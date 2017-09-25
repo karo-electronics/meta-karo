@@ -1,0 +1,25 @@
+diff --git a/arch/arm/mach-imx/clk-imx6q.c b/arch/arm/mach-imx/clk-imx6q.c
+index f45de65..3845ab3 100644
+--- a/arch/arm/mach-imx/clk-imx6q.c
++++ b/arch/arm/mach-imx/clk-imx6q.c
+@@ -882,6 +882,20 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
+        /*Set enet_ref clock to 125M to supply for RGMII tx_clk */
+        clk_set_rate(clk[IMX6QDL_CLK_ENET_REF], 125000000);
+ 
++       np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-fec");
++       if (np) {
++               u32 clock_frequency;
++               int ret;
++
++               ret = of_property_read_u32(np, "ref-clock", &clock_frequency);
++               if (ret == 0) {
++                       printk("fec ref-clock: %d\n", clock_frequency);
++                       imx_clk_set_rate(clk[IMX6QDL_CLK_ENET_REF], clock_frequency);
++               }
++       }
++       // This clock may be needed very early on
++       imx_clk_prepare_enable(clk[IMX6QDL_CLK_ENET_REF]);
++
+ #ifdef CONFIG_MX6_VPU_352M
+        /*
+         * If VPU 352M is enabled, then PLL2_PDF2 need to be

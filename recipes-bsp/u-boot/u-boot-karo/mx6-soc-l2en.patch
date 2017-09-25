@@ -1,0 +1,27 @@
+diff --git a/arch/arm/cpu/armv7/mx6/soc.c b/arch/arm/cpu/armv7/mx6/soc.c
+index 6f74175..585d635 100644
+--- a/arch/arm/cpu/armv7/mx6/soc.c
++++ b/arch/arm/cpu/armv7/mx6/soc.c
+@@ -714,6 +714,12 @@ void v7_outer_cache_enable(void)
+ 
+ 
+ 	/*
++	 * Must disable the L2 before changing the latency parameters
++	 * and auxiliary control register.
++	 */
++	clrbits_le32(&pl310->pl310_ctrl, L2X0_CTRL_EN);
++
++	/*
+ 	 * Set bit 22 in the auxiliary control register. If this bit
+ 	 * is cleared, PL310 treats Normal Shared Non-cacheable
+ 	 * accesses as Cacheable no-allocate.
+@@ -730,9 +736,6 @@ void v7_outer_cache_enable(void)
+ 	}
+ #endif
+ 
+-	/* Must disable the L2 before changing the latency parameters */
+-	clrbits_le32(&pl310->pl310_ctrl, L2X0_CTRL_EN);
+-
+ 	writel(0x132, &pl310->pl310_tag_latency_ctrl);
+ 	writel(0x132, &pl310->pl310_data_latency_ctrl);
+ 

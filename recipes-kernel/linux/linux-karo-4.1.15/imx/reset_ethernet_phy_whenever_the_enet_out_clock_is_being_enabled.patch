@@ -1,0 +1,123 @@
+diff --git a/drivers/net/ethernet/freescale/fec.h b/drivers/net/ethernet/freescale/fec.h
+index 65a3cd3..ecdc711 100644
+--- a/drivers/net/ethernet/freescale/fec.h
++++ b/drivers/net/ethernet/freescale/fec.h
+@@ -540,6 +540,8 @@ struct fec_enet_private {
+ 	int	wol_flag;
+ 	int	wake_irq;
+ 	u32	quirks;
++	int phy_reset_gpio;
++	int phy_reset_duration;
+ 
+ 	struct	napi_struct napi;
+ 	int	csum_flags;
+diff --git a/drivers/net/ethernet/freescale/fec_main.c b/drivers/net/ethernet/freescale/fec_main.c
+index 2b16041..a120a93 100644
+--- a/drivers/net/ethernet/freescale/fec_main.c
++++ b/drivers/net/ethernet/freescale/fec_main.c
+@@ -69,6 +69,7 @@
+ 
+ static void set_multicast_list(struct net_device *ndev);
+ static void fec_enet_itr_coal_init(struct net_device *ndev);
++static void fec_reset_phy(struct platform_device *pdev);
+ 
+ #define DRIVER_NAME	"fec"
+ 
+@@ -1882,6 +1883,8 @@ static int fec_enet_clk_enable(struct net_device *ndev, bool enable)
+ 			ret = clk_prepare_enable(fep->clk_enet_out);
+ 			if (ret)
+ 				goto failed_clk_enet_out;
++
++			fec_reset_phy(fep->pdev);
+ 		}
+ 		if (fep->clk_ptp) {
+ 			mutex_lock(&fep->ptp_clk_mutex);
+@@ -3329,30 +3332,43 @@ static int fec_enet_init(struct net_device *ndev)
+ #ifdef CONFIG_OF
+ static void fec_reset_phy(struct platform_device *pdev)
+ {
+-	int err, phy_reset;
+-	int msec = 1;
+-	struct device_node *np = pdev->dev.of_node;
++	struct net_device *ndev = platform_get_drvdata(pdev);
++	struct fec_enet_private *fep = netdev_priv(ndev);
+ 
+-	if (!np)
++	if (!gpio_is_valid(fep->phy_reset_gpio))
+ 		return;
+ 
+-	err = of_property_read_u32(np, "phy-reset-duration", &msec);
+-	/* A sane reset duration should not be longer than 1s */
+-	if (!err && msec > 1000)
+-		msec = 1;
++	gpio_set_value_cansleep(fep->phy_reset_gpio, 0);
++	msleep(fep->phy_reset_duration);
++	gpio_set_value_cansleep(fep->phy_reset_gpio, 1);
++}
++
++static int fec_get_reset_gpio(struct platform_device *pdev)
++{
++	int err, phy_reset;
++	int msec = 1;
++	struct device_node *np = pdev->dev.of_node;
++	struct net_device *ndev = platform_get_drvdata(pdev);
++	struct fec_enet_private *fep = netdev_priv(ndev);
+ 
+ 	phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
+ 	if (!gpio_is_valid(phy_reset))
+-		return;
++		return phy_reset;
+ 
+ 	err = devm_gpio_request_one(&pdev->dev, phy_reset,
+ 				    GPIOF_OUT_INIT_LOW, "phy-reset");
+ 	if (err) {
+ 		dev_err(&pdev->dev, "failed to get phy-reset-gpios: %d\n", err);
+-		return;
++		return err;
+ 	}
+-	msleep(msec);
+-	gpio_set_value(phy_reset, 1);
++	
++	of_property_read_u32(np, "phy-reset-duration", &msec);
++	/* A sane reset duration should not be longer than 1s */
++	if (msec > 1000)
++		msec = 1;
++	fep->phy_reset_duration = msec;
++	
++	return phy_reset;
+ }
+ #else /* CONFIG_OF */
+ static void fec_reset_phy(struct platform_device *pdev)
+@@ -3362,6 +3378,11 @@ static void fec_reset_phy(struct platform_device *pdev)
+ 	 * by machine code.
+ 	 */
+ }
++
++static inline int fec_get_reset_gpio(struct platform_device *pdev)
++{
++	return -EINVAL;
++}
+ #endif /* CONFIG_OF */
+ 
+ static void
+@@ -3494,6 +3515,12 @@ fec_probe(struct platform_device *pdev)
+ 
+ 	fec_enet_of_parse_stop_mode(pdev);
+ 
++	ret = fec_get_reset_gpio(pdev);
++	if (ret == -EPROBE_DEFER)
++		goto gpio_defer;
++	fep->phy_reset_gpio = ret;
++	
++
+ 	if (of_get_property(np, "fsl,magic-packet", NULL))
+ 		fep->wol_flag |= FEC_WOL_HAS_MAGIC_PACKET;
+ 
+@@ -3638,6 +3665,7 @@ failed_regulator:
+ failed_clk:
+ failed_phy:
+ 	of_node_put(phy_node);
++gpio_defer:
+ failed_ioremap:
+ 	free_netdev(ndev);
+  

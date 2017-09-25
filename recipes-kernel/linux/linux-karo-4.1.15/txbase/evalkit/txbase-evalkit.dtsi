@@ -1,0 +1,197 @@
+/*
+ * Copyright 2016 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright 2016-2017 Oliver Wendt <OW@KARO-electronics.de>
+ * Copyright 2016 Michael Vyskocil <MV@KARO-electronics.de>
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License
+ *     version 2 as published by the Free Software Foundation.
+ *
+ *     This file is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+
+/*
+ * Please be reminded that in general DTSI file(s) are include files that are
+ * for more than one purpose (usually bound to a SoC) and as such shouldn't be
+ * edited. For end-user products it should be the DTS file(s) that choose which
+ * devices and pins are active and setup.
+ *
+ * The setup of DT files for Ka-Ro TX COM Modules under Yocto follow a
+ * different, non-standard, implementation, which can make it necessary.
+ */
+
+/*
+ * Please see the imx6*-tx6-gpio.h && imx6*-tx6.dtsi in "linux-karo-x.y.ab/tx6"
+ * for the definitions like TX_NAND or TX_EMMC, etc.
+ */
+
+/ {
+	aliases {
+		backlight0 = &backlight0;
+		/*
+		 * The node/alias 'display' is needed for U-Boot to be able to
+		 * show a logo/splash image at boot time. It needs to include
+		 * 'display-timings' as direct sub-node.
+		 */
+		display = TX_LCD;
+		mxcfb0 = TX_LCD_FB;
+	};
+
+	backlight0: backlight0 {
+		compatible = "pwm-backlight";
+		pwms = <TX_PWM 0 500000>;
+		power-supply = <&reg_lcd0_pwr>;
+		/*
+		* a poor man's way to create a 1:1 relationship between
+		* the PWM value and the actual duty cycle
+		*/
+		brightness-levels = < 0  1  2  3  4  5  6  7  8  9
+				     10 11 12 13 14 15 16 17 18 19
+				     20 21 22 23 24 25 26 27 28 29
+				     30 31 32 33 34 35 36 37 38 39
+				     40 41 42 43 44 45 46 47 48 49
+				     50 51 52 53 54 55 56 57 58 59
+				     60 61 62 63 64 65 66 67 68 69
+				     70 71 72 73 74 75 76 77 78 79
+				     80 81 82 83 84 85 86 87 88 89
+				     90 91 92 93 94 95 96 97 98 99
+				    100>;
+		default-brightness-level = <50>;
+		status = "disabled";
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_leds>;
+		
+		user_led: user {
+			label = "Heartbeat";
+			gpios = <TX_GPIO_PIN153 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	reg_lcd0_pwr: regulator-lcd0-power {
+		compatible = "regulator-fixed";
+		regulator-name = "LCD0 RESET";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_lcd0_pwr>;
+		gpio = <TX_GPIO_PIN150 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+};
+
+&iomuxc {
+	tx6 {
+		pinctrl_edt_ft5x06: edt-ft5x06grp {
+			fsl,pins = <
+				TX_GPIO_PAD148		/* Interrupt */
+				TX_GPIO_PAD149 		/* Reset */
+				TX_GPIO_PAD152 		/* Wake */
+			>;
+		};
+
+		pinctrl_gpio_leds: gpioledsgrp {
+			fsl,pins = <
+				TX_GPIO_PAD153		/* LED Heartbeat */
+			>;
+		};
+
+		pinctrl_lcd0_pwr: lcd0-pwrgrp {
+			fsl,pins = <
+				TX_GPIO_PAD150 		/* LCD Reset */
+			>;
+		};
+	};
+};
+
+/*
+ * Ka-Ro device references in alphabetical order
+ */
+
+TX_CAN1 {
+	status = "okay";
+};
+
+TX_I2C {
+	ds1339: rtc@68 {
+		compatible = "dallas,ds1339";
+		reg = <0x68>;
+	};
+
+	polytouch: edt-ft5x06@38 {
+		compatible = "edt,edt-ft5x06";
+		reg = <0x38>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_edt_ft5x06>;
+		interrupt-extended = <TX_GPIO_PIN148 0>;
+		reset-gpios = <TX_GPIO_PIN149 GPIO_ACTIVE_LOW>;
+		wake-gpios = <TX_GPIO_PIN152 GPIO_ACTIVE_HIGH>;
+		linux,wakeup;
+	};
+};
+
+TX_LCD {
+	status = "okay";
+};
+
+TX_PWM {
+	status = "okay";
+};
+
+TX_UART1 {
+	status = "okay";
+};
+
+TX_UART2 {
+	status = "okay";
+};
+
+TX_UART3 {
+	status = "okay";
+};
+
+TX_USBH {
+	status = "okay";
+};
+
+TX_USBOTG {
+	status = "okay";
+};

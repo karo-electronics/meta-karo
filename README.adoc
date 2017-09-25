@@ -1,0 +1,62 @@
+
+= Ka-Ro Yocto BSP
+
+To get the BSP you need to have `repo` installed and use it as:
+
+Install the `repo` utility:
+
+[source,console]
+mkdir ~/bin
+curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+chmod a+x ~/bin/repo
+
+Download the BSP source:
+
+[source,console]
+PATH=${PATH}:~/bin
+mkdir karo-bsp
+cd karo-bsp
+repo init -u https://github.com/karo-electronics/karo-manifest -b pyro
+repo sync
+
+At the end of the commands you have every metadata you need to start work with.
+
+To start a simple image build:
+
+[source,console]
+source ./setup-environment build
+bitbake core-image-minimal
+
+You can use any directory to host your build.
+
+The source code is checked out at `karo-bsp/sources`.
+
+== Contributing
+
+Ka-Ro has no mailing list to contribute to and patches specific to the Ka-Ro
+flavour of this FSL Community BSP will in general not be accepted by the
+FSL Community BSP.
+
+
+Therefore it applies that:
+
+To contribute to this layer you should send the patches for review to the
+maintainer of this BSP, i.e. Ka-Ro. A list of these maintainers can be found
+on the respective site.
+
+=== Creating Patches
+
+When creating patches, please use something like:
+
+[source,console]
+git format-patch -s --subject-prefix='karo-bsp][PATCH' origin
+
+When sending patches, please use something like:
+
+[source,console]
+git send-email --to <insert-maintainer-here>@karo-electronics.de <generated patch>
+
+---
+http://www.karo-electronics.de[Ka-Ro electronics GmbH]
+
+Contact support: support@karo-electronics.de

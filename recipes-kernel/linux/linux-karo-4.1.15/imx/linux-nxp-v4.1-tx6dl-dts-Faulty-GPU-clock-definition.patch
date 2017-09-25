@@ -1,0 +1,36 @@
+From d2b52a32ef67ce665ac693a209d904abb616a037 Mon Sep 17 00:00:00 2001
+From: Oliver Wendt <ow@karo-electronics.de>
+Date: Fri, 5 May 2017 17:34:57 +0200
+Subject: [PATCH] linux-nxp: v4.1: tx6dl: dts: Faulty GPU clock definition
+ rectified.
+
+---
+ arch/arm/boot/dts/imx6dl.dtsi | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/arch/arm/boot/dts/imx6dl.dtsi b/arch/arm/boot/dts/imx6dl.dtsi
+index a004478..9556bfd 100644
+--- a/arch/arm/boot/dts/imx6dl.dtsi
++++ b/arch/arm/boot/dts/imx6dl.dtsi
+@@ -103,12 +103,12 @@
+ 			interrupts = <0 9 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <0 10 IRQ_TYPE_LEVEL_HIGH>;
+ 			interrupt-names = "irq_3d", "irq_2d";
+-			clocks = <&clks IMX6QDL_CLK_OPENVG_AXI>, <&clks IMX6QDL_CLK_GPU3D_AXI>,
+-				 <&clks IMX6QDL_CLK_GPU2D_CORE>, <&clks IMX6QDL_CLK_GPU3D_CORE>,
+-				 <&clks IMX6QDL_CLK_DUMMY>;
+-			clock-names = "gpu2d_axi_clk", "gpu3d_axi_clk",
+-				      "gpu2d_clk", "gpu3d_clk",
+-				      "gpu3d_shader_clk";
++			clocks = <&clks IMX6QDL_CLK_GPU2D_AXI>, <&clks IMX6QDL_CLK_OPENVG_AXI>,
++				 <&clks IMX6QDL_CLK_GPU3D_AXI>, <&clks IMX6QDL_CLK_GPU2D_CORE>,
++				 <&clks IMX6QDL_CLK_GPU3D_CORE>, <&clks IMX6QDL_CLK_DUMMY>;
++			clock-names = "gpu2d_axi_clk", "openvg_axi_clk",
++				      "gpu3d_axi_clk", "gpu2d_clk",
++				      "gpu3d_clk", "gpu3d_shader_clk";
+ 			resets = <&src 0>, <&src 3>;
+ 			reset-names = "gpu3d", "gpu2d";
+ 			power-domains = <&gpc 1>;
+-- 
+2.1.4
+

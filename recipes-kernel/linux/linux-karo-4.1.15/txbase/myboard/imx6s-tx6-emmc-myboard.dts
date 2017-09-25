@@ -1,0 +1,111 @@
+/*
+ * Copyright 2016 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright 2016 Oliver Wendt <OW@KARO-electronics.de>
+ * Copyright 2016 Michael Vyskocil <MV@KARO-electronics.de>
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License
+ *     version 2 as published by the Free Software Foundation.
+ *
+ *     This file is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/*
+ * Please be reminded that - in general - DTSI file(s) are include files that
+ * are for more than one purpose (usually bound to a SoC) and as such shouldn't
+ * be edited. For end-user products it should be the DTS file(s) that choose
+ * which devices and pins are active and setup.
+ *
+ * The setup of DT files for Ka-Ro TX COM Modules under Yocto follow a
+ * different, non-standard, implementation to the mainline Linux kernel.
+ */
+
+/*
+ * Please see the imx6*-tx6-gpio.h && imx6*-tx6.dtsi in "linux-karo-x.y.ab/tx6"
+ * for the definitions like TX_NAND or TX_EMMC, etc.
+ */
+
+/dts-v1/;
+
+#include "imx6dl.dtsi"
+#include "imx6qdl-tx6.dtsi"
+#include "txbase-mb7.dtsi"
+
+/ {
+	model = "Ka-Ro electronics TX6S Module (eMMC & RGB)";
+	compatible = "karo,imx6dl-tx6dl", "fsl,imx6dl";
+
+	cpus {
+		/delete-node/ cpu@1;
+	};
+};
+
+/*
+ * Every VOU is multi parted: backlight, device, framebuffer, pwm
+ * Thus all parts have to be enabled before a display can be used on the
+ * specific port.
+ */
+
+&backlight0 {
+	status = "okay";
+};
+
+/*
+ * NVM setup
+ */
+
+TX_EMMC {
+	status = "okay";
+};
+
+/*
+ * Remaining device references in alphabetical order
+ */
+
+TX_LCD {
+	status = "okay";
+	/*
+	 * Users should add their custom timing here, therewith
+	 * overwriting the default/pre-defined timings. For more see
+	 *
+	 * txbase/{BASEBOARD}-{DISPLAY-IF}/txbase-{BASEBOARD}-{DISPLAY-IF}.dtsi
+	 *
+	 * e.g.:
+	 * txbase/mb7-lvds/txbase-aclavis.dtsi
+	 */
+};
+
+TX_LCD_FB {
+	status = "okay";
+};

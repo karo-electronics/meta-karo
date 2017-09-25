@@ -1,0 +1,247 @@
+/*
+ * Copyright 2016 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright 2016-2017 Oliver Wendt <OW@KARO-electronics.de>
+ * Copyright 2016 Michael Vyskocil <MV@KARO-electronics.de>
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License
+ *     version 2 as published by the Free Software Foundation.
+ *
+ *     This file is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/ {
+	aliases {
+		backlight = &backlight0;
+		backlight0 = &backlight0;
+		/*
+		 * The node/alias 'display' is needed for U-Boot to be able to
+		 * show a logo/splash image at boot time. It needs to include
+		 * 'display-timings' as direct sub-node.
+		 */
+		display = &lvds0;
+		lvds0 = &lvds0;
+		lvds1 = &lvds1;
+		mxcfb0 = TX_LDB_FB1;
+		mxcfb1 = TX_LDB_FB2;
+	};
+
+	backlight0: backlight0 {
+		compatible = "pwm-backlight";
+		pwms = <TX_PWM 0 500000>;
+		power-supply = <&reg_lcd0_pwr>;
+		enable-gpios = <TX_GPIO_PIN154 GPIO_ACTIVE_HIGH>;
+		/*
+		* a poor man's way to create a 1:1 relationship between
+		* the PWM value and the actual duty cycle
+		*/
+		brightness-levels = < 0  1  2  3  4  5  6  7  8  9
+				     10 11 12 13 14 15 16 17 18 19
+				     20 21 22 23 24 25 26 27 28 29
+				     30 31 32 33 34 35 36 37 38 39
+				     40 41 42 43 44 45 46 47 48 49
+				     50 51 52 53 54 55 56 57 58 59
+				     60 61 62 63 64 65 66 67 68 69
+				     70 71 72 73 74 75 76 77 78 79
+				     80 81 82 83 84 85 86 87 88 89
+				     90 91 92 93 94 95 96 97 98 99
+				    100>;
+		default-brightness-level = <50>;
+		status = "disabled";
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_gpio_leds>;
+
+		user_led: user {
+			label = "Heartbeat";
+			gpios = <TX_GPIO_PIN153 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	regulators {
+		reg_lcd0_pwr: regulator-lcd0-power {
+			compatible = "regulator-fixed";
+			regulator-name = "LCD0 RESET";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&pinctrl_lcd0_pwr>;
+			gpio = <TX_GPIO_PIN150 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+	};
+};
+
+TX_CAN1 {
+	status = "okay";
+};
+
+TX_I2C {
+	status = "okay";
+
+	ds1339: rtc@68 {
+		compatible = "dallas,ds1339";
+		reg = <0x68>;
+	};
+};
+
+TX_LDB {
+/*
+ * The node/alias 'display' is needed for U-Boot to be able to show a
+ * logo/splash image at boot time. It needs to include 'display-timings'
+ * as direct sub-node.
+ *
+ * Other naming is only needed for the NXP/Freescale non-mainline
+ * compliant/proprietary display driver in their Yocto 4.1 Kernel
+ * implementation.
+ */
+	lvds0: lvds-channel@0 {
+		crtc = "ipu1-di0";
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+		primary;
+		status = "disabled";
+
+		display-timings {
+			/*
+			 * The naitive mode has to be named seperately between
+			 * lvds0 & lvds1, otherwise it will be overwritten.
+			 */
+			native-mode = <&timing0>;
+			timing0: ETML101001DKA {
+				clock-frequency = <0x043b5fc0>;
+				hactive = <0x00000500>;
+				vactive = <0x00000320>;
+				hback-porch = <0x00000032>;
+				hsync-len = <0x0000003c>;
+				hfront-porch = <0x00000032>;
+				vback-porch = <0x00000005>;
+				vsync-len = <0x0000000d>;
+				vfront-porch = <0x00000005>;
+			};
+		};
+	};
+
+	lvds1: lvds-channel@1 {
+		crtc = "ipu1-di1";
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <18>;
+		status = "disabled";
+
+		display-timings {
+			/*
+			 * The naitive mode has to be named seperately between
+			 * lvds0 & lvds1, otherwise it will be overwritten.
+			 */
+			native-mode = <&timing1>;
+			timing1: ETML101001DKA {
+				clock-frequency = <0x043b5fc0>;
+				hactive = <0x00000500>;
+				vactive = <0x00000320>;
+				hback-porch = <0x00000032>;
+				hsync-len = <0x0000003c>;
+				hfront-porch = <0x00000032>;
+				vback-porch = <0x00000005>;
+				vsync-len = <0x0000000d>;
+				vfront-porch = <0x00000005>;
+			};
+		};
+	};
+};
+
+TX_LDB_FB1 {
+	status = "okay";
+};
+
+TX_LDB_FB2 {
+	status = "okay";
+};
+
+TX_PWM {
+	status = "okay";
+};
+
+TX_SD1 {
+	status = "okay";
+};
+
+TX_UART1 {
+	status = "okay";
+};
+
+TX_UART2 {
+	status = "okay";
+	fsl,uart-has-rtscts;
+	uart-has-rtscts;
+};
+
+TX_USBH {
+	status = "okay";
+};
+
+TX_USBOTG {
+	status = "okay";
+};
+
+&iomuxc {
+	tx6 {
+		pinctrl_hog: hoggrp {
+			fsl,pins = <
+				TX_GPIO_PAD148		/* OPTO IN */
+				TX_GPIO_PAD149		/* OPTO IN */
+				TX_GPIO_PAD151		/* OPTO OUT */
+				TX_GPIO_PAD152		/* OPTO OUT */
+				TX_GPIO_PAD154		/* Backlight enable */
+			>;
+		};
+
+		pinctrl_gpio_leds: gpioledsgrp {
+			fsl,pins = <
+				TX_GPIO_PAD153		/* LED Heartbeat */
+			>;
+		};
+
+		pinctrl_lcd0_pwr: lcd0-pwrgrp {
+			fsl,pins = <
+				TX_GPIO_PAD150		/* LCD Reset */
+			>;
+		};
+	};
+};
