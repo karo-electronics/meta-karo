@@ -1,0 +1,45 @@
+#!/bin/bash
+
+[ -s /etc/default/rcS ] && . /etc/default/rcS
+
+hotplug=$(cat /proc/sys/kernel/hotplug)
+if [ -z "$hotplug" ];then
+    logger "WARNING: /proc/sys/kernel/hotplug is not set!"
+    echo "/sbin/mdev" > /proc/sys/kernel/hotplug
+elif [ "${hotplug/mdev/}" = "$hotplug" ];then
+    logger "WARNING: /proc/sys/kernel/hotplug set to '${hotplug}' instead of /sbin/mdev!"
+fi
+
+case $1 in
+    start)
+	if [ ! -f /dev/mdev.seq ];then
+	    touch /dev/mdev.seq
+	    /sbin/mdev -s
+	fi
+	if [ -d /sys/class/firmware ];then
+	    [ "$VERBOSE" = no ] || echo -n "Triggering firmware load"
+	    for dir in $(find /sys/class/firmware/ -type l);do
+		[ $VERBOSE != very ] || echo -n " ${dir##*/}"
+		echo add > "$dir/uevent"
+	    done
+	    [ $VERBOSE = no ] || echo "."
+	fi
+
+	[ "$VERBOSE" = no ] || echo "Loading pertinent kernel modules"
+	ifs="$IFS"
+	IFS='
+'
+	files=($(find /sys/devices/* -name modalias))
+	IFS="$ifs"
+	for file in "${files[@]}";do
+	    alias="$(cat "$file")"
+	    [ "$VERBOSE" = very ] && echo "Autoloading $alias"
+	    modprobe --use-blacklist "${alias//\[_-\]/-}" &> /dev/null
+        done
+	;;
+    stop)
+	;;
+    *)
+	echo "Usage: $0 start|stop" >&2
+	exit 3
+esac

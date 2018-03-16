@@ -1,0 +1,47 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          reboot
+# Required-Start:
+# Required-Stop:
+# Default-Start:
+# Default-Stop:      6
+# Short-Description: Execute the reboot command.
+# Description:
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+. /etc/default/rcS
+
+do_stop () {
+	# Message should end with a newline since kFreeBSD may
+	# print more stuff (see #323749)
+	[ $VERBOSE = no ] || echo "Will now restart"
+
+	netdown=""
+	if sed -n 's/^[^ ]* \([^ ]*\) \([^ ]*\) .*$/\1 \2/p' /proc/mounts | grep -q "^/ nfs$";then
+		echo "NOT shutting down network interfaces: / is an NFS mount"
+	elif sed -n 's/^[^ ]* \([^ ]*\) \([^ ]*\) .*$/\2/p' /proc/mounts | grep -qE '^(nfs|smbfs)$';then
+		echo "NOT shutting down network interfaces: NFS/SMB shares still mounted."
+	else
+		netdown=-i
+	fi
+	reboot -d -f $netdown
+}
+
+case "$1" in
+  start)
+	# No-op
+	;;
+  restart|reload|force-reload)
+	echo "Error: argument '$1' not supported" >&2
+	exit 3
+	;;
+  stop)
+	do_stop
+	;;
+  *)
+	echo "Usage: $0 start|stop" >&2
+	exit 3
+	;;
+esac

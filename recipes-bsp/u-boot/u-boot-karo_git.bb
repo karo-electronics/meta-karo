@@ -8,14 +8,23 @@ PROVIDES = "u-boot"
 
 PV = "v2015.10-rc2+git${SRCPV}"
 
-SRCREV = "04fae1750f5e236e8abb4470d5d8b5aa3262a99c"
+SRCREV = "KARO-TX6-2018-01-08"
 SRCBRANCH = "master"
-SRC_URI = "git://git@github.com/karo-electronics/karo-uboot-devel.git;branch=${SRCBRANCH};protocol=ssh \
-	file://mbl_fix_compile_issue.patch \
-"
+SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;branch=${SRCBRANCH}"
 
 S = "${WORKDIR}/git"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*)"
+COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*|imx6.*-tx.*)"
+
+python check_sanity_everybuild_append () {
+    if d.getVar('UBOOT_MACHINE') != None and d.getVar('IMAGE_BASENAME') != 'u-boot-karo':
+        status.addresult("Error: cannot build %s in build dir that has been configured for 'u-boot' build only" % d.getVar('IMAGE_BASENAME'), d)
+
+    elif d.getVar('IMAGE_BASENAME') == 'karo-image-x11' and d.getVar('DISTRO') != 'karo-x11':
+        status.addresult("Error: cannot build '%s' with DISTRO '%s'" % \
+           (d.getVar('IMAGE_BASENAME'), d.getVar('DISTRO')))
+    else
+        bb.error("Ka-Ro sanity check passed")
+}

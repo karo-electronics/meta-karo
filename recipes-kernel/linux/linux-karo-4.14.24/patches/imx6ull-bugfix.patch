@@ -1,0 +1,37 @@
+Index: karo-tx-linux/arch/arm/boot/dts/imx6ull.dtsi
+===================================================================
+--- karo-tx-linux.orig/arch/arm/boot/dts/imx6ull.dtsi
++++ karo-tx-linux/arch/arm/boot/dts/imx6ull.dtsi
+@@ -41,3 +41,32 @@
+ 
+ #include "imx6ul.dtsi"
+ #include "imx6ull-pinfunc.h"
++
++/ {
++	soc {
++		aips-bus@02000000 {
++			spba-bus@02000000 {
++				/delete-node/ serial@02024000;
++			};
++		};
++
++		aips3: aips-bus@02200000 {
++			compatible = "fsl,aips-bus", "simple-bus";
++			#address-cells = <1>;
++			#size-cells = <1>;
++			reg = <0x02200000 0x100000>;
++			ranges;
++
++			uart8: serial@02288000 {
++				compatible = "fsl,imx6ul-uart",
++					     "fsl,imx6q-uart";
++				reg = <0x02288000 0x4000>;
++				interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
++				clocks = <&clks IMX6UL_CLK_UART8_IPG>,
++					 <&clks IMX6UL_CLK_UART8_SERIAL>;
++				clock-names = "ipg", "per";
++				status = "disabled";
++			};
++		};
++	};
++};

@@ -1,17 +1,69 @@
 SUMMARY = "Linux Kernel for Ka-Ro electronics TX6 Computer-On-Modules"
 
 require recipes-kernel/linux/linux-imx.inc
-require recipes-kernel/linux/linux-dtb.inc
 
 DEPENDS += "lzop-native bc-native"
 
-SRCBRANCH = "karo-tx-linux"
-SRCREV = "f7a9069cf51de58dffe84db692cc9d6680173cf0"
-KERNEL_SRC = "git://git@github.com/karo-electronics/karo-linux-devel.git;protocol=ssh"
+SRCBRANCH = "karo-tx6-mainline"
+SRCREV = "KARO-TX6-2018-01-08"
+KERNEL_SRC = "git://github.com/karo-electronics/karo-tx-linux.git"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
+
 SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://defconfig \
+           file://imx6qdl-tx6-mb7-sound.patch \
+           file://imx6ull-bugfix.patch \
+           file://txul-phy-reset.patch \
 "
 
-KERNEL_IMAGETYPE="uImage"
+LOCALVERSION = "-karo-tx6"
+KERNEL_IMAGETYPE = "uImage"
 
-COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*)"
+KERNEL_DEVICETREE_imx6dl-tx6-emmc ?= " \
+                                  imx6dl-tx6dl-comtft.dtb \
+                                  imx6dl-tx6s-8{0,1}35{,-mb7}.dtb \
+"
+KERNEL_DEVICETREE_imx6dl-tx6-nand ?= " \
+                                  imx6dl-tx6s-8{0,1}34{,-mb7}.dtb \
+                                  imx6dl-tx6u-8{0,1}1x.dtb \
+                                  imx6dl-tx6u-8{0,1}xx-mb7.dtb \
+"
+KERNEL_DEVICETREE_imx6q-tx6-emmc ?= " \
+                                 imx6q-tx6q-1020{,-comtft}.dtb \
+                                 imx6q-tx6q-1036{,-mb7}.dtb \
+"
+KERNEL_DEVICETREE_imx6q-tx6-nand ?= " \
+                                 imx6q-tx6q-1{0,1}10.dtb \
+                                 imx6q-tx6q-1010-comtft.dtb \
+                                 imx6q-tx6q-1{0,1}x0-mb7.dtb \
+"
+KERNEL_DEVICETREE_imx6qp-tx6-emmc ?= " \
+                                  imx6qp-tx6qp-8{0,1}37{,-mb7}.dtb \
+"
+KERNEL_DEVICETREE_imx6ul-tx6-emmc ?= " \
+                                  imx6ul-tx6ul-0011.dtb \
+                                  imx6ul-txul-5011-{mainboard,mb7}.dtb \
+"
+KERNEL_DEVICETREE_imx6ul-tx6-nand ?= " \
+                                  imx6ul-tx6ul-0010.dtb \
+                                  imx6ul-txul-5010-{mainboard,mb7}.dtb \
+"
+KERNEL_DEVICETREE_imx6ull-tx6-emmc ?= " \
+                                   imx6ull-txul-8013{,-mb7,-mainboard}.dtb \
+"
+
+COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*|imx6.*-tx.*)"
+
+do_install_append () {
+    set -x
+    install -v -d -m 0755 ${D}${FW_PATH}
+    for f in ${FW_FILES};do
+        src="${f//file:\//${WORKDIR}}"
+        subdir="$(dirname "${src##*/firmware/}")"
+        [ "${subdir##/*}" = "$subdir" ] || exit 1
+        if [ "$subdir" != "." ];then
+                install -v -d -m 0755 "${D}${FW_PATH}/$subdir"
+        fi
+        install -v -m 0644 "${src}" "${D}${FW_PATH}/$subdir"
+    done
+}

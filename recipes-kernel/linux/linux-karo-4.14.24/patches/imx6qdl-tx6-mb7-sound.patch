@@ -1,0 +1,24 @@
+Index: karo-tx-linux/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
+===================================================================
+--- karo-tx-linux.orig/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
++++ karo-tx-linux/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
+@@ -69,8 +69,6 @@
+ 		bus-format-override = "spwg-18";
+ 		pixelclk-active = <0>;
+ 	};
+-
+-	/delete-node/ sound;
+ };
+ 
+ &can1 {
+@@ -96,10 +94,6 @@
+ 	};
+ };
+ 
+-&sgtl5000 {
+-	status = "disabled";
+-};
+-
+ &reg_lcd0_pwr {
+ 	status = "disabled";
+ };

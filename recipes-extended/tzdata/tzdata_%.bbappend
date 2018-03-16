@@ -1,0 +1,1 @@
+inherit relative_symlinks

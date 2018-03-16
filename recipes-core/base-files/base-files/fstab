@@ -1,0 +1,9 @@
+# device	dir		type		options			dump	fsck
+
+/dev/root	/		auto		defaults		0	0
+proc		/proc		proc		defaults		0	0
+sysfs		/sys		sysfs		defaults		0	0
+devtmpfs	/dev		devtmpfs	defaults		0	0
+devpts		/dev/pts	devpts		mode=0620,gid=5		0	0
+tmpfs		/tmp		tmpfs		defaults		0	0
+tmpfs		/var/tmp	tmpfs		defaults		0	0

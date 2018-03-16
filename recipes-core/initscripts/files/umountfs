@@ -1,0 +1,41 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          umountfs
+# Required-Start:
+# Required-Stop:
+# Default-Start:
+# Default-Stop:      0 6
+# Short-Description: Turn off swap and unmount all local file systems.
+# Description:
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+# make changes to certain tmp directories persistent
+if [ -d /etc/.var -a -n "$(ls /etc/.var/)" ];then
+    mount /etc/.var -o remount,rw
+    for d in tmp/ lib/ log/wtmp;do
+	rsync -avu --delete "/var/$d" "/etc/.var/$d"
+    done
+    mount /etc/.var -o remount,rw
+fi
+
+umount -f -a -t tmpfs
+
+echo "Deactivating swap..."
+[ -x /sbin/swapoff ] && swapoff -a
+
+echo "Unmounting local filesystems..."
+grep -q /mnt/ram /proc/mounts && mount -o remount,ro /mnt/ram
+mount -o remount,ro /
+
+netmnt=""
+if sed -n 's/^[^ ]* \([^ ]*\) \([^ ]*\) .*$/\1 \2/p' /proc/mounts | grep -q "^/ nfs$";then
+    echo "NOT unmounting NFS filesystems due to NFSROOT"
+    netmnt=,nfs
+fi
+
+umount -f -a -r -t nodevpts,devtmpfs,proc,sysfs,tmpfs,usbfs${netmnt}
+mount
+
+: exit 0
