@@ -23,6 +23,7 @@ KERNEL_IMAGETYPE = "uImage"
 KERNEL_DEVICETREE_imx6dl-tx6-emmc ?= " \
                                   imx6dl-tx6dl-comtft.dtb \
                                   imx6dl-tx6s-8{0,1}35{,-mb7}.dtb \
+                                  imx6dl-tx6u-8{0,1}33{,-mb7}.dtb \
 "
 KERNEL_DEVICETREE_imx6dl-tx6-nand ?= " \
                                   imx6dl-tx6s-8{0,1}34{,-mb7}.dtb \
@@ -30,7 +31,7 @@ KERNEL_DEVICETREE_imx6dl-tx6-nand ?= " \
                                   imx6dl-tx6u-8{0,1}xx-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6q-tx6-emmc ?= " \
-                                 imx6q-tx6q-1020{,-comtft}.dtb \
+                                 imx6q-tx6q-1020{,-comtft,-mb7}.dtb \
                                  imx6q-tx6q-1036{,-mb7}.dtb \
 "
 KERNEL_DEVICETREE_imx6q-tx6-nand ?= " \
