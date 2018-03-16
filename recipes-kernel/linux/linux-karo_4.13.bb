@@ -11,6 +11,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
 SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://defconfig \
+           file://0001-patch-for-edt-m12.diff \
            file://imx6qdl-tx6-mb7-sound.patch \
            file://imx6ull-bugfix.patch \
            file://txul-phy-reset.patch \
