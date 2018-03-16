@@ -16,7 +16,7 @@ Download the BSP source:
 PATH=${PATH}:~/bin
 mkdir karo-bsp
 cd karo-bsp
-repo init -u https://github.com/karo-electronics/karo-manifest -b pyro
+repo init -u https://github.com/karo-electronics/karo-manifest -b rocko
 repo sync
 
 At the end of the commands you have every metadata you need to start work with.
@@ -25,7 +25,7 @@ To start a simple image build:
 
 [source,console]
 source ./setup-environment build
-bitbake core-image-minimal
+bitbake karo-image-minimal
 
 You can use any directory to host your build.
 
@@ -54,7 +54,7 @@ git format-patch -s --subject-prefix='karo-bsp][PATCH' origin
 When sending patches, please use something like:
 
 [source,console]
-git send-email --to <insert-maintainer-here>@karo-electronics.de <generated patch>
+git send-email --to yocto-devel@karo-electronics.de <generated patch>
 
 ---
 http://www.karo-electronics.de[Ka-Ro electronics GmbH]
