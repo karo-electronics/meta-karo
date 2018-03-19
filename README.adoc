@@ -19,30 +19,78 @@ cd karo-bsp
 repo init -u https://github.com/karo-electronics/karo-manifest -b rocko
 repo sync
 
-At the end of the commands you have every metadata you need to start work with.
+At the end of the commands you have all metadata you need to start work with.
+
+=== Building Linux Kernel and rootfs
 
 To start a simple image build:
 
 [source,console]
-source ./setup-environment build
+MACHINE=imx6q-tx6-nand source ./setup-environment build-imx6q-tx6-nand
 bitbake karo-image-minimal
+
+This will create a console oriented rootfs that is mounted read-only and
+can be used to check all hardware components of the Ka-Ro modules and
+baseboards.
+
+A BSP with X server and GUI can be configured and built using:
+
+[source,console]
+MACHINE=imx6q-tx6-emmc source ./setup-environment build-imx6q-tx6-emmc
+bitbake karo-image-x11
+
+
+'MACHINE' in the above examples can be any one of:
+
+[source,console]
+imx6q-tx6-nand	       		# for TX6Q-1030, TX6Q-1130
+imx6q-tx6-emmc			# for TX6Q-1020, TX6Q-1036
+imx6dl-tx6-nand			# for TX6U-8030/8130, TX6S-8034/8134
+imx6dl-tx6-emmc			# for TX6S-8035/8135
+imx6qp-tx6-emmc			# for TX6Q-8037/8137
+imx6ul-tx6-nand			# for TXUL-5010
+imx6ul-tx6-emmc			# for TXUL-5011/5012
+imx6ull-tx6-emmc		# for TXUL-8013
+
+=== Building U-Boot
+
+Building the U-Boot boot loader currently requires a different
+tool-chain and therefore a different basic configuration:
+
+[source,console]
+MACHINE=tx6q-1030 source ./setup-environment build-tx6q-1030
+bitbake u-boot
+
+The following 'MACHINE' configurations are available to build U-Boot:
+
+[source,console]
+tx6q-1030
+tx6q-1036
+tx6q-1130
+tx6q-8037
+tx6q-8137
+tx6s-8034
+tx6s-8035
+tx6s-8134
+tx6s-8135
+tx6u-8030
+tx6u-8033
+tx6u-8130
+tx6u-8133
+txul-5010
+txul-5011
+txul-8013
+
 
 You can use any directory to host your build.
 
-The source code is checked out at `karo-bsp/sources`.
+The source code is checked out at `sources` within your chosen
+directory (here 'karo-bsp').
 
 == Contributing
 
 Ka-Ro has no mailing list to contribute to and patches specific to the Ka-Ro
-flavour of this FSL Community BSP will in general not be accepted by the
-FSL Community BSP.
-
-
-Therefore it applies that:
-
-To contribute to this layer you should send the patches for review to the
-maintainer of this BSP, i.e. Ka-Ro. A list of these maintainers can be found
-on the respective site.
+should be sent for review to <yocto-devel@karo-electronics.de>.
 
 === Creating Patches
 
