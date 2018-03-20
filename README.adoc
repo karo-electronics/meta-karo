@@ -36,7 +36,7 @@ baseboards.
 A BSP with X server and GUI can be configured and built using:
 
 [source,console]
-MACHINE=imx6q-tx6-emmc source ./setup-environment build-imx6q-tx6-emmc
+MACHINE=imx6q-tx6-emmc DISTRO=karo-x11 source ./setup-environment build-imx6q-tx6-emmc
 bitbake karo-image-x11
 
 
