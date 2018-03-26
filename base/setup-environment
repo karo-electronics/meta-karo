@@ -22,6 +22,11 @@
 CWD=`pwd`
 PROGNAME=setup-environment
 
+if [ -z "$BASH_VERSION" ];then
+    echo "This script requires /bin/sh to be linked to /bin/bash" >&2
+    return 1
+fi
+
 usage()
 {
     echo -e "\nUsage: source $PROGNAME <build-dir>
