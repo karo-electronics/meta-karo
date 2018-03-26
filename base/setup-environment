@@ -35,7 +35,8 @@ usage()
 If undefined, this script will set \$MACHINE to 'imx6q-tx6-emmc'.
 "
 
-    shopt -s nullglob
+    shopt -q nullglob && nullglob=false || nullglob=true
+    $nullglob && shopt -s nullglob
     for s in sources/*/conf/machine/*.conf;do
         echo -e "
 Supported machines: `echo; ls sources/*/conf/machine/*.conf | \
@@ -47,6 +48,7 @@ sed 's/^.*= "/\t/;s/"//'`
 To build for a machine listed above, run this script as:
 DISTRO=<distro> MACHINE=<machine> source $PROGNAME <build-dir>
 "
+        $nullglob && shopt -u nullglob
         return
     done
 	cat << EOF
@@ -55,6 +57,7 @@ Make sure, to set up your yocto source directory with:
     repo init -u git@github.com:karo-electronics/karo-manifest -b master
     repo sync
 EOF
+    $nullglob && shopt -u nullglob
 }
 
 clean_up()
@@ -163,6 +166,8 @@ fi
 
 # Ensure all files in sources/base are kept in sync with project root
 updated=
+shopt -q nullglob && nullglob=false || nullglob=true
+$nullglob && shopt -s nullglob
 for f in "$CWD/sources/meta-karo/base/"*; do
     file="$(basename $f)"
     if [ "$file" = "conf" ] || echo "$file" | grep -q '~$'; then
@@ -175,6 +180,7 @@ for f in "$CWD/sources/meta-karo/base/"*; do
         cp "$f" "$file"
     fi
 done
+$nullglob && shopt -u nullglob
 if [ "$updated" = "true" ]; then
     echo "The project root content has been updated. Please run '$PROGNAME' again."
     return
