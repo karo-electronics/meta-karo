@@ -16,7 +16,7 @@ Download the BSP source:
 PATH=${PATH}:~/bin
 mkdir karo-bsp
 cd karo-bsp
-repo init -u https://github.com/karo-electronics/karo-manifest -b rocko
+repo init -u https://github.com/karo-electronics/karo-bsp -b rocko
 repo sync
 
 At the end of the commands you have all metadata you need to start work with.
