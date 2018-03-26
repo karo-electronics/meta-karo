@@ -158,16 +158,16 @@ fi
 
 # Ensure all files in sources/base are kept in sync with project root
 updated=
-for f in $CWD/sources/meta-karo/base/*; do
+for f in "$CWD/sources/meta-karo/base/"*; do
     file="$(basename $f)"
-    if [ "$file" = "conf" ] || echo $file | grep -q '~$'; then
+    if [ "$file" = "conf" ] || echo "$file" | grep -q '~$'; then
         continue
     fi
 
     if ! cmp -s "$file" "$f"; then
         updated="true"
-        [ -e $file ] && chmod u+w $file
-        cp $f $file
+        [ -e "$file" ] && chmod u+w "$file"
+        cp "$f" "$file"
     fi
 done
 if [ "$updated" = "true" ]; then
