@@ -165,7 +165,7 @@ if [ -e $PWD/sources/oe-core ]; then
 fi
 
 # Ensure all files in sources/base are kept in sync with project root
-updated=
+updated=false
 shopt -q nullglob && nullglob=false || nullglob=true
 $nullglob && shopt -s nullglob
 for f in "$CWD/sources/meta-karo/base/"*; do
@@ -175,13 +175,13 @@ for f in "$CWD/sources/meta-karo/base/"*; do
     fi
 
     if ! cmp -s "$file" "$f"; then
-        updated="true"
+        updated=true
         [ -e "$file" ] && chmod u+w "$file"
         cp "$f" "$file"
     fi
 done
 $nullglob && shopt -u nullglob
-if [ "$updated" = "true" ]; then
+if $updated; then
     echo "The project root content has been updated. Please run '$PROGNAME' again."
     return
 fi
