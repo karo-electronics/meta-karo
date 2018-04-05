@@ -23,7 +23,7 @@ CWD=`pwd`
 PROGNAME=setup-environment
 
 if [ -z "$BASH_VERSION" ];then
-    echo "This script requires /bin/sh to be linked to /bin/bash" >&2
+    echo "This script must to be run from bash" >&2
     return 1
 fi
 
