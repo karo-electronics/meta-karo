@@ -1,18 +1,22 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 SRC_URI_append = " \
-	   file://bootmisc.sh \
-	   file://initvar.sh \
-	   file://umountroot \
-	   file://vars.sh \
+               file://bootmisc.sh \
+               file://initvar.sh \
+               file://umountroot \
+               file://vars.sh \
 "
 
 FILES_${PN} += "/lib/init/vars.sh"
 CONFFILES_${PN} += "${sysconfdir}/init.d/umountroot"
 
 rmfiles = " \
-        init.d/{populate-volatile.sh,read-only-rootfs-hook.sh,save-rtc.sh} \
-	rc*.d/*{populate-volatile.sh,read-only-rootfs-hook.sh,save-rtc.sh} \
-	default/volatiles \
+        init.d/populate-volatile.sh \
+        init.d/read-only-rootfs-hook.sh \
+        init.d/save-rtc.sh \
+        rc*.d/*populate-volatile.sh \
+        rc*.d/*read-only-rootfs-hook.sh \
+        rc*.d/*save-rtc.sh \
+        default/volatiles \
 "
 
 do_install_append () {

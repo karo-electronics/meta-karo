@@ -22,36 +22,59 @@ KERNEL_IMAGETYPE = "uImage"
 
 KERNEL_DEVICETREE_imx6dl-tx6-emmc ?= " \
                                   imx6dl-tx6dl-comtft.dtb \
-                                  imx6dl-tx6s-8{0,1}35{,-mb7}.dtb \
-                                  imx6dl-tx6u-8{0,1}33{,-mb7}.dtb \
+                                  imx6dl-tx6s-8035.dtb \
+                                  imx6dl-tx6s-8035-mb7.dtb \
+                                  imx6dl-tx6s-8135.dtb \
+                                  imx6dl-tx6s-8135-mb7.dtb \
+                                  imx6dl-tx6u-8033.dtb \
+                                  imx6dl-tx6u-8033-mb7.dtb \
+                                  imx6dl-tx6u-8133.dtb \
+                                  imx6dl-tx6u-8133-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6dl-tx6-nand ?= " \
-                                  imx6dl-tx6s-8{0,1}34{,-mb7}.dtb \
-                                  imx6dl-tx6u-8{0,1}1x.dtb \
-                                  imx6dl-tx6u-8{0,1}xx-mb7.dtb \
+                                  imx6dl-tx6s-8034.dtb \
+                                  imx6dl-tx6s-8134-mb7.dtb \
+                                  imx6dl-tx6s-8034.dtb \
+                                  imx6dl-tx6s-8134-mb7.dtb \
+                                  imx6dl-tx6u-801x.dtb \
+                                  imx6dl-tx6u-811x.dtb \
+                                  imx6dl-tx6u-80xx-mb7.dtb \
+                                  imx6dl-tx6u-81xx-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6q-tx6-emmc ?= " \
-                                 imx6q-tx6q-1020{,-comtft,-mb7}.dtb \
-                                 imx6q-tx6q-1036{,-mb7}.dtb \
+                                 imx6q-tx6q-1020.dtb \
+                                 imx6q-tx6q-1020-comtft.dtb \
+                                 imx6q-tx6q-1020-mb7.dtb \
+                                 imx6q-tx6q-1036.dtb \
+                                 imx6q-tx6q-1036-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6q-tx6-nand ?= " \
-                                 imx6q-tx6q-1{0,1}10.dtb \
+                                 imx6q-tx6q-1010.dtb \
+                                 imx6q-tx6q-1110.dtb \
                                  imx6q-tx6q-1010-comtft.dtb \
-                                 imx6q-tx6q-1{0,1}x0-mb7.dtb \
+                                 imx6q-tx6q-10x0-mb7.dtb \
+                                 imx6q-tx6q-11x0-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6qp-tx6-emmc ?= " \
-                                  imx6qp-tx6qp-8{0,1}37{,-mb7}.dtb \
+                                  imx6qp-tx6qp-8037.dtb \
+                                  imx6qp-tx6qp-8137-mb7.dtb \
+                                  imx6qp-tx6qp-8037.dtb \
+                                  imx6qp-tx6qp-8137-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6ul-tx6-emmc ?= " \
                                   imx6ul-tx6ul-0011.dtb \
-                                  imx6ul-txul-5011-{mainboard,mb7}.dtb \
+                                  imx6ul-txul-5011-mainboard.dtb \
+                                  imx6ul-txul-5011-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6ul-tx6-nand ?= " \
                                   imx6ul-tx6ul-0010.dtb \
-                                  imx6ul-txul-5010-{mainboard,mb7}.dtb \
+                                  imx6ul-txul-5010-mainboard.dtb \
+                                  imx6ul-txul-5010-mb7.dtb \
 "
 KERNEL_DEVICETREE_imx6ull-tx6-emmc ?= " \
-                                   imx6ull-txul-8013{,-mb7,-mainboard}.dtb \
+                                   imx6ull-txul-8013.dtb \
+                                   imx6ull-txul-8013-mainboard.dtb \
+                                   imx6ull-txul-8013-mb7.dtb \
 "
 
 COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*|imx6.*-tx.*)"
