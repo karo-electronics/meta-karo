@@ -163,6 +163,7 @@ OEROOT=$PWD/sources/poky
 if [ -e $PWD/sources/oe-core ]; then
     OEROOT=$PWD/sources/oe-core
 fi
+TEMPLATECONF=${TEMPLATECONF:-$PWD/sources/meta-karo/conf}
 
 # Ensure all files in sources/base are kept in sync with project root
 updated=false
