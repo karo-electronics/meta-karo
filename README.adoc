@@ -50,7 +50,7 @@ imx6dl-tx6-emmc			# for TX6S-8035/8135
 imx6qp-tx6-emmc			# for TX6Q-8037/8137
 imx6ul-tx6-nand			# for TXUL-5010
 imx6ul-tx6-emmc			# for TXUL-5011/5012
-imx6ull-tx6-emmc		# for TXUL-8013
+imx6ull-txul-emmc		# for TXUL-8013
 
 === Building U-Boot
 

@@ -71,7 +71,7 @@ KERNEL_DEVICETREE_imx6ul-tx6-nand ?= " \
                                   imx6ul-txul-5010-mainboard.dtb \
                                   imx6ul-txul-5010-mb7.dtb \
 "
-KERNEL_DEVICETREE_imx6ull-tx6-emmc ?= " \
+KERNEL_DEVICETREE_imx6ull-txul-emmc ?= " \
                                    imx6ull-txul-8013.dtb \
                                    imx6ull-txul-8013-mainboard.dtb \
                                    imx6ull-txul-8013-mb7.dtb \
