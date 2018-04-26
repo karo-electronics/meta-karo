@@ -21,9 +21,9 @@ repo sync
 
 At the end of the commands you have all metadata you need to start work with.
 
-=== Building Linux Kernel and rootfs
+=== Building Linux Kernel and rootfs (for U-Boot see below!)
 
-To start a simple image build:
+To start a simple Linux kernel and rootfs image build:
 
 [source,console]
 MACHINE=imx6q-tx6-nand source ./setup-environment build-imx6q-tx6-nand
@@ -43,14 +43,14 @@ bitbake karo-image-x11
 'MACHINE' in the above examples can be any one of:
 
 [source,console]
-imx6q-tx6-nand	       		# for TX6Q-1030, TX6Q-1130
-imx6q-tx6-emmc			# for TX6Q-1020, TX6Q-1036
-imx6dl-tx6-nand			# for TX6U-8030/8130, TX6S-8034/8134
-imx6dl-tx6-emmc			# for TX6S-8035/8135
-imx6qp-tx6-emmc			# for TX6Q-8037/8137
-imx6ul-tx6-nand			# for TXUL-5010
-imx6ul-tx6-emmc			# for TXUL-5011/5012
-imx6ull-txul-emmc		# for TXUL-8013
+imx6q-tx6-nand                  # for TX6Q-1030, TX6Q-1130
+imx6q-tx6-emmc                  # for TX6Q-1020, TX6Q-1036
+imx6dl-tx6-nand                 # for TX6U-8030/8130, TX6S-8034/8134
+imx6dl-tx6-emmc                 # for TX6S-8035/8135
+imx6qp-tx6-emmc                 # for TX6Q-8037/8137
+imx6ul-tx6-nand                 # for TXUL-5010
+imx6ul-tx6-emmc                 # for TXUL-5011/5012
+imx6ull-txul-emmc               # for TXUL-8013
 
 === Building U-Boot
 
