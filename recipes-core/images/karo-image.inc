@@ -46,17 +46,3 @@ RDEPENDS_append_karo-x11 = " libdrm-etnaviv"
 PREFERRED_PROVIDER_fdisk = "util-linux"
 
 IMAGE_ROOTFS_SIZE ?= "32768"
-
-#python extend_recipe_sysroot_append() {
-#    if d.getVar('UBOOT_MACHINE') != None:
-#        raise_sanity_error("build directory has been configured for u-boot build", d)
-#}
-
-python karo_check_distro () {
-    if d.getVar('UBOOT_MACHINE') != None and d.getVar('IMAGE_BASENAME') != 'u-boot-karo':
-        raise_sanity_error("cannot build %s in build dir that has been configured for 'u-boot' build only" % d.getVar('IMAGE_BASENAME'), d)
-
-    elif d.getVar('IMAGE_BASENAME') == 'karo-image-x11' and d.getVar('DISTRO') != 'karo-x11':
-        raise_sanity_error("cannot build '%s' with DISTRO '%s'" % \
-           (d.getVar('IMAGE_BASENAME'), d.getVar('DISTRO')), d)
-}
