@@ -1,2 +1,3 @@
 #DISTRO = "karo-base"
 #VIRTUAL-RUNTIME_dev_manager = "udev"
+DISTRO_FEATURES_append = " wifi"

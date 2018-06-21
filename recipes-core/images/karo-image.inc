@@ -40,6 +40,7 @@ IMAGE_INSTALL = "\
 "
 IMAGE_INSTALL_append_karo-base = " udev"
 IMAGE_INSTALL_append_karo-x11 = " twm udev xterm"
+IMAGE_INSTALL_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
 
 RDEPENDS_append_karo-x11 = " libdrm-etnaviv"
 

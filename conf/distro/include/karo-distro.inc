@@ -8,6 +8,7 @@ VIRTUAL-RUNTIME_init_manager = "sysvinit"
 # We only want to build systemd free images!
 DISTRO_FEATURES_remove = "systemd"
 DISTRO_FEATURES_BACKFILL_CONSIDERED_append = " systemd"
+DISTRO_FEATURES_DEFAULT_remove = "wifi"
 
 DISTRO_FEATURES += " \
                 alternatives-symlinks-relative \
@@ -15,5 +16,6 @@ DISTRO_FEATURES += " \
                 ldconfig \
                 pam \
                 telnet-login \
+                ${@bb.utils.contains("TXBASE","evalkit", \
+                   bb.utils.contains("TXNVM","emmc","wifi","",d),"",d)} \
 "
-
