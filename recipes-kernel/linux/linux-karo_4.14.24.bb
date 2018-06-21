@@ -17,6 +17,7 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://txul-phy-reset.patch \
            file://fec-enet-reset.patch \
            file://busformat-override.patch \
+           file://pixclk-polarity-override.patch \
 "
 
 LOCALVERSION = "-stable"
