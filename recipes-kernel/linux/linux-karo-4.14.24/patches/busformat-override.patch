@@ -1,0 +1,100 @@
+commit 09dd2461deba25da409a2c32b23c96ff59f405c3
+Author: Lothar Waßmann <LW@KARO-electronics.de>
+Date:   Thu Sep 14 11:54:43 2017 +0200
+
+    drm/panel: simple: make it possible to override LCD bus format
+    
+    The baseboards for the Ka-Ro electronics series of i.MX modules have
+    their display ports wired to the topmost bits of the R,G,B bit
+    lanes. Thus no matter what LCD bus width (18 or 24bit) a module
+    provides, the LCD port can be used without shuffling bit lanes.
+    
+    Add a function to handle certain quirks of the LCD interface to the
+    panel driver to be able to override the bus format specified in a
+    panel's display_mode.
+
+diff --git a/Documentation/devicetree/bindings/display/panel/simple-panel.txt b/Documentation/devicetree/bindings/display/panel/simple-panel.txt
+index 1341bbf..e2308c3 100644
+--- a/Documentation/devicetree/bindings/display/panel/simple-panel.txt
++++ b/Documentation/devicetree/bindings/display/panel/simple-panel.txt
+@@ -7,6 +7,8 @@ Optional properties:
+ - ddc-i2c-bus: phandle of an I2C controller used for DDC EDID probing
+ - enable-gpios: GPIO pin to enable or disable the panel
+ - backlight: phandle of the backlight device attached to the panel
++- bus-format-override: override the bus_format setting of the panel's
++  display_mode settings
+ 
+ Example:
+ 
+diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
+index fde9c41..f356a7b 100644
+--- a/drivers/gpu/drm/panel/panel-simple.c
++++ b/drivers/gpu/drm/panel/panel-simple.c
+@@ -87,6 +87,8 @@ struct panel_simple {
+ 	struct i2c_adapter *ddc;
+ 
+ 	struct gpio_desc *enable_gpio;
++
++	u32 bus_fmt_override;
+ };
+ 
+ static inline struct panel_simple *to_panel_simple(struct drm_panel *panel)
+@@ -151,7 +153,11 @@ static int panel_simple_get_fixed_modes(
+ 	connector->display_info.bpc = panel->desc->bpc;
+ 	connector->display_info.width_mm = panel->desc->size.width;
+ 	connector->display_info.height_mm = panel->desc->size.height;
+-	if (panel->desc->bus_format)
++
++	if (panel->bus_fmt_override)
++		drm_display_info_set_bus_formats(&connector->display_info,
++						 &panel->bus_fmt_override, 1);
++	else if (panel->desc->bus_format)
+ 		drm_display_info_set_bus_formats(&connector->display_info,
+ 						 &panel->desc->bus_format, 1);
+ 	connector->display_info.bus_flags = panel->desc->bus_flags;
+@@ -284,6 +290,34 @@ static int panel_simple_get_timings(stru
+ 	return p->desc->num_timings;
+ }
+ 
++static inline int panel_simple_check_quirks(struct device *dev,
++					    struct panel_simple *p)
++{
++	const char *bus_fmt;
++
++	if (of_property_read_string(dev->of_node, "bus-format-override",
++				    &bus_fmt) == 0) {
++		if (strcmp(bus_fmt, "rgb24") == 0)
++			p->bus_fmt_override = MEDIA_BUS_FMT_RGB888_1X24;
++		else if (strcmp(bus_fmt, "rgb666") == 0)
++			p->bus_fmt_override = MEDIA_BUS_FMT_RGB666_1X18;
++		else if (strcmp(bus_fmt, "rgb565") == 0)
++			p->bus_fmt_override = MEDIA_BUS_FMT_RGB565_1X16;
++		else if (strcmp(bus_fmt, "spwg-18") == 0)
++			p->bus_fmt_override = MEDIA_BUS_FMT_RGB666_1X7X3_SPWG;
++		else if (strcmp(bus_fmt, "spwg-24") == 0)
++			p->bus_fmt_override = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG;
++		else if (strcmp(bus_fmt, "jeida-24") == 0)
++			p->bus_fmt_override = MEDIA_BUS_FMT_RGB888_1X7X4_JEIDA;
++		else
++			dev_err(dev,
++				"Unsupported bus-format-override value: '%s'\n",
++				bus_fmt);
++		return p->bus_fmt_override ? 0 : -EINVAL;
++	}
++	return 0;
++}
++
+ static const struct drm_panel_funcs panel_simple_funcs = {
+ 	.disable = panel_simple_disable,
+ 	.unprepare = panel_simple_unprepare,
+@@ -339,6 +373,10 @@ static int panel_simple_probe(struct dev
+ 		}
+ 	}
+ 
++	err = panel_simple_check_quirks(dev, panel);
++	if (err)
++		goto free_ddc;
++
+ 	drm_panel_init(&panel->base);
+ 	panel->base.dev = dev;
+ 	panel->base.funcs = &panel_simple_funcs;
