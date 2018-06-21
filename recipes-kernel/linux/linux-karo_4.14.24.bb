@@ -44,7 +44,6 @@ KERNEL_DEVICETREE_imx6dl-tx6-nand ?= " \
 KERNEL_DEVICETREE_imx6q-tx6-emmc ?= " \
                                  imx6q-tx6q-1020.dtb \
                                  imx6q-tx6q-1020-comtft.dtb \
-                                 imx6q-tx6q-1020-mb7.dtb \
                                  imx6q-tx6q-1036.dtb \
                                  imx6q-tx6q-1036-mb7.dtb \
 "
