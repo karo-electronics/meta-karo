@@ -10,10 +10,10 @@ DISTRO_FEATURES_remove = "systemd"
 DISTRO_FEATURES_BACKFILL_CONSIDERED_append = " systemd"
 
 DISTRO_FEATURES += " \
+                alternatives-symlinks-relative \
                 dhcpcd \
                 ldconfig \
                 pam \
                 telnet-login \
-		alternatives-symlinks-relative \
 "
 

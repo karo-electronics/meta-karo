@@ -34,11 +34,6 @@ FILES_${PN} += "/run/utmp /var/log/utmp"
 inherit relative_symlinks
 
 do_install_append () {
-    echo "IMAGE_TYPE='${@ d.getVar('IMAGE_TYPE')}'" >&2
-    echo "DISTRO_FEATURES='${@ d.getVar('DISTRO_FEATURES')}'" >&2
-    echo "IMAGE_FEATURES='${@ d.getVar('IMAGE_FEATURES')}'" >&2
-    echo "IMAGE_INSTALL='${@ d.getVar('IMAGE_INSTALL')}'" >&2
-    echo "VIRTUAL-RUNTIME_dev_manager='${@ d.getVar('VIRTUAL-RUNTIME_dev_manager')}'" >&2
     if ${@ bb.utils.contains('VIRTUAL-RUNTIME_dev_manager','busybox-mdev','true','false',d)};then
         echo "Using busybox-mdev as device manager"
     elif ${@ bb.utils.contains('VIRTUAL-RUNTIME_dev_manager','udev','true','false',d)};then
