@@ -15,6 +15,7 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://0002-karo-dtbs.patch \
            file://imx6ull-bugfix.patch \
            file://txul-phy-reset.patch \
+           file://fec-enet-reset.patch \
 "
 
 LOCALVERSION = "-stable"

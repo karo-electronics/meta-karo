@@ -1,0 +1,198 @@
+commit fac8dc6a300ced21494cba76af18cb4197c699c6
+Author: Lothar Waßmann <LW@KARO-electronics.de>
+Date:   Tue Oct 10 14:05:36 2017 +0200
+
+    net: fec: reset PHY whenever enet out clock has been re-enabled
+
+diff --git a/drivers/net/ethernet/freescale/fec.h b/drivers/net/ethernet/freescale/fec.h
+index 38c7b21..4c2de04 100644
+--- a/drivers/net/ethernet/freescale/fec.h
++++ b/drivers/net/ethernet/freescale/fec.h
+@@ -524,6 +524,11 @@ struct fec_enet_private {
+ 
+ 	int	dev_id;
+ 
++	int	reset_gpio;
++	int	phy_reset_duration;
++	int	phy_post_delay;
++	int	reset_active_high;
++
+ 	/* Phylib and MDIO interface */
+ 	struct	mii_bus *mii_bus;
+ 	int	mii_timeout;
+diff --git a/drivers/net/ethernet/freescale/fec_main.c b/drivers/net/ethernet/freescale/fec_main.c
+index 311539c..26d87e3 100644
+--- a/drivers/net/ethernet/freescale/fec_main.c
++++ b/drivers/net/ethernet/freescale/fec_main.c
+@@ -1843,6 +1843,8 @@ static int fec_enet_mdio_write(struct mii_bus *bus, int mii_id, int regnum,
+ 	return ret;
+ }
+ 
++static void fec_reset_phy(struct fec_enet_private *fep);
++
+ static int fec_enet_clk_enable(struct net_device *ndev, bool enable)
+ {
+ 	struct fec_enet_private *fep = netdev_priv(ndev);
+@@ -1853,9 +1855,13 @@ static int fec_enet_clk_enable(struct net_device *ndev, bool enable)
+ 		if (ret)
+ 			return ret;
+ 
+-		ret = clk_prepare_enable(fep->clk_enet_out);
+-		if (ret)
+-			goto failed_clk_enet_out;
++		if (fep->clk_enet_out) {
++			ret = clk_prepare_enable(fep->clk_enet_out);
++			if (ret)
++				goto failed_clk_enet_out;
++
++			fec_reset_phy(fep);
++		}
+ 
+ 		if (fep->clk_ptp) {
+ 			mutex_lock(&fep->ptp_clk_mutex);
+@@ -3222,67 +3228,90 @@ static int fec_enet_init(struct net_device *ndev)
+ }
+ 
+ #ifdef CONFIG_OF
+-static int fec_reset_phy(struct platform_device *pdev)
++static void fec_reset_phy(struct fec_enet_private *fep)
+ {
+-	int err, phy_reset;
+-	bool active_high = false;
+-	int msec = 1, phy_post_delay = 0;
+-	struct device_node *np = pdev->dev.of_node;
++	if (!gpio_is_valid(fep->reset_gpio))
++		return;
+ 
+-	if (!np)
+-		return 0;
++	gpio_set_value_cansleep(fep->reset_gpio, fep->reset_active_high);
+ 
+-	err = of_property_read_u32(np, "phy-reset-duration", &msec);
+-	/* A sane reset duration should not be longer than 1s */
+-	if (!err && msec > 1000)
+-		msec = 1;
++	if (fep->phy_reset_duration > 20)
++		msleep(fep->phy_reset_duration);
++	else
++		usleep_range(fep->phy_reset_duration * 1000,
++			     fep->phy_reset_duration * 1000 + 1000);
+ 
+-	phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
+-	if (phy_reset == -EPROBE_DEFER)
+-		return phy_reset;
+-	else if (!gpio_is_valid(phy_reset))
+-		return 0;
++	gpio_set_value_cansleep(fep->reset_gpio, !fep->reset_active_high);
+ 
+-	err = of_property_read_u32(np, "phy-reset-post-delay", &phy_post_delay);
+-	/* valid reset duration should be less than 1s */
+-	if (!err && phy_post_delay > 1000)
+-		return -EINVAL;
++	if (!fep->phy_post_delay)
++		return;
++	if (fep->phy_post_delay > 20)
++		msleep(fep->phy_post_delay);
++	else
++		usleep_range(fep->phy_post_delay * 1000,
++			     fep->phy_post_delay * 1000 + 1000);
++}
++
++static int fec_get_reset_gpio(struct platform_device *pdev)
++{
++	int err;
++	struct device_node *np = pdev->dev.of_node;
++	struct net_device *ndev = platform_get_drvdata(pdev);
++	struct fec_enet_private *fep = netdev_priv(ndev);
+ 
+-	active_high = of_property_read_bool(np, "phy-reset-active-high");
++	/* Most DT files do not specify the correct polarity
++	 * of the phy-reset GPIO.
++	 * So use this special property to signal the actual
++	 * signal polarity.
++	 */
++	fep->reset_gpio = of_get_named_gpio(np, "phy-reset-gpios", 0);
++	if (fep->reset_gpio == -EPROBE_DEFER)
++		return -EPROBE_DEFER;
++	if (!gpio_is_valid(fep->reset_gpio))
++		return 0;
++
++	fep->reset_active_high = of_property_read_bool(np,
++						       "phy-reset-active-high");
+ 
+-	err = devm_gpio_request_one(&pdev->dev, phy_reset,
+-			active_high ? GPIOF_OUT_INIT_HIGH : GPIOF_OUT_INIT_LOW,
+-			"phy-reset");
++	err = devm_gpio_request_one(&pdev->dev, fep->reset_gpio,
++				    fep->reset_active_high ?
++				    GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH,
++				    "phy-reset");
+ 	if (err) {
+ 		dev_err(&pdev->dev, "failed to get phy-reset-gpios: %d\n", err);
+ 		return err;
+ 	}
+ 
+-	if (msec > 20)
+-		msleep(msec);
+-	else
+-		usleep_range(msec * 1000, msec * 1000 + 1000);
+-
+-	gpio_set_value_cansleep(phy_reset, !active_high);
+-
+-	if (!phy_post_delay)
+-		return 0;
++	err = of_property_read_u32(np, "phy-reset-duration",
++				   &fep->phy_reset_duration);
++	/* A sane reset duration should not be longer than 1s */
++	if (err || fep->phy_reset_duration > 1000)
++		fep->phy_reset_duration = 1;
+ 
+-	if (phy_post_delay > 20)
+-		msleep(phy_post_delay);
+-	else
+-		usleep_range(phy_post_delay * 1000,
+-			     phy_post_delay * 1000 + 1000);
++	err = of_property_read_u32(np, "phy-reset-post-delay",
++				   &fep->phy_post_delay);
++	/* valid post reset delay should be less than 1s */
++	if (err)
++		fep->phy_post_delay = 0;
++	else if (fep->phy_post_delay > 1000)
++		return -EINVAL;
+ 
+ 	return 0;
+ }
+ #else /* CONFIG_OF */
+-static int fec_reset_phy(struct platform_device *pdev)
++/* In case of platform probe, the reset has been done
++ * by machine code.
++ */
++static inline void fec_reset_phy(struct fec_enet_private *fep)
+ {
+-	/*
+-	 * In case of platform probe, the reset has been done
+-	 * by machine code.
+-	 */
++}
++
++static int fec_get_reset_gpio(struct platform_device *pdev)
++{
++	struct net_device *ndev = platform_get_drvdata(pdev);
++	struct fec_enet_private *fep = netdev_priv(ndev);
++
++	fep->reset_gpio = -EINVAL;
+ 	return 0;
+ }
+ #endif /* CONFIG_OF */
+@@ -3471,9 +3500,10 @@ fec_probe(struct platform_device *pdev)
+ 	pm_runtime_set_active(&pdev->dev);
+ 	pm_runtime_enable(&pdev->dev);
+ 
+-	ret = fec_reset_phy(pdev);
++	ret = fec_get_reset_gpio(pdev);
+ 	if (ret)
+ 		goto failed_reset;
++	fec_reset_phy(fep);
+ 
+ 	if (fep->bufdesc_ex)
+ 		fec_ptp_init(pdev);
