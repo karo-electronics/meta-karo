@@ -1,0 +1,52 @@
+Index: b/csr/os_linux/driver/bh.c
+===================================================================
+--- a/csr/os_linux/driver/bh.c
++++ b/csr/os_linux/driver/bh.c
+@@ -13,6 +13,8 @@
+  *
+  * ---------------------------------------------------------------------------
+  */
++#include <linux/sched/types.h>
++
+ #include "csr_wifi_hip_unifi.h"
+ #include "unifi_priv.h"
+ 
+Index: b/csr/os_linux/driver/netdev.c
+===================================================================
+--- a/csr/os_linux/driver/netdev.c
++++ b/csr/os_linux/driver/netdev.c
+@@ -2357,10 +2357,6 @@
+         netif_rx_ni(skb);
+ #endif
+ #endif
+- 
+-    if (dev != NULL) {
+-        dev->last_rx = jiffies;
+-    }
+ 
+     /* Bump rx stats */
+     priv->interfacePriv[ifTag]->stats.rx_packets++;
+Index: b/csr/os_linux/driver/unifi_sme.c
+===================================================================
+--- a/csr/os_linux/driver/unifi_sme.c
++++ b/csr/os_linux/driver/unifi_sme.c
+@@ -11,6 +11,7 @@
+  *
+  * ***************************************************************************
+  */
++#include <linux/sched/types.h>
+ 
+ #include "unifi_priv.h"
+ #include "csr_wifi_hip_unifi.h"
+Index: b/csr/synergy/framework/3.1/bsp/ports/pclin/inc/csr_framework_ext_types.h
+===================================================================
+--- a/csr/synergy/framework/3.1/bsp/ports/pclin/inc/csr_framework_ext_types.h
++++ b/csr/synergy/framework/3.1/bsp/ports/pclin/inc/csr_framework_ext_types.h
+@@ -13,6 +13,7 @@
+ #include "csr_types.h"
+ 
+ #ifdef __KERNEL__
++#include <linux/wait.h>
+ #include <linux/kthread.h>
+ #include <linux/semaphore.h>
+ #else
