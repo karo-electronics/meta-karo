@@ -19,3 +19,10 @@ DISTRO_FEATURES += " \
                 ${@bb.utils.contains("TXBASE","evalkit", \
                    bb.utils.contains("TXNVM","emmc","wifi","",d),"",d)} \
 "
+
+ROOT_HOME ?= "/root"
+
+VIRTUAL-RUNTIME_base-utils-hwclock = "util-linux-hwclock"
+
+inherit rootfs-postprocess
+ROOTFS_POSTPROCESS_COMMAND_remove = "rootfs_update_timestamp; "

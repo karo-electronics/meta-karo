@@ -70,18 +70,11 @@ MACHINE_FEATURES = " \
                  vfat \
 "
 
-ROOT_HOME ?= "/root"
-
 # Add the ability to specify _imx machines
 MACHINEOVERRIDES =. "imx:"
-
-VIRTUAL-RUNTIME_base-utils-hwclock = "util-linux-hwclock"
 
 # Default baseboard name
 TXBASE_DEFAULT_mx6 ?= "mb7"
 TXBASE_DEFAULT_mx6ul ?= "evalkit"
 
 TXBASE ?= "${TXBASE_DEFAULT}"
-
-inherit rootfs-postprocess
-ROOTFS_POSTPROCESS_COMMAND_remove = "rootfs_update_timestamp; "
