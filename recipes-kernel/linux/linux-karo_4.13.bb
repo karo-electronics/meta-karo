@@ -11,6 +11,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
 SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://defconfig \
+           ${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
            file://0001-patch-for-edt-m12.diff \
            file://imx6qdl-tx6-mb7-sound.patch \
            file://imx6ull-bugfix.patch \
@@ -76,7 +77,25 @@ KERNEL_DEVICETREE_imx6ull-txul-emmc ?= " \
                                    imx6ull-txul-8013-mb7.dtb \
 "
 
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
+
 COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*|imx6.*-tx.*)"
+
+# returns all the elements from the src uri that are .cfg files
+def find_cfgs(d):
+    sources=src_patches(d, True)
+    sources_list=[]
+    for s in sources:
+        if s.endswith('.cfg'):
+            sources_list.append(s)
+
+    return sources_list
+
+do_configure_prepend () {
+    for f in ${@" ".join(find_cfgs(d))};do
+        cat $f >> ${B}/.config
+    done
+}
 
 do_install_append () {
     set -x
