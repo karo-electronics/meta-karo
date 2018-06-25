@@ -8,7 +8,7 @@ INSANE_SKIP_${PN} = "already-stripped"
 
 WF111_VERSION = "5.2.2-r3"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRCREV = "silabs-drv-r3"
 SRC_URI = " \
 	git://github.com/karo-electronics/wf111-driver;branch=${SRCREV};destsuffix=wf111-driver-${WF111_VERSION} \
