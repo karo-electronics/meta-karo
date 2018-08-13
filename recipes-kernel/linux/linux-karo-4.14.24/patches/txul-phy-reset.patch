@@ -1,9 +1,9 @@
-diff --git a/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi b/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
+diff --git a/arch/arm/boot/dts/imx6ul-tx6ul.dtsi b/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
 index 19f9ce2..5810452c 100644
---- a/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
-+++ b/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
-@@ -71,6 +71,7 @@
- 	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_mdio &pinctrl_etnphy1_rst>;
+--- a/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
++++ b/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
+@@ -343,6 +344,7 @@
+ 	pinctrl-0 = <&pinctrl_enet2 &pinctrl_etnphy1_rst>;
  	phy-mode = "rmii";
  	phy-reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
 +	phy-reset-post-delay = <10>;
