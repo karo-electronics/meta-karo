@@ -16,6 +16,7 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://0002-karo-dtbs.patch \
            file://imx6ull-bugfix.patch \
            file://txul-phy-reset.patch \
+           file://txul-enet-sleep.patch \
            file://fec-enet-reset.patch \
            file://busformat-override.patch \
            file://pixclk-polarity-override.patch \

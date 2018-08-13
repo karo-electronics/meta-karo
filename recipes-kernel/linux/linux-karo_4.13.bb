@@ -16,6 +16,7 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://imx6qdl-tx6-mb7-sound.patch \
            file://imx6ull-bugfix.patch \
            file://txul-phy-reset.patch \
+           file://txul-enet-sleep.patch \
 "
 
 LOCALVERSION = "-karo-tx6"
