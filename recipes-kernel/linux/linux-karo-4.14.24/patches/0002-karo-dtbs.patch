@@ -1,7 +1,7 @@
-Index: kernel-source/arch/arm/boot/dts/Makefile
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/Makefile
-+++ kernel-source/arch/arm/boot/dts/Makefile
+diff --git a/arch/arm/boot/dts/Makefile b/arch/arm/boot/dts/Makefile
+index eff87a344566..7231c6777261 100644
+--- a/arch/arm/boot/dts/Makefile
++++ b/arch/arm/boot/dts/Makefile
 @@ -389,10 +389,20 @@ dtb-$(CONFIG_SOC_IMX6Q) += \
  	imx6dl-ts4900.dtb \
  	imx6dl-tx6dl-comtft.dtb \
@@ -62,14 +62,14 @@ Index: kernel-source/arch/arm/boot/dts/Makefile
  dtb-$(CONFIG_SOC_IMX7D) += \
  	imx7d-cl-som-imx7.dtb \
  	imx7d-colibri-eval-v3.dtb \
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts b/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
+index aac42ac465b6..0e75b0a43371 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -168,13 +168,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6dl-comtft.dts
  &reg_can_xcvr {
  	status = "disabled";
  };
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8034-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8034-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6s-8034-mb7.dts
+new file mode 100644
+index 000000000000..cf4bf36b9785
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8034-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8034-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -221,14 +222,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8034-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6S-8034 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8034.dts b/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
+index ff8f7b1c4282..1a12542dc8e0 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2015-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2015-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2015-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -420,13 +421,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8034.dts
 -&reg_lcd0_pwr {
 -	status = "disabled";
 -};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8035-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8035-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6s-8035-mb7.dts
+new file mode 100644
+index 000000000000..efdf167f2e2a
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8035-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8035-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -473,14 +475,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8035-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6S-8035 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8035.dts b/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
+index f988950e9443..e54a1eae6185 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2015-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2015-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2015-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -675,13 +677,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8035.dts
  &usdhc4 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_usdhc4>;
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8134-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8134-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6s-8134-mb7.dts
+new file mode 100644
+index 000000000000..6f28467bb205
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8134-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8134-mb7.dts
 @@ -0,0 +1,47 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -727,13 +730,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8134-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6S-8134 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8134.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8134.dts b/arch/arm/boot/dts/imx6dl-tx6s-8134.dts
+new file mode 100644
+index 000000000000..d16e260f1ab2
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8134.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8134.dts
 @@ -0,0 +1,70 @@
 +/*
-+ * Copyright 2016-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2016-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -802,13 +806,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8134.dts
 +		MX6QDL_PAD_SD3_CMD__GPIO7_IO02		0x170b0 /* SD1 CD */
 +	>;
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8135-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8135-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6s-8135-mb7.dts
+new file mode 100644
+index 000000000000..63b4c41c5b55
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8135-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8135-mb7.dts
 @@ -0,0 +1,47 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -854,13 +859,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8135-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6S-8135 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8135.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6s-8135.dts b/arch/arm/boot/dts/imx6dl-tx6s-8135.dts
+new file mode 100644
+index 000000000000..f6b8ce548f3c
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8135.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6s-8135.dts
 @@ -0,0 +1,86 @@
 +/*
-+ * Copyright 2016-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2016-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -945,14 +951,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6s-8135.dts
 +		>;
 +	};
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-801x.dts b/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
+index d1f1298ec55a..5100b3a8657b 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -1124,13 +1130,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-801x.dts
 -&ipu1_di0_disp0 {
 -	remote-endpoint = <&display0_in>;
  };
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8033-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-8033-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6u-8033-mb7.dts
+new file mode 100644
+index 000000000000..4ac1bc2a47d2
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8033-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-8033-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -1177,14 +1184,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8033-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6U-8033 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-8033.dts b/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
+index 4d3204a56f46..4c635cc14272 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -1374,13 +1381,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8033.dts
  &usdhc4 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_usdhc4>;
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-80xx-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-80xx-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6u-80xx-mb7.dts
+new file mode 100644
+index 000000000000..ad681a8f7c89
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-80xx-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-80xx-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -1427,14 +1435,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-80xx-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6U-8030/-8010/-8012 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-811x.dts b/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
+index 5e0c6bb49f37..21f46713af25 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -1577,13 +1585,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-811x.dts
 -		>;
 -	};
  };
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8133-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-8133-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6u-8133-mb7.dts
+new file mode 100644
+index 000000000000..85fed00e282b
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8133-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-8133-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -1630,13 +1639,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8133-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6U-8133 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8133.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-8133.dts b/arch/arm/boot/dts/imx6dl-tx6u-8133.dts
+new file mode 100644
+index 000000000000..405f5e5e623d
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8133.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-8133.dts
 @@ -0,0 +1,82 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -1717,14 +1727,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-8133.dts
 +		>;
 +	};
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
-+++ kernel-source/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
+diff --git a/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts b/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
+index b9a783f7160e..bc6220123e4e 100644
+--- a/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
++++ b/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2016-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2016-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -1948,14 +1958,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6dl-tx6u-81xx-mb7.dts
 -	};
 +	model = "Ka-Ro electronics TX6U-8130/-8110 Module on MB7 baseboard";
  };
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts b/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
+index 71746edc2ee9..e905ee4757be 100644
+--- a/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -2054,14 +2064,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1010-comtft.dts
  &reg_can_xcvr {
  	status = "disabled";
  };
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1010.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6q-tx6q-1010.dts
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1010.dts
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1010.dts b/arch/arm/boot/dts/imx6q-tx6q-1010.dts
+index f9cd21a41a79..f46348df5b6e 100644
+--- a/arch/arm/boot/dts/imx6q-tx6q-1010.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1010.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -2236,13 +2246,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1010.dts
 +&ipu2 {
 +	status = "disabled";
  };
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1020-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1020-mb7.dts b/arch/arm/boot/dts/imx6q-tx6q-1020-mb7.dts
+new file mode 100644
+index 000000000000..12ac7146b3c3
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1020-mb7.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1020-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -2289,14 +2300,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1020-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6Q-1020 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1020.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6q-tx6q-1020.dts
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1020.dts
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1020.dts b/arch/arm/boot/dts/imx6q-tx6q-1020.dts
+index b49133d25d80..ce34189a7212 100644
+--- a/arch/arm/boot/dts/imx6q-tx6q-1020.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1020.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -2484,13 +2495,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1020.dts
  	no-1-8-v;
  	fsl,wp-controller;
  	status = "okay";
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1036-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1036-mb7.dts b/arch/arm/boot/dts/imx6q-tx6q-1036-mb7.dts
+new file mode 100644
+index 000000000000..985a7808b339
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1036-mb7.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1036-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -2537,14 +2549,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1036-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6Q-1036 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1036.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6q-tx6q-1036.dts
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1036.dts
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1036.dts b/arch/arm/boot/dts/imx6q-tx6q-1036.dts
+index 7c152e32758c..bc3b34818dd2 100644
+--- a/arch/arm/boot/dts/imx6q-tx6q-1036.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1036.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -2738,13 +2750,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1036.dts
  &usdhc4 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_usdhc4>;
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-10x0-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-10x0-mb7.dts b/arch/arm/boot/dts/imx6q-tx6q-10x0-mb7.dts
+new file mode 100644
+index 000000000000..6f48ae70f2fd
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-10x0-mb7.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-10x0-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -2791,14 +2804,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-10x0-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6Q-1010/-1030 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1110.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6q-tx6q-1110.dts
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-1110.dts
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-1110.dts b/arch/arm/boot/dts/imx6q-tx6q-1110.dts
+index 0433e220a931..07cab6f0d79b 100644
+--- a/arch/arm/boot/dts/imx6q-tx6q-1110.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-1110.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -2948,14 +2961,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-1110.dts
 -		>;
 -	};
 -};
-Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
-+++ kernel-source/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
+diff --git a/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts b/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
+index d78b129d01ea..e0e893d299f6 100644
+--- a/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
++++ b/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2016-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2016-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -3187,13 +3200,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6q-tx6q-11x0-mb7.dts
 -		>;
 -	};
  };
-Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6-lcd.dtsi
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qdl-tx6-lcd.dtsi b/arch/arm/boot/dts/imx6qdl-tx6-lcd.dtsi
+new file mode 100644
+index 000000000000..654cdb91000c
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qdl-tx6-lcd.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-tx6-lcd.dtsi
 @@ -0,0 +1,252 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -3444,13 +3458,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6-lcd.dtsi
 +&ipu1_di0_disp0 {
 +	remote-endpoint = <&lcd_in>;
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6-lvds.dtsi
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qdl-tx6-lvds.dtsi b/arch/arm/boot/dts/imx6qdl-tx6-lvds.dtsi
+new file mode 100644
+index 000000000000..76e94931ea16
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qdl-tx6-lvds.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-tx6-lvds.dtsi
 @@ -0,0 +1,286 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -3735,13 +3750,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6-lvds.dtsi
 +&reg_lcd1_pwr {
 +	status = "okay";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi b/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
+new file mode 100644
+index 000000000000..a540c486b4e2
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
 @@ -0,0 +1,105 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -3845,14 +3861,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6-mb7.dtsi
 +&reg_lcd0_pwr {
 +	status = "disabled";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6.dtsi
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6qdl-tx6.dtsi
-+++ kernel-source/arch/arm/boot/dts/imx6qdl-tx6.dtsi
+diff --git a/arch/arm/boot/dts/imx6qdl-tx6.dtsi b/arch/arm/boot/dts/imx6qdl-tx6.dtsi
+index c6bec97fbeaf..9e4c207acda8 100644
+--- a/arch/arm/boot/dts/imx6qdl-tx6.dtsi
++++ b/arch/arm/boot/dts/imx6qdl-tx6.dtsi
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2014-2016 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2014-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2014-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -4277,13 +4293,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qdl-tx6.dtsi
 -	fsl,wp-controller;
 -	status = "okay";
 -};
-Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8037-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qp-tx6qp-8037-mb7.dts b/arch/arm/boot/dts/imx6qp-tx6qp-8037-mb7.dts
+new file mode 100644
+index 000000000000..263b838d3ffa
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8037-mb7.dts
++++ b/arch/arm/boot/dts/imx6qp-tx6qp-8037-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -4330,13 +4347,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8037-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TX6Q-8037 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8037.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qp-tx6qp-8037.dts b/arch/arm/boot/dts/imx6qp-tx6qp-8037.dts
+new file mode 100644
+index 000000000000..3aa6f7d463a7
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8037.dts
++++ b/arch/arm/boot/dts/imx6qp-tx6qp-8037.dts
 @@ -0,0 +1,86 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -4421,13 +4439,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8037.dts
 +		>;
 +	};
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8137-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qp-tx6qp-8137-mb7.dts b/arch/arm/boot/dts/imx6qp-tx6qp-8137-mb7.dts
+new file mode 100644
+index 000000000000..69d85de2afd7
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8137-mb7.dts
++++ b/arch/arm/boot/dts/imx6qp-tx6qp-8137-mb7.dts
 @@ -0,0 +1,57 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -4483,13 +4502,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8137-mb7.dts
 +&sata {
 +	status = "okay";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8137.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6qp-tx6qp-8137.dts b/arch/arm/boot/dts/imx6qp-tx6qp-8137.dts
+new file mode 100644
+index 000000000000..34372e779a7e
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8137.dts
++++ b/arch/arm/boot/dts/imx6qp-tx6qp-8137.dts
 @@ -0,0 +1,90 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -4578,14 +4598,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6qp-tx6qp-8137.dts
 +		>;
 +	};
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
-+++ kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
+diff --git a/arch/arm/boot/dts/imx6ul-tx6ul.dtsi b/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
+index ec745eb3b6a8..2d1a63658347 100644
+--- a/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
++++ b/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
 @@ -1,5 +1,5 @@
  /*
 - * Copyright 2015 Lothar Waßmann <LW@KARO-electronics.de>
-+ * Copyright 2015-2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2015-2018 Lothar Waßmann <LW@KARO-electronics.de>
   *
   * This file is dual-licensed: you can use it either under the terms
   * of the GPL or the X11 license, at your option. Note that this dual
@@ -4670,7 +4690,18 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
  	phy-supply = <&reg_3v3_etn>;
  	phy-handle = <&etnphy0>;
  	status = "okay";
-@@ -357,8 +363,11 @@
+@@ -339,8 +345,9 @@
+ };
+ 
+ &fec2 {
+-	pinctrl-names = "default";
++	pinctrl-names = "default", "sleep";
+ 	pinctrl-0 = <&pinctrl_enet2 &pinctrl_etnphy1_rst>;
++	pinctrl-1 = <&pinctrl_enet2_sleep &pinctrl_etnphy1_rst_sleep>;
+ 	phy-mode = "rmii";
+ 	phy-reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
+ 	phy-supply = <&reg_3v3_etn>;
+@@ -357,8 +364,11 @@
  };
  
  &i2c2 {
@@ -4683,7 +4714,7 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
  	clock-frequency = <400000>;
  	status = "okay";
  
-@@ -420,127 +429,129 @@
+@@ -420,127 +430,129 @@
  &lcdif {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_disp0_1>;
@@ -4925,10 +4956,29 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
  		};
  	};
  };
-@@ -713,6 +724,19 @@
- 		>;
- 	};
- 
+@@ -709,7 +721,34 @@
+ 			MX6UL_PAD_ENET1_TX_EN__ENET1_TX_EN	0x000b0
+ 			MX6UL_PAD_ENET1_TX_DATA0__ENET1_TDATA00	0x000b0
+ 			MX6UL_PAD_ENET1_TX_DATA1__ENET1_TDATA01	0x000b0
+-			MX6UL_PAD_ENET1_TX_CLK__ENET1_REF_CLK1	0x400000b1
++			MX6UL_PAD_ENET1_TX_CLK__ENET1_REF_CLK1	0x40000018
++		>;
++	};
++
++	pinctrl_enet1_mdio: enet1-mdiogrp {
++		fsl,pins = <
++			MX6UL_PAD_GPIO1_IO07__ENET1_MDC		0x0b0b0
++			MX6UL_PAD_GPIO1_IO06__ENET1_MDIO	0x1b0b0
++		>;
++	};
++
++	pinctrl_enet1_mdio_sleep: enet1-mdio-sleepgrp {
++		fsl,pins = <
++			MX6UL_PAD_GPIO1_IO07__GPIO1_IO07	0x038b0
++			MX6UL_PAD_GPIO1_IO06__GPIO1_IO06	0x038b0
++		>;
++	};
++
 +	pinctrl_enet1_sleep: enet1-sleepgrp {
 +		fsl,pins = <
 +			MX6UL_PAD_ENET1_RX_DATA0__GPIO2_IO00	0x038b0
@@ -4939,27 +4989,35 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
 +			MX6UL_PAD_ENET1_TX_DATA0__GPIO2_IO03	0x038b0
 +			MX6UL_PAD_ENET1_TX_DATA1__GPIO2_IO04	0x038b0
 +			MX6UL_PAD_ENET1_TX_CLK__GPIO2_IO06	0x038b0
-+		>;
-+	};
-+
- 	pinctrl_enet2: enet2grp {
- 		fsl,pins = <
- 			MX6UL_PAD_ENET2_RX_DATA0__ENET2_RDATA00	0x000b0
-@@ -733,6 +757,13 @@
  		>;
  	};
  
-+	pinctrl_enet1_mdio_sleep: enet1-mdio-sleepgrp {
-+		fsl,pins = <
-+			MX6UL_PAD_GPIO1_IO07__GPIO1_IO07	0x038b0
-+			MX6UL_PAD_GPIO1_IO06__GPIO1_IO06	0x038b0
-+		>;
-+	};
-+
- 	pinctrl_etnphy_power: etnphy-pwrgrp {
+@@ -722,14 +761,20 @@
+ 			MX6UL_PAD_ENET2_TX_EN__ENET2_TX_EN	0x000b0
+ 			MX6UL_PAD_ENET2_TX_DATA0__ENET2_TDATA00	0x000b0
+ 			MX6UL_PAD_ENET2_TX_DATA1__ENET2_TDATA01	0x000b0
+-			MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2	0x400000b1
++			MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2	0x40000018
+ 		>;
+ 	};
+ 
+-	pinctrl_enet1_mdio: enet1-mdiogrp {
++	pinctrl_enet2_sleep: enet2grp {
  		fsl,pins = <
- 			MX6UL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x0b0b0 /* ETN PHY POWER */
-@@ -751,6 +782,12 @@
+-			MX6UL_PAD_GPIO1_IO07__ENET1_MDC		0x0b0b0
+-			MX6UL_PAD_GPIO1_IO06__ENET1_MDIO	0x1b0b0
++			MX6UL_PAD_ENET2_RX_DATA0__ENET2_RDATA00	0x000b0
++			MX6UL_PAD_ENET2_RX_DATA1__ENET2_RDATA01	0x000b0
++			MX6UL_PAD_ENET2_RX_EN__ENET2_RX_EN	0x000b0
++			MX6UL_PAD_ENET2_RX_ER__ENET2_RX_ER	0x000b0
++			MX6UL_PAD_ENET2_TX_EN__ENET2_TX_EN	0x000b0
++			MX6UL_PAD_ENET2_TX_DATA0__ENET2_TDATA00	0x000b0
++			MX6UL_PAD_ENET2_TX_DATA1__ENET2_TDATA01	0x000b0
++			MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2	0x40000018
+ 		>;
+ 	};
+ 
+@@ -751,6 +796,12 @@
  		>;
  	};
  
@@ -4972,7 +5030,20 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
  	pinctrl_etnphy1_int: etnphy-intgrp-1 {
  		fsl,pins = <
  			MX6UL_PAD_CSI_DATA06__GPIO4_IO27	0x0b0b0 /* ETN PHY INT */
-@@ -817,6 +854,13 @@
+@@ -763,6 +814,12 @@
+ 		>;
+ 	};
+ 
++	pinctrl_etnphy1_rst_sleep: etnphy-rst-sleepgrp-1 {
++		fsl,pins = <
++			MX6UL_PAD_CSI_DATA07__GPIO4_IO28	0x038b0
++		>;
++	};
++
+ 	pinctrl_flexcan1: flexcan1grp {
+ 		fsl,pins = <
+ 			MX6UL_PAD_UART3_CTS_B__FLEXCAN1_TX	0x0b0b0
+@@ -817,6 +874,13 @@
  		>;
  	};
  
@@ -4986,13 +5057,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
  	pinctrl_kpp: kppgrp {
  		fsl,pins = <
  			MX6UL_PAD_ENET2_RX_DATA1__KPP_COL04	0x1b0b0
-Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5010-mainboard.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ul-txul-5010-mainboard.dts b/arch/arm/boot/dts/imx6ul-txul-5010-mainboard.dts
+new file mode 100644
+index 000000000000..178647849472
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ul-txul-5010-mainboard.dts
++++ b/arch/arm/boot/dts/imx6ul-txul-5010-mainboard.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5039,13 +5111,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5010-mainboard.dts
 +/ {
 +	model = "Ka-Ro electronics TXUL-5010/-0010 Module on TXUL Mainboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5010-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ul-txul-5010-mb7.dts b/arch/arm/boot/dts/imx6ul-txul-5010-mb7.dts
+new file mode 100644
+index 000000000000..b1cb871a37e1
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ul-txul-5010-mb7.dts
++++ b/arch/arm/boot/dts/imx6ul-txul-5010-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5092,13 +5165,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5010-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TXUL-5010/-0010 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5011-mainboard.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ul-txul-5011-mainboard.dts b/arch/arm/boot/dts/imx6ul-txul-5011-mainboard.dts
+new file mode 100644
+index 000000000000..6a46af5f12be
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ul-txul-5011-mainboard.dts
++++ b/arch/arm/boot/dts/imx6ul-txul-5011-mainboard.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5145,13 +5219,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5011-mainboard.dts
 +/ {
 +	model = "Ka-Ro electronics TXUL-5011/-0011 Module on TXUL Mainboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5011-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ul-txul-5011-mb7.dts b/arch/arm/boot/dts/imx6ul-txul-5011-mb7.dts
+new file mode 100644
+index 000000000000..9282e3701167
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ul-txul-5011-mb7.dts
++++ b/arch/arm/boot/dts/imx6ul-txul-5011-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5198,279 +5273,106 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-5011-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TXUL-5011/-0011 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
-===================================================================
---- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
-@@ -0,0 +1,261 @@
-+/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
-+ *
-+ * This file is dual-licensed: you can use it either under the terms
-+ * of the GPL or the X11 license, at your option. Note that this dual
-+ * licensing only applies to this file, and not this project as a
-+ * whole.
-+ *
-+ *  a) This file is free software; you can redistribute it and/or
-+ *     modify it under the terms of the GNU General Public License
-+ *     version 2 as published by the Free Software Foundation.
-+ *
-+ *     This file is distributed in the hope that it will be useful,
-+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *     GNU General Public License for more details.
-+ *
-+ * Or, alternatively,
-+ *
-+ *  b) Permission is hereby granted, free of charge, to any person
-+ *     obtaining a copy of this software and associated documentation
-+ *     files (the "Software"), to deal in the Software without
-+ *     restriction, including without limitation the rights to use,
-+ *     copy, modify, merge, publish, distribute, sublicense, and/or
-+ *     sell copies of the Software, and to permit persons to whom the
-+ *     Software is furnished to do so, subject to the following
-+ *     conditions:
-+ *
-+ *     The above copyright notice and this permission notice shall be
-+ *     included in all copies or substantial portions of the Software.
-+ *
-+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-+ *     OTHER DEALINGS IN THE SOFTWARE.
-+ */
+diff --git a/arch/arm/boot/dts/imx6ul-tx6ul-mainboard.dts b/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
+similarity index 91%
+rename from arch/arm/boot/dts/imx6ul-tx6ul-mainboard.dts
+rename to arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
+index 28d055e3f301..09e30e27f171 100644
+--- a/arch/arm/boot/dts/imx6ul-tx6ul-mainboard.dts
++++ b/arch/arm/boot/dts/imx6ul-txul-mainboard.dtsi
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright 2015 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2015-2018 Lothar Waßmann <LW@KARO-electronics.de>
+  *
+  * This file is dual-licensed: you can use it either under the terms
+  * of the GPL or the X11 license, at your option. Note that this dual
+@@ -39,21 +39,13 @@
+  *     OTHER DEALINGS IN THE SOFTWARE.
+  */
+ 
+-/dts-v1/;
+-#include "imx6ul.dtsi"
+-#include "imx6ul-tx6ul.dtsi"
+-
+ / {
+-	model = "Ka-Ro electronics TXUL-0010 Module on TXUL Mainboard";
+-	compatible = "karo,imx6ul-tx6ul", "fsl,imx6ul";
+-
+ 	aliases {
+ 		lcdif_24bit_pins_a = &pinctrl_disp0_3;
+-		mmc0 = &usdhc1;
+-		/delete-property/ mmc1;
+ 		serial2 = &uart3;
+ 		serial4 = &uart5;
+ 	};
 +
-+/ {
-+	aliases {
-+		lcdif_24bit_pins_a = &pinctrl_disp0_3;
-+		serial2 = &uart3;
-+		serial4 = &uart5;
-+	};
-+
-+	/delete-node/ sound;
-+};
-+
-+&can1 {
-+	xceiver-supply = <&reg_3v3>;
-+};
-+
-+&can2 {
-+	xceiver-supply = <&reg_3v3>;
-+};
-+
-+&ds1339 {
-+	status = "disabled";
-+};
-+
-+&fec1 {
-+	pinctrl-0 = <&pinctrl_enet1 &pinctrl_etnphy0_rst>;
-+	/delete-node/ mdio;
-+};
-+
-+&fec2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_mdio &pinctrl_etnphy1_rst>;
-+	phy-mode = "rmii";
-+	phy-reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
-+	phy-supply = <&reg_3v3_etn>;
-+	phy-handle = <&etnphy1>;
-+	status = "okay";
-+
-+	mdio {
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+
-+		etnphy0: ethernet-phy@0 {
-+			compatible = "ethernet-phy-ieee802.3-c22";
-+			reg = <0>;
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&pinctrl_etnphy0_int>;
-+			interrupt-parent = <&gpio5>;
-+			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
-+			status = "okay";
-+		};
-+
-+		etnphy1: ethernet-phy@2 {
-+			compatible = "ethernet-phy-ieee802.3-c22";
-+			reg = <2>;
-+			pinctrl-names = "default";
-+			pinctrl-0 = <&pinctrl_etnphy1_int>;
-+			interrupt-parent = <&gpio4>;
-+			interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
-+			status = "okay";
-+		};
-+	};
-+};
-+
-+&i2c_gpio {
-+	status = "disabled";
-+};
-+
-+&i2c2 {
-+	/delete-node/ codec@0a;
-+	/delete-node/ touchscreen@48;
-+
-+	rtc: mcp7940x@6f {
-+		compatible = "microchip,mcp7940x";
-+		reg = <0x6f>;
-+	};
-+};
-+
-+&kpp {
-+	status = "disabled";
-+};
-+
-+&lcdif {
-+	pinctrl-0 = <&pinctrl_disp0_3>;
-+};
-+
+ 	/delete-node/ sound;
+ };
+ 
+@@ -71,12 +63,15 @@
+ 
+ &fec1 {
+ 	pinctrl-0 = <&pinctrl_enet1 &pinctrl_etnphy0_rst>;
++	pinctrl-1 = <&pinctrl_enet1_sleep &pinctrl_etnphy0_rst_sleep>;
+ 	/delete-node/ mdio;
+ };
+ 
+ &fec2 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_mdio &pinctrl_etnphy1_rst>;
++	pinctrl-1 = <&pinctrl_enet2_sleep &pinctrl_enet2_mdio_sleep
++		     &pinctrl_etnphy1_rst_sleep>;
+ 	phy-mode = "rmii";
+ 	phy-reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
+ 	phy-supply = <&reg_3v3_etn>;
+@@ -94,7 +84,6 @@
+ 			pinctrl-0 = <&pinctrl_etnphy0_int>;
+ 			interrupt-parent = <&gpio5>;
+ 			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+-			interrupts-extended = <&gpio5 5 IRQ_TYPE_EDGE_FALLING>;
+ 			status = "okay";
+ 		};
+ 
+@@ -105,7 +94,6 @@
+ 			pinctrl-0 = <&pinctrl_etnphy1_int>;
+ 			interrupt-parent = <&gpio4>;
+ 			interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
+-			interrupts-extended = <&gpio4 27 IRQ_TYPE_EDGE_FALLING>;
+ 			status = "okay";
+ 		};
+ 	};
+@@ -133,7 +121,7 @@
+ 	pinctrl-0 = <&pinctrl_disp0_3>;
+ };
+ 
+-&reg_usbotg_vbus{
 +&reg_usbotg_vbus {
-+	status = "disabled";
-+};
-+
-+&usdhc1 {
-+	pinctrl-0 = <&pinctrl_usdhc1>;
-+	non-removable;
-+	/delete-property/ cd-gpios;
-+	cap-sdio-irq;
-+};
-+
-+&uart1 {
-+	pinctrl-0 = <&pinctrl_uart1>;
-+	/delete-property/ uart-has-rtscts;
-+};
-+
-+&uart2 {
-+	pinctrl-0 = <&pinctrl_uart2>;
-+	/delete-property/ uart-has-rtscts;
-+	status = "okay";
-+};
-+
-+&uart3 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart3>;
-+	status = "okay";
-+};
-+
-+&uart4 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart4>;
-+	status = "okay";
-+};
-+
-+&uart5 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart5>;
-+	status = "okay";
-+};
-+
-+&uart6 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart6>;
-+	status = "okay";
-+};
-+
-+&uart7 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart7>;
-+	status = "okay";
-+};
-+
-+&uart8 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_uart8>;
-+	status = "disabled"; /* conflicts with LCDIF */
-+};
-+
-+&iomuxc {
-+	hoggrp {
+ 	status = "disabled";
+ };
+ 
+@@ -234,6 +222,13 @@
+ 		>;
+ 	};
+ 
++	pinctrl_enet2_mdio_sleep: enet2-mdio-sleepgrp {
 +		fsl,pins = <
-+			MX6UL_PAD_CSI_DATA01__GPIO4_IO22	0x0b0b0 /* WLAN_RESET */
++			MX6UL_PAD_GPIO1_IO07__GPIO1_IO07	0x038b0
++			MX6UL_PAD_GPIO1_IO06__GPIO1_IO06	0x038b0
 +		>;
 +	};
 +
-+	pinctrl_disp0_3: disp0grp-3 {
-+		fsl,pins = <
-+			MX6UL_PAD_LCD_CLK__LCDIF_CLK		0x10 /* LSCLK */
-+			MX6UL_PAD_LCD_ENABLE__LCDIF_ENABLE	0x10 /* OE_ACD */
-+			MX6UL_PAD_LCD_HSYNC__LCDIF_HSYNC	0x10 /* HSYNC */
-+			MX6UL_PAD_LCD_VSYNC__LCDIF_VSYNC	0x10 /* VSYNC */
-+			MX6UL_PAD_LCD_DATA02__LCDIF_DATA02	0x10
-+			MX6UL_PAD_LCD_DATA03__LCDIF_DATA03	0x10
-+			MX6UL_PAD_LCD_DATA04__LCDIF_DATA04	0x10
-+			MX6UL_PAD_LCD_DATA05__LCDIF_DATA05	0x10
-+			MX6UL_PAD_LCD_DATA06__LCDIF_DATA06	0x10
-+			MX6UL_PAD_LCD_DATA07__LCDIF_DATA07	0x10
-+			/* LCD_DATA08..09 not wired */
-+			MX6UL_PAD_LCD_DATA10__LCDIF_DATA10	0x10
-+			MX6UL_PAD_LCD_DATA11__LCDIF_DATA11	0x10
-+			MX6UL_PAD_LCD_DATA12__LCDIF_DATA12	0x10
-+			MX6UL_PAD_LCD_DATA13__LCDIF_DATA13	0x10
-+			MX6UL_PAD_LCD_DATA14__LCDIF_DATA14	0x10
-+			MX6UL_PAD_LCD_DATA15__LCDIF_DATA15	0x10
-+			/* LCD_DATA16..17 not wired */
-+			MX6UL_PAD_LCD_DATA18__LCDIF_DATA18	0x10
-+			MX6UL_PAD_LCD_DATA19__LCDIF_DATA19	0x10
-+			MX6UL_PAD_LCD_DATA20__LCDIF_DATA20	0x10
-+			MX6UL_PAD_LCD_DATA21__LCDIF_DATA21	0x10
-+			MX6UL_PAD_LCD_DATA22__LCDIF_DATA22	0x10
-+			MX6UL_PAD_LCD_DATA23__LCDIF_DATA23	0x10
-+		>;
-+	};
-+
-+	pinctrl_enet2_mdio: enet2-mdiogrp {
-+		fsl,pins = <
-+			MX6UL_PAD_GPIO1_IO07__ENET2_MDC		0x0b0b0
-+			MX6UL_PAD_GPIO1_IO06__ENET2_MDIO	0x1b0b0
-+		>;
-+	};
-+
-+	pinctrl_uart3: uart3grp {
-+		fsl,pins = <
-+			MX6UL_PAD_UART3_TX_DATA__UART3_DCE_TX	0x0b0b0
-+			MX6UL_PAD_UART3_RX_DATA__UART3_DCE_RX	0x0b0b0
-+		>;
-+	};
-+
-+	pinctrl_uart4: uart4grp {
-+		fsl,pins = <
-+			MX6UL_PAD_UART4_TX_DATA__UART4_DCE_TX	0x0b0b0
-+			MX6UL_PAD_UART4_RX_DATA__UART4_DCE_RX	0x0b0b0
-+		>;
-+	};
-+
-+	pinctrl_uart6: uart6grp {
-+		fsl,pins = <
-+			MX6UL_PAD_CSI_MCLK__UART6_DCE_TX	0x0b0b0
-+			MX6UL_PAD_CSI_PIXCLK__UART6_DCE_RX	0x0b0b0
-+		>;
-+	};
-+
-+	pinctrl_uart7: uart7grp {
-+		fsl,pins = <
-+			MX6UL_PAD_LCD_DATA16__UART7_DCE_TX	0x0b0b0
-+			MX6UL_PAD_LCD_DATA17__UART7_DCE_RX	0x0b0b0
-+		>;
-+	};
-+
-+	pinctrl_uart8: uart8grp {
-+		fsl,pins = <
-+			MX6UL_PAD_LCD_DATA20__UART8_DCE_TX	0x0b0b0
-+			MX6UL_PAD_LCD_DATA21__UART8_DCE_RX	0x0b0b0
-+		>;
-+	};
-+};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-mb7.dtsi
-===================================================================
+ 	pinctrl_uart3: uart3grp {
+ 		fsl,pins = <
+ 			MX6UL_PAD_UART3_TX_DATA__UART3_DCE_TX	0x0b0b0
+diff --git a/arch/arm/boot/dts/imx6ul-txul-mb7.dtsi b/arch/arm/boot/dts/imx6ul-txul-mb7.dtsi
+new file mode 100644
+index 000000000000..f6b8c7e1de5b
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ul-txul-mb7.dtsi
++++ b/arch/arm/boot/dts/imx6ul-txul-mb7.dtsi
 @@ -0,0 +1,74 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5543,13 +5445,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ul-txul-mb7.dtsi
 +	 */
 +	status = "disabled";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ull-txul-8013-mainboard.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ull-txul-8013-mainboard.dts b/arch/arm/boot/dts/imx6ull-txul-8013-mainboard.dts
+new file mode 100644
+index 000000000000..7dfce017d79b
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ull-txul-8013-mainboard.dts
++++ b/arch/arm/boot/dts/imx6ull-txul-8013-mainboard.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5596,13 +5499,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ull-txul-8013-mainboard.dts
 +/ {
 +	model = "Ka-Ro electronics TXUL-8013 Module on TXUL Mainboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ull-txul-8013-mb7.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ull-txul-8013-mb7.dts b/arch/arm/boot/dts/imx6ull-txul-8013-mb7.dts
+new file mode 100644
+index 000000000000..4c5f6ec584e0
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ull-txul-8013-mb7.dts
++++ b/arch/arm/boot/dts/imx6ull-txul-8013-mb7.dts
 @@ -0,0 +1,48 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5649,13 +5553,14 @@ Index: kernel-source/arch/arm/boot/dts/imx6ull-txul-8013-mb7.dts
 +/ {
 +	model = "Ka-Ro electronics TXUL-8013 Module on MB7 baseboard";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ull-txul-8013.dts
-===================================================================
+diff --git a/arch/arm/boot/dts/imx6ull-txul-8013.dts b/arch/arm/boot/dts/imx6ull-txul-8013.dts
+new file mode 100644
+index 000000000000..6cd9b924e96b
 --- /dev/null
-+++ kernel-source/arch/arm/boot/dts/imx6ull-txul-8013.dts
++++ b/arch/arm/boot/dts/imx6ull-txul-8013.dts
 @@ -0,0 +1,69 @@
 +/*
-+ * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
++ * Copyright 2017-2018 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + * This file is dual-licensed: you can use it either under the terms
 + * of the GPL or the X11 license, at your option. Note that this dual
@@ -5723,279 +5628,3 @@ Index: kernel-source/arch/arm/boot/dts/imx6ull-txul-8013.dts
 +	fsl,wp-controller;
 +	status = "okay";
 +};
-Index: kernel-source/arch/arm/boot/dts/imx6ul-tx6ul-mainboard.dts
-===================================================================
---- kernel-source.orig/arch/arm/boot/dts/imx6ul-tx6ul-mainboard.dts
-+++ /dev/null
-@@ -1,271 +0,0 @@
--/*
-- * Copyright 2015 Lothar Waßmann <LW@KARO-electronics.de>
-- *
-- * This file is dual-licensed: you can use it either under the terms
-- * of the GPL or the X11 license, at your option. Note that this dual
-- * licensing only applies to this file, and not this project as a
-- * whole.
-- *
-- *  a) This file is free software; you can redistribute it and/or
-- *     modify it under the terms of the GNU General Public License
-- *     version 2 as published by the Free Software Foundation.
-- *
-- *     This file is distributed in the hope that it will be useful,
-- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
-- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- *     GNU General Public License for more details.
-- *
-- * Or, alternatively,
-- *
-- *  b) Permission is hereby granted, free of charge, to any person
-- *     obtaining a copy of this software and associated documentation
-- *     files (the "Software"), to deal in the Software without
-- *     restriction, including without limitation the rights to use,
-- *     copy, modify, merge, publish, distribute, sublicense, and/or
-- *     sell copies of the Software, and to permit persons to whom the
-- *     Software is furnished to do so, subject to the following
-- *     conditions:
-- *
-- *     The above copyright notice and this permission notice shall be
-- *     included in all copies or substantial portions of the Software.
-- *
-- *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-- *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-- *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-- *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-- *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-- *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-- *     OTHER DEALINGS IN THE SOFTWARE.
-- */
--
--/dts-v1/;
--#include "imx6ul.dtsi"
--#include "imx6ul-tx6ul.dtsi"
--
--/ {
--	model = "Ka-Ro electronics TXUL-0010 Module on TXUL Mainboard";
--	compatible = "karo,imx6ul-tx6ul", "fsl,imx6ul";
--
--	aliases {
--		lcdif_24bit_pins_a = &pinctrl_disp0_3;
--		mmc0 = &usdhc1;
--		/delete-property/ mmc1;
--		serial2 = &uart3;
--		serial4 = &uart5;
--	};
--	/delete-node/ sound;
--};
--
--&can1 {
--	xceiver-supply = <&reg_3v3>;
--};
--
--&can2 {
--	xceiver-supply = <&reg_3v3>;
--};
--
--&ds1339 {
--	status = "disabled";
--};
--
--&fec1 {
--	pinctrl-0 = <&pinctrl_enet1 &pinctrl_etnphy0_rst>;
--	/delete-node/ mdio;
--};
--
--&fec2 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_enet2 &pinctrl_enet2_mdio &pinctrl_etnphy1_rst>;
--	phy-mode = "rmii";
--	phy-reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
--	phy-supply = <&reg_3v3_etn>;
--	phy-handle = <&etnphy1>;
--	status = "okay";
--
--	mdio {
--		#address-cells = <1>;
--		#size-cells = <0>;
--
--		etnphy0: ethernet-phy@0 {
--			compatible = "ethernet-phy-ieee802.3-c22";
--			reg = <0>;
--			pinctrl-names = "default";
--			pinctrl-0 = <&pinctrl_etnphy0_int>;
--			interrupt-parent = <&gpio5>;
--			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
--			interrupts-extended = <&gpio5 5 IRQ_TYPE_EDGE_FALLING>;
--			status = "okay";
--		};
--
--		etnphy1: ethernet-phy@2 {
--			compatible = "ethernet-phy-ieee802.3-c22";
--			reg = <2>;
--			pinctrl-names = "default";
--			pinctrl-0 = <&pinctrl_etnphy1_int>;
--			interrupt-parent = <&gpio4>;
--			interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
--			interrupts-extended = <&gpio4 27 IRQ_TYPE_EDGE_FALLING>;
--			status = "okay";
--		};
--	};
--};
--
--&i2c_gpio {
--	status = "disabled";
--};
--
--&i2c2 {
--	/delete-node/ codec@0a;
--	/delete-node/ touchscreen@48;
--
--	rtc: mcp7940x@6f {
--		compatible = "microchip,mcp7940x";
--		reg = <0x6f>;
--	};
--};
--
--&kpp {
--	status = "disabled";
--};
--
--&lcdif {
--	pinctrl-0 = <&pinctrl_disp0_3>;
--};
--
--&reg_usbotg_vbus{
--	status = "disabled";
--};
--
--&usdhc1 {
--	pinctrl-0 = <&pinctrl_usdhc1>;
--	non-removable;
--	/delete-property/ cd-gpios;
--	cap-sdio-irq;
--};
--
--&uart1 {
--	pinctrl-0 = <&pinctrl_uart1>;
--	/delete-property/ uart-has-rtscts;
--};
--
--&uart2 {
--	pinctrl-0 = <&pinctrl_uart2>;
--	/delete-property/ uart-has-rtscts;
--	status = "okay";
--};
--
--&uart3 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_uart3>;
--	status = "okay";
--};
--
--&uart4 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_uart4>;
--	status = "okay";
--};
--
--&uart5 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_uart5>;
--	status = "okay";
--};
--
--&uart6 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_uart6>;
--	status = "okay";
--};
--
--&uart7 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_uart7>;
--	status = "okay";
--};
--
--&uart8 {
--	pinctrl-names = "default";
--	pinctrl-0 = <&pinctrl_uart8>;
--	status = "disabled"; /* conflicts with LCDIF */
--};
--
--&iomuxc {
--	hoggrp {
--		fsl,pins = <
--			MX6UL_PAD_CSI_DATA01__GPIO4_IO22	0x0b0b0 /* WLAN_RESET */
--		>;
--	};
--
--	pinctrl_disp0_3: disp0grp-3 {
--		fsl,pins = <
--			MX6UL_PAD_LCD_CLK__LCDIF_CLK		0x10 /* LSCLK */
--			MX6UL_PAD_LCD_ENABLE__LCDIF_ENABLE	0x10 /* OE_ACD */
--			MX6UL_PAD_LCD_HSYNC__LCDIF_HSYNC	0x10 /* HSYNC */
--			MX6UL_PAD_LCD_VSYNC__LCDIF_VSYNC	0x10 /* VSYNC */
--			MX6UL_PAD_LCD_DATA02__LCDIF_DATA02	0x10
--			MX6UL_PAD_LCD_DATA03__LCDIF_DATA03	0x10
--			MX6UL_PAD_LCD_DATA04__LCDIF_DATA04	0x10
--			MX6UL_PAD_LCD_DATA05__LCDIF_DATA05	0x10
--			MX6UL_PAD_LCD_DATA06__LCDIF_DATA06	0x10
--			MX6UL_PAD_LCD_DATA07__LCDIF_DATA07	0x10
--			/* LCD_DATA08..09 not wired */
--			MX6UL_PAD_LCD_DATA10__LCDIF_DATA10	0x10
--			MX6UL_PAD_LCD_DATA11__LCDIF_DATA11	0x10
--			MX6UL_PAD_LCD_DATA12__LCDIF_DATA12	0x10
--			MX6UL_PAD_LCD_DATA13__LCDIF_DATA13	0x10
--			MX6UL_PAD_LCD_DATA14__LCDIF_DATA14	0x10
--			MX6UL_PAD_LCD_DATA15__LCDIF_DATA15	0x10
--			/* LCD_DATA16..17 not wired */
--			MX6UL_PAD_LCD_DATA18__LCDIF_DATA18	0x10
--			MX6UL_PAD_LCD_DATA19__LCDIF_DATA19	0x10
--			MX6UL_PAD_LCD_DATA20__LCDIF_DATA20	0x10
--			MX6UL_PAD_LCD_DATA21__LCDIF_DATA21	0x10
--			MX6UL_PAD_LCD_DATA22__LCDIF_DATA22	0x10
--			MX6UL_PAD_LCD_DATA23__LCDIF_DATA23	0x10
--		>;
--	};
--
--	pinctrl_enet2_mdio: enet2-mdiogrp {
--		fsl,pins = <
--			MX6UL_PAD_GPIO1_IO07__ENET2_MDC		0x0b0b0
--			MX6UL_PAD_GPIO1_IO06__ENET2_MDIO	0x1b0b0
--		>;
--	};
--
--	pinctrl_uart3: uart3grp {
--		fsl,pins = <
--			MX6UL_PAD_UART3_TX_DATA__UART3_DCE_TX	0x0b0b0
--			MX6UL_PAD_UART3_RX_DATA__UART3_DCE_RX	0x0b0b0
--		>;
--	};
--
--	pinctrl_uart4: uart4grp {
--		fsl,pins = <
--			MX6UL_PAD_UART4_TX_DATA__UART4_DCE_TX	0x0b0b0
--			MX6UL_PAD_UART4_RX_DATA__UART4_DCE_RX	0x0b0b0
--		>;
--	};
--
--	pinctrl_uart6: uart6grp {
--		fsl,pins = <
--			MX6UL_PAD_CSI_MCLK__UART6_DCE_TX	0x0b0b0
--			MX6UL_PAD_CSI_PIXCLK__UART6_DCE_RX	0x0b0b0
--		>;
--	};
--
--	pinctrl_uart7: uart7grp {
--		fsl,pins = <
--			MX6UL_PAD_LCD_DATA16__UART7_DCE_TX	0x0b0b0
--			MX6UL_PAD_LCD_DATA17__UART7_DCE_RX	0x0b0b0
--		>;
--	};
--
--	pinctrl_uart8: uart8grp {
--		fsl,pins = <
--			MX6UL_PAD_LCD_DATA20__UART8_DCE_TX	0x0b0b0
--			MX6UL_PAD_LCD_DATA21__UART8_DCE_RX	0x0b0b0
--		>;
--	};
--};
