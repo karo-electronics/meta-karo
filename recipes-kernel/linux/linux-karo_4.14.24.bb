@@ -12,6 +12,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH} \
            file://defconfig \
            ${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
+           ${@bb.utils.contains('KERNEL_FEATURES',"debian","file://cfg/debian.cfg","",d)} \
            file://0001-patch-for-edt-m12.diff \
            file://0002-karo-dtbs.patch \
            file://imx6ull-bugfix.patch \
