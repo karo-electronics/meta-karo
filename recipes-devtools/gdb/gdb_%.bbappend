@@ -3,3 +3,4 @@ do_install_append () {
     rm -rvf ${D}/usr/share/gdb
     rm -vf ${D}${bindir}/gdb
 }
+PACKAGECONFIG_append = " "
