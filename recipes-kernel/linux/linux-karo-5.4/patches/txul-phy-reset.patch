@@ -1,0 +1,12 @@
+diff --git a/arch/arm/boot/dts/imx6ul-tx6ul.dtsi b/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
+index 19f9ce2..5810452c 100644
+--- a/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
++++ b/arch/arm/boot/dts/imx6ul-tx6ul.dtsi
+@@ -343,6 +344,7 @@
+ 	pinctrl-0 = <&pinctrl_enet2 &pinctrl_etnphy1_rst>;
+ 	phy-mode = "rmii";
+ 	phy-reset-gpios = <&gpio4 28 GPIO_ACTIVE_LOW>;
++	phy-reset-post-delay = <10>;
+ 	phy-supply = <&reg_3v3_etn>;
+ 	phy-handle = <&etnphy1>;
+ 	status = "okay";

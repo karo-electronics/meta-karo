@@ -1,0 +1,94 @@
+commit 15eac9d803414dd670a4e99970b895c6f16ed92b
+Author: Lothar Waßmann <LW@KARO-electronics.de>
+Date:   Thu Sep 14 11:54:55 2017 +0200
+
+    drm/panel: simple: add support for overriding the pixel clock polarity
+    
+    The Ka-Ro electronics MB7 baseboard has an on-board LCD->LVDS
+    converter that requires a fixed pixelclk polarity, no matter what the
+    panel's display_mode specifies. Add an option to override the pixelclk
+    polarity defined in the panel's display_mode via DTB.
+
+diff --git a/Documentation/devicetree/bindings/display/panel/simple-panel.txt b/Documentation/devicetree/bindings/display/panel/simple-panel.txt
+index e2308c3..dcaf9a7 100644
+--- a/Documentation/devicetree/bindings/display/panel/simple-panel.txt
++++ b/Documentation/devicetree/bindings/display/panel/simple-panel.txt
+@@ -9,6 +9,9 @@ Optional properties:
+ - backlight: phandle of the backlight device attached to the panel
+ - bus-format-override: override the bus_format setting of the panel's
+   display_mode settings
++- pixelclk-active: override the pixelclock polarity defined in the
++  panel's display_mode settings
++
+ 
+ Example:
+ 
+diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
+index f356a7b..7bbb752 100644
+--- a/drivers/gpu/drm/panel/panel-simple.c
++++ b/drivers/gpu/drm/panel/panel-simple.c
+@@ -89,6 +89,12 @@ struct panel_simple {
+ 	struct gpio_desc *enable_gpio;
+ 
+ 	u32 bus_fmt_override;
++	u32 quirks;
++};
++
++enum {
++	PANEL_QUIRK_PIXDATA_NEGEDGE = BIT(0),
++	PANEL_QUIRK_PIXDATA_POSEDGE = BIT(1),
+ };
+ 
+ static inline struct panel_simple *to_panel_simple(struct drm_panel *panel)
+@@ -96,6 +102,15 @@ static inline struct panel_simple *to_pa
+ 	return container_of(panel, struct panel_simple, base);
+ }
+ 
++static inline void panel_simple_apply_quirks(struct panel_simple *panel,
++					     struct drm_display_info *info)
++{
++	if (panel->quirks & PANEL_QUIRK_PIXDATA_NEGEDGE)
++		info->bus_flags |= DRM_BUS_FLAG_PIXDATA_NEGEDGE;
++	if (panel->quirks & PANEL_QUIRK_PIXDATA_POSEDGE)
++		info->bus_flags |= DRM_BUS_FLAG_PIXDATA_POSEDGE;
++}
++
+ static int panel_simple_get_fixed_modes(struct panel_simple *panel)
+ {
+ 	struct drm_connector *connector = panel->base.connector;
+@@ -161,6 +176,8 @@ static int panel_simple_get_fixed_modes(
+ 		drm_display_info_set_bus_formats(&connector->display_info,
+ 						 &panel->desc->bus_format, 1);
+ 	connector->display_info.bus_flags = panel->desc->bus_flags;
++	if (panel->quirks)
++		panel_simple_apply_quirks(panel, &connector->display_info);
+ 
+ 	return num;
+ }
+@@ -294,6 +311,7 @@ static inline int panel_simple_check_qui
+ 					    struct panel_simple *p)
+ {
+ 	const char *bus_fmt;
++	u32 clkpol;
+ 
+ 	if (of_property_read_string(dev->of_node, "bus-format-override",
+ 				    &bus_fmt) == 0) {
+@@ -315,6 +333,18 @@ static inline int panel_simple_check_qui
+ 				bus_fmt);
+ 		return p->bus_fmt_override ? 0 : -EINVAL;
+ 	}
++
++	if (of_property_read_u32(dev->of_node, "pixelclk-active",
++				 &clkpol) == 0) {
++		if (clkpol & ~1) {
++			dev_err(dev,
++				"Invalid value for pixelclk-active: '%u' (should be <0> or <1>)\n",
++				clkpol);
++			return -EINVAL;
++		}
++		p->quirks |= clkpol ? PANEL_QUIRK_PIXDATA_POSEDGE :
++			PANEL_QUIRK_PIXDATA_NEGEDGE;
++	}
+ 	return 0;
+ }
+ 

@@ -1,0 +1,2 @@
+DISTRO = "karo-x11"
+VIRTUAL-RUNTIME_dev_manager = "udev"
