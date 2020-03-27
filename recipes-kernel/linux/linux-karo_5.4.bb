@@ -14,17 +14,17 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 SRC_URI_append = " \
 	file://0001-display-support.patch \
 	file://0002-fec-enet-reset.patch \
+	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
+	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
 "
 
-#${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)}
-#${@bb.utils.contains('KERNEL_FEATURES',"debian","file://cfg/debian.cfg","",d)}
 #file://patch-for-edt-m12.diff
 #file://imx6ull-bugfix.patch
 #file://txul-phy-reset.patch
 #file://txul-enet-sleep.patch
 #file://pixclk-polarity-override.patch
 
-SRC_URI_append_mx6 = " \
+SRC_URI_append_tx6 = " \
 	file://defconfig \
 	file://dts/imx6dl-tx6s-8034-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8035-mb7.dts;subdir=git/arch/arm/boot \
@@ -64,6 +64,7 @@ SRC_URI_append_txul = " \
 LOCALVERSION = "-stable"
 KERNEL_IMAGETYPE = "uImage"
 
+# TODO: put them all into machine specific files.
 DEFAULT_DEVICETREE_imx6dl-tx6-emmc ?= " \
                                 imx6dl-tx6dl-comtft.dtb \
                                 imx6dl-tx6s-8035.dtb \
@@ -123,8 +124,11 @@ DEFAULT_DEVICETREE_imx6ull-txul-emmc ?= " \
 KERNEL_DEVICETREE ?= "${DEFAULT_DEVICETREE}"
 
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd","",d)}"
 
-COMPATIBLE_MACHINE  = "(tx6[qsu]-.*|txul-.*|imx6.*-tx.*)"
+COMPATIBLE_MACHINE_tx8 = "(tx8m-.*|qs8m-.*)"
+COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
+COMPATIBLE_MACHINE_txul = "(txul-.*)"
 
 # returns all the elements from the src uri that are .cfg files
 def find_cfgs(d):
