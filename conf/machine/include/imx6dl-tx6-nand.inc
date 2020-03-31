@@ -1,13 +1,6 @@
-#@TYPE: Machine
-#@NAME: Ka-Ro electronics i.MX6DL TX6DL Computer-On-Module
-#@SOC: i.MX6DL
-#@DESCRIPTION: Machine configuration for Ka-Ro electronics TX6DL Computer-On-Module
-#@MAINTAINER: Oliver Wendt <ow@karo-electronics.com>
-
-require include/tx-base.inc
+require tx6-base.inc
 require conf/machine/include/tune-cortexa9.inc
 
-TXTYPE = "imx6dl-tx6"
-TXNVM = "nand"
+MACHINEOVERRIDES =. "mx6:mx6dl:tx6:"
 
-MACHINEOVERRIDES =. "mx6:mx6dl:tx6:${TXTYPE}-${TXNVM}:"
+FLASHTYPE = "nand"

@@ -1,9 +1,8 @@
 LICENSE = "MIT"
 
-inherit core-image
+inherit core-image distro_features_check
 
-#uncommenting will break the build
-#DISTROOVERRIDES =. "karo-minimal karo-base karo-x11 karo-qt5"
+DISTROOVERRIDES =. "karo-minimal:karo-base:karo-x11:karo-wayland"
 
 IMAGE_FEATURES += "tools-debug"
 
@@ -38,8 +37,6 @@ IMAGE_INSTALL = "\
               util-linux-mkfs \
               util-linux-setterm \
 "
-
-IMAGE_INSTALL_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
 
 CORE_IMAGE_EXTRA_INSTALL += "kernel-modules"
 #CORE_IMAGE_EXTRA_INSTALL_mx6 += "u-boot-karo"

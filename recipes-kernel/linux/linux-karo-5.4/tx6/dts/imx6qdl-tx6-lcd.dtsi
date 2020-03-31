@@ -77,7 +77,6 @@
 		enable-gpios = <&gpio3 29 GPIO_ACTIVE_HIGH>;
 		power-supply = <&reg_3v3>;
 		backlight = <&backlight>;
-		interface-pix-fmt = "rgb24";
 
 		port {
 			lcd_panel_in: endpoint {
@@ -92,6 +91,7 @@
 		#size-cells = <0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_disp0_1>;
+		interface-pix-fmt = "rgb24";
 		status = "okay";
 
 		port@0 {

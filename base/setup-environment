@@ -147,6 +147,10 @@ else
             bitbake_target="karo-image${DISTRO#karo}"
             DEV_MANAGER="udev"
             ;;
+	karo-wayland)
+	    bitbake_target="karo-image-weston"
+	    DEV_MANAGER="udev"
+	    ;;
         uboot|u-boot|u-boot-karo)
             bitbake_target="u-boot-karo"
             DISTRO="poky"

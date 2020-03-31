@@ -26,16 +26,17 @@ SRC_URI_append = " \
 
 SRC_URI_append_tx6 = " \
 	file://defconfig \
+	file://dts/imx6dl-tx6u-8033.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6s-8134.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6s-8135.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8034-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8035-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8134-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6s-8134.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8135-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6s-8135.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-8133-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6u-80xx-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6u-8033-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6u-8133-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6q-tx6q-10x0-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6q-tx6q-1020-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6q-tx6q-1036-mb7.dts;subdir=git/arch/arm/boot \
@@ -63,65 +64,6 @@ SRC_URI_append_txul = " \
 
 LOCALVERSION = "-stable"
 KERNEL_IMAGETYPE = "uImage"
-
-# TODO: put them all into machine specific files.
-DEFAULT_DEVICETREE_imx6dl-tx6-emmc ?= " \
-                                imx6dl-tx6dl-comtft.dtb \
-                                imx6dl-tx6s-8035.dtb \
-                                imx6dl-tx6s-8035-mb7.dtb \
-                                imx6dl-tx6s-8135.dtb \
-                                imx6dl-tx6s-8135-mb7.dtb \
-                                imx6dl-tx6u-8033.dtb \
-                                imx6dl-tx6u-8033-mb7.dtb \
-                                imx6dl-tx6u-8133.dtb \
-                                imx6dl-tx6u-8133-mb7.dtb \
-"
-DEFAULT_DEVICETREE_imx6dl-tx6-nand ?= " \
-                                imx6dl-tx6s-8034.dtb \
-                                imx6dl-tx6s-8134-mb7.dtb \
-                                imx6dl-tx6s-8034.dtb \
-                                imx6dl-tx6s-8134-mb7.dtb \
-                                imx6dl-tx6u-801x.dtb \
-                                imx6dl-tx6u-811x.dtb \
-                                imx6dl-tx6u-80xx-mb7.dtb \
-                                imx6dl-tx6u-81xx-mb7.dtb \
-"
-DEFAULT_DEVICETREE_imx6q-tx6-emmc ?= " \
-                                imx6q-tx6q-1020.dtb \
-                                imx6q-tx6q-1020-comtft.dtb \
-                                imx6q-tx6q-1036.dtb \
-                                imx6q-tx6q-1036-mb7.dtb \
-"
-DEFAULT_DEVICETREE_imx6q-tx6-nand ?= " \
-                                imx6q-tx6q-1010.dtb \
-                                imx6q-tx6q-1110.dtb \
-                                imx6q-tx6q-1010-comtft.dtb \
-                                imx6q-tx6q-10x0-mb7.dtb \
-                                imx6q-tx6q-11x0-mb7.dtb \
-"
-DEFAULT_DEVICETREE_imx6qp-tx6-emmc ?= " \
-                                imx6qp-tx6qp-8037.dtb \
-                                imx6qp-tx6qp-8137-mb7.dtb \
-                                imx6qp-tx6qp-8037.dtb \
-                                imx6qp-tx6qp-8137-mb7.dtb \
-"
-DEFAULT_DEVICETREE_imx6ul-tx6-emmc ?= " \
-                                imx6ul-tx6ul-0011.dtb \
-                                imx6ul-txul-5011-mb7.dtb \
-				imx6ul-txul-5011-mainboard.dtb \
-"
-DEFAULT_DEVICETREE_imx6ul-tx6-nand ?= " \
-                                imx6ul-tx6ul-0010.dtb \
-                                imx6ul-txul-5010-mainboard.dtb \
-                                imx6ul-txul-5010-mb7.dtb \
-"
-DEFAULT_DEVICETREE_imx6ull-txul-emmc ?= " \
-                                imx6ull-txul-8013.dtb \
-                                imx6ull-txul-8013-mainboard.dtb \
-                                imx6ull-txul-8013-mb7.dtb \
-"
-
-KERNEL_DEVICETREE ?= "${DEFAULT_DEVICETREE}"
 
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd","",d)}"

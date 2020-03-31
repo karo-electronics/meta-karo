@@ -12,16 +12,8 @@ UBOOT_ENTRYPOINT_tx6  ?= "0x10008000"
 UBOOT_ENTRYPOINT_txul ?= "0x80008000"
 UBOOT_CONFIG ??= "generic"
 
-# 'cortexa9-neon' 'cortexa9hf-neon'
 DEFAULTTUNE_tx6 ?= "cortexa9hf-neon"
 DEFAULTTUNE_txul ?= "cortexa7hf-neon"
-
-# PREFERRED_PROVIDER_virtual/xserver = "xserver-xorg"
-# XSERVER_DRIVER = "xf86-video-fbdev"
-# XSERVER_DRIVER_mx6 = "xf86-video-modesetting"
-# XSERVER = "xserver-xorg \
-#            xf86-input-evdev \
-#            ${XSERVER_DRIVER}"
 
 PACKAGE_EXCLUDE_COMPLEMENTARY = ".*"
 
@@ -34,21 +26,24 @@ MACHINE_EXTRA_RRECOMMENDS ??= " \
                           kernel-modules \
 "
 
+# Set Serial console
+SERIAL_CONSOLE = "115200 ttymxc0"
+
 SERIAL_CONSOLES ??= " \
                 115200;ttymxc0 \
                 115200;ttymxc1 \
                 115200;ttymxc2 \
 "
 
-# MACHINE_FEATURES = " \
-#                  alsa \
-#                  rtc \
-#                  serial \
-#                  touchscreen \
-#                  usbgadget \
-#                  usbhost \
-#                  vfat \
-# "
+MACHINE_FEATURES = " \
+                 alsa \
+                 rtc \
+                 serial \
+                 touchscreen \
+                 usbgadget \
+                 usbhost \
+                 vfat \
+"
 
 # Default baseboard name
 DEFAULT_BASEBOARD_tx6 ?= "mb7"
