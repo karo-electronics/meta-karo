@@ -43,10 +43,10 @@ SRC_URI_append_tx6 = " \
 	file://dts/imx6qdl-tx6-lcd.dtsi;subdir=git/arch/arm/boot \
 	file://dts/imx6qdl-tx6-lvds.dtsi;subdir=git/arch/arm/boot \
 	file://dts/imx6qdl-tx6-mb7.dtsi;subdir=git/arch/arm/boot \
-	file://dts/imx6qp-tx6qp-8037-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6qp-tx6qp-8037.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6qp-tx6qp-8137-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6qp-tx6qp-8137.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6qp-tx6q-8037-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6qp-tx6q-8037.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6qp-tx6q-8137-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6qp-tx6q-8137.dts;subdir=git/arch/arm/boot \
 "
 
 SRC_URI_append_txul = " \
