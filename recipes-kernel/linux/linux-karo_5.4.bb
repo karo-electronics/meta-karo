@@ -22,7 +22,6 @@ SRC_URI_append = " \
 #file://imx6ull-bugfix.patch
 #file://txul-phy-reset.patch
 #file://txul-enet-sleep.patch
-#file://pixclk-polarity-override.patch
 
 SRC_URI_append_tx6 = " \
 	file://defconfig \
