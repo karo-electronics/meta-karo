@@ -81,22 +81,8 @@ def find_cfgs(d):
 
     return sources_list
 
-do_configure_prepend () {
+do_configure_append () {
     for f in ${@" ".join(find_cfgs(d))};do
         cat $f >> ${B}/.config
-    done
-}
-
-do_install_append () {
-    set -x
-    install -v -d -m 0755 ${D}${FW_PATH}
-    for f in ${FW_FILES};do
-        src="${f//file:\//${WORKDIR}}"
-        subdir="$(dirname "${src##*/firmware/}")"
-        [ "${subdir##/*}" = "$subdir" ] || exit 1
-        if [ "$subdir" != "." ];then
-                install -v -d -m 0755 "${D}${FW_PATH}/$subdir"
-        fi
-        install -v -m 0644 "${src}" "${D}${FW_PATH}/$subdir"
     done
 }
