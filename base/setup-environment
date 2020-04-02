@@ -111,10 +111,6 @@ if [ "$MACHINE" = "" ] || [ "$VALID_MACHINE" = "0" ]; then
     echo -e "\nThe \$MACHINE you have specified ($MACHINE) is not supported by this build setup"
     usage && clean_up
     return 1
-else
-    if [ ! -e $1/conf/local.conf.sample ]; then
-        echo "Configuring for ${MACHINE}"
-    fi
 fi
 
 if [ -z "$SDKMACHINE" ]; then
@@ -208,7 +204,7 @@ if [ ! -e conf/local.conf.sample ]; then
     mv conf/local.conf conf/local.conf.sample
 
     # Generate the local.conf based on the Yocto defaults
-    TEMPLATES=$CWD/layers/meta-karo/base/conf
+    TEMPLATES=$CWD/layers/meta-karo/conf
     grep -v '^#\|^$' conf/local.conf.sample > conf/local.conf
 #    if [ -n "$DEV_MANAGER" ];then
 #        echo "VIRTUAL-RUNTIME_dev_manager = \"$DEV_MANAGER\"" >> conf/local.conf
