@@ -126,6 +126,12 @@
 	pinctrl-0 = <&pinctrl_disp0_3>;
 };
 
+&lcd_panel {
+	panel-timing {
+		pixelclk-active = <0>;
+	};
+};
+
 &reg_usbotg_vbus {
 	status = "disabled";
 };

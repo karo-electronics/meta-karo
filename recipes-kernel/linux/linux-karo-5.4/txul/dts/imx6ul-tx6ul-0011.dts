@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright 2015 Lothar Waßmann <LW@KARO-electronics.de>
  *
  * This file is dual-licensed: you can use it either under the terms
  * of the GPL or the X11 license, at your option. Note that this dual
@@ -39,30 +39,30 @@
  *     OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/dts-v1/;
+#include "imx6ul.dtsi"
+#include "imx6ul-tx6ul.dtsi"
+
 / {
-	/delete-node/ sound;
-};
+	model = "Ka-Ro electronics TXUL-0011 Module";
+	compatible = "karo,imx6ul-tx6ul", "fsl,imx6ul";
 
-&can1 {
-	status = "disabled";
-};
-
-&can2 {
-	xceiver-supply = <&reg_3v3>;
-};
-
-&i2c2 {
-	rtc: mcp7940x@6f {
-		compatible = "microchip,mcp7940x";
-		reg = <0x6f>;
+	aliases {
+		mmc0 = &usdhc2;
+		mmc1 = &usdhc1;
 	};
 };
 
-&sgtl5000 {
-	/*
-	 * The SGTL5000 present on the MB7 baseboard cannot be used
-	 * because the JTAG interface shares the SAI interface pins.
-	 * Especially JTAG_TDI drives the SAI BITCLK via a level shifter.
-	 */
+&gpmi {
 	status = "disabled";
+};
+
+&usdhc2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usdhc2>;
+	bus-width = <4>;
+	no-1-8-v;
+	non-removable;
+	fsl,wp-controller;
+	status = "okay";
 };

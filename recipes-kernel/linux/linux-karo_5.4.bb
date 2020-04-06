@@ -14,14 +14,10 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 SRC_URI_append = " \
 	file://0001-display-support.patch \
 	file://0002-fec-enet-reset.patch \
+	file://0003-panel-dpi.patch \
 	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
 	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
 "
-
-#file://patch-for-edt-m12.diff
-#file://imx6ull-bugfix.patch
-#file://txul-phy-reset.patch
-#file://txul-enet-sleep.patch
 
 SRC_URI_append_tx6 = " \
 	file://defconfig \
@@ -50,6 +46,9 @@ SRC_URI_append_tx6 = " \
 
 SRC_URI_append_txul = " \
 	file://defconfig \
+	file://dts/imx6ul-tx6ul-0010.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6ul-tx6ul-0011.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6ul-tx6ul.dtsi;subdir=git/arch/arm/boot \
 	file://dts/imx6ul-txul-5010-mainboard.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6ul-txul-5010-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6ul-txul-5011-mainboard.dts;subdir=git/arch/arm/boot \

@@ -12,9 +12,6 @@ UBOOT_ENTRYPOINT_tx6  ?= "0x10008000"
 UBOOT_ENTRYPOINT_txul ?= "0x80008000"
 UBOOT_CONFIG ??= "generic"
 
-DEFAULTTUNE_tx6 ?= "cortexa9hf-neon"
-DEFAULTTUNE_txul ?= "cortexa7hf-neon"
-
 PACKAGE_EXCLUDE_COMPLEMENTARY = ".*"
 
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
