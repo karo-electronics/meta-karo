@@ -1,0 +1,169 @@
+From be54a2d37f5c46636d607aea17b65c31b094af17 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Fri, 29 Nov 2019 14:14:29 +0100
+Subject: [PATCH 18/35] imx8mn: soc: put env_get_location() in board specific
+ code where it belongs
+
+The (weak) default implementation may well be suited for other i.MX8MN
+based board than the Freescale ones. Put the non-weak implementation
+into board specific code, so that other users may use the default
+implemention or override it in their own board specific code.
+
+In conjunction with this the CONFIG_ENV_DEFAULT_NOWHERE setting is
+only relevant for the Freescale i.MX8N implementation so far, so
+enable it only for "freescale" by default.
+---
+ arch/arm/mach-imx/imx8m/soc.c           | 57 ---------------------------------
+ board/freescale/imx8mn_evk/imx8mn_evk.c | 57 +++++++++++++++++++++++++++++++++
+ env/Kconfig                             |  2 +-
+ 3 files changed, 58 insertions(+), 58 deletions(-)
+
+diff --git a/arch/arm/mach-imx/imx8m/soc.c b/arch/arm/mach-imx/imx8m/soc.c
+index 9330ec1..2ea73ad 100644
+--- a/arch/arm/mach-imx/imx8m/soc.c
++++ b/arch/arm/mach-imx/imx8m/soc.c
+@@ -939,60 +939,3 @@ void do_error(struct pt_regs *pt_regs, unsigned int esr)
+ }
+ #endif
+ #endif
+-
+-#if defined(CONFIG_IMX8MN)
+-enum env_location env_get_location(enum env_operation op, int prio)
+-{
+-	enum boot_device dev = get_boot_device();
+-	enum env_location env_loc = ENVL_UNKNOWN;
+-
+-	if (prio)
+-		return env_loc;
+-
+-	switch (dev) {
+-#ifdef CONFIG_ENV_IS_IN_SPI_FLASH
+-	case QSPI_BOOT:
+-		env_loc = ENVL_SPI_FLASH;
+-		break;
+-#endif
+-#ifdef CONFIG_ENV_IS_IN_NAND
+-	case NAND_BOOT:
+-		env_loc = ENVL_NAND;
+-		break;
+-#endif
+-#ifdef CONFIG_ENV_IS_IN_MMC
+-	case SD1_BOOT:
+-	case SD2_BOOT:
+-	case SD3_BOOT:
+-	case MMC1_BOOT:
+-	case MMC2_BOOT:
+-	case MMC3_BOOT:
+-		env_loc =  ENVL_MMC;
+-		break;
+-#endif
+-	default:
+-#if defined(CONFIG_ENV_DEFAULT_NOWHERE) || defined(CONFIG_ENV_IS_NOWHERE)
+-		env_loc = ENVL_NOWHERE;
+-#endif
+-		break;
+-	}
+-
+-	return env_loc;
+-}
+-
+-#ifndef ENV_IS_EMBEDDED
+-long long env_get_offset(long long defautl_offset)
+-{
+-	enum boot_device dev = get_boot_device();
+-
+-	switch (dev) {
+-	case NAND_BOOT:
+-		return (60 << 20);  /* 60MB offset for NAND */
+-	default:
+-		break;
+-	}
+-
+-	return defautl_offset;
+-}
+-#endif
+-#endif
+diff --git a/board/freescale/imx8mn_evk/imx8mn_evk.c b/board/freescale/imx8mn_evk/imx8mn_evk.c
+index c28146f..7cb8c9e 100644
+--- a/board/freescale/imx8mn_evk/imx8mn_evk.c
++++ b/board/freescale/imx8mn_evk/imx8mn_evk.c
+@@ -417,6 +417,63 @@ int board_mmc_get_env_dev(int devno)
+ 	return devno - 1;
+ }
+ 
++#if defined(CONFIG_IMX8MN)
++enum env_location env_get_location(enum env_operation op, int prio)
++{
++	enum boot_device dev = get_boot_device();
++	enum env_location env_loc = ENVL_UNKNOWN;
++
++	if (prio)
++		return env_loc;
++
++	switch (dev) {
++#ifdef CONFIG_ENV_IS_IN_SPI_FLASH
++	case QSPI_BOOT:
++		env_loc = ENVL_SPI_FLASH;
++		break;
++#endif
++#ifdef CONFIG_ENV_IS_IN_NAND
++	case NAND_BOOT:
++		env_loc = ENVL_NAND;
++		break;
++#endif
++#ifdef CONFIG_ENV_IS_IN_MMC
++	case SD1_BOOT:
++	case SD2_BOOT:
++	case SD3_BOOT:
++	case MMC1_BOOT:
++	case MMC2_BOOT:
++	case MMC3_BOOT:
++		env_loc =  ENVL_MMC;
++		break;
++#endif
++	default:
++#ifdef CONFIG_ENV_DEFAULT_NOWHERE
++		env_loc = ENVL_NOWHERE;
++#endif
++		break;
++	}
++
++	return env_loc;
++}
++
++#ifndef ENV_IS_EMBEDDED
++long long env_get_offset(long long defautl_offset)
++{
++	enum boot_device dev = get_boot_device();
++
++	switch (dev) {
++	case NAND_BOOT:
++		return (60 << 20);  /* 60MB offset for NAND */
++	default:
++		break;
++	}
++
++	return defautl_offset;
++}
++#endif
++#endif
++
+ int mmc_map_to_kernel_blk(int devno)
+ {
+ 	return devno + 1;
+diff --git a/env/Kconfig b/env/Kconfig
+index 0d78142..489979d 100644
+--- a/env/Kconfig
++++ b/env/Kconfig
+@@ -23,7 +23,7 @@ config ENV_IS_NOWHERE
+ 
+ config ENV_DEFAULT_NOWHERE
+ 	depends on !ENV_IS_NOWHERE
+-	default y if IMX8MN
++	default y if IMX8MN && VENDOR = "freescale"
+ 	bool "Environment is not stored if no matched location"
+ 	help
+ 	  Define this when multiple ENV locations are defined and use nowhere as
+-- 
+2.7.4
+

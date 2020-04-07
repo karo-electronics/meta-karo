@@ -1,0 +1,26 @@
+From a3dec6b5d6d1f7a123a83bfcd91c2f8b29779773 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Tue, 21 Jan 2020 12:36:01 +0100
+Subject: [PATCH 25/35] pinctrl: print error message with dev_err() rathern
+ than dev_dbg()
+
+---
+ drivers/pinctrl/pinctrl-uclass.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pinctrl/pinctrl-uclass.c b/drivers/pinctrl/pinctrl-uclass.c
+index 6a73a06..66fcd94 100644
+--- a/drivers/pinctrl/pinctrl-uclass.c
++++ b/drivers/pinctrl/pinctrl-uclass.c
+@@ -265,7 +265,7 @@ static int pinctrl_post_bind(struct udevice *dev)
+ 	const struct pinctrl_ops *ops = pinctrl_get_ops(dev);
+ 
+ 	if (!ops) {
+-		dev_dbg(dev, "ops is not set.  Do not bind.\n");
++		dev_err(dev, "ops is not set.  Do not bind.\n");
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+2.7.4
+

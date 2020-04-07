@@ -1,0 +1,162 @@
+From dd6a8e68ff4c3d7bdcd9e965c6a638003f23ba48 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Tue, 21 Jan 2020 12:35:22 +0100
+Subject: [PATCH 24/35] clk: print error messages with dev_err()/pr_err()
+ rathern than debug()
+
+---
+ drivers/clk/clk-uclass.c | 48 +++++++++++++++++++++++++-----------------------
+ 1 file changed, 25 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/clk/clk-uclass.c b/drivers/clk/clk-uclass.c
+index ad76379..dbe1f10 100644
+--- a/drivers/clk/clk-uclass.c
++++ b/drivers/clk/clk-uclass.c
+@@ -43,7 +43,7 @@ static int clk_of_xlate_default(struct clk *clk,
+ 	debug("%s(clk=%p)\n", __func__, clk);
+ 
+ 	if (args->args_count > 1) {
+-		debug("Invaild args_count: %d\n", args->args_count);
++		pr_err("Invalid args_count: %d\n", args->args_count);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -63,7 +63,8 @@ static int clk_get_by_indexed_prop(struct udevice *dev, const char *prop_name,
+ 	struct udevice *dev_clk;
+ 	const struct clk_ops *ops;
+ 
+-	debug("%s(dev=%p, index=%d, clk=%p)\n", __func__, dev, index, clk);
++	dev_dbg(dev, "%s(dev=%p, index=%d, clk=%p)\n", __func__, dev,
++		index, clk);
+ 
+ 	assert(clk);
+ 	clk->dev = NULL;
+@@ -71,15 +72,15 @@ static int clk_get_by_indexed_prop(struct udevice *dev, const char *prop_name,
+ 	ret = dev_read_phandle_with_args(dev, prop_name, "#clock-cells", 0,
+ 					 index, &args);
+ 	if (ret) {
+-		debug("%s: fdtdec_parse_phandle_with_args failed: err=%d\n",
+-		      __func__, ret);
++		dev_err(dev, "%s: fdtdec_parse_phandle_with_args failed: %s\n",
++			__func__, fdt_strerror(ret));
+ 		return ret;
+ 	}
+ 
+ 	ret = uclass_get_device_by_ofnode(UCLASS_CLK, args.node, &dev_clk);
+ 	if (ret) {
+-		debug("%s: uclass_get_device_by_of_offset failed: err=%d\n",
+-		      __func__, ret);
++		dev_err(dev, "%s: uclass_get_device_by_of_offset failed: %d\n",
++			__func__, ret);
+ 		return ret;
+ 	}
+ 
+@@ -92,7 +93,7 @@ static int clk_get_by_indexed_prop(struct udevice *dev, const char *prop_name,
+ 	else
+ 		ret = clk_of_xlate_default(clk, &args);
+ 	if (ret) {
+-		debug("of_xlate() failed: %d\n", ret);
++		dev_err(dev, "of_xlate() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -114,8 +115,8 @@ static int clk_set_default_parents(struct udevice *dev)
+ 	num_parents = dev_count_phandle_with_args(dev, "assigned-clock-parents",
+ 						  "#clock-cells");
+ 	if (num_parents < 0) {
+-		debug("%s: could not read assigned-clock-parents for %p\n",
+-		      __func__, dev);
++		dev_dbg(dev, "%s: could not read assigned-clock-parents\n",
++			__func__);
+ 		return 0;
+ 	}
+ 
+@@ -123,16 +124,16 @@ static int clk_set_default_parents(struct udevice *dev)
+ 		ret = clk_get_by_indexed_prop(dev, "assigned-clock-parents",
+ 					      index, &parent_clk);
+ 		if (ret) {
+-			debug("%s: could not get parent clock %d for %s\n",
+-			      __func__, index, dev_read_name(dev));
++			dev_err(dev, "could not get parent clock %d: %d\n",
++				index, ret);
+ 			return ret;
+ 		}
+ 
+ 		ret = clk_get_by_indexed_prop(dev, "assigned-clocks",
+ 					      index, &clk);
+ 		if (ret) {
+-			debug("%s: could not get assigned clock %d for %s\n",
+-			      __func__, index, dev_read_name(dev));
++			dev_err(dev, "could not get assigned clock %d\n",
++				index);
+ 			return ret;
+ 		}
+ 
+@@ -146,8 +147,8 @@ static int clk_set_default_parents(struct udevice *dev)
+ 			continue;
+ 
+ 		if (ret) {
+-			debug("%s: failed to reparent clock %d for %s\n",
+-			      __func__, index, dev_read_name(dev));
++			dev_err(dev, "failed to reparent clock %d: %d\n",
++				index, ret);
+ 			return ret;
+ 		}
+ 	}
+@@ -181,15 +182,15 @@ static int clk_set_default_rates(struct udevice *dev)
+ 		ret = clk_get_by_indexed_prop(dev, "assigned-clocks",
+ 					      index, &clk);
+ 		if (ret) {
+-			debug("%s: could not get assigned clock %d for %s\n",
+-			      __func__, index, dev_read_name(dev));
++			dev_dbg(dev, "could not get assigned clock %d\n",
++				index);
+ 			continue;
+ 		}
+ 
+ 		ret = clk_set_rate(&clk, rates[index]);
+ 		if (ret < 0) {
+-			debug("%s: failed to set rate on clock %d for %s\n",
+-			      __func__, index, dev_read_name(dev));
++			dev_err(dev, "failed to set rate on clock %d for %s\n",
++				index, dev_read_name(dev));
+ 			break;
+ 		}
+ 	}
+@@ -207,7 +208,7 @@ int clk_set_defaults(struct udevice *dev)
+ 	if (!(gd->flags & GD_FLG_RELOC))
+ 		return 0;
+ 
+-	debug("%s(%s)\n", __func__, dev_read_name(dev));
++	dev_dbg(dev, "%s\n", __func__);
+ 
+ 	ret = clk_set_default_parents(dev);
+ 	if (ret)
+@@ -225,12 +226,13 @@ int clk_get_by_name(struct udevice *dev, const char *name, struct clk *clk)
+ {
+ 	int index;
+ 
+-	debug("%s(dev=%p, name=%s, clk=%p)\n", __func__, dev, name, clk);
++	dev_dbg(dev, "%s(dev=%p, name=%s, clk=%p)\n", __func__, dev,
++		name, clk);
+ 	clk->dev = NULL;
+ 
+ 	index = dev_read_stringlist_search(dev, "clock-names", name);
+ 	if (index < 0) {
+-		debug("fdt_stringlist_search() failed: %d\n", index);
++		dev_err(dev, "fdt_stringlist_search() failed: %d\n", index);
+ 		return index;
+ 	}
+ 
+@@ -266,7 +268,7 @@ int clk_request(struct udevice *dev, struct clk *clk)
+ {
+ 	const struct clk_ops *ops = clk_dev_ops(dev);
+ 
+-	debug("%s(dev=%p, clk=%p)\n", __func__, dev, clk);
++	dev_dbg(dev, "%s(dev=%p, clk=%p)\n", __func__, dev, clk);
+ 
+ 	clk->dev = dev;
+ 
+-- 
+2.7.4
+

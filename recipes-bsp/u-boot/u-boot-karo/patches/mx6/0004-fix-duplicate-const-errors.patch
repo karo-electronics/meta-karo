@@ -1,0 +1,131 @@
+Index: karo-tx-uboot/arch/arm/include/asm/imx-common/iomux-v3.h
+===================================================================
+--- karo-tx-uboot.orig/arch/arm/include/asm/imx-common/iomux-v3.h
++++ karo-tx-uboot/arch/arm/include/asm/imx-common/iomux-v3.h
+@@ -187,7 +187,7 @@ typedef u64 iomux_v3_cfg_t;
+ #define GPIO_PORTE		(4 << GPIO_PORT_SHIFT)
+ #define GPIO_PORTF		(5 << GPIO_PORT_SHIFT)
+ 
+-void imx_iomux_v3_setup_pad(const iomux_v3_cfg_t const pad);
++void imx_iomux_v3_setup_pad(const iomux_v3_cfg_t pad);
+ void imx_iomux_v3_setup_multiple_pads(iomux_v3_cfg_t const *pad_list,
+ 				     unsigned count);
+ /*
+Index: karo-tx-uboot/board/karo/common/env.c
+===================================================================
+--- karo-tx-uboot.orig/board/karo/common/env.c
++++ karo-tx-uboot/board/karo/common/env.c
+@@ -31,7 +31,7 @@ void env_cleanup(void)
+ 	set_default_env(NULL);
+ }
+ #else
+-static const char const *cleanup_vars[] = {
++static const char * const cleanup_vars[] = {
+ 	"bootargs",
+ 	"fileaddr",
+ 	"filesize",
+Index: karo-tx-uboot/board/karo/tx6/tx6qdl.c
+===================================================================
+--- karo-tx-uboot.orig/board/karo/tx6/tx6qdl.c
++++ karo-tx-uboot/board/karo/tx6/tx6qdl.c
+@@ -82,7 +82,7 @@ char __csf_data[0] __attribute__((sectio
+ 					     PAD_CTL_DSE_40ohm |	\
+ 					     PAD_CTL_SRE_SLOW)
+ 
+-static const iomux_v3_cfg_t const tx6qdl_pads[] = {
++static const iomux_v3_cfg_t tx6qdl_pads[] = {
+ 	/* RESET_OUT */
+ 	MX6_PAD_GPIO_17__GPIO7_IO12 | TX6_DEFAULT_PAD_CTRL,
+ 
+@@ -117,7 +117,7 @@ static const iomux_v3_cfg_t const tx6qdl
+ 	MX6_PAD_SD3_DAT4__GPIO7_IO01 | TX6_DEFAULT_PAD_CTRL, /* PHY INT */
+ };
+ 
+-static const iomux_v3_cfg_t const tx6qdl_fec_pads[] = {
++static const iomux_v3_cfg_t tx6qdl_fec_pads[] = {
+ 	/* FEC functions */
+ 	MX6_PAD_ENET_MDC__ENET_MDC | TX6_FEC_PAD_CTRL,
+ 	MX6_PAD_ENET_MDIO__ENET_MDIO | TX6_FEC_PAD_CTRL,
+@@ -134,7 +134,7 @@ static const iomux_v3_cfg_t const tx6qdl
+ 	MX6_PAD_ENET_TXD0__ENET_TX_DATA0 | TX6_FEC_PAD_CTRL,
+ };
+ 
+-static const iomux_v3_cfg_t const tx6_i2c_gpio_pads[] = {
++static const iomux_v3_cfg_t tx6_i2c_gpio_pads[] = {
+ 	/* internal I2C */
+ 	MX6_PAD_EIM_D28__GPIO3_IO28 | MUX_CFG_SION |
+ 	TX6_GPIO_PAD_CTRL,
+@@ -142,13 +142,13 @@ static const iomux_v3_cfg_t const tx6_i2
+ 	TX6_GPIO_PAD_CTRL,
+ };
+ 
+-static const iomux_v3_cfg_t const tx6_i2c_pads[] = {
++static const iomux_v3_cfg_t tx6_i2c_pads[] = {
+ 	/* internal I2C */
+ 	MX6_PAD_EIM_D28__I2C1_SDA | TX6_I2C_PAD_CTRL,
+ 	MX6_PAD_EIM_D21__I2C1_SCL | TX6_I2C_PAD_CTRL,
+ };
+ 
+-static const struct gpio const tx6qdl_gpios[] = {
++static const struct gpio tx6qdl_gpios[] = {
+ 	/* These two entries are used to forcefully reinitialize the I2C bus */
+ 	{ TX6_I2C1_SCL_GPIO, GPIOFLAG_INPUT, "I2C1 SCL", },
+ 	{ TX6_I2C1_SDA_GPIO, GPIOFLAG_INPUT, "I2C1 SDA", },
+Index: karo-tx-uboot/board/karo/tx6/tx6ul.c
+===================================================================
+--- karo-tx-uboot.orig/board/karo/tx6/tx6ul.c
++++ karo-tx-uboot/board/karo/tx6/tx6ul.c
+@@ -92,7 +92,7 @@ char __csf_data[0] __attribute__((sectio
+ 					PAD_CTL_PUS_47K_UP)
+ 
+ 
+-static const iomux_v3_cfg_t const tx6ul_pads[] = {
++static const iomux_v3_cfg_t tx6ul_pads[] = {
+ 	/* UART pads */
+ #if CONFIG_MXC_UART_BASE == UART1_BASE
+ 	MX6_PAD_UART1_TX_DATA__UART1_DCE_TX | TX6UL_DEFAULT_PAD_CTRL,
+@@ -118,7 +118,7 @@ static const iomux_v3_cfg_t const tx6ul_
+ 	MX6_PAD_SNVS_TAMPER5__GPIO5_IO05 | TX6UL_GPIO_IN_PAD_CTRL, /* PHY INT */
+ };
+ 
+-static const iomux_v3_cfg_t const tx6ul_enet1_pads[] = {
++static const iomux_v3_cfg_t tx6ul_enet1_pads[] = {
+ 	/* FEC functions */
+ 	MX6_PAD_GPIO1_IO07__ENET1_MDC | MUX_PAD_CTRL(PAD_CTL_DSE_120ohm |
+ 						     PAD_CTL_SPEED_LOW),
+@@ -138,7 +138,7 @@ static const iomux_v3_cfg_t const tx6ul_
+ 	MX6_PAD_ENET1_TX_DATA0__ENET1_TDATA00 | TX6UL_ENET_PAD_CTRL,
+ };
+ 
+-static const iomux_v3_cfg_t const tx6ul_enet2_pads[] = {
++static const iomux_v3_cfg_t tx6ul_enet2_pads[] = {
+ 	MX6_PAD_ENET2_TX_CLK__ENET2_REF_CLK2 | MUX_PAD_CTRL(PAD_CTL_SPEED_LOW |
+ 							    PAD_CTL_DSE_80ohm |
+ 							    PAD_CTL_SRE_SLOW),
+@@ -151,7 +151,7 @@ static const iomux_v3_cfg_t const tx6ul_
+ 	MX6_PAD_ENET2_TX_DATA0__ENET2_TDATA00 | TX6UL_ENET_PAD_CTRL,
+ };
+ 
+-static const iomux_v3_cfg_t const tx6ul_i2c_pads[] = {
++static const iomux_v3_cfg_t tx6ul_i2c_pads[] = {
+ 	/* internal I2C */
+ 	MX6_PAD_SNVS_TAMPER1__GPIO5_IO01 | MUX_CFG_SION |
+ 			TX6UL_I2C_PAD_CTRL, /* I2C SCL */
+@@ -159,7 +159,7 @@ static const iomux_v3_cfg_t const tx6ul_
+ 			TX6UL_I2C_PAD_CTRL, /* I2C SDA */
+ };
+ 
+-static const struct gpio const tx6ul_gpios[] = {
++static const struct gpio tx6ul_gpios[] = {
+ #ifdef CONFIG_SYS_I2C_SOFT
+ 	/* These two entries are used to forcefully reinitialize the I2C bus */
+ 	{ TX6UL_I2C1_SCL_GPIO, GPIOFLAG_INPUT, "I2C1 SCL", },
+@@ -170,7 +170,7 @@ static const struct gpio const tx6ul_gpi
+ 	{ TX6UL_FEC_INT_GPIO, GPIOFLAG_INPUT, "FEC PHY INT", },
+ };
+ 
+-static const struct gpio const tx6ul_fec2_gpios[] = {
++static const struct gpio tx6ul_fec2_gpios[] = {
+ 	{ TX6UL_FEC2_RST_GPIO, GPIOFLAG_OUTPUT_INIT_LOW, "FEC2 PHY RESET", },
+ 	{ TX6UL_FEC2_INT_GPIO, GPIOFLAG_INPUT, "FEC2 PHY INT", },
+ };

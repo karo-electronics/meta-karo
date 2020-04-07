@@ -1,4 +1,4 @@
-SUMMARY = "Linux Kernel for Ka-Ro electronics TX6 Computer-On-Modules"
+SUMMARY = "Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
 require recipes-kernel/linux/linux-karo.inc
 
@@ -17,6 +17,27 @@ SRC_URI_append = " \
 	file://0003-panel-dpi.patch \
 	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
 	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
+"
+
+SRC_URI_append_mx8mm = " \
+	file://defconfig \
+	file://dts/freescale/imx8mm-qs8m-mq00-qsbase2.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-qs8m-mq00.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-16xx.dtsi;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-1610-mipi-mb.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-1610-tx4etml0500.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-1610.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-1620-lvds-mb.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-1620.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-lvds-mb.dtsi;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mm-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot \
+"
+
+SRC_URI_append_mx8mn = " \
+	file://defconfig \
+	file://dts/freescale/imx8mn-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mn-tx8m-nd00-mipi-mb.dts;subdir=git/arch/arm64/boot \
+	file://dts/freescale/imx8mn-tx8m-nd00.dts;subdir=git/arch/arm64/boot \
 "
 
 SRC_URI_append_tx6 = " \
@@ -61,12 +82,13 @@ SRC_URI_append_txul = " \
 "
 
 LOCALVERSION = "-stable"
-KERNEL_IMAGETYPE = "uImage"
+KERNEL_IMAGETYPE_mx8 = "Image"
+KERNEL_IMAGETYPE_mx6 = "uImage"
 
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd","",d)}"
 
-COMPATIBLE_MACHINE_tx8 = "(tx8m-.*|qs8m-.*)"
+COMPATIBLE_MACHINE_mx8 = "(tx8m-.*|qs8m-.*)"
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
 

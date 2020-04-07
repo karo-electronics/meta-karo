@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright 2019 Lothar Waßmann <LW@KARO-electronics.de>
+ *
+ */
+
+#include "imx8mm-tx8m-1610.dts"
+#include "imx8mm-tx8m-mipi-mb.dtsi"
+
+/ {
+	model = "Ka-Ro TX8M-1610 module on TX-MIPI-LVDS Mainboard";
+};

@@ -1,0 +1,1149 @@
+Index: u-boot-imx8mm-2.3.0/configs/qs8m-nd00_defconfig
+===================================================================
+--- /dev/null
++++ u-boot-imx8mm-2.3.0/configs/qs8m-nd00_defconfig
+@@ -0,0 +1,113 @@
++CONFIG_ARM=y
++CONFIG_ARCH_IMX8M=y
++CONFIG_SYS_TEXT_BASE=0x40200000
++CONFIG_SPL_GPIO_SUPPORT=y
++CONFIG_SPL_LIBCOMMON_SUPPORT=y
++CONFIG_SPL_LIBGENERIC_SUPPORT=y
++CONFIG_SYS_MALLOC_F_LEN=0x2000
++CONFIG_TARGET_TX8M=y
++CONFIG_KARO_QS8M_ND00=y
++CONFIG_SPL_MMC_SUPPORT=y
++CONFIG_SPL_SERIAL_SUPPORT=y
++CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
++CONFIG_SPL_WATCHDOG_SUPPORT=y
++# CONFIG_IMX_WDOG_B_RESET is not set
++CONFIG_IMX_BOOTAUX=y
++CONFIG_DEFAULT_DEVICE_TREE="imx8mn-qs8m-nd00"
++CONFIG_ENV_VARS_UBOOT_CONFIG=y
++CONFIG_FIT=y
++CONFIG_SPL_LOAD_FIT=y
++CONFIG_OF_BOARD_SETUP=y
++CONFIG_OF_SYSTEM_SETUP=y
++CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/spl_sd.cfg,SPL_TEXT_BASE=0x912000"
++CONFIG_SD_BOOT=y
++CONFIG_BOOTDELAY=3
++CONFIG_USE_BOOTCOMMAND=y
++CONFIG_BOOTCOMMAND="run bootargs_${boot_mode} bootm_cmd"
++CONFIG_LOGLEVEL=7
++CONFIG_PRE_CONSOLE_BUFFER=y
++CONFIG_PRE_CON_BUF_ADDR=0x93F000
++CONFIG_SYS_CONSOLE_INFO_QUIET=y
++CONFIG_DEFAULT_FDT_FILE="imx8mn-qs8m-nd00.dtb"
++CONFIG_VERSION_VARIABLE=y
++CONFIG_ARCH_MISC_INIT=y
++CONFIG_SPL=y
++CONFIG_SPL_BOARD_INIT=y
++CONFIG_SPL_RAW_IMAGE_SUPPORT=y
++CONFIG_SPL_DISABLE_BANNER_PRINT=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_USE_SECTOR=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR=0x2c0
++CONFIG_SPL_I2C_SUPPORT=y
++CONFIG_SPL_POWER_SUPPORT=y
++CONFIG_SPL_USB_HOST_SUPPORT=y
++CONFIG_SPL_USB_GADGET_SUPPORT=y
++CONFIG_SPL_USB_SDP_SUPPORT=y
++CONFIG_HUSH_PARSER=y
++CONFIG_SYS_PROMPT="QS8MN U-Boot > "
++CONFIG_CMD_MEMTEST=y
++CONFIG_CMD_CLK=y
++# CONFIG_CMD_FLASH is not set
++CONFIG_CMD_FUSE=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPT=y
++CONFIG_CMD_GPT_RENAME=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_PART=y
++CONFIG_CMD_READ=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_CACHE=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_EFI_PARTITION_ENTRIES_OFF=2048
++CONFIG_PARTITION_TYPE_GUID=y
++CONFIG_OF_CONTROL=y
++CONFIG_OF_BOARD_FIXUP=y
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_BOOTP_DNS=y
++CONFIG_BOOTP_GATEWAY=y
++CONFIG_BOOTP_SUBNETMASK=y
++CONFIG_IMX8M_DDR3L=y
++CONFIG_DM_GPIO=y
++CONFIG_MXC_GPIO=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_MXC=y
++CONFIG_LED=y
++CONFIG_LED_GPIO=y
++CONFIG_MXC_OCOTP=y
++CONFIG_PHY_MICREL=y
++CONFIG_PHY_MICREL_KSZ90X1=y
++CONFIG_PHY_SMSC=y
++CONFIG_DM_ETH=y
++CONFIG_PINCTRL=y
++CONFIG_PINCTRL_IMX8M=y
++CONFIG_DM_REGULATOR=y
++CONFIG_DM_THERMAL=y
++CONFIG_NXP_TMU=y
++CONFIG_USB=y
++CONFIG_DM_USB=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="FSL"
++CONFIG_USB_GADGET_VENDOR_NUM=0x0525
++CONFIG_USB_GADGET_PRODUCT_NUM=0xa4a5
++CONFIG_CI_UDC=y
++CONFIG_USB_GADGET_VBUS_DRAW=60
++CONFIG_SDP_LOADADDR=0x40400000
++CONFIG_USB_GADGET_DOWNLOAD=y
++CONFIG_VIDEO=y
++CONFIG_IMX_SEC_MIPI_DSI=y
++CONFIG_SYS_CONSOLE_BG_COL=0xc0
++CONFIG_SYS_CONSOLE_FG_COL=0x10
++CONFIG_FAT_WRITE=y
++# CONFIG_REGEX is not set
++CONFIG_OF_LIBFDT_OVERLAY=y
++# CONFIG_EFI_LOADER is not set
+Index: u-boot-imx8mm-2.3.0/configs/qs8m-nd00_mfg_defconfig
+===================================================================
+--- /dev/null
++++ u-boot-imx8mm-2.3.0/configs/qs8m-nd00_mfg_defconfig
+@@ -0,0 +1,114 @@
++CONFIG_ARM=y
++CONFIG_ARCH_IMX8M=y
++CONFIG_SYS_TEXT_BASE=0x40200000
++CONFIG_SPL_GPIO_SUPPORT=y
++CONFIG_SPL_LIBCOMMON_SUPPORT=y
++CONFIG_SPL_LIBGENERIC_SUPPORT=y
++CONFIG_SYS_MALLOC_F_LEN=0x2000
++CONFIG_TARGET_TX8M=y
++CONFIG_KARO_QS8M_ND00=y
++CONFIG_TX8M_UBOOT_MFG=y
++CONFIG_SPL_MMC_SUPPORT=y
++CONFIG_SPL_SERIAL_SUPPORT=y
++CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
++CONFIG_SPL_WATCHDOG_SUPPORT=y
++# CONFIG_IMX_WDOG_B_RESET is not set
++CONFIG_IMX_BOOTAUX=y
++CONFIG_DEFAULT_DEVICE_TREE="imx8mn-qs8m-nd00"
++CONFIG_ENV_VARS_UBOOT_CONFIG=y
++# CONFIG_ANDROID_BOOT_IMAGE is not set
++CONFIG_FIT=y
++CONFIG_SPL_LOAD_FIT=y
++CONFIG_OF_BOARD_SETUP=y
++CONFIG_OF_SYSTEM_SETUP=y
++CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/spl_sd.cfg,SPL_TEXT_BASE=0x912000"
++CONFIG_SD_BOOT=y
++CONFIG_BOOTDELAY=0
++CONFIG_USE_BOOTCOMMAND=y
++CONFIG_BOOTCOMMAND="run bootargs_${boot_mode} bootm_cmd"
++CONFIG_LOGLEVEL=7
++CONFIG_PRE_CONSOLE_BUFFER=y
++CONFIG_PRE_CON_BUF_ADDR=0x93F000
++CONFIG_SYS_CONSOLE_INFO_QUIET=y
++CONFIG_DEFAULT_FDT_FILE="imx8mn-qs8m-nd00.dtb"
++CONFIG_VERSION_VARIABLE=y
++CONFIG_ARCH_MISC_INIT=y
++CONFIG_SPL=y
++CONFIG_SPL_BOARD_INIT=y
++CONFIG_SPL_RAW_IMAGE_SUPPORT=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_USE_SECTOR=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR=0x2c0
++CONFIG_SPL_I2C_SUPPORT=y
++CONFIG_SPL_POWER_SUPPORT=y
++CONFIG_SPL_USB_HOST_SUPPORT=y
++CONFIG_SPL_USB_GADGET_SUPPORT=y
++CONFIG_SPL_USB_SDP_SUPPORT=y
++CONFIG_SYS_PROMPT="QS8MN U-Boot > "
++CONFIG_FASTBOOT=y
++CONFIG_FSL_FASTBOOT=y
++CONFIG_FASTBOOT_BUF_ADDR=0x42800000
++CONFIG_FASTBOOT_BUF_SIZE=0x40000000
++CONFIG_FASTBOOT_FLASH=y
++CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++# CONFIG_CMD_ELF is not set
++# CONFIG_CMD_XIMG is not set
++CONFIG_CMD_MEMTEST=y
++CONFIG_CMD_CLK=y
++# CONFIG_CMD_FLASH is not set
++CONFIG_CMD_FUSE=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPT=y
++CONFIG_CMD_GPT_RENAME=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_PART=y
++CONFIG_CMD_READ=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_CACHE=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_EFI_PARTITION_ENTRIES_OFF=2048
++CONFIG_PARTITION_TYPE_GUID=y
++CONFIG_OF_CONTROL=y
++CONFIG_OF_BOARD_FIXUP=y
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_BOOTP_DNS=y
++CONFIG_BOOTP_GATEWAY=y
++CONFIG_BOOTP_SUBNETMASK=y
++CONFIG_IMX8M_DDR3L=y
++CONFIG_DM_GPIO=y
++CONFIG_MXC_GPIO=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_MXC=y
++CONFIG_LED=y
++CONFIG_LED_GPIO=y
++CONFIG_MXC_OCOTP=y
++CONFIG_PHY_SMSC=y
++CONFIG_DM_ETH=y
++CONFIG_PINCTRL=y
++CONFIG_PINCTRL_IMX8M=y
++CONFIG_DM_REGULATOR=y
++CONFIG_DM_THERMAL=y
++CONFIG_NXP_TMU=y
++CONFIG_USB=y
++CONFIG_DM_USB=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="FSL"
++CONFIG_USB_GADGET_VENDOR_NUM=0x0525
++CONFIG_USB_GADGET_PRODUCT_NUM=0xa4a5
++CONFIG_CI_UDC=y
++CONFIG_USB_GADGET_VBUS_DRAW=60
++CONFIG_SDP_LOADADDR=0x40400000
++CONFIG_USB_FUNCTION_MASS_STORAGE=y
++CONFIG_FAT_WRITE=y
++# CONFIG_REGEX is not set
++CONFIG_OF_LIBFDT_OVERLAY=y
++# CONFIG_EFI_LOADER is not set
+Index: u-boot-imx8mm-2.3.0/configs/qs8m-nd00_noenv_defconfig
+===================================================================
+--- /dev/null
++++ u-boot-imx8mm-2.3.0/configs/qs8m-nd00_noenv_defconfig
+@@ -0,0 +1,106 @@
++CONFIG_ARM=y
++CONFIG_ARCH_IMX8M=y
++CONFIG_SYS_TEXT_BASE=0x40200000
++CONFIG_SPL_GPIO_SUPPORT=y
++CONFIG_SPL_LIBCOMMON_SUPPORT=y
++CONFIG_SPL_LIBGENERIC_SUPPORT=y
++CONFIG_SYS_MALLOC_F_LEN=0x2000
++CONFIG_TARGET_TX8M=y
++CONFIG_KARO_QS8M_ND00=y
++CONFIG_TX8M_UBOOT_NOENV=y
++CONFIG_SPL_MMC_SUPPORT=y
++CONFIG_SPL_SERIAL_SUPPORT=y
++CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
++CONFIG_SPL_WATCHDOG_SUPPORT=y
++# CONFIG_IMX_WDOG_B_RESET is not set
++CONFIG_IMX_BOOTAUX=y
++CONFIG_DEFAULT_DEVICE_TREE="imx8mn-qs8m-nd00"
++CONFIG_ENV_VARS_UBOOT_CONFIG=y
++CONFIG_FIT=y
++CONFIG_SPL_LOAD_FIT=y
++CONFIG_OF_BOARD_SETUP=y
++CONFIG_OF_SYSTEM_SETUP=y
++CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/spl_sd.cfg,SPL_TEXT_BASE=0x912000"
++CONFIG_SD_BOOT=y
++CONFIG_BOOTDELAY=-1
++CONFIG_USE_BOOTCOMMAND=y
++CONFIG_BOOTCOMMAND="run bootargs_${boot_mode} bootm_cmd"
++CONFIG_LOGLEVEL=7
++CONFIG_PRE_CONSOLE_BUFFER=y
++CONFIG_PRE_CON_BUF_ADDR=0x93F000
++CONFIG_SYS_CONSOLE_INFO_QUIET=y
++CONFIG_DEFAULT_FDT_FILE="imx8mn-qs8m-nd00.dtb"
++CONFIG_VERSION_VARIABLE=y
++CONFIG_ARCH_MISC_INIT=y
++CONFIG_SPL=y
++CONFIG_SPL_BOARD_INIT=y
++CONFIG_SPL_RAW_IMAGE_SUPPORT=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_USE_SECTOR=y
++CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR=0x2c0
++CONFIG_SPL_I2C_SUPPORT=y
++CONFIG_SPL_POWER_SUPPORT=y
++CONFIG_SPL_USB_HOST_SUPPORT=y
++CONFIG_SPL_USB_GADGET_SUPPORT=y
++CONFIG_SPL_USB_SDP_SUPPORT=y
++CONFIG_SYS_PROMPT="QS8MN U-Boot > "
++CONFIG_CMD_MEMTEST=y
++CONFIG_CMD_CLK=y
++# CONFIG_CMD_FLASH is not set
++CONFIG_CMD_FUSE=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPT=y
++CONFIG_CMD_GPT_RENAME=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_PART=y
++CONFIG_CMD_READ=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
++CONFIG_CMD_DHCP=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_CACHE=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_EFI_PARTITION_ENTRIES_OFF=2048
++CONFIG_PARTITION_TYPE_GUID=y
++CONFIG_OF_CONTROL=y
++CONFIG_OF_BOARD_FIXUP=y
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_BOOTP_DNS=y
++CONFIG_BOOTP_GATEWAY=y
++CONFIG_BOOTP_SUBNETMASK=y
++CONFIG_IMX8M_DDR3L=y
++CONFIG_DM_GPIO=y
++CONFIG_MXC_GPIO=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_MXC=y
++CONFIG_LED=y
++CONFIG_LED_GPIO=y
++CONFIG_MXC_OCOTP=y
++CONFIG_PHY_SMSC=y
++CONFIG_DM_ETH=y
++CONFIG_PINCTRL=y
++CONFIG_PINCTRL_IMX8M=y
++CONFIG_DM_REGULATOR=y
++CONFIG_DM_THERMAL=y
++CONFIG_NXP_TMU=y
++CONFIG_USB=y
++CONFIG_DM_USB=y
++CONFIG_USB_EHCI_HCD=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="FSL"
++CONFIG_USB_GADGET_VENDOR_NUM=0x0525
++CONFIG_USB_GADGET_PRODUCT_NUM=0xa4a5
++CONFIG_CI_UDC=y
++CONFIG_USB_GADGET_VBUS_DRAW=60
++CONFIG_SDP_LOADADDR=0x40400000
++CONFIG_USB_GADGET_DOWNLOAD=y
++CONFIG_FAT_WRITE=y
++# CONFIG_REGEX is not set
++CONFIG_OF_LIBFDT_OVERLAY=y
++# CONFIG_EFI_LOADER is not set
+Index: u-boot-imx8mm-2.3.0/arch/arm/dts/imx8mn-qs8m-nd00-u-boot.dtsi
+===================================================================
+--- /dev/null
++++ u-boot-imx8mm-2.3.0/arch/arm/dts/imx8mn-qs8m-nd00-u-boot.dtsi
+@@ -0,0 +1,12 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/*
++ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
++ *
++ */
++#include "config.h"
++
++/ {
++	config {
++		u-boot,mmc-env-offset = <CONFIG_ENV_OFFSET>;
++	};
++};
+Index: u-boot-imx8mm-2.3.0/arch/arm/dts/imx8mn-qs8m-nd00.dts
+===================================================================
+--- /dev/null
++++ u-boot-imx8mm-2.3.0/arch/arm/dts/imx8mn-qs8m-nd00.dts
+@@ -0,0 +1,595 @@
++// SPDX-License-Identifier: (GPL-2.0 OR MIT)
++/*
++ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
++ *
++ */
++
++/dts-v1/;
++
++#include "fsl-imx8mn.dtsi"
++
++/ {
++	model = "Ka-Ro electronics QS8M-ND00 (NXP i.MX8MN) board";
++	compatible = "karo,imx8mn-tx8m", "fsl,imx8mn";
++
++	aliases {
++		usb-host = &usbotg2;
++		usbotg = &usbotg1;
++		i2c0 = &i2c1;
++		i2c1 = &i2c2;
++		i2c2 = &i2c3;
++	};
++
++	chosen {
++		bootargs = "console=ttymxc0,115200 earlycon=ec_imx6q,0x30860000,115200";
++		stdout-path = &uart1;
++	};
++
++	clocks {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		audio_clk: clock@0 {
++			compatible = "fixed-clock";
++			reg = <0>;
++			#clock-cells = <0>;
++			clock-frequency = <26000000>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led {
++			label = "Heartbeat";
++			pinctrl-names = "default";
++			pinctrl-0 = <&pinctrl_led>;
++			gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
++		};
++	};
++
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0x0 0x40000000 0 0x40000000>;
++	};
++
++	owire {
++		compatible = "w1-gpio";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_owire>;
++		gpios = <&gpio3 25 GPIO_ACTIVE_HIGH>;
++		linux,open-drain;
++	};
++
++	reg_3v3: regulator-3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		regulator-always-on;
++		power-supply = <&buck6_reg>;
++	};
++
++	reg_3v3_etn: regulator-3v3-etn {
++		compatible = "regulator-fixed";
++		regulator-name = "3V3_ETN";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_etnphy_power>;
++		gpio = <&gpio1 23 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		power-supply = <&reg_3v3>;
++	};
++};
++
++&A53_0 {
++	arm-supply = <&buck2_reg>;
++};
++
++&i2c1 {
++	pinctrl-names = "default", "gpio";
++	pinctrl-0 = <&pinctrl_i2c1>;
++	pinctrl-1 = <&pinctrl_i2c1_gpio>;
++	clock-frequency = <400000>;
++	scl-gpios = <&gpio5 14 GPIO_ACTIVE_HIGH>;
++	sda-gpios = <&gpio5 15 GPIO_ACTIVE_HIGH>;
++	status = "okay";
++
++	pmic: bd71837@4b {
++		reg = <0x4b>;
++		compatible = "rohm,bd71837";
++		/* PMIC BD71837 PMIC_nINT GPIO1_IO3 */
++		pinctrl-0 = <&pinctrl_pmic>;
++		gpio_intr = <&gpio1 3 GPIO_ACTIVE_LOW>;
++
++		gpo {
++			rohm,drv = <0x0C>;	/* 0b0000_1100 all gpios with CMOS output mode */
++		};
++
++		regulators {
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			bd71837,pmic-buck2-uses-i2c-dvs;
++			bd71837,pmic-buck2-dvs-voltage = <1000000>, <900000>, <0>; /* VDD_ARM: Run-Idle */
++
++			buck1_reg: regulator@0 {
++				reg = <0>;
++				regulator-compatible = "buck1";
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <1300000>;
++				regulator-boot-on;
++				regulator-always-on;
++				regulator-ramp-delay = <1250>;
++			};
++
++			buck2_reg: regulator@1 {
++				reg = <1>;
++				regulator-compatible = "buck2";
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <1300000>;
++				regulator-boot-on;
++				regulator-always-on;
++				regulator-ramp-delay = <1250>;
++			};
++
++			buck3_reg: regulator@2 {
++				reg = <2>;
++				regulator-compatible = "buck3";
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <1300000>;
++			};
++
++			buck4_reg: regulator@3 {
++				reg = <3>;
++				regulator-compatible = "buck4";
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <1300000>;
++			};
++
++			buck5_reg: regulator@4 {
++				reg = <4>;
++				regulator-compatible = "buck5";
++				regulator-min-microvolt = <700000>;
++				regulator-max-microvolt = <1350000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			buck6_reg: regulator@5 {
++				reg = <5>;
++				regulator-compatible = "buck6";
++				regulator-min-microvolt = <3000000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			buck7_reg: regulator@6 {
++				reg = <6>;
++				regulator-compatible = "buck7";
++				regulator-min-microvolt = <1605000>;
++				regulator-max-microvolt = <1995000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			buck8_reg: regulator@7 {
++				reg = <7>;
++				regulator-compatible = "buck8";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <1400000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo1_reg: regulator@8 {
++				reg = <8>;
++				regulator-compatible = "ldo1";
++				regulator-min-microvolt = <3000000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo2_reg: regulator@9 {
++				reg = <9>;
++				regulator-compatible = "ldo2";
++				regulator-min-microvolt = <900000>;
++				regulator-max-microvolt = <900000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo3_reg: regulator@10 {
++				reg = <10>;
++				regulator-compatible = "ldo3";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo4_reg: regulator@11 {
++				reg = <11>;
++				regulator-compatible = "ldo4";
++				regulator-min-microvolt = <900000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo5_reg: regulator@12 {
++				reg = <12>;
++				regulator-compatible = "ldo5";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++			};
++
++			ldo6_reg: regulator@13 {
++				reg = <13>;
++				regulator-compatible = "ldo6";
++				regulator-min-microvolt = <900000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo7_reg: regulator@14 {
++				reg = <14>;
++				regulator-compatible = "ldo7";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++			};
++		};
++	};
++};
++
++&i2c2 {
++	clock-frequency = <400000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c2>;
++	status = "okay";
++};
++
++&i2c3 {
++	clock-frequency = <400000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c3>;
++	status = "okay";
++};
++
++&fec1 {
++	pinctrl-names = "default", "sleep";
++	pinctrl-0 = <&pinctrl_fec1 &pinctrl_etnphy_rst>;
++	pinctrl-1 = <&pinctrl_fec1_sleep>;
++	phy-mode = "rmii";
++	phy-handle = <&ethphy0>;
++	phy-supply = <&reg_3v3_etn>;
++	phy-reset-gpios = <&gpio1 29 GPIO_ACTIVE_LOW>;
++	phy-reset-duration = <10>;
++	assigned-clock-parents = <&clk IMX8MM_SYS_PLL1_266M>,
++				 <&clk IMX8MM_SYS_PLL2_100M>,
++				 <&clk IMX8MM_SYS_PLL2_50M>;
++	assigned-clock-rates = <0>, <0>, <50000000>, <100000000>;
++	status = "okay";
++
++	mdio {
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		ethphy0: ethernet-phy@0 {
++			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <0>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&pinctrl_etnphy_int>;
++			interrupt-parent = <&gpio1>;
++			interrupts = <28 IRQ_TYPE_EDGE_FALLING>;
++			smsc,disable-energy-detect;
++		};
++	};
++};
++
++&uart1 { /* console */
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart1 &pinctrl_uart1_rtscts>;
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&uart2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart2 &pinctrl_uart2_rtscts>;
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&uart3 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart3 &pinctrl_uart3_rtscts>;
++	uart-has-rtscts;
++	status = "okay";
++};
++
++&usbotg1 {
++	status = "okay";
++};
++
++&usdhc1 { /* eMMC */
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_usdhc1>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&usdhc2 {
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++	pinctrl-0 = <&pinctrl_usdhc2 &pinctrl_usdhc2_cd>;
++	pinctrl-1 = <&pinctrl_usdhc2_100mhz &pinctrl_usdhc2_cd>;
++	pinctrl-2 = <&pinctrl_usdhc2_200mhz &pinctrl_usdhc2_cd>;
++	bus-width = <4>;
++	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
++	no-1-8-v;
++	fsl,wp-controller;
++	status = "okay";
++};
++
++&usdhc3 {
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++	pinctrl-0 = <&pinctrl_usdhc3 &pinctrl_usdhc3_cd>;
++	pinctrl-1 = <&pinctrl_usdhc3_100mhz &pinctrl_usdhc3_cd>;
++	pinctrl-2 = <&pinctrl_usdhc3_200mhz &pinctrl_usdhc3_cd>;
++	bus-width = <4>;
++	cd-gpios = <&gpio3 8 GPIO_ACTIVE_LOW>;
++	no-1-8-v;
++	fsl,wp-controller;
++	status = "okay";
++};
++
++&wdog1 {
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&iomuxc {
++	pinctrl_etnphy_int: etnphy-intgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ENET_RD2__GPIO1_IO28		0x90
++		>;
++	};
++
++	pinctrl_etnphy_power: etnphy-powergrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ENET_TXC__GPIO1_IO23		0x142
++		>;
++	};
++
++	pinctrl_etnphy_rst: etnphy-rstgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ENET_RD3__GPIO1_IO29		0x140
++		>;
++	};
++
++	pinctrl_fec1: fec1grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ENET_MDC__ENET1_MDC		0x142
++			MX8MN_IOMUXC_ENET_MDIO__ENET1_MDIO		0x142
++			MX8MN_IOMUXC_ENET_TD2__ENET1_TX_CLK		0x40000016
++			MX8MN_IOMUXC_ENET_TD0__ENET1_RGMII_TD0		0x16
++			MX8MN_IOMUXC_ENET_TD1__ENET1_RGMII_TD1		0x16
++			MX8MN_IOMUXC_ENET_RD0__ENET1_RGMII_RD0		0x90
++			MX8MN_IOMUXC_ENET_RD1__ENET1_RGMII_RD1		0x90
++			MX8MN_IOMUXC_ENET_RXC__ENET1_RX_ER		0x16
++			MX8MN_IOMUXC_ENET_RX_CTL__ENET1_RGMII_RX_CTL	0x16
++			MX8MN_IOMUXC_ENET_TX_CTL__ENET1_RGMII_TX_CTL	0x16
++		>;
++	};
++
++	pinctrl_fec1_sleep: fec1-sleepgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ENET_MDC__ENET1_MDC		0x120
++			MX8MN_IOMUXC_ENET_MDIO__ENET1_MDIO		0x120
++			MX8MN_IOMUXC_ENET_TD2__ENET1_TX_CLK		0x40000120
++			MX8MN_IOMUXC_ENET_TD0__ENET1_RGMII_TD0		0x120
++			MX8MN_IOMUXC_ENET_TD1__ENET1_RGMII_TD1		0x120
++			MX8MN_IOMUXC_ENET_RD0__ENET1_RGMII_RD0		0x120
++			MX8MN_IOMUXC_ENET_RD1__ENET1_RGMII_RD1		0x120
++			MX8MN_IOMUXC_ENET_RXC__ENET1_RX_ER		0x120
++			MX8MN_IOMUXC_ENET_RX_CTL__ENET1_RGMII_RX_CTL	0x120
++			MX8MN_IOMUXC_ENET_TX_CTL__ENET1_RGMII_TX_CTL	0x120
++		>;
++	};
++
++	pinctrl_i2c1: i2c1grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_I2C1_SCL__I2C1_SCL			0x400001c2
++			MX8MN_IOMUXC_I2C1_SDA__I2C1_SDA			0x400001c2
++		>;
++	};
++
++	pinctrl_i2c1_gpio: i2c1-gpiogrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_I2C1_SCL__GPIO5_IO14		0x400001c2
++			MX8MN_IOMUXC_I2C1_SDA__GPIO5_IO15		0x400001c2
++		>;
++	};
++
++	pinctrl_i2c2: i2c2grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_I2C2_SCL__I2C2_SCL			0x400001c2
++			MX8MN_IOMUXC_I2C2_SDA__I2C2_SDA			0x400001c2
++		>;
++	};
++
++	pinctrl_i2c3: i2c3grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_I2C3_SCL__I2C3_SCL			0x400001c2
++			MX8MN_IOMUXC_I2C3_SDA__I2C3_SDA			0x400001c2
++		>;
++	};
++
++	pinctrl_i2c4: i2c4grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_I2C4_SCL__I2C4_SCL			0x400001c2
++			MX8MN_IOMUXC_I2C4_SDA__I2C4_SDA			0x400001c2
++		>;
++	};
++
++	pinctrl_led: ledgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_GPIO1_IO02__GPIO1_IO2		0x06
++		>;
++	};
++
++	pinctrl_owire: owiregrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_SAI5_MCLK__GPIO3_IO25		0x400001c0
++		>;
++	};
++
++	pinctrl_pmic: pmicgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_GPIO1_IO03__GPIO1_IO3		0x1c0
++		>;
++	};
++
++	pinctrl_uart1: uart1grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_UART1_RXD__UART1_DCE_RX		0x140
++			MX8MN_IOMUXC_UART1_TXD__UART1_DCE_TX		0x140
++		>;
++	};
++
++	pinctrl_uart1_rtscts: uart1-rtsctsgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_UART3_TXD__UART1_DCE_RTS_B		0x140
++			MX8MN_IOMUXC_UART3_RXD__UART1_DCE_CTS_B		0x140
++		>;
++	};
++
++	pinctrl_uart2: uart2grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_UART2_RXD__UART2_DCE_RX		0x140
++			MX8MN_IOMUXC_UART2_TXD__UART2_DCE_TX		0x140
++		>;
++	};
++
++	pinctrl_uart2_rtscts: uart2-rtsctsgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_UART4_TXD__UART2_DCE_RTS_B		0x140
++			MX8MN_IOMUXC_UART4_RXD__UART2_DCE_CTS_B		0x140
++		>;
++	};
++
++	pinctrl_uart3: uart3grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ECSPI1_SCLK__UART3_DCE_RX		0x140
++			MX8MN_IOMUXC_ECSPI1_MOSI__UART3_DCE_TX		0x140
++		>;
++	};
++
++	pinctrl_uart3_rtscts: uart3-rtsctsgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_ECSPI1_SS0__UART3_DCE_RTS_B	0x140
++			MX8MN_IOMUXC_ECSPI1_MISO__UART3_DCE_CTS_B	0x140
++		>;
++	};
++
++	pinctrl_usdhc1: usdhc1grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_SD1_CLK__USDHC1_CLK		0x190
++			MX8MN_IOMUXC_SD1_CMD__USDHC1_CMD		0x150
++			MX8MN_IOMUXC_SD1_DATA0__USDHC1_DATA0		0x1d0
++			MX8MN_IOMUXC_SD1_DATA1__USDHC1_DATA1		0x1d0
++			MX8MN_IOMUXC_SD1_DATA2__USDHC1_DATA2		0x1d0
++			MX8MN_IOMUXC_SD1_DATA3__USDHC1_DATA3		0x1d0
++			MX8MN_IOMUXC_SD1_DATA4__USDHC1_DATA4		0x1d0
++			MX8MN_IOMUXC_SD1_DATA5__USDHC1_DATA5		0x1d0
++			MX8MN_IOMUXC_SD1_DATA6__USDHC1_DATA6		0x1d0
++			MX8MN_IOMUXC_SD1_DATA7__USDHC1_DATA7		0x1d0
++			MX8MN_IOMUXC_SD1_STROBE__USDHC1_STROBE		0x156
++			MX8MN_IOMUXC_SD1_RESET_B__USDHC1_RESET_B	0x156
++		>;
++	};
++
++	pinctrl_usdhc2: usdhc2grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_SD2_CLK__USDHC2_CLK		0x190
++			MX8MN_IOMUXC_SD2_CMD__USDHC2_CMD		0x1d0
++			MX8MN_IOMUXC_SD2_DATA0__USDHC2_DATA0		0x1d0
++			MX8MN_IOMUXC_SD2_DATA1__USDHC2_DATA1		0x1d0
++			MX8MN_IOMUXC_SD2_DATA2__USDHC2_DATA2		0x1d0
++			MX8MN_IOMUXC_SD2_DATA3__USDHC2_DATA3		0x1d0
++		>;
++	};
++
++	pinctrl_usdhc2_100mhz: usdhc2grp100mhz {
++		fsl,pins = <
++			MX8MN_IOMUXC_SD2_CLK__USDHC2_CLK		0x194
++			MX8MN_IOMUXC_SD2_CMD__USDHC2_CMD		0x1d4
++			MX8MN_IOMUXC_SD2_DATA0__USDHC2_DATA0		0x1d4
++			MX8MN_IOMUXC_SD2_DATA1__USDHC2_DATA1		0x1d4
++			MX8MN_IOMUXC_SD2_DATA2__USDHC2_DATA2		0x1d4
++			MX8MN_IOMUXC_SD2_DATA3__USDHC2_DATA3		0x1d4
++		>;
++	};
++
++	pinctrl_usdhc2_200mhz: usdhc2grp200mhz {
++		fsl,pins = <
++			MX8MN_IOMUXC_SD2_CLK__USDHC2_CLK		0x196
++			MX8MN_IOMUXC_SD2_CMD__USDHC2_CMD		0x1d6
++			MX8MN_IOMUXC_SD2_DATA0__USDHC2_DATA0		0x1d6
++			MX8MN_IOMUXC_SD2_DATA1__USDHC2_DATA1		0x1d6
++			MX8MN_IOMUXC_SD2_DATA2__USDHC2_DATA2		0x1d6
++			MX8MN_IOMUXC_SD2_DATA3__USDHC2_DATA3		0x1d6
++		>;
++	};
++
++	pinctrl_usdhc2_cd: usdhc2-cdgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_SD2_CD_B__GPIO2_IO12		0x1c0
++		>;
++	};
++
++	pinctrl_usdhc3: usdhc3grp {
++		fsl,pins = <
++			MX8MN_IOMUXC_NAND_WE_B__USDHC3_CLK		0x40000190
++			MX8MN_IOMUXC_NAND_WP_B__USDHC3_CMD		0x1d0
++			MX8MN_IOMUXC_NAND_DATA04__USDHC3_DATA0		0x1d0
++			MX8MN_IOMUXC_NAND_DATA05__USDHC3_DATA1		0x1d0
++			MX8MN_IOMUXC_NAND_DATA06__USDHC3_DATA2		0x1d0
++			MX8MN_IOMUXC_NAND_DATA07__USDHC3_DATA3		0x1d0
++		>;
++	};
++
++	pinctrl_usdhc3_100mhz: usdhc3grp100mhz {
++		fsl,pins = <
++			MX8MN_IOMUXC_NAND_WE_B__USDHC3_CLK		0x40000194
++			MX8MN_IOMUXC_NAND_WP_B__USDHC3_CMD		0x1d4
++			MX8MN_IOMUXC_NAND_DATA04__USDHC3_DATA0		0x1d4
++			MX8MN_IOMUXC_NAND_DATA05__USDHC3_DATA1		0x1d4
++			MX8MN_IOMUXC_NAND_DATA06__USDHC3_DATA2		0x1d4
++			MX8MN_IOMUXC_NAND_DATA07__USDHC3_DATA3		0x1d4
++		>;
++	};
++
++	pinctrl_usdhc3_200mhz: usdhc3grp200mhz {
++		fsl,pins = <
++			MX8MN_IOMUXC_NAND_WE_B__USDHC3_CLK		0x40000196
++			MX8MN_IOMUXC_NAND_WP_B__USDHC3_CMD		0x1d6
++			MX8MN_IOMUXC_NAND_DATA04__USDHC3_DATA0		0x1d6
++			MX8MN_IOMUXC_NAND_DATA05__USDHC3_DATA1		0x1d6
++			MX8MN_IOMUXC_NAND_DATA06__USDHC3_DATA2		0x1d6
++			MX8MN_IOMUXC_NAND_DATA07__USDHC3_DATA3		0x1d6
++		>;
++	};
++
++	pinctrl_usdhc3_cd: usdhc3-cdgrp {
++		fsl,pins = <
++			MX8MN_IOMUXC_NAND_DATA02__GPIO3_IO8		0x1c0
++		>;
++	};
++};
+Index: u-boot-imx8mm-2.3.0/board/karo/tx8m/Kconfig
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/board/karo/tx8m/Kconfig
++++ u-boot-imx8mm-2.3.0/board/karo/tx8m/Kconfig
+@@ -9,45 +9,50 @@ config SYS_CONFIG_NAME
+ config SYS_VENDOR
+ 	default "karo"
+ 
+-choice
+-	prompt "Ka-Ro TX8M module variant"
+-	default KARO_TX8MM_1610
+-
+-config KARO_TX8MM_1610
+-	bool "Ka-Ro TX8M-1610 module"
+-	select IMX8MM
++config KARO_TX8M
++	bool
+ 	select BOARD_LATE_INIT
+ 	imply FEC_MXC
+ 	select MII
+ 	select PHYLIB
+ 	select MXC_UART
+ 
+-config KARO_TX8MM_1620
+-	bool "Ka-Ro TX8M-1620 module"
+-	select IMX8MM
++config KARO_QS8M
++	bool
+ 	select BOARD_LATE_INIT
+ 	imply FEC_MXC
+ 	select MII
+ 	select PHYLIB
+ 	select MXC_UART
+ 
+-config KARO_QS8M
++choice
++	prompt "Ka-Ro TX8M/QS8M module variant"
++	default KARO_TX8MM_1610
++
++config KARO_TX8MM_1610
++	bool "Ka-Ro TX8M-1610 module"
++	select IMX8MM
++	select KARO_TX8M
++
++config KARO_TX8MM_1620
++	bool "Ka-Ro TX8M-1620 module"
++	select IMX8MM
++	select KARO_TX8M
++
++config KARO_QS8M_MQ00
+ 	bool "Ka-Ro TX8M-1610 compatible solder-in module"
+ 	select IMX8MM
+-	select BOARD_LATE_INIT
+-	imply FEC_MXC
+-	select MII
+-	select PHYLIB
+-	select MXC_UART
++	select KARO_QS8M
+ 
+ config KARO_TX8MN
+ 	bool "Ka-Ro TX8M-ND00 module"
+ 	select IMX8MN
+-	select BOARD_LATE_INIT
+-	imply FEC_MXC
+-	select MII
+-	select PHYLIB
+-	select MXC_UART
++	select KARO_TX8M
++
++config KARO_QS8M_ND00
++	bool "Ka-Ro TX8M-1610 compatible solder-in module"
++	select IMX8MN
++	select KARO_QS8M
+ 
+ endchoice
+ 
+Index: u-boot-imx8mm-2.3.0/board/karo/tx8m/tx8mm.c
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/board/karo/tx8m/tx8mm.c
++++ u-boot-imx8mm-2.3.0/board/karo/tx8m/tx8mm.c
+@@ -523,7 +523,7 @@ int checkboard(void)
+ 	printf("Board: Ka-Ro TX8M-1610\n");
+ #elif defined(CONFIG_KARO_TX8MM_1620)
+ 	printf("Board: Ka-Ro TX8M-1620\n");
+-#elif defined(CONFIG_KARO_QS8M)
++#elif defined(CONFIG_KARO_QS8M_MQ00)
+ 	printf("Board: Ka-Ro QS8M-MQ00\n");
+ #else
+ #error Unsupported module variant
+Index: u-boot-imx8mm-2.3.0/board/karo/tx8m/tx8mn.c
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/board/karo/tx8m/tx8mn.c
++++ u-boot-imx8mm-2.3.0/board/karo/tx8m/tx8mn.c
+@@ -465,7 +465,7 @@ int checkboard(void)
+ {
+ #if defined(CONFIG_KARO_TX8MN)
+ 	printf("Board: Ka-Ro TX8M-ND00\n");
+-#elif defined(CONFIG_KARO_QS8M)
++#elif defined(CONFIG_KARO_QS8M_ND00)
+ 	printf("Board: Ka-Ro QS8M-ND00\n");
+ #else
+ #error Unsupported module variant
+Index: u-boot-imx8mm-2.3.0/include/configs/tx8m.h
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/include/configs/tx8m.h
++++ u-boot-imx8mm-2.3.0/include/configs/tx8m.h
+@@ -185,8 +185,10 @@
+ #define PHYS_SDRAM_SIZE			SZ_2G
+ #elif defined(CONFIG_KARO_TX8MN)
+ #define PHYS_SDRAM_SIZE			SZ_512M
+-#elif defined(CONFIG_KARO_QS8M)
++#elif defined(CONFIG_KARO_QS8M_MQ00)
+ #define PHYS_SDRAM_SIZE			SZ_1G
++#elif defined(CONFIG_KARO_QS8M_ND00)
++#define PHYS_SDRAM_SIZE			SZ_512M
+ #else
+ #error Unsupported Board type
+ #endif
+Index: u-boot-imx8mm-2.3.0/arch/arm/dts/Makefile
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/arch/arm/dts/Makefile
++++ u-boot-imx8mm-2.3.0/arch/arm/dts/Makefile
+@@ -474,6 +474,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += fsl-imx8mq-e
+ 		imx8mm-qs8m-mq00.dtb \
+ 		imx8mm-tx8m-1610.dtb \
+ 		imx8mm-tx8m-1620.dtb \
++		imx8mn-qs8m-nd00.dtb \
+ 		imx8mn-tx8m-nd00.dtb
+ 
+ dtb-$(CONFIG_ARCH_IMX8) += fsl-imx8dx-17x17-val.dtb \
+Index: u-boot-imx8mm-2.3.0/board/karo/tx8m/Makefile
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/board/karo/tx8m/Makefile
++++ u-boot-imx8mm-2.3.0/board/karo/tx8m/Makefile
+@@ -8,8 +8,6 @@ ifdef CONFIG_SPL_BUILD
+ obj-y += spl.o
+ obj-$(CONFIG_IMX8M_DDR3L) += ddr3l_timing.o
+ else
+-obj-$(CONFIG_KARO_TX8MM_1610) += tx8mm.o
+-obj-$(CONFIG_KARO_TX8MM_1620) += tx8mm.o
+-obj-$(CONFIG_KARO_TX8MN) += tx8mn.o
+-obj-$(CONFIG_KARO_QS8M) += tx8mm.o
++obj-$(CONFIG_IMX8MM) += tx8mm.o
++obj-$(CONFIG_IMX8MN) += tx8mn.o
+ endif
+Index: u-boot-imx8mm-2.3.0/configs/qs8m-mq00_defconfig
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/configs/qs8m-mq00_defconfig
++++ u-boot-imx8mm-2.3.0/configs/qs8m-mq00_defconfig
+@@ -6,7 +6,7 @@ CONFIG_SPL_LIBCOMMON_SUPPORT=y
+ CONFIG_SPL_LIBGENERIC_SUPPORT=y
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+ CONFIG_TARGET_TX8M=y
+-CONFIG_KARO_QS8M=y
++CONFIG_KARO_QS8M_MQ00=y
+ CONFIG_SPL_MMC_SUPPORT=y
+ CONFIG_SPL_SERIAL_SUPPORT=y
+ CONFIG_SPL_DRIVERS_MISC_SUPPORT=y
+Index: u-boot-imx8mm-2.3.0/configs/qs8m-mq00_mfg_defconfig
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/configs/qs8m-mq00_mfg_defconfig
++++ u-boot-imx8mm-2.3.0/configs/qs8m-mq00_mfg_defconfig
+@@ -6,7 +6,7 @@ CONFIG_SPL_LIBCOMMON_SUPPORT=y
+ CONFIG_SPL_LIBGENERIC_SUPPORT=y
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+ CONFIG_TARGET_TX8M=y
+-CONFIG_KARO_QS8M=y
++CONFIG_KARO_QS8M_MQ00=y
+ CONFIG_TX8M_UBOOT_MFG=y
+ CONFIG_SPL_MMC_SUPPORT=y
+ CONFIG_SPL_SERIAL_SUPPORT=y
+Index: u-boot-imx8mm-2.3.0/configs/qs8m-mq00_noenv_defconfig
+===================================================================
+--- u-boot-imx8mm-2.3.0.orig/configs/qs8m-mq00_noenv_defconfig
++++ u-boot-imx8mm-2.3.0/configs/qs8m-mq00_noenv_defconfig
+@@ -6,7 +6,7 @@ CONFIG_SPL_LIBCOMMON_SUPPORT=y
+ CONFIG_SPL_LIBGENERIC_SUPPORT=y
+ CONFIG_SYS_MALLOC_F_LEN=0x2000
+ CONFIG_TARGET_TX8M=y
+-CONFIG_KARO_QS8M=y
++CONFIG_KARO_QS8M_MQ00=y
+ CONFIG_TX8M_UBOOT_NOENV=y
+ CONFIG_SPL_MMC_SUPPORT=y
+ CONFIG_SPL_SERIAL_SUPPORT=y

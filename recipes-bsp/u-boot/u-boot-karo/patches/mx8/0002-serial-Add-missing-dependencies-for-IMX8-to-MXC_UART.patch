@@ -1,0 +1,25 @@
+From 45f06189fa960aa9d7de5b03bf8435b3268805f4 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Wed, 20 Mar 2019 12:31:35 +0100
+Subject: [PATCH 02/35] serial: Add missing dependencies for IMX8 to MXC_UART
+
+---
+ drivers/serial/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/serial/Kconfig b/drivers/serial/Kconfig
+index e52a7e0..e4d966c 100644
+--- a/drivers/serial/Kconfig
++++ b/drivers/serial/Kconfig
+@@ -437,7 +437,7 @@ config MVEBU_A3700_UART
+ 
+ config MXC_UART
+ 	bool "IMX serial port support"
+-	depends on MX5 || MX6
++	depends on MX5 || MX6 || IMX8 || IMX8M
+ 	help
+ 	  If you have a machine based on a Motorola IMX CPU you
+ 	  can enable its onboard serial port by enabling this option.
+-- 
+2.7.4
+

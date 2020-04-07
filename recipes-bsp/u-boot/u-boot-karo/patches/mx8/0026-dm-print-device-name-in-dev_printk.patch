@@ -1,0 +1,58 @@
+From 05fff9f63213182071625efde8271d6b1d686e61 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Tue, 21 Jan 2020 12:45:13 +0100
+Subject: [PATCH 26/35] dm: print device name in dev_printk()
+
+Since the 'dev' parameter is now actually evaluated passing an invalid
+argument in drivers/i2c/mxc_i2c.c now produces a compile error which
+is also fixed in this patch.
+---
+ drivers/i2c/mxc_i2c.c | 6 ++++--
+ include/dm/device.h   | 5 +----
+ 2 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/i2c/mxc_i2c.c b/drivers/i2c/mxc_i2c.c
+index 4ef8f6c..c3381f7 100644
+--- a/drivers/i2c/mxc_i2c.c
++++ b/drivers/i2c/mxc_i2c.c
+@@ -794,7 +794,8 @@ static int mxc_i2c_probe(struct udevice *bus)
+ 	 */
+ 	ret = fdt_stringlist_search(fdt, node, "pinctrl-names", "gpio");
+ 	if (ret < 0) {
+-		debug("i2c bus %d at 0x%2lx, no gpio pinctrl state.\n", bus->seq, i2c_bus->base);
++		debug("i2c bus %d at 0x%2lx, no gpio pinctrl state.\n",
++		      bus->seq, i2c_bus->base);
+ 	} else {
+ 		ret = gpio_request_by_name_nodev(offset_to_ofnode(node),
+ 				"scl-gpios", 0, &i2c_bus->scl_gpio,
+@@ -805,7 +806,8 @@ static int mxc_i2c_probe(struct udevice *bus)
+ 		if (!dm_gpio_is_valid(&i2c_bus->sda_gpio) ||
+ 		    !dm_gpio_is_valid(&i2c_bus->scl_gpio) ||
+ 		    ret || ret2) {
+-			dev_err(dev, "i2c bus %d at %lu, fail to request scl/sda gpio\n", bus->seq, i2c_bus->base);
++			dev_err(bus, "i2c bus %d at %lu, fail to request scl/sda gpio\n",
++				bus->seq, i2c_bus->base);
+ 			return -EINVAL;
+ 		}
+ 	}
+diff --git a/include/dm/device.h b/include/dm/device.h
+index d2b1989..d85039c 100644
+--- a/include/dm/device.h
++++ b/include/dm/device.h
+@@ -903,12 +903,9 @@ static inline void devm_kfree(struct udevice *dev, void *ptr)
+ #undef dev_warn
+ #endif
+ 
+-/*
+- * REVISIT:
+- * print device name like Linux
+- */
+ #define dev_printk(dev, fmt, ...)				\
+ ({								\
++	printf("%s: ", dev_read_name(dev));			\
+ 	printk(fmt, ##__VA_ARGS__);				\
+ })
+ 
+-- 
+2.7.4
+

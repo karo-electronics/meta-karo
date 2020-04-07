@@ -1,0 +1,69 @@
+From 245a0d4709e43f749c8c3b4b22ea30d81ab60fc6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Thu, 16 Jan 2020 12:43:37 +0100
+Subject: [PATCH 23/35] env: fix handling of .callbacks variable
+
+Runtime changes to the '.callbacks' variable do not have any effect,
+since for performance reasons the variable is read only on the first
+call to env_callback_init().
+---
+ env/callback.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/env/callback.c b/env/callback.c
+index be70980..dc391a6 100644
+--- a/env/callback.c
++++ b/env/callback.c
+@@ -7,6 +7,7 @@
+ 
+ #include <common.h>
+ #include <environment.h>
++#include <malloc.h>
+ 
+ #if defined(CONFIG_NEEDS_MANUAL_RELOC)
+ DECLARE_GLOBAL_DATA_PTR;
+@@ -36,7 +37,7 @@ static struct env_clbk_tbl *find_env_callback(const char *name)
+ }
+ 
+ static int first_call = 1;
+-static const char *callback_list;
++static char *callback_list;
+ 
+ /*
+  * Look for a possible callback for a newly added variable
+@@ -51,7 +52,7 @@ void env_callback_init(ENTRY *var_entry)
+ 	int ret = 1;
+ 
+ 	if (first_call) {
+-		callback_list = env_get(ENV_CALLBACK_VAR);
++		callback_list = strdup(env_get(ENV_CALLBACK_VAR));
+ 		first_call = 0;
+ 	}
+ 
+@@ -102,10 +103,10 @@ static int set_callback(const char *name, const char *value, void *priv)
+ 
+ 	/* does the env variable actually exist? */
+ 	if (ep != NULL) {
+-		/* the assocaition delares no callback, so remove the pointer */
+-		if (value == NULL || strlen(value) == 0)
++		/* the association declares no callback, so remove the pointer */
++		if (value == NULL || strlen(value) == 0) {
+ 			ep->callback = NULL;
+-		else {
++		} else {
+ 			/* assign the requested callback */
+ 			clbkp = find_env_callback(value);
+ 			if (clbkp != NULL)
+@@ -131,6 +132,9 @@ static int on_callbacks(const char *name, const char *value, enum env_op op,
+ 	/* configure any dynamic callback bindings */
+ 	env_attr_walk(value, set_callback, NULL);
+ 
++	free(callback_list);
++	callback_list = strdup(value);
++
+ 	return 0;
+ }
+ U_BOOT_ENV_CALLBACK(callbacks, on_callbacks);
+-- 
+2.7.4
+

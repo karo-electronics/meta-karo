@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright 2019 Lothar Waßmann <LW@KARO-electronics.de>
+ *
+ */
+
+#include "imx8mm-tx8m-1610.dts"
+#include "imx8mm-tx8m-mipi-mb.dtsi"
+
+/ {
+	model = "Ka-Ro TX8M-1610 module on TX4ETML0500 baseboard";
+
+	/delete-node/ sound;
+};
+
+&fec1 {
+	status = "disabled";
+};
+
+&i2c2 {
+	/delete-node/ sgtl5000@a;
+	/delete-node/ mcp7940x@6f;
+
+	polytouch@41 {
+		compatible = "st,stmpe811";
+		reg = <0x41>;
+		irq-gpio = <&gpio5 18 IRQ_TYPE_LEVEL_LOW>;
+		interrupt-controller;
+		id = <0>;
+		blocks = <0x5>;
+		irq-trigger = <0x1>;
+		wakeup-source;
+
+		stmpe_touchscreen {
+			compatible = "st,stmpe-ts";
+			/* 3.25 MHz ADC clock speed */
+			st,adc-freq = <1>;
+			/* 8 sample average control */
+			st,ave-ctrl = <3>;
+			/* 7 length fractional part in z */
+			st,fraction-z = <7>;
+			/*
+			 * 50 mA typical 80 mA max touchscreen drivers
+			 * current limit value
+			 */
+			st,i-drive = <1>;
+			/* 12-bit ADC */
+			st,mod-12b = <1>;
+			/* internal ADC reference */
+			st,ref-sel = <0>;
+			/* ADC converstion time: 80 clocks */
+			st,sample-time = <4>;
+			/* 1 ms panel driver settling time */
+			st,settling = <3>;
+			/* 5 ms touch detect interrupt delay */
+			st,touch-det-delay = <5>;
+		};
+	};
+};
+
+&mipi_dsi {
+	panel@0 {
+		compatible = "edt,etml050001dma";
+		reg = <0>;
+		panel-width-mm = <65>;
+		panel-height-mm = <120>;
+		dsi-lanes = <4>;
+		video-mode = <0>;
+		backlight = <&backlight>;
+		reset-gpios = <&gpio5 19 GPIO_ACTIVE_LOW>;
+
+		display-timings {
+			native-mode = <&etml050001dma>;
+
+			etml050001dma: edt-etml050001dma {
+				hactive = <720>;
+				hsync-len = <12>;
+				hfront-porch = <12>;
+				hback-porch = <24>;
+				vactive = <1280>;
+				vsync-len = <2>;
+				vfront-porch = <2>;
+				vback-porch = <2>;
+				clock-frequency = <(768 * 1286 * 60)>;
+			};
+		};
+	};
+};
+
+&pcie0 {
+	status = "disabled";
+};
+
+&sai2 {
+	status = "disabled";
+};
+
+&uart2 {
+	status = "disabled";
+};
+
+&uart3 {
+	status = "disabled";
+};
+
+&usdhc2 {
+	status = "disabled";
+};
+
+&usdhc3 {
+	status = "disabled";
+};

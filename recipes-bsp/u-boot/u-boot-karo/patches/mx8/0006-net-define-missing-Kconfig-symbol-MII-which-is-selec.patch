@@ -1,0 +1,27 @@
+From c935ca1a484dd07905a6ef7da19a0ed3396afbc8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Wed, 20 Mar 2019 14:55:53 +0100
+Subject: [PATCH 06/35] net: define missing Kconfig symbol MII which is
+ 'select'ed but was never defined
+
+---
+ drivers/net/Kconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index 41cc152..ad52bb2 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -217,6 +217,9 @@ config RGMII
+ 	  Enable the support of the Reduced Gigabit Media-Independent
+ 	  Interface (RGMII).
+ 
++config MII
++	bool
++
+ config RTL8139
+ 	bool "Realtek 8139 series Ethernet controller driver"
+ 	help
+-- 
+2.7.4
+

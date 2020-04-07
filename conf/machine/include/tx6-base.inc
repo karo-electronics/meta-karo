@@ -10,9 +10,7 @@ UBOOT_SUFFIX ??= "bin"
 
 UBOOT_ENTRYPOINT_tx6  ?= "0x10008000"
 UBOOT_ENTRYPOINT_txul ?= "0x80008000"
-UBOOT_CONFIG ??= "generic"
-
-PACKAGE_EXCLUDE_COMPLEMENTARY = ".*"
+UBOOT_CONFIG ??= "mfg generic"
 
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
 PREFERRED_VERSION_linux-karo ??= "5.4"
@@ -23,9 +21,7 @@ MACHINE_EXTRA_RRECOMMENDS ??= " \
                           kernel-modules \
 "
 
-# Set Serial console
-SERIAL_CONSOLE = "115200 ttymxc0"
-
+# Set Serial consoles
 SERIAL_CONSOLES ??= " \
                 115200;ttymxc0 \
                 115200;ttymxc1 \

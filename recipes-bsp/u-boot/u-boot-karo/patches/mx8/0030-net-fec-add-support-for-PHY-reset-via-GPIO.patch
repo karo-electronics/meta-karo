@@ -1,0 +1,113 @@
+From d64f3ebf20047d12b9f5d16253670705ebd0674f Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Tue, 21 Jan 2020 12:56:36 +0100
+Subject: [PATCH 30/35] net: fec: add support for PHY reset via GPIO
+
+---
+ drivers/net/fec_mxc.c | 45 +++++++++++++++++++++++++++++++++++++++------
+ drivers/net/fec_mxc.h |  5 +++++
+ 2 files changed, 44 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/fec_mxc.c b/drivers/net/fec_mxc.c
+index cba6dce..88c72e1 100644
+--- a/drivers/net/fec_mxc.c
++++ b/drivers/net/fec_mxc.c
+@@ -71,8 +71,6 @@ DECLARE_GLOBAL_DATA_PTR;
+ #error "PKTALIGN must be multiple of ARCH_DMA_MINALIGN!"
+ #endif
+ 
+-#undef DEBUG
+-
+ #ifdef CONFIG_FEC_MXC_SWAP_PACKET
+ static void swap_packet(uint32_t *packet, int length)
+ {
+@@ -1045,6 +1043,25 @@ __weak void init_clk_fec(int index)
+ {
+ }
+ 
++#ifdef CONFIG_DM_GPIO
++/* FEC GPIO reset */
++static void fec_gpio_reset(struct fec_priv *priv)
++{
++	debug("%s(dev)\n", __func__);
++	if (!dm_gpio_is_valid(&priv->phy_reset_gpio))
++		return;
++
++	dm_gpio_set_value(&priv->phy_reset_gpio, 1);
++	mdelay(priv->reset_duration);
++	dm_gpio_set_value(&priv->phy_reset_gpio, 0);
++	mdelay(priv->reset_post_delay);
++}
++#else
++static inline void fec_gpio_reset(struct fec_priv *priv)
++{
++}
++#endif
++
+ #ifndef CONFIG_DM_ETH
+ #ifdef CONFIG_PHYLIB
+ int fec_probe(bd_t *bd, int dev_id, uint32_t base_addr,
+@@ -1095,6 +1112,8 @@ static int fec_probe(bd_t *bd, int dev_id, uint32_t base_addr,
+ 
+ 	fec->xcv_type = CONFIG_FEC_XCV_TYPE;
+ 
++	fec_gpio_reset(priv);
++
+ 	/* Reset chip. */
+ 	writel(readl(&fec->eth->ecntrl) | FEC_ECNTRL_RESET, &fec->eth->ecntrl);
+ 	start = get_timer(0);
+@@ -1282,6 +1301,7 @@ static int fecmxc_probe(struct udevice *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	fec_gpio_reset(priv);
+ 	/* Reset chip. */
+ 	writel(readl(&priv->eth->ecntrl) | FEC_ECNTRL_RESET,
+ 	       &priv->eth->ecntrl);
+@@ -1373,10 +1393,23 @@ static int fecmxc_ofdata_to_platdata(struct udevice *dev)
+ 		return -EINVAL;
+ 	}
+ 
+-	/* TODO
+-	 * Need to get the reset-gpio and related properties from DT
+-	 * and implemet the enet reset code on .probe call
+-	 */
++#ifdef CONFIG_DM_GPIO
++	if (gpio_request_by_name(dev, "phy-reset-gpios", 0,
++				 &priv->phy_reset_gpio, GPIOD_IS_OUT))
++		return 0; /* property is optional, don't return error! */
++
++	priv->reset_duration = dev_read_u32_default(dev,
++						    "phy-reset-duration", 1);
++	if (priv->reset_duration > 1000) {
++		dev_warn(dev, "phy reset duration should be <= 1000ms\n");
++		/* property value wrong, use default value */
++		priv->reset_duration = 1;
++	}
++
++	priv->reset_post_delay = dev_read_u32_default(dev,
++						      "phy-reset-post-delay",
++						      0);
++#endif
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/fec_mxc.h b/drivers/net/fec_mxc.h
+index 43a7d7b..9f723f9 100644
+--- a/drivers/net/fec_mxc.h
++++ b/drivers/net/fec_mxc.h
+@@ -252,6 +252,11 @@ struct fec_priv {
+ 	int (*mii_postcall)(int);
+ #endif
+ 
++#ifdef CONFIG_DM_GPIO
++	struct gpio_desc phy_reset_gpio;
++	u32 reset_duration;
++	u32 reset_post_delay;
++#endif
+ #ifdef CONFIG_DM_ETH
+ 	u32 interface;
+ #endif
+-- 
+2.7.4
+

@@ -1,0 +1,111 @@
+From 98acc2cb667660c55fa9dfb623799975af68f3e1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Lothar=20Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Date: Wed, 20 Mar 2019 15:30:13 +0100
+Subject: [PATCH 09/35] usb: gadget: sdp: silence noisy messages
+
+---
+ common/spl/spl.c           |  2 +-
+ drivers/usb/gadget/f_sdp.c | 22 +++++++++++-----------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/common/spl/spl.c b/common/spl/spl.c
+index a45e9d5..4c381cb 100644
+--- a/common/spl/spl.c
++++ b/common/spl/spl.c
+@@ -383,7 +383,7 @@ static int boot_from_devices(struct spl_image_info *spl_image,
+ 		loader = spl_ll_find_loader(spl_boot_list[i]);
+ #if defined(CONFIG_SPL_SERIAL_SUPPORT) && defined(CONFIG_SPL_LIBCOMMON_SUPPORT)
+ 		if (loader)
+-			printf("Trying to boot from %s\n", loader->name);
++			debug("Trying to boot from %s\n", loader->name);
+ 		else
+ 			puts("SPL: Unsupported Boot Device!\n");
+ #endif
+diff --git a/drivers/usb/gadget/f_sdp.c b/drivers/usb/gadget/f_sdp.c
+index d87877e..54b85df 100644
+--- a/drivers/usb/gadget/f_sdp.c
++++ b/drivers/usb/gadget/f_sdp.c
+@@ -297,8 +297,8 @@ static void sdp_rx_command_complete(struct usb_ep *ep, struct usb_request *req)
+ 		sdp->dnl_address = be32_to_cpu(cmd->addr);
+ 		sdp->dnl_bytes_remaining = be32_to_cpu(cmd->cnt);
+ 		sdp->next_state = SDP_STATE_TX_REGISTER;
+-		printf("Reading %d registers at 0x%08x... ",
+-		       sdp->dnl_bytes_remaining, sdp->dnl_address);
++		debug("Reading %d registers at 0x%08x... ",
++		      sdp->dnl_bytes_remaining, sdp->dnl_address);
+ 		break;
+ 	case SDP_WRITE_FILE:
+ 		sdp->always_send_status = true;
+@@ -310,8 +310,8 @@ static void sdp_rx_command_complete(struct usb_ep *ep, struct usb_request *req)
+ 		sdp->last_dnl_file_bytes = sdp->dnl_bytes_remaining;
+ 		sdp->next_state = SDP_STATE_IDLE;
+ 
+-		printf("Downloading file of size %d to 0x%08x... ",
+-		       sdp->dnl_bytes_remaining, sdp->dnl_address);
++		debug("Downloading file of size %d to 0x%08x... ",
++		      sdp->dnl_bytes_remaining, sdp->dnl_address);
+ 
+ 		break;
+ 	case SDP_ERROR_STATUS:
+@@ -387,7 +387,7 @@ static void sdp_rx_data_complete(struct usb_ep *ep, struct usb_request *req)
+ 	if (sdp->dnl_bytes_remaining)
+ 		return;
+ 
+-	printf("done\n");
++	debug("done\n");
+ 
+ 	switch (sdp->state) {
+ 	case SDP_STATE_RX_FILE_DATA:
+@@ -642,7 +642,7 @@ static int sdp_bind_config(struct usb_configuration *c)
+ 
+ int sdp_init(int controller_index)
+ {
+-	printf("SDP: initialize...\n");
++	debug("SDP: initialize...\n");
+ 	while (!sdp_func->configuration_done) {
+ 		if (ctrlc()) {
+ 			puts("\rCTRL+C - Operation aborted.\n");
+@@ -662,11 +662,11 @@ static u32 sdp_jump_imxheader(void *address)
+ 	ulong (*entry)(void);
+ 
+ 	if (headerv2->header.tag != IVT_HEADER_TAG) {
+-		printf("Header Tag is not an IMX image\n");
++		debug("Header Tag is not an IMX image\n");
+ 		return SDP_ERROR_IMXHEADER;
+ 	}
+ 
+-	printf("Jumping to 0x%08x\n", headerv2->entry);
++	debug("Jumping to 0x%08x\n", headerv2->entry);
+ 	entry = sdp_ptr(headerv2->entry);
+ 	entry();
+ 
+@@ -756,7 +756,7 @@ static void sdp_handle_in_ep(void)
+ 		sdp_func->state = SDP_STATE_TX_REGISTER_BUSY;
+ 		break;
+ 	case SDP_STATE_JUMP:
+-		printf("Jumping to header at 0x%08x\n", sdp_func->jmp_address);
++		debug("Jumping to header at 0x%08x\n", sdp_func->jmp_address);
+ 		status = sdp_jump_imxheader(sdp_ptr(sdp_func->jmp_address));
+ 
+ 		/* If imx header fails, try some U-Boot specific headers */
+@@ -777,7 +777,7 @@ static void sdp_handle_in_ep(void)
+ 				panic("Error in search header, failed to jump\n");
+ 			}
+ 
+-			printf("Found header at 0x%08x\n", sdp_func->jmp_address);
++			debug("Found header at 0x%08x\n", sdp_func->jmp_address);
+ 
+ 			header = (struct image_header *)(ulong)(sdp_func->jmp_address);
+ 
+@@ -830,7 +830,7 @@ static void sdp_handle_in_ep(void)
+ 
+ void sdp_handle(int controller_index)
+ {
+-	printf("SDP: handle requests...\n");
++	debug("SDP: handle requests...\n");
+ 	while (1) {
+ 		if (ctrlc()) {
+ 			puts("\rCTRL+C - Operation aborted.\n");
+-- 
+2.7.4
+

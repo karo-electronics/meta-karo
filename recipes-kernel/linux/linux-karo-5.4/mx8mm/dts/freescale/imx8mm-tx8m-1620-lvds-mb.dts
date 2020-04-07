@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright 2019 Markus Bauer <MB@KARO-electronics.de>
+ *
+ */
+
+#include "imx8mm-tx8m-1620.dts"
+#include "imx8mm-tx8m-lvds-mb.dtsi"
+
+/ {
+	model = "Ka-Ro TX8M-1620 module on TX-LVDS Mainboard";
+};

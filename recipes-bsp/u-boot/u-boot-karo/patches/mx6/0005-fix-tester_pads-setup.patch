@@ -1,0 +1,14 @@
+Index: karo-tx-uboot/board/karo/tx6/tx6ul.c
+===================================================================
+--- karo-tx-uboot.orig/board/karo/tx6/tx6ul.c
++++ karo-tx-uboot/board/karo/tx6/tx6ul.c
+@@ -1387,7 +1387,8 @@ static void tx_tester_board_init(void)
+ 		printf("Failed to request TX-Tester GPIOs: %d\n", ret);
+ 		return;
+ 	}
+-	imx_iomux_v3_setup_multiple_pads(stk5_pads, ARRAY_SIZE(stk5_pads));
++	imx_iomux_v3_setup_multiple_pads(tx_tester_pads,
++					 ARRAY_SIZE(tx_tester_pads));
+ 
+ 	if (wrsr & WRSR_TOUT)
+ 		gpio_set_value(IMX_GPIO_NR(5, 4), 1);
