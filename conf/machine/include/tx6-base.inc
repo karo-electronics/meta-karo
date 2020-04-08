@@ -17,9 +17,26 @@ PREFERRED_VERSION_linux-karo ??= "5.4"
 KERNEL_IMAGETYPE ??= "uImage"
 
 # Ship kernel modules
-MACHINE_EXTRA_RRECOMMENDS ??= " \
+MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
 "
+
+# Ship imx-sdma firmware
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS = " \
+        linux-firmware-imx-sdma-imx6q \
+"
+
+# Shit vpu firmware
+MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append_karo-wayland = " \
+        linux-firmware-imx-vpu \
+"
+
+# Blacklist evbug kernel module
+KERNEL_MODULE_PROBECONF += "evbug"
+module_conf_evbug = "blacklist evbug"
+
+# Set Serial console
+SERIAL_CONSOLE = "115200 ttymxc0"
 
 # Set Serial consoles
 SERIAL_CONSOLES ??= " \
