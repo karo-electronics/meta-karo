@@ -19,8 +19,9 @@
 #
 # Add options for the script
 # Copyright (C) 2013 Freescale Semiconductor, Inc.
-CWD=`pwd`
+CWD=`cd .;pwd`
 PROGNAME=setup-environment
+export BSPDIR="$CWD"
 
 if [ -z "$BASH_VERSION" ];then
     echo "This script must to be run from bash" >&2
@@ -29,10 +30,21 @@ fi
 
 usage()
 {
-    echo -e "\nUsage: source $PROGNAME <build-dir>
-    <build-dir>: specifies the build directory location (required)
+    echo -e "
+Usage: MACHINE=<machine> DISTRO=<distro> source $PROGNAME <build-dir>
+Usage:                                   source $PROGNAME <build-dir>
+    <machine>    machine name
+    <distro>     distro name
+    <build-dir>  build directory
 
-If undefined, this script will set \$MACHINE to 'imx6q-tx6-emmc'.
+The first usage is for creating a new build directory. In this case, the
+script creates the build directory <build-dir>, configures it for the
+specified <machine> and <distro>, and prepares the calling shell for running
+bitbake on the build directory.
+
+The second usage is for using an existing build directory. In this case,
+the script prepares the calling shell for running bitbake on the build
+directory <build-dir>. The build directory configuration is unchanged.
 "
 
     shopt -q nullglob && nullglob=false || nullglob=true
@@ -40,10 +52,10 @@ If undefined, this script will set \$MACHINE to 'imx6q-tx6-emmc'.
     for s in layers/*/conf/machine/*.conf;do
         echo -e "
 Supported machines: `echo; ls layers/*/conf/machine/*.conf | \
-sed 's/^.*\//\t/;s/\.conf//'`
+sed 's:^.*/:\t:;s/\.conf//' | sort`
 
-Supported distros: `echo; grep -h '^DISTRO_NAME ' layers/*/conf/distro/*.conf | \
-sed 's/^.*= "/\t/;s/"//'`
+Supported distros: `echo; ls sources/*/conf/distro/*.conf | \
+sed 's:^.*/:\t:;s/\.conf//' | sort`
 
 To build for a machine listed above, run this script as:
 DISTRO=<distro> MACHINE=<machine> source $PROGNAME <build-dir>
@@ -51,13 +63,14 @@ DISTRO=<distro> MACHINE=<machine> source $PROGNAME <build-dir>
         $nullglob && shopt -u nullglob
         return
     done
-	cat << EOF
+    cat << EOF
 No machine configuration files found!
 Make sure, to set up your yocto source directory with:
     repo init -u git@github.com:karo-electronics/karo-manifest -b master
     repo sync
 EOF
     $nullglob && shopt -u nullglob
+    return 1
 }
 
 clean_up()
@@ -100,8 +113,17 @@ if [ "$(whoami)" = "root" ]; then
     return 1
 fi
 
-if [ -z "$MACHINE" ]; then
-    MACHINE='imx6q-tx6-emmc'
+if [ ! -e "$1/conf/local.conf.sample" ]; then
+    build_dir_setup_enabled=true
+else
+    build_dir_setup_enabled=false
+fi
+
+if $build_dir_setup_enabled && [ -z "$MACHINE" ];then
+    usage
+    echo -e "ERROR: You must set MACHINE when creating a new build directory."
+    clean_up
+    return 1
 fi
 
 # Check the machine type specified
@@ -111,6 +133,9 @@ if [ "$MACHINE" = "" ] || [ "$VALID_MACHINE" = "0" ]; then
     echo -e "\nThe \$MACHINE you have specified ($MACHINE) is not supported by this build setup"
     usage && clean_up
     return 1
+fi
+if [ ! -e $1/conf/local.conf.sample ]; then
+    echo "Configuring for ${MACHINE}"
 fi
 
 if [ -z "$SDKMACHINE" ]; then
@@ -163,7 +188,8 @@ OEROOT=$PWD/layers/poky
 if [ -e $PWD/layers/oe-core ]; then
     OEROOT=$PWD/layers/oe-core
 fi
-TEMPLATECONF=${TEMPLATECONF:-$PWD/layers/meta-karo/conf}
+
+TEMPLATECONF=${PWD/layers/meta-karo/base/conf}
 echo $TEMPLATECONF
 
 # Ensure all files in layers/base are kept in sync with project root
@@ -200,15 +226,13 @@ fi
 export PATH="`echo $PATH | sed 's/\(:.\|:\)*:/:/g;s/^.\?://;s/:.\?$//'`"
 
 generated_config=
-if [ ! -e conf/local.conf.sample ]; then
+if $build_dir_setup_enabled; then
     mv conf/local.conf conf/local.conf.sample
 
     # Generate the local.conf based on the Yocto defaults
-    TEMPLATES=$CWD/layers/meta-karo/conf
+    TEMPLATES=$CWD/layers/meta-karo/base/conf
     grep -v '^#\|^$' conf/local.conf.sample > conf/local.conf
-#    if [ -n "$DEV_MANAGER" ];then
-#        echo "VIRTUAL-RUNTIME_dev_manager = \"$DEV_MANAGER\"" >> conf/local.conf
-#    fi
+
     if [ "$DISTRO" = "karo-minimal" ];then
         echo 'EXTRA_IMAGE_FEATURES += "read-only-rootfs"' >> conf/local.conf
     fi
@@ -220,6 +244,7 @@ if [ ! -e conf/local.conf.sample ]; then
         -i conf/local.conf
 
     cp $TEMPLATES/* conf/
+
     for s in $HOME/.oe $HOME/.yocto; do
         if [ -e $s/site.conf ]; then
             echo "Linking $s/site.conf to conf/site.conf"

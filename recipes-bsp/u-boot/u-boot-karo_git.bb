@@ -7,6 +7,9 @@ LIC_FILES_CHKSUM_mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84
 
 PROVIDES += "u-boot"
 
+DEPENDS += "bc-native"
+DEPENDS_mx8 += "dtc-native"
+
 SRC_URI_mx8 = "git://source.codeaurora.org/external/imx/uboot-imx.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH_mx8 = "imx_v2018.03_4.14.98_2.3.0"
 SRCREV_mx8 = "0e207921e9a0db4d1dff27fee8b9a22a43a8fcc9"

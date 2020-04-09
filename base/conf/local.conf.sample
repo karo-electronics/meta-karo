@@ -143,8 +143,6 @@ PACKAGE_CLASSES ?= "package_deb"
 # We default to enabling the debugging tweaks.
 EXTRA_IMAGE_FEATURES ?= "debug-tweaks"
 
-VIRTUAL-RUNTIME_init_manager = "sysvinit"
-
 #
 # Additional image features
 #
