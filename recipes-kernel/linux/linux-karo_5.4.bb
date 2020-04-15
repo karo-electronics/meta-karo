@@ -82,13 +82,13 @@ SRC_URI_append_txul = " \
 "
 
 LOCALVERSION = "-stable"
-KERNEL_IMAGETYPE_mx8 = "Image"
+KERNEL_IMAGETYPE_mx8m = "Image"
 KERNEL_IMAGETYPE_mx6 = "uImage"
 
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd","",d)}"
 
-COMPATIBLE_MACHINE_mx8 = "(tx8m-.*|qs8m-.*)"
+COMPATIBLE_MACHINE_tx8 = "(tx8m-.*|qs8m-.*)"
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
 

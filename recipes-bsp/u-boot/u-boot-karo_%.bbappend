@@ -18,7 +18,7 @@ SRC_URI_append_mx6 = " \
 #file://0007-net-bootp-convert-messages-about-unhandled-DHCP-opti.patch 
 #file://0008-pinctrl-print-error-message-with-dev_err-rather-than.patch
 
-SRC_URI_append_mx8 = " \
+SRC_URI_append_mx8m = " \
 	file://0001-Fix-alignment-of-reserved-memory-section.patch \
 	file://0002-serial-Add-missing-dependencies-for-IMX8-to-MXC_UART.patch \
 	file://0003-net-Add-missing-dependencies-for-IMX8-to-FEC_MXC.patch \
