@@ -92,6 +92,9 @@ COMPATIBLE_MACHINE_mx8 = "(tx8m-.*|qs8m-.*)"
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
 
+# exclude kernel in rootfs
+RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
+
 # returns all the elements from the src uri that are .cfg files
 def find_cfgs(d):
     sources=src_patches(d, True)
