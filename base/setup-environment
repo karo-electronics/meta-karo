@@ -22,6 +22,7 @@
 CWD=`cd .;pwd`
 PROGNAME=setup-environment
 export BSPDIR="$CWD"
+TEMPLATECONF=${PWD}/layers/meta-karo/base/conf
 
 if [ -z "$BASH_VERSION" ];then
     echo "This script must to be run from bash" >&2
@@ -54,7 +55,7 @@ directory <build-dir>. The build directory configuration is unchanged.
 Supported machines: `echo; ls layers/*/conf/machine/*.conf | \
 sed 's:^.*/:\t:;s/\.conf//' | sort`
 
-Supported distros: `echo; ls sources/*/conf/distro/*.conf | \
+Supported distros: `echo; ls layers/*/conf/distro/*.conf | \
 sed 's:^.*/:\t:;s/\.conf//' | sort`
 
 To build for a machine listed above, run this script as:
@@ -134,7 +135,7 @@ if [ "$MACHINE" = "" ] || [ "$VALID_MACHINE" = "0" ]; then
     usage && clean_up
     return 1
 fi
-if [ ! -e $1/conf/local.conf.sample ]; then
+if [ ! -e $TEMPLATECONF/local.conf.sample ]; then
     echo "Configuring for ${MACHINE}"
 fi
 
@@ -143,54 +144,38 @@ if [ -z "$SDKMACHINE" ]; then
 fi
 
 if [ -z "$DISTRO" ]; then
-    case $MACHINE in
-        imx*-tx*)
-            DISTRO="karo-minimal"
-            DEV_MANAGER="busybox-mdev"
-            bitbake_target=karo-image-minimal
-            ;;
-        tx*)
-            DISTRO="poky"
-            bitbake_target=u-boot
-            ;;
-        *)
-            echo "Internal error: Unsupported \$MACHINE: '$MACHINE'"
-            clean_up
-            return 1
-    esac
-else
-    case $DISTRO in
-        karo-minimal)
-            bitbake_target="karo-image-minimal"
-            DEV_MANAGER="busybox-mdev"
-            ;;
-        karo-base|karo-x11)
-            bitbake_target="karo-image${DISTRO#karo}"
-            DEV_MANAGER="udev"
-            ;;
-	karo-wayland)
-	    bitbake_target="karo-image-weston"
-	    DEV_MANAGER="udev"
-	    ;;
-        uboot|u-boot|u-boot-karo)
-            bitbake_target="u-boot-karo"
-            DISTRO="poky"
-            ;;
-        *)
-            echo "Unsupported distro: '$DISTRO'" >&2
-            usage && clean_up
-            return 1
-            ;;
-    esac
+    DISTRO="karo-minimal"
 fi
+case $DISTRO in
+    karo-minimal)
+        bitbake_target="karo-image-minimal"
+        ;;
+    karo-base|karo-x11|karo-qt5)
+        bitbake_target="karo-image${DISTRO#karo}"
+        ;;
+    karo-*)
+        distro_dir="$(dirname "$(find layers -path */conf/distro/${DISTRO}.conf -printf "%h")")"
+        distro_images="$(find "$distro_dir/../" -path */images/*.bb -printf "%f")"
+        bitbake_target="${distro_images//.bb/ }"
+        ;;
+    *wayland)
+        bitbake_target="core-image-weston"
+        ;;
+    poky)
+        bitbake_target="u-boot-karo"
+        ;;
+    *)
+        echo "Unsupported distro: '$DISTRO'" >&2
+        usage && clean_up
+        return 1
+        ;;
+esac
+
 
 OEROOT=$PWD/layers/poky
 if [ -e $PWD/layers/oe-core ]; then
     OEROOT=$PWD/layers/oe-core
 fi
-
-TEMPLATECONF=${PWD/layers/meta-karo/base/conf}
-echo $TEMPLATECONF
 
 # Ensure all files in layers/base are kept in sync with project root
 updated=false
@@ -230,7 +215,6 @@ if $build_dir_setup_enabled; then
     mv conf/local.conf conf/local.conf.sample
 
     # Generate the local.conf based on the Yocto defaults
-    TEMPLATES=$CWD/layers/meta-karo/base/conf
     grep -v '^#\|^$' conf/local.conf.sample > conf/local.conf
 
     if [ "$DISTRO" = "karo-minimal" ];then
@@ -243,7 +227,7 @@ if $build_dir_setup_enabled; then
         -e "s,POKY_DISTRO ?=.*,POKY_DISTRO ?= '$POKY_DISTRO',g" \
         -i conf/local.conf
 
-    cp $TEMPLATES/* conf/
+    cp $TEMPLATECONF/* conf/
 
     for s in $HOME/.oe $HOME/.yocto; do
         if [ -e $s/site.conf ]; then
@@ -270,7 +254,10 @@ For a Ka-Ro specific Yocto guide please refer to:
     "Getting Started" > "Yocto Guide" in the respective TX module page on
     https://www.karo-electronics.com
 
-You can start your build now with 'bitbake $bitbake_target'
+You can start your build now with:
+$(for i in ${bitbake_target:-core-image-minimal};do \
+	echo "    bitbake $i"; \
+done )
 
 EOF
 

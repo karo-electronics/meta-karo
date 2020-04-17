@@ -3,7 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:${THISDIR}/${PN}/patches:"
 SRC_URI_append = " \
 	file://karo.bmp;subdir=git/tools/logos \
 	file://0013-net-bootp-convert-messages-about-unhandled-DHCP-opti.patch \
-	file://0025-pinctrl-print-error-message-with-dev_err-rathern-tha.patch \
+	file://0025-pinctrl-print-error-message-with-dev_err-rather-than.patch \
 "
 
 SRC_URI_append_mx6 = " \

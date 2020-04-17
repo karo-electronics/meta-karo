@@ -222,7 +222,6 @@ SSTATE_MIRRORS ?= "\
 	file://.* http://sstate.yoctoproject.org/PATH;downloadfilename=PATH \
 "
 
-
 #
 # Qemu configuration
 #

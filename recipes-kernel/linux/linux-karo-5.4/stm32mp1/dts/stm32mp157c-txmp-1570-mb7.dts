@@ -1,0 +1,116 @@
+// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+
+/dts-v1/;
+
+#include "stm32mp157c-txmp-1570.dts"
+#include "stm32mp15-txmp-mb7.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH TXMP-1570 module on MB7 baseboard";
+
+	reg_2v5: regulator-2v5 {
+		compatible = "regulator-fixed";
+		regulator-name = "2v5";
+		regulator-min-microvolt = <2500000>;
+		regulator-max-microvolt = <2500000>;
+		regulator-always-on;
+	};
+
+	sound {
+		compatible = "karo,stm32mp157c-sgtl5000",
+			     "audio-graph-card";
+		label = "TXMP-SGTL5000";
+		routing =
+			"MIC_IN", "Mic Jack",
+			"Mic Jack", "Mic Bias",
+			"Headphone Jack", "HP_OUT";
+		dais = <&sai2a_port>;
+		status = "okay";
+	};
+};
+
+&gpu {
+	status = "okay";
+};
+
+&i2c5 {
+	sgtl5000: codec@a {
+		compatible = "fsl,sgtl5000";
+		#sound-dai-cells = <0>;
+		reg = <0xa>;
+		VDDA-supply = <&reg_2v5>;
+		VDDIO-supply = <&reg_3v3>;
+		clocks = <&mclk>;
+		status = "okay";
+
+		port {
+			sgtl5000_in: endpoint {
+				remote-endpoint = <&sai2_out>;
+			};
+		};
+	};
+};
+
+&lcd_panel {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&txmp_ltdc_pins>;
+	pinctrl-1 = <&txmp_ltdc_pins_sleep>;
+	enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
+};
+
+&sai2 {
+	clocks = <&rcc SAI2>, <&rcc PLL3_Q>, <&rcc PLL3_R>;
+	clock-names = "pclk", "x8k", "x11k";
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&txmp_sai2_pins>;
+	pinctrl-1 = <&txmp_sai2_sleep_pins>;
+	status = "okay";
+};
+
+&sai2a {
+	#clock-cells = <0>;
+	dma-names = "tx";
+	status = "okay";
+
+	sai2a_port: port {
+		sai2_out: endpoint {
+			remote-endpoint = <&sgtl5000_in>;
+			dai-format = "i2s";
+			bitclock-master = <&sgtl5000>;
+			mclk-fs = <256>;
+		};
+	};
+};
+
+&pinctrl {
+	txmp_sai2_pins: txmp-sai2-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('D', 11, AF10)	/* TXD */
+				  STM32_PINMUX('D', 12, AF10)	/* FS */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('A', 0, AF10)	/* RXD */
+				  STM32_PINMUX('D', 13, AF10)	/* SCK */
+			>;
+		};
+	};
+
+	txmp_sai2_sleep_pins: txmp-sai2-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('A', 0, ANALOG)	/* RXD */
+				  STM32_PINMUX('D', 11, ANALOG)	/* TXD */
+				  STM32_PINMUX('D', 13, ANALOG)	/* SCK */
+				  STM32_PINMUX('D', 12, ANALOG)	/* FS */
+			>;
+		};
+	};
+};

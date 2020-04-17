@@ -22,20 +22,18 @@ S = "${WORKDIR}/git"
 
 BOOT_TOOLS_mx8m = "imx-boot-tools"
 
-do_deploy_append_tx8 () {
+do_deploy_append_mx8m () {
     # Deploy the mkimage, u-boot-nodtb.bin and fsl-imx8mq-XX.dtb for mkimage to generate boot binary
-    if [ -n "${UBOOT_CONFIG}" ]
-    then
+    if [ -n "${UBOOT_CONFIG}" ]; then
         for config in ${UBOOT_MACHINE}; do
             i=$(expr $i + 1);
             for type in ${UBOOT_CONFIG}; do
                 j=$(expr $j + 1);
-                if [ $j -eq $i ]
-                then
+                if [ $j -eq $i ]; then
                     install -d ${DEPLOYDIR}/${BOOT_TOOLS}
-                    install ${B}/${config}/arch/arm/dts/${UBOOT_DTB_NAME}  ${DEPLOYDIR}/${BOOT_TOOLS}
-                    install ${B}/${config}/tools/mkimage  ${DEPLOYDIR}/${BOOT_TOOLS}/mkimage_uboot
-                    install ${B}/${config}/u-boot-nodtb.bin  ${DEPLOYDIR}/${BOOT_TOOLS}/u-boot-nodtb.bin-${MACHINE}-${type}
+                    install ${B}/${config}/arch/arm/dts/${UBOOT_DTB_NAME} ${DEPLOYDIR}/${BOOT_TOOLS}
+                    install ${B}/${config}/tools/mkimage ${DEPLOYDIR}/${BOOT_TOOLS}/mkimage_uboot
+                    install ${B}/${config}/u-boot-nodtb.bin ${DEPLOYDIR}/${BOOT_TOOLS}/u-boot-nodtb.bin-${MACHINE}-${type}
                 fi
             done
             unset  j

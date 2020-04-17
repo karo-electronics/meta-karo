@@ -15,8 +15,8 @@ DDR_FIRMWARE_NAME = "ddr3_imem_1d.bin ddr3_dmem_1d.bin"
 # Set imx-mkimage boot target
 IMXBOOT_TARGETS = "flash_tx8m"
 
-# Set Serial console
-SERIAL_CONSOLE = "115200 ttymxc0"
+# Set Serial consoles
+SERIAL_CONSOLES = "115200;ttymxc0 115200;ttymxc1 115200;ttymxc2"
 
 IMAGE_BOOTLOADER = "imx-boot"
 

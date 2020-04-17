@@ -4,10 +4,12 @@ require recipes-kernel/linux/linux-karo.inc
 
 DEPENDS += "lzop-native bc-native"
 
-SRCBRANCH = "master"
-SRCREV = "219d54332a09e8d8741c1e1982f5eae56099de85"
-KERNEL_SRC = "git://github.com/torvalds/linux.git"
+SRCBRANCH = "linux-5.4.y"
+SRCREV = "v5.4.32"
+KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
+
+PROVIDES += "linux"
 
 SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 
@@ -21,23 +23,39 @@ SRC_URI_append = " \
 
 SRC_URI_append_mx8mm = " \
 	file://defconfig \
-	file://dts/freescale/imx8mm-qs8m-mq00-qsbase2.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-qs8m-mq00.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-16xx.dtsi;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-1610-mipi-mb.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-1610-tx4etml0500.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-1610.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-1620-lvds-mb.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-1620.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-lvds-mb.dtsi;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mm-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot \
+	file://dts/imx8mm-qs8m-mq00-qsbase2.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-qs8m-mq00.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-16xx.dtsi;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-1610-mipi-mb.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-1610-tx4etml0500.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-1610.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-1620-lvds-mb.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-1620.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-lvds-mb.dtsi;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mm-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot/freescale \
 "
 
 SRC_URI_append_mx8mn = " \
 	file://defconfig \
-	file://dts/freescale/imx8mn-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mn-tx8m-nd00-mipi-mb.dts;subdir=git/arch/arm64/boot \
-	file://dts/freescale/imx8mn-tx8m-nd00.dts;subdir=git/arch/arm64/boot \
+	file://dts/imx8mn-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mn-tx8m-nd00-mipi-mb.dts;subdir=git/arch/arm64/boot/freescale \
+	file://dts/imx8mn-tx8m-nd00.dts;subdir=git/arch/arm64/boot/freescale \
+"
+
+SRC_URI_append_stm32mp1 = " \
+	file://defconfig \
+	file://dts/stm32mp15-ddr.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-mx.h;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-txmp-mb7.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530-mipi-mb.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
 "
 
 SRC_URI_append_tx6 = " \

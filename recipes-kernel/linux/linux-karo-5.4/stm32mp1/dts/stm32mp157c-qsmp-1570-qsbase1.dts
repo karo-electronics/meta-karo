@@ -1,0 +1,118 @@
+// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+
+/dts-v1/;
+
+#include "stm32mp157c-qsmp-1570.dts"
+#include "stm32mp15-txmp-mb7.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSBASE1 baseboard";
+
+	/delete-node/ sound;
+};
+
+&gpu {
+	status = "okay";
+};
+
+&lcd_panel {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&qsmp_ltdc_pins>;
+	pinctrl-1 = <&qsmp_ltdc_pins_sleep>;
+	enable-gpios = <&gpioa 10 GPIO_ACTIVE_HIGH>;
+};
+
+&polytouch {
+	interrupt-parent = <&gpiod>;
+	interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
+	/delete-property/ reset-gpios;
+	/delete-property/ wake-gpios;
+};
+
+&rtc_i2c {
+	status = "disabled";
+};
+
+&uart4_pins_mx {
+	pins1 {
+		/delete-property/ bias-disable;
+		bias-pull-up;
+	};
+};
+
+&pinctrl {
+	qsmp_ltdc_pins: qsmp-ltdc-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('G',  7, AF14) /* LCD_CLK */
+				  STM32_PINMUX('I', 10, AF14) /* LCD_HSYNC */
+				  STM32_PINMUX('I',  9, AF14) /* LCD_VSYNC */
+				  STM32_PINMUX('E', 13, AF14) /* LCD_DE */
+
+				  STM32_PINMUX('H',  2, AF14) /* LCD_R0 */
+				  STM32_PINMUX('H',  3, AF14) /* LCD_R1 */
+				  STM32_PINMUX('H',  8, AF14) /* LCD_R2 */
+				  STM32_PINMUX('H',  9, AF14) /* LCD_R3 */
+				  STM32_PINMUX('H', 10, AF14) /* LCD_R4 */
+				  STM32_PINMUX('H', 11, AF14) /* LCD_R5 */
+				  STM32_PINMUX('H', 12, AF14) /* LCD_R6 */
+				  STM32_PINMUX('E', 15, AF14) /* LCD_R7 */
+				  STM32_PINMUX('B',  1, AF14) /* LCD_G0 */
+				  STM32_PINMUX('E',  6, AF14) /* LCD_G1 */
+				  STM32_PINMUX('H', 13, AF14) /* LCD_G2 */
+				  STM32_PINMUX('H', 14, AF14) /* LCD_G3 */
+				  STM32_PINMUX('H', 15, AF14) /* LCD_G4 */
+				  STM32_PINMUX('I',  0, AF14) /* LCD_G5 */
+				  STM32_PINMUX('I',  1, AF14) /* LCD_G6 */
+				  STM32_PINMUX('I',  2, AF14) /* LCD_G7 */
+				  STM32_PINMUX('E',  4, AF14) /* LCD_B0 */
+				  STM32_PINMUX('G', 12, AF14) /* LCD_B1 */
+				  STM32_PINMUX('G', 10, AF14) /* LCD_B2 */
+				  STM32_PINMUX('D', 10, AF14) /* LCD_B3 */
+				  STM32_PINMUX('I',  4, AF14) /* LCD_B4 */
+				  STM32_PINMUX('I',  5, AF14) /* LCD_B5 */
+				  STM32_PINMUX('I',  6, AF14) /* LCD_B6 */
+				  STM32_PINMUX('D',  8, AF14) /* LCD_B7 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+	};
+
+	qsmp_ltdc_pins_sleep: qsmp-lcd-pins-sleep {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('G',  7, ANALOG) /* LCD_CLK */
+				  STM32_PINMUX('I', 10, ANALOG) /* LCD_HSYNC */
+				  STM32_PINMUX('I',  9, ANALOG) /* LCD_VSYNC */
+				  STM32_PINMUX('E', 13, ANALOG) /* LCD_DE */
+
+				  STM32_PINMUX('H',  2, ANALOG) /* LCD_R0 */
+				  STM32_PINMUX('H',  3, ANALOG) /* LCD_R1 */
+				  STM32_PINMUX('H',  8, ANALOG) /* LCD_R2 */
+				  STM32_PINMUX('H',  9, ANALOG) /* LCD_R3 */
+				  STM32_PINMUX('H', 10, ANALOG) /* LCD_R4 */
+				  STM32_PINMUX('H', 11, ANALOG) /* LCD_R5 */
+				  STM32_PINMUX('H', 12, ANALOG) /* LCD_R6 */
+				  STM32_PINMUX('E', 15, ANALOG) /* LCD_R7 */
+				  STM32_PINMUX('B',  1, ANALOG) /* LCD_G0 */
+				  STM32_PINMUX('E',  6, ANALOG) /* LCD_G1 */
+				  STM32_PINMUX('H', 13, ANALOG) /* LCD_G2 */
+				  STM32_PINMUX('H', 14, ANALOG) /* LCD_G3 */
+				  STM32_PINMUX('H', 15, ANALOG) /* LCD_G4 */
+				  STM32_PINMUX('I',  0, ANALOG) /* LCD_G5 */
+				  STM32_PINMUX('I',  1, ANALOG) /* LCD_G6 */
+				  STM32_PINMUX('I',  2, ANALOG) /* LCD_G7 */
+				  STM32_PINMUX('E',  4, ANALOG) /* LCD_B0 */
+				  STM32_PINMUX('G', 12, ANALOG) /* LCD_B1 */
+				  STM32_PINMUX('G', 10, ANALOG) /* LCD_B2 */
+				  STM32_PINMUX('D', 10, ANALOG) /* LCD_B3 */
+				  STM32_PINMUX('I',  4, ANALOG) /* LCD_B4 */
+				  STM32_PINMUX('I',  5, ANALOG) /* LCD_B5 */
+				  STM32_PINMUX('I',  6, ANALOG) /* LCD_B6 */
+				  STM32_PINMUX('D',  8, ANALOG) /* LCD_B7 */
+			>;
+		};
+	};
+};

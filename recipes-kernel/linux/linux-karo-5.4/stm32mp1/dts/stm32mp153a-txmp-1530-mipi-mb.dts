@@ -1,0 +1,132 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) STMicroelectronics 2019 - All Rights Reserved
+ * Author: STM32CubeMX code generation for STMicroelectronics.
+ */
+
+/dts-v1/;
+
+#include "stm32mp153a-txmp-1530.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH TXMP-1530 module";
+	compatible = "st,stm32mp153a-txmp-1530", "st,stm32mp153";
+
+	aliases {
+		display = &lcd_panel;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	lcd_backlight: lcd-backlight {
+		compatible = "gpio-backlight";
+		gpios = <&gpioa 10 GPIO_ACTIVE_LOW>;
+		default-on;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		module_led {
+			gpios = <&gpioe 4 GPIO_ACTIVE_HIGH>;
+			label = "Heartbeat";
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	reg_3v3: regulator-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+
+	soc {
+		etzpc: etzpc@5c007000 {
+			compatible = "st,stm32mp1-etzpc";
+			reg = <0x5c007000 0x400>;
+			clocks = <&rcc TZPC>;
+			status = "okay";
+			secure-status = "okay";
+		};
+
+		sound {
+		};
+
+		stgen: stgen@5c008000 {
+			compatible = "st,stm32-stgen";
+			reg = <0x5c008000 0x1000>;
+			status = "okay";
+		};
+	};
+
+	lcd_panel: panel {
+		compatible = "tianma,tm101jvhg32";
+		pinctrl-names = "default", "sleep";
+		enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
+		backlight = <&lcd_backlight>;
+		power-supply = <&reg_3v3>;
+		status = "okay";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
+	};
+};
+
+&dsi {
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			dsi_in: endpoint {
+				remote-endpoint = <&ltdc_ep1_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			dsi_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
+		};
+	};
+};
+
+&ltdc {
+	status = "okay";
+
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ltdc_ep1_out: endpoint@1 {
+			reg = <1>;
+			remote-endpoint = <&dsi_in>;
+		};
+	};
+};
+
+&uart4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&txmp_uart4_pins>;
+	status = "okay";
+};
+
+&uart5 {
+	status = "disabled";
+};
+
+&uart7 {
+	status = "disabled";
+};
