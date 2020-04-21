@@ -1,9 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
+ */
 
 /dts-v1/;
 
 #include "stm32mp153a-txmp-1530.dts"
-#include "stm32mp15-txmp-mb7.dtsi"
+#include "stm32mp15-karo-mb7.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1530 module on MB7 baseboard";
@@ -29,11 +32,7 @@
 	};
 };
 
-&gpu {
-	status = "okay";
-};
-
-&i2c5 {
+&i2c6 {
 	sgtl5000: codec@a {
 		compatible = "fsl,sgtl5000";
 		#sound-dai-cells = <0>;
@@ -54,7 +53,7 @@
 &lcd_panel {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&txmp_ltdc_pins>;
-	pinctrl-1 = <&txmp_ltdc_pins_sleep>;
+	pinctrl-1 = <&txmp_ltdc_sleep>;
 	enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
 	reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
 };

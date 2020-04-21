@@ -1,9 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
+ */
 
 /dts-v1/;
 
 #include "stm32mp157c-txmp-1570.dts"
-#include "stm32mp15-txmp-mb7.dtsi"
+#include "stm32mp15-karo-mb7.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1570 module on MB7 baseboard";
@@ -54,7 +57,7 @@
 &lcd_panel {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&txmp_ltdc_pins>;
-	pinctrl-1 = <&txmp_ltdc_pins_sleep>;
+	pinctrl-1 = <&txmp_ltdc_sleep>;
 	enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
 	reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
 };
@@ -81,6 +84,10 @@
 			mclk-fs = <256>;
 		};
 	};
+};
+
+&pwr_regulators {
+	/delete-property/ wakeup-gpios;
 };
 
 &pinctrl {

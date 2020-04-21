@@ -4,6 +4,8 @@ require recipes-kernel/linux/linux-karo.inc
 
 DEPENDS += "lzop-native bc-native"
 
+LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
+
 SRCBRANCH = "linux-5.4.y"
 SRCREV = "v5.4.32"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
@@ -40,22 +42,6 @@ SRC_URI_append_mx8mn = " \
 	file://dts/imx8mn-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot/freescale \
 	file://dts/imx8mn-tx8m-nd00-mipi-mb.dts;subdir=git/arch/arm64/boot/freescale \
 	file://dts/imx8mn-tx8m-nd00.dts;subdir=git/arch/arm64/boot/freescale \
-"
-
-SRC_URI_append_stm32mp1 = " \
-	file://defconfig \
-	file://dts/stm32mp15-ddr.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-mx.h;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-txmp-mb7.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mipi-mb.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
 "
 
 SRC_URI_append_tx6 = " \
