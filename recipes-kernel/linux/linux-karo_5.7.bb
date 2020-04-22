@@ -17,9 +17,10 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
 	file://0001-usb-dwc2-prevent-BUG-due-to-uninitialized-timer.patch \
+	file://0002-display-support.patch \
+	file://0003-panel-dpi-bus-format.patch \
+	file://0004-drm-mode-video-mode-bus-flags.patch \
 "
-#file://0003-panel-dpi.patch
-#file://0001-display-support.patch 
 
 SRC_URI_append_stm32mp1 = " \
 	file://defconfig \
