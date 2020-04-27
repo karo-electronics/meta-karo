@@ -13,10 +13,8 @@ SRC_URI_append_mx6 = " \
 	file://0004-fix-duplicate-const-errors.patch \
 	file://0005-fix-tester_pads-setup.patch \
 	file://0006-use-bootp-random-id.patch \
+	file://0007-increase-bootm-len.patch \
 "
-# dont apply
-#file://0007-net-bootp-convert-messages-about-unhandled-DHCP-opti.patch 
-#file://0008-pinctrl-print-error-message-with-dev_err-rather-than.patch
 
 SRC_URI_append_mx8m = " \
 	file://0001-Fix-alignment-of-reserved-memory-section.patch \
