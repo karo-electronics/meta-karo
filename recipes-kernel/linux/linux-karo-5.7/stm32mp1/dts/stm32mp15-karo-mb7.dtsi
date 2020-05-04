@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
 
 / {
 	aliases {
@@ -17,151 +17,47 @@
 		};
 	};
 
-	lcd_panel: panel {
-		compatible = "edt,et057090dhu";
+	lcd_panel: lcd-panel {
+		compatible = "panel-dpi";
 		pinctrl-0 = <&txmp_ltdc_pins>;
-		pinctrl-1 = <&txmp_ltdc_pins_sleep>;
+		pinctrl-1 = <&txmp_ltdc_sleep>;
 		backlight = <&lcd_backlight>;
 		power-supply = <&reg_3v3>;
 		status = "okay";
+		data-mapping = "rgb24";
+
+		panel-timing {
+			clock-frequency = <25200000>;
+			hactive = <640>;
+			vactive = <480>;
+			hback-porch = <114>;
+			hsync-len = <30>;
+			hfront-porch = <16>;
+			vback-porch = <32>;
+			vsync-len = <3>;
+			vfront-porch = <10>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <1>;
+			pixelclk-active = <1>;
+		};
 
 		port {
 			panel_in: endpoint {
 				remote-endpoint = <&ltdc_ep1_out>;
 			};
 		};
-
-		display-timings {
-			native-mode = <&ETV570>;
-
-			VGA: VGA {
-				clock-frequency = <25200000>;
-				hactive = <640>;
-				vactive = <480>;
-				hback-porch = <48>;
-				hsync-len = <96>;
-				hfront-porch = <16>;
-				vback-porch = <31>;
-				vsync-len = <2>;
-				vfront-porch = <12>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-			};
-
-			ETV570: ETV570 {
-				u-boot,panel-name = "edt,et057090dhu";
-				clock-frequency = <25200000>;
-				hactive = <640>;
-				vactive = <480>;
-				hback-porch = <114>;
-				hsync-len = <30>;
-				hfront-porch = <16>;
-				vback-porch = <32>;
-				vsync-len = <3>;
-				vfront-porch = <10>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <1>;
-			};
-
-			ET0350: ET0350 {
-				u-boot,panel-name = "edt,et0350g0dh6";
-				clock-frequency = <6413760>;
-				hactive = <320>;
-				vactive = <240>;
-				hback-porch = <34>;
-				hsync-len = <34>;
-				hfront-porch = <20>;
-				vback-porch = <15>;
-				vsync-len = <3>;
-				vfront-porch = <4>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-			};
-
-			ET0430: ET0430 {
-				u-boot,panel-name = "edt,et0430g0dh6";
-				clock-frequency = <9009000>;
-				hactive = <480>;
-				vactive = <272>;
-				hback-porch = <2>;
-				hsync-len = <41>;
-				hfront-porch = <2>;
-				vback-porch = <2>;
-				vsync-len = <10>;
-				vfront-porch = <2>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <1>;
-			};
-
-			ET0500: ET0500 {
-				clock-frequency = <33264000>;
-				hactive = <800>;
-				vactive = <480>;
-				hback-porch = <88>;
-				hsync-len = <128>;
-				hfront-porch = <40>;
-				vback-porch = <33>;
-				vsync-len = <2>;
-				vfront-porch = <10>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-			};
-
-			ET0700: ET0700 { /* same as ET0500 */
-				u-boot,panel-name = "edt,etm0700g0dh6";
-				clock-frequency = <33264000>;
-				hactive = <800>;
-				vactive = <480>;
-				hback-porch = <88>;
-				hsync-len = <128>;
-				hfront-porch = <40>;
-				vback-porch = <33>;
-				vsync-len = <2>;
-				vfront-porch = <10>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-			};
-
-			ETQ570: ETQ570 {
-				clock-frequency = <6596040>;
-				hactive = <320>;
-				vactive = <240>;
-				hback-porch = <38>;
-				hsync-len = <30>;
-				hfront-porch = <30>;
-				vback-porch = <16>;
-				vsync-len = <3>;
-				vfront-porch = <4>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-			};
-		};
 	};
-
 };
 
-&i2c5 {
+&i2c6 {
 	status = "okay";
 
 	polytouch: edt-ft5x06@38 {
 		compatible = "edt,edt-ft5x06";
 		reg = <0x38>;
-		interrupt-parent = <&gpioe>;
-		interrupts = <0 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-parent = <&gpiod>;
+		interrupts = <6 IRQ_TYPE_EDGE_FALLING>;
 		reset-gpios = <&gpiod 14 GPIO_ACTIVE_LOW>; /* Pin 149 */
 		wake-gpios = <&gpioe 2 GPIO_ACTIVE_HIGH>; /* Pin 152 */
 		wakeup-source;
@@ -187,6 +83,11 @@
 			remote-endpoint = <&panel_in>;
 		};
 	};
+};
+
+&sdmmc3 {
+	/* not usable due to pinswap of SDMMC3_CMD and SDMMC3_D0 */
+	status = "disabled";
 };
 
 &pinctrl {
@@ -243,7 +144,7 @@
 		};
 	};
 
-	txmp_ltdc_pins_sleep: txmp-lcd-pins-sleep {
+	txmp_ltdc_sleep: txmp-lcd-sleep {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('G',  7, ANALOG) /* LCD_CLK */

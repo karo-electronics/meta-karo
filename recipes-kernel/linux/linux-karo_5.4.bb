@@ -4,6 +4,8 @@ require recipes-kernel/linux/linux-karo.inc
 
 DEPENDS += "lzop-native bc-native"
 
+LIC_FILES_CHKSUM = "file://COPYING;md5=bbea815ee2795b2f4230826c0c6b8814"
+
 SRCBRANCH = "linux-5.4.y"
 SRCREV = "v5.4.32"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
