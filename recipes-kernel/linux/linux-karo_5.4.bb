@@ -14,6 +14,7 @@ PROVIDES += "linux"
 SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
+	file://defconfig \
 	file://0001-display-support.patch \
 	file://0002-fec-enet-reset.patch \
 	file://0003-panel-dpi.patch \
@@ -22,7 +23,6 @@ SRC_URI_append = " \
 "
 
 SRC_URI_append_mx8mm = " \
-	file://defconfig \
 	file://dts/imx8mm-qs8m-mq00-qsbase2.dts;subdir=git/arch/arm64/boot/freescale \
 	file://dts/imx8mm-qs8m-mq00.dts;subdir=git/arch/arm64/boot/freescale \
 	file://dts/imx8mm-tx8m-16xx.dtsi;subdir=git/arch/arm64/boot/freescale \
@@ -36,30 +36,12 @@ SRC_URI_append_mx8mm = " \
 "
 
 SRC_URI_append_mx8mn = " \
-	file://defconfig \
 	file://dts/imx8mn-tx8m-mipi-mb.dtsi;subdir=git/arch/arm64/boot/freescale \
 	file://dts/imx8mn-tx8m-nd00-mipi-mb.dts;subdir=git/arch/arm64/boot/freescale \
 	file://dts/imx8mn-tx8m-nd00.dts;subdir=git/arch/arm64/boot/freescale \
 "
 
-SRC_URI_append_stm32mp1 = " \
-	file://defconfig \
-	file://dts/stm32mp15-ddr.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-mx.h;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-txmp-mb7.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mipi-mb.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
-"
-
 SRC_URI_append_tx6 = " \
-	file://defconfig \
 	file://dts/imx6dl-tx6u-8033.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8134.dts;subdir=git/arch/arm/boot \
@@ -84,7 +66,6 @@ SRC_URI_append_tx6 = " \
 "
 
 SRC_URI_append_txul = " \
-	file://defconfig \
 	file://dts/imx6ul-tx6ul-0010.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6ul-tx6ul-0011.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6ul-tx6ul.dtsi;subdir=git/arch/arm/boot \
@@ -97,6 +78,21 @@ SRC_URI_append_txul = " \
 	file://dts/imx6ull-txul-8013-mainboard.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6ull-txul-8013-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6ull-txul-8013.dts;subdir=git/arch/arm/boot \
+"
+
+SRC_URI_append_stm32mp1 = " \
+	file://dts/stm32mp15-ddr.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-mx.h;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-txmp-mb7.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530-mipi-mb.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
 "
 
 LOCALVERSION = "-stable"
