@@ -43,6 +43,10 @@ SRC_URI_append_mx8mn = " \
 	file://dts/imx8mn-tx8m-nd00.dts;subdir=git/arch/arm64/boot/freescale \
 "
 
+SRC_URI_append_mx6 = " \
+	${@bb.utils.contains('MACHINE_FEATURES',"nand","file://cfg/nand.cfg","",d)} \
+"
+
 SRC_URI_append_tx6 = " \
 	file://dts/imx6dl-tx6u-8033.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
