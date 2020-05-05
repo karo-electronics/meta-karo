@@ -69,6 +69,8 @@ SRC_URI_append_tx6 = " \
 	file://dts/imx6qp-tx6q-8037.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8137-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8137.dts;subdir=git/arch/arm/boot \
+	${@bb.utils.contains('MACHINE_FEATURES',"lvds","file://cfg/lvds.cfg","file://cfg/lcd.cfg",d)} \
+	${@bb.utils.contains('MACHINE_FEATURES',"sata","file://cfg/sata.cfg","",d)} \
 "
 
 SRC_URI_append_txul = " \
