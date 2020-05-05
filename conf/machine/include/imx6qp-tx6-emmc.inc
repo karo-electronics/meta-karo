@@ -3,4 +3,4 @@ require conf/machine/include/tune-cortexa9.inc
 
 MACHINEOVERRIDES =. "mx6:mx6q:tx6:"
 
-FLASHTYPE = "emmc"
+MACHINE_FEATURES += "emmc"

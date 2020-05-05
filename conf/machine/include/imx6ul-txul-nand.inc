@@ -3,4 +3,4 @@ require conf/machine/include/tune-cortexa7.inc
 
 MACHINEOVERRIDES =. "mx6:mx6ul:txul:"
 
-FLASHTYPE = "nand"
+MACHINE_FEATURES += "nand"
