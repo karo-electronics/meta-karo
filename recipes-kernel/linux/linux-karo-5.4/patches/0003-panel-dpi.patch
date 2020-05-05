@@ -8,7 +8,7 @@ diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-
 index f0c79c2..d646292 100644
 --- a/drivers/gpu/drm/panel/panel-simple.c
 +++ b/drivers/gpu/drm/panel/panel-simple.c
-@@ -374,6 +374,62 @@ static int panel_simple_get_timings(struct drm_panel *panel,
+@@ -355,6 +355,62 @@ static int panel_simple_get_timings(struct drm_panel *panel,
  	return p->desc->num_timings;
  }
  
@@ -71,7 +71,7 @@ index f0c79c2..d646292 100644
  static const struct drm_panel_funcs panel_simple_funcs = {
  	.disable = panel_simple_disable,
  	.unprepare = panel_simple_unprepare,
-@@ -481,8 +537,15 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
+@@ -461,8 +517,15 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
  		}
  	}
  
@@ -87,9 +87,9 @@ index f0c79c2..d646292 100644
 +			panel_simple_parse_panel_timing_node(dev, panel, &dt);
 +	}
  
- 	if (of_property_read_u32(dev->of_node, "pixelclk-active",
- 				 &clkpol) == 0) {
-@@ -3579,6 +3642,10 @@ static const struct of_device_id platform_of_match[] = {
+ 	drm_panel_init(&panel->base);
+ 	panel->base.dev = dev;
+@@ -3584,6 +3647,10 @@ static const struct of_device_id platform_of_match[] = {
  		.compatible = "winstar,wf35ltiacd",
  		.data = &winstar_wf35ltiacd,
  	}, {

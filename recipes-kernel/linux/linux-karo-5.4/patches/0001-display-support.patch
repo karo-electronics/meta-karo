@@ -2,100 +2,17 @@ commit 4bf9095995a8d1c184cf969a712ec11e05e93b35
 Author: mb-karo <mb@karo-electronics.de>
 Date:   Wed Apr 1 13:35:56 2020 +0000
 
-    drm/panel: simple: add support for overriding the pixel clock polarity
-    
-    The Ka-Ro electronics MB7 baseboard has an on-board LCD->LVDS
-    converter that requires a fixed pixelclk polarity, no matter what the
-    panel's display_mode specifies. Add an option to override the pixelclk
-    polarity defined in the panel's display_mode via DTB.
+    drm/panel: simple: add support for various panels
 
-diff --git a/Documentation/devicetree/bindings/display/panel/panel-common.yaml b/Documentation/devicetree/bindings/display/panel/panel-common.yaml
-index ef8d8cd..be312e0 100644
---- a/Documentation/devicetree/bindings/display/panel/panel-common.yaml
-+++ b/Documentation/devicetree/bindings/display/panel/panel-common.yaml
-@@ -142,6 +142,11 @@ properties:
-       controller, this property contains a phandle that references the
-       controller.
- 
-+ pixelclk-active:
-+  description:
-+    Override the pixelclock polarity defined in the
-+    panel's display_mode settings
-+
- dependencies:
-   width-mm: [ height-mm ]
-   height-mm: [ width-mm ]
+    - add support for the EDT ETM0430 4.3" panel
+    - add support for the EDT ET0350 3.5" panel
+    - add support for the EDT ET1010 10" panel
+    - add support for the NLT NL12880 12" LVDS panel
+
 diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
 index 28fa6ba..f0c79c2 100644
 --- a/drivers/gpu/drm/panel/panel-simple.c
 +++ b/drivers/gpu/drm/panel/panel-simple.c
-@@ -111,6 +111,13 @@ struct panel_simple {
- 	struct gpio_desc *enable_gpio;
- 
- 	struct drm_display_mode override_mode;
-+
-+	u32 quirks;
-+};
-+
-+enum {
-+	PANEL_QUIRK_PIXDATA_NEGEDGE = BIT(0),
-+	PANEL_QUIRK_PIXDATA_POSEDGE = BIT(1),
- };
- 
- static inline struct panel_simple *to_panel_simple(struct drm_panel *panel)
-@@ -118,6 +125,15 @@ static inline struct panel_simple *to_panel_simple(struct drm_panel *panel)
- 	return container_of(panel, struct panel_simple, base);
- }
- 
-+static inline void panel_simple_apply_quirks(struct panel_simple *panel,
-+					     struct drm_display_info *info)
-+{
-+	if (panel->quirks & PANEL_QUIRK_PIXDATA_NEGEDGE)
-+		info->bus_flags |= DRM_BUS_FLAG_PIXDATA_NEGEDGE;
-+	if (panel->quirks & PANEL_QUIRK_PIXDATA_POSEDGE)
-+		info->bus_flags |= DRM_BUS_FLAG_PIXDATA_POSEDGE;
-+}
-+
- static unsigned int panel_simple_get_timings_modes(struct panel_simple *panel)
- {
- 	struct drm_connector *connector = panel->base.connector;
-@@ -225,6 +241,9 @@ static int panel_simple_get_non_edid_modes(struct panel_simple *panel)
- 						 &panel->desc->bus_format, 1);
- 	connector->display_info.bus_flags = panel->desc->bus_flags;
- 
-+	if (panel->quirks)
-+		panel_simple_apply_quirks(panel, &connector->display_info);
-+
- 	return num;
- }
- 
-@@ -417,6 +436,7 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
- 	struct panel_simple *panel;
- 	struct display_timing dt;
- 	int err;
-+	u32 clkpol;
- 
- 	panel = devm_kzalloc(dev, sizeof(*panel), GFP_KERNEL);
- 	if (!panel)
-@@ -464,6 +484,18 @@ static int panel_simple_probe(struct device *dev, const struct panel_desc *desc)
- 	if (!of_get_display_timing(dev->of_node, "panel-timing", &dt))
- 		panel_simple_parse_panel_timing_node(dev, panel, &dt);
- 
-+	if (of_property_read_u32(dev->of_node, "pixelclk-active",
-+				 &clkpol) == 0) {
-+		if (clkpol & ~1) {
-+			dev_err(dev,
-+				"Invalid value for pixelclk-active: '%u' (should be <0> or <1>)\n",
-+				clkpol);
-+			return -EINVAL;
-+		}
-+		panel->quirks |= clkpol ? PANEL_QUIRK_PIXDATA_POSEDGE :
-+			PANEL_QUIRK_PIXDATA_NEGEDGE;
-+	}
-+
- 	drm_panel_init(&panel->base);
- 	panel->base.dev = dev;
- 	panel->base.funcs = &panel_simple_funcs;
 @@ -1287,6 +1319,58 @@ static const struct panel_desc edt_etm0430g0dh6 = {
  	},
  };
