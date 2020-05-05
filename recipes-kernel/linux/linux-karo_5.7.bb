@@ -13,7 +13,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
 PROVIDES += "linux"
 
-SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
+SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
 	file://0001-usb-dwc2-prevent-BUG-due-to-uninitialized-timer.patch \
