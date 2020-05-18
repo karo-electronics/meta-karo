@@ -1,0 +1,28 @@
+Index: karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
+===================================================================
+--- karo-tx-linux.orig/arch/arm/boot/dts/stm32mp151.dtsi
++++ karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
+@@ -1366,12 +1366,6 @@
+ 			status = "disabled";
+ 		};
+ 
+-		stmmac_axi_config_0: stmmac-axi-config {
+-			snps,wr_osr_lmt = <0x7>;
+-			snps,rd_osr_lmt = <0x7>;
+-			snps,blen = <0 0 0 0 16 8 4>;
+-		};
+-
+ 		ethernet0: ethernet@5800a000 {
+ 			compatible = "st,stm32mp1-dwmac", "snps,dwmac-4.20a";
+ 			reg = <0x5800a000 0x2000>;
+@@ -1705,4 +1699,10 @@
+ 			status = "disabled";
+ 		};
+ 	};
++
++	stmmac_axi_config_0: stmmac-axi-config {
++		snps,wr_osr_lmt = <0x7>;
++		snps,rd_osr_lmt = <0x7>;
++		snps,blen = <0 0 0 0 16 8 4>;
++	};
+ };

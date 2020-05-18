@@ -1,0 +1,22 @@
+Index: karo-tx-linux/drivers/rtc/rtc-stm32.c
+===================================================================
+--- karo-tx-linux.orig/drivers/rtc/rtc-stm32.c
++++ karo-tx-linux/drivers/rtc/rtc-stm32.c
+@@ -779,6 +779,8 @@ static int stm32_rtc_probe(struct platfo
+ 	}
+ 
+ 	ret = device_init_wakeup(&pdev->dev, true);
++	if (ret)
++		dev_warn(&pdev->dev, "alarm can't wake up the system: %d", ret);
+ 	if (rtc->data->has_wakeirq) {
+ 		rtc->wakeirq_alarm = platform_get_irq_optional(pdev, 1);
+ 		if (rtc->wakeirq_alarm > 0) {
+@@ -790,8 +792,6 @@ static int stm32_rtc_probe(struct platfo
+ 				goto err;
+ 		}
+ 	}
+-	if (ret)
+-		dev_warn(&pdev->dev, "alarm can't wake up the system: %d", ret);
+ 
+ 	platform_set_drvdata(pdev, rtc);
+ 

@@ -1,7 +1,8 @@
 KBUILD_BUILD_USER := "support"
 KBUILD_BUILD_HOST := "karo-electronics.de"
 
-# Set specific make target and binary suffix
+# build u-boot with image
+EXTRA_IMAGEDEPENDS += "u-boot-karo"
 PREFERRED_PROVIDER_u-boot ??= "u-boot-karo"
 PREFERRED_PROVIDER_virtual/bootloader ??= "u-boot-karo"
 

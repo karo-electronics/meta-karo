@@ -88,21 +88,6 @@ SRC_URI_append_txul = " \
 	file://dts/imx6ull-txul-8013.dts;subdir=git/arch/arm/boot \
 "
 
-SRC_URI_append_stm32mp1 = " \
-	file://dts/stm32mp15-ddr.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-mx.h;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-txmp-mb7.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mipi-mb.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
-"
-
 LOCALVERSION = "-stable"
 KERNEL_IMAGETYPE_mx8m = "Image"
 KERNEL_IMAGETYPE_mx6 = "uImage"

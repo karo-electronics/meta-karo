@@ -1,0 +1,13 @@
+Index: karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
+===================================================================
+--- karo-tx-linux.orig/arch/arm/boot/dts/stm32mp151.dtsi
++++ karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
+@@ -1315,6 +1315,8 @@
+ 		};
+ 
+ 		qspi: spi@58003000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
+ 			compatible = "st,stm32f469-qspi";
+ 			reg = <0x58003000 0x1000>, <0x70000000 0x10000000>;
+ 			reg-names = "qspi", "qspi_mm";

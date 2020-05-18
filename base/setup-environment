@@ -146,33 +146,30 @@ fi
 if [ -z "$DISTRO" ]; then
     DISTRO="karo-minimal"
 fi
-if [ -s "layers/meta-karo-distro/conf/distro/${DISTRO}.conf" ];then
-    bitbake_target="karo-image${DISTRO#karo}"
-else
-    case $DISTRO in
-        karo-*)
-            distro_dir="$(dirname "$(find layers -path */conf/distro/${DISTRO}.conf -printf "%h")")"
-            if [ "$distro_dir" = "." ];then
-                echo "Unsupported distro: '$DISTRO'" >&2
-                usage && clean_up
-                return 1
-            fi
-            distro_images="$(cd "$distro_dir/../recipes-core/images/";ls *.bb)"
-            bitbake_target="${distro_images//.bb/ }"
-            ;;
-        *wayland)
-            bitbake_target="core-image-weston"
-            ;;
-        poky)
-            bitbake_target="u-boot-karo"
-            ;;
-        *)
-            echo "Unsupported distro: '$DISTRO'" >&2
-            usage && clean_up
-            return 1
-            ;;
-    esac
-fi
+
+case $DISTRO in
+karo-*)
+    distro_dir="$(dirname "$(find layers -path */conf/distro/${DISTRO}.conf -printf "%h")")"
+    if [ "$distro_dir" = "." ];then
+    echo "Unsupported distro: '$DISTRO'" >&2
+    usage && clean_up
+    return 1
+    fi
+    distro_images="$(cd "$distro_dir/../recipes-core/images/";ls *.bb)"
+    bitbake_target="${distro_images//.bb/ }"
+    ;;
+*wayland)
+    bitbake_target="core-image-weston"
+    ;;
+poky)
+    bitbake_target="u-boot-karo"
+    ;;
+*)
+    echo "Unsupported distro: '$DISTRO'" >&2
+    usage && clean_up
+    return 1
+    ;;
+esac
 
 OEROOT=$PWD/layers/poky
 if [ -e $PWD/layers/oe-core ]; then

@@ -22,6 +22,7 @@
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
 		gpio = <&gpiob 9 GPIO_ACTIVE_HIGH>;
+		regulator-always-on;
 	};
 
 	reg_usbotg_vbus: regulator-usbotg-vbus {
@@ -31,10 +32,6 @@
 		regulator-max-microvolt = <5000000>;
 		enable-active-high;
 		gpio = <&gpioa 1 GPIO_ACTIVE_HIGH>;
-	};
-
-	soc {
-		/delete-node/ pin-controller-z@54004000;
 	};
 };
 
@@ -47,13 +44,6 @@
 	pinctrl-1 = <&txmp_ethernet0_rmii_sleep_pins>;
 	phy-mode = "rmii";
 	st,eth-ref-clk-sel;
-};
-
-&lcd_backlight {
-	pinctrl-names = "default", "sleep";
-	pwms = <&txmp_pwm1 2 500000 PWM_POLARITY_INVERTED>;
-	pinctrl-0 = <&txmp_pwm1_pins>;
-	pinctrl-1 = <&txmp_pwm1_sleep_pins>;
 };
 
 &mdio0 {
@@ -105,15 +95,8 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&txmp_spi2_pins>;
 	pinctrl-1 = <&txmp_spi2_sleep_pins>;
+	cs-gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
 	status = "okay";
-};
-
-&timers1 {
-	status = "okay";
-
-	txmp_pwm1: pwm {
-		status = "okay";
-	};
 };
 
 &uart4 {
@@ -183,21 +166,6 @@
 				  STM32_PINMUX('C', 5, ANALOG)	/* ETH_RMII_RXD1 */
 				  STM32_PINMUX('A', 7, ANALOG)	/* ETH_RMII_CRS_DV */
 			>;
-		};
-	};
-
-	txmp_pwm1_pins: txmp-pwm1-pins {
-		pins {
-			pinmux = <STM32_PINMUX('A', 10, AF1)>; /* TIM1_CH3 */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-	};
-
-	txmp_pwm1_sleep_pins: txmp-pwm1-sleep-pins {
-		pins {
-			pinmux = <STM32_PINMUX('A', 10, ANALOG)>; /* TIM1_CH3 */
 		};
 	};
 
@@ -345,7 +313,6 @@
 	txmp_spi2_sleep_pins: txmp-spi2-sleep-pins {
 		pins {
 			pinmux = <
-				  STM32_PINMUX('B', 12, ANALOG) /* SPI2_NSS */
 				  STM32_PINMUX('C', 3, ANALOG) /* SPI2_MOSI */
 				  STM32_PINMUX('C', 2, ANALOG) /* SPI2_MISO */
 				  STM32_PINMUX('A', 9, ANALOG) /* SPI2_SCK */

@@ -1,5 +1,6 @@
 MACHINEOVERRIDES =. "stm32mp1:"
 
+include conf/machine/include/st-machine-common-stm32mp.inc
 include conf/machine/include/tune-cortexa7.inc
 
 KBUILD_BUILD_USER := "support"
@@ -24,3 +25,23 @@ MACHINE_EXTRA_RRECOMMENDS = " \
 # Blacklist evbug kernel module
 KERNEL_MODULE_PROBECONF += "evbug"
 module_conf_evbug = "blacklist evbug"
+
+# =========================================================================
+# flashlayout
+# =========================================================================
+# Define the config labels to use to generate flashlayout file
+FLASHLAYOUT_CONFIG_LABELS = "emmc"
+
+# =========================================================================
+# Trusted firmware debug
+# =========================================================================
+TF_DEBUG ?= "0"
+
+# =========================================================================
+# Flashlayouts
+# =========================================================================
+ENABLE_FLASHLAYOUT_CONFIG = "1"
+FLASHLAYOUT_BOOTSCHEME_LABELS = "basic trusted"
+BIN2BOOT_REPLACE_PATTERNS_fsbl1-boot = "basic;trusted"
+BIN2BOOT_REPLACE_PATTERNS_ssbl-boot = "basic;mfg trusted;mfg"
+FLASHLAYOUT_TYPE_LABELS_emmc = "${TF_A_DEVICETREE}"

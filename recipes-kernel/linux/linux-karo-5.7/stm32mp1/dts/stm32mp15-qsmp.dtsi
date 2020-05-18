@@ -30,12 +30,6 @@
 	status = "okay";
 };
 
-#if 0
-&adc_temp {
-	status = "okay";
-};
-#endif
-
 &ethernet0 {
 	pinctrl-0 = <&qsmp_ethernet0_rgmii_pins>;
 	pinctrl-1 = <&qsmp_ethernet0_rgmii_sleep_pins>;
@@ -54,13 +48,6 @@
 	pinctrl-0 = <&qsmp_i2c2_pins>;
 	pinctrl-1 = <&qsmp_i2c2_sleep_pins>;
 	status = "okay";
-};
-
-&lcd_backlight {
-	pinctrl-names = "default", "sleep";
-	pwms = <&qsmp_pwm2 0 500000 PWM_POLARITY_INVERTED>;
-	pinctrl-0 = <&qsmp_pwm2_pins>;
-	pinctrl-1 = <&qsmp_pwm2_sleep_pins>;
 };
 
 &mdio0 {
@@ -126,14 +113,6 @@
 	st,neg-edge;
 	non-removable;
 	status = "okay";
-};
-
-&timers2 {
-	status = "okay";
-
-	qsmp_pwm2: pwm {
-		status = "okay";
-	};
 };
 
 &usart2 {
@@ -247,21 +226,6 @@
 				  STM32_PINMUX('D', 0, ANALOG) /* FDCAN1_RX */
 				  STM32_PINMUX('D', 1, ANALOG) /* FDCAN1_TX */
 			>;
-		};
-	};
-
-	qsmp_pwm2_pins: qsmp-pwm2-pins {
-		pins {
-			pinmux = <STM32_PINMUX('A', 15, AF1)>; /* TIM2_CH1 */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-	};
-
-	qsmp_pwm2_sleep_pins: qsmp-pwm2-sleep-pins {
-		pins {
-			pinmux = <STM32_PINMUX('A', 15, ANALOG)>; /* TIM2_CH1 */
 		};
 	};
 

@@ -7,8 +7,6 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
 
-#include "stm32mp15-ddr.dtsi"
-
 / {
 	aliases {
 		ethernet0 = &ethernet0;
@@ -21,22 +19,6 @@
 
 	chosen {
 		stdout-path = "serial0:115200n8";
-	};
-
-	lcd_backlight: lcd-backlight {
-		compatible = "pwm-backlight";
-		brightness-levels = < 0  1  2  3  4  5  6  7  8  9
-				     10 11 12 13 14 15 16 17 18 19
-				     20 21 22 23 24 25 26 27 28 29
-				     30 31 32 33 34 35 36 37 38 39
-				     40 41 42 43 44 45 46 47 48 49
-				     50 51 52 53 54 55 56 57 58 59
-				     60 61 62 63 64 65 66 67 68 69
-				     70 71 72 73 74 75 76 77 78 79
-				     80 81 82 83 84 85 86 87 88 89
-				     90 91 92 93 94 95 96 97 98 99
-				    100>;
-		default-brightness-level = <50>;
 	};
 
 	leds {
@@ -54,17 +36,6 @@
 		regulator-min-microvolt = <3300000>;
 		regulator-max-microvolt = <3300000>;
 		regulator-always-on;
-	};
-
-	usb_phy_tuning: usb-phy-tuning {
-		st,hs-dc-level = <2>;
-		st,fs-rftime-tuning;
-		st,hs-rftime-reduction;
-		st,hs-current-trim = <15>;
-		st,hs-impedance-trim = <1>;
-		st,squelch-level = <3>;
-		st,hs-rx-offset = <2>;
-		st,no-lsfs-sc;
 	};
 };
 
@@ -111,6 +82,11 @@
 	status = "okay";
 };
 
+&pwr_regulators {
+	vdd-supply = <&reg_3v3>;
+	vdd_3v3_usbfs-supply = <&reg18>;
+};
+
 &qspi {
 	pinctrl-names = "default";
 	pinctrl-0 = <&quadspi_pins>;
@@ -153,7 +129,6 @@
 };
 
 &usbh_ehci {
-	phy-names = "usb";
 	phys = <&usbphyc_port0>;
 	status = "okay";
 };
@@ -174,10 +149,16 @@
 };
 
 &usbphyc_port0 {
+	phy-supply = <&reg_3v3>;
+	vdda1v1-supply = <&reg11>;
+	vdda1v8-supply = <&reg18>;
 	status = "okay";
 };
 
 &usbphyc_port1 {
+	phy-supply = <&reg_3v3>;
+	vdda1v1-supply = <&reg11>;
+	vdda1v8-supply = <&reg18>;
 	status = "okay";
 };
 
