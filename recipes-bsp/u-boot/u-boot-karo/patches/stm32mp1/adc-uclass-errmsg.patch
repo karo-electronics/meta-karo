@@ -1,0 +1,15 @@
+Index: u-boot/drivers/adc/adc-uclass.c
+===================================================================
+--- u-boot.orig/drivers/adc/adc-uclass.c
++++ u-boot/drivers/adc/adc-uclass.c
+@@ -39,8 +39,8 @@ static int check_channel(struct udevice
+ 	if ((uc_pdata->channel_mask >= mask) && (uc_pdata->channel_mask & mask))
+ 		return 0;
+ 
+-	printf("Error in %s/%s().\nWrong channel selection for device: %s\n",
+-	       __FILE__, caller_function, dev->name);
++	pr_err("Wrong channel selection %08x for device: %s\nAvailable channels: %08x\n",
++	       mask, dev->name, uc_pdata->channel_mask);
+ 
+ 	return -EINVAL;
+ }

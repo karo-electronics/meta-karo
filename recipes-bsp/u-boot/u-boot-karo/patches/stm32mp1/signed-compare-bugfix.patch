@@ -1,0 +1,38 @@
+Index: u-boot/drivers/mtd/nand/spi/core.c
+===================================================================
+--- u-boot.orig/drivers/mtd/nand/spi/core.c
++++ u-boot/drivers/mtd/nand/spi/core.c
+@@ -79,8 +79,7 @@ static int spinand_get_cfg(struct spinan
+ {
+ 	struct nand_device *nand = spinand_to_nand(spinand);
+ 
+-	if (WARN_ON(spinand->cur_target < 0 ||
+-		    spinand->cur_target >= nand->memorg.ntargets))
++	if (WARN_ON(spinand->cur_target >= nand->memorg.ntargets))
+ 		return -EINVAL;
+ 
+ 	*cfg = spinand->cfg_cache[spinand->cur_target];
+@@ -92,8 +91,7 @@ static int spinand_set_cfg(struct spinan
+ 	struct nand_device *nand = spinand_to_nand(spinand);
+ 	int ret;
+ 
+-	if (WARN_ON(spinand->cur_target < 0 ||
+-		    spinand->cur_target >= nand->memorg.ntargets))
++	if (WARN_ON(spinand->cur_target >= nand->memorg.ntargets))
+ 		return -EINVAL;
+ 
+ 	if (spinand->cfg_cache[spinand->cur_target] == cfg)
+Index: u-boot/drivers/mtd/ubi/vmt.c
+===================================================================
+--- u-boot.orig/drivers/mtd/ubi/vmt.c
++++ u-boot/drivers/mtd/ubi/vmt.c
+@@ -756,8 +756,7 @@ static int self_check_volume(struct ubi_
+ 			ubi_err(ubi, "bad used_ebs");
+ 			goto fail;
+ 		}
+-		if (vol->last_eb_bytes < 0 ||
+-		    vol->last_eb_bytes > vol->usable_leb_size) {
++		if (vol->last_eb_bytes > vol->usable_leb_size) {
+ 			ubi_err(ubi, "bad last_eb_bytes");
+ 			goto fail;
+ 		}

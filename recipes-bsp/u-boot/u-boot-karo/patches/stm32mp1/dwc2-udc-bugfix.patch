@@ -1,0 +1,55 @@
+Index: u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+===================================================================
+--- u-boot.orig/drivers/usb/gadget/dwc2_udc_otg.c
++++ u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+@@ -973,7 +973,7 @@ int dwc2_phy_setup(struct udevice *dev,
+ 
+ 	for (i = 0; i < count; i++) {
+ 		ret = generic_phy_get_by_index(dev, i, &usb_phys[i]);
+-		if (ret && ret != -ENOENT) {
++		if (ret) {
+ 			dev_err(dev, "Failed to get USB PHY%d for %s\n",
+ 				i, dev->name);
+ 			return ret;
+@@ -1004,16 +1004,11 @@ int dwc2_phy_setup(struct udevice *dev,
+ 	return 0;
+ 
+ phys_poweron_err:
+-	for (i = count - 1; i >= 0; i--)
++	for (--i; i >= 0; i--)
+ 		generic_phy_power_off(&usb_phys[i]);
+-
+-	for (i = 0; i < count; i++)
+-		generic_phy_exit(&usb_phys[i]);
+-
+-	return ret;
+-
++	i = count;
+ phys_init_err:
+-	for (; i >= 0; i--)
++	for (--i; i >= 0; i--)
+ 		generic_phy_exit(&usb_phys[i]);
+ 
+ 	return ret;
+@@ -1027,12 +1022,16 @@ void dwc2_phy_shutdown(struct udevice *d
+ 		if (!generic_phy_valid(&usb_phys[i]))
+ 			continue;
+ 
++		ret = generic_phy_exit(&usb_phys[i]);
++		if (ret)
++			dev_err(dev,
++				"generic_phy_exit() for PHY%d failed: %d\n",
++				i, ret);
+ 		ret = generic_phy_power_off(&usb_phys[i]);
+-		ret |= generic_phy_exit(&usb_phys[i]);
+-		if (ret) {
+-			dev_err(dev, "Can't shutdown USB PHY%d for %s\n",
+-				i, dev->name);
+-		}
++		if (ret)
++			dev_err(dev,
++				"generic_phy_power_off() for PHY%d failed: %d\n",
++				i, ret);
+ 	}
+ }
+ 

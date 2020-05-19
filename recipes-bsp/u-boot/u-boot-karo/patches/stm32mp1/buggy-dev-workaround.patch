@@ -1,0 +1,65 @@
+Index: u-boot/drivers/usb/gadget/udc/udc-core.c
+===================================================================
+--- u-boot.orig/drivers/usb/gadget/udc/udc-core.c
++++ u-boot/drivers/usb/gadget/udc/udc-core.c
+@@ -12,6 +12,7 @@
+  * commit 02e8c96627 : usb: gadget: udc: core: prepend udc_attach_driver with
+  *		       usb_
+  */
++#define BUGGY_USE_OF_STRUCT_DEVICE
+ 
+ #include <dm/device_compat.h>
+ #include <dm/devres.h>
+Index: u-boot/include/dm/device_compat.h
+===================================================================
+--- u-boot.orig/include/dm/device_compat.h
++++ u-boot/include/dm/device_compat.h
+@@ -36,12 +36,19 @@
+  * REVISIT:
+  * print device name like Linux
+  */
++#ifndef BUGGY_USE_OF_STRUCT_DEVICE
+ #define dev_printk(dev, fmt, ...)				\
+ ({								\
+ 	if (dev)						\
+ 		printk("%s: ", dev_read_name(dev));		\
+ 	printk(fmt, ##__VA_ARGS__);				\
+ })
++#else
++#define dev_printk(dev, fmt, ...)				\
++({								\
++	printk(fmt, ##__VA_ARGS__);				\
++})
++#endif
+ 
+ #define __dev_printk(level, dev, fmt, ...)			\
+ ({								\
+Index: u-boot/drivers/usb/dwc3/gadget.c
+===================================================================
+--- u-boot.orig/drivers/usb/dwc3/gadget.c
++++ u-boot/drivers/usb/dwc3/gadget.c
+@@ -2612,7 +2612,7 @@ int dwc3_gadget_init(struct dwc3 *dwc)
+ 	if (ret)
+ 		goto err4;
+ 
+-	ret = usb_add_gadget_udc((struct device *)dwc->dev, &dwc->gadget);
++	ret = usb_add_gadget_udc(dwc->dev, &dwc->gadget);
+ 	if (ret) {
+ 		dev_err(dwc->dev, "failed to register udc\n");
+ 		goto err4;
+Index: u-boot/include/linux/usb/gadget.h
+===================================================================
+--- u-boot.orig/include/linux/usb/gadget.h
++++ u-boot/include/linux/usb/gadget.h
+@@ -885,9 +885,9 @@ int usb_gadget_register_driver(struct us
+  */
+ int usb_gadget_unregister_driver(struct usb_gadget_driver *driver);
+ 
+-int usb_add_gadget_udc_release(struct device *parent,
++int usb_add_gadget_udc_release(struct device *__unused__,
+ 		struct usb_gadget *gadget, void (*release)(struct device *dev));
+-int usb_add_gadget_udc(struct device *parent, struct usb_gadget *gadget);
++int usb_add_gadget_udc(struct device *__unused__, struct usb_gadget *gadget);
+ void usb_del_gadget_udc(struct usb_gadget *gadget);
+ /*-------------------------------------------------------------------------*/
+ 

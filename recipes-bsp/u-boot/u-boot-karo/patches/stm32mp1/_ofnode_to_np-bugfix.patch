@@ -1,0 +1,32 @@
+Index: u-boot/include/dm/ofnode.h
+===================================================================
+--- u-boot.orig/include/dm/ofnode.h
++++ u-boot/include/dm/ofnode.h
+@@ -13,6 +13,7 @@
+ 
+ /* Enable checks to protect against invalid calls */
+ #undef OF_CHECKS
++#define OF_CHECKS
+ 
+ struct resource;
+ 
+@@ -59,7 +60,7 @@ struct ofnode_phandle_args {
+ };
+ 
+ /**
+- * _ofnode_to_np() - convert an ofnode to a live DT node pointer
++ * ofnode_to_np() - convert an ofnode to a live DT node pointer
+  *
+  * This cannot be called if the reference contains an offset.
+  *
+@@ -157,8 +158,8 @@ static inline bool ofnode_is_np(ofnode n
+ 	 * live tree is in use.
+ 	 */
+ 	assert(!ofnode_valid(node) ||
+-	       (of_live_active() ? _ofnode_to_np(node)
+-				  : _ofnode_to_np(node)));
++	       (of_live_active() ? ofnode_to_np(node)
++				  : ofnode_to_np(node)));
+ #endif
+ 	return of_live_active() && ofnode_valid(node);
+ }

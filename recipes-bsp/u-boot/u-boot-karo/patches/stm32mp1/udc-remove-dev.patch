@@ -1,0 +1,84 @@
+Index: u-boot/drivers/usb/gadget/udc/udc-core.c
+===================================================================
+--- u-boot.orig/drivers/usb/gadget/udc/udc-core.c
++++ u-boot/drivers/usb/gadget/udc/udc-core.c
+@@ -12,7 +12,6 @@
+  * commit 02e8c96627 : usb: gadget: udc: core: prepend udc_attach_driver with
+  *		       usb_
+  */
+-#define BUGGY_USE_OF_STRUCT_DEVICE
+ 
+ #include <dm/device_compat.h>
+ #include <dm/devres.h>
+@@ -187,11 +186,9 @@ int usb_add_gadget_udc_release(struct de
+ 		goto err1;
+ 
+ 	dev_set_name(&gadget->dev, "gadget");
+-	gadget->dev.parent = parent;
+ 
+ 	udc->dev.release = usb_udc_release;
+ 	udc->dev.class = udc_class;
+-	udc->dev.parent = parent;
+ 
+ 	udc->gadget = gadget;
+ 
+@@ -225,8 +222,8 @@ EXPORT_SYMBOL_GPL(usb_add_gadget_udc);
+ 
+ static void usb_gadget_remove_driver(struct usb_udc *udc)
+ {
+-	dev_dbg(&udc->dev, "unregistering UDC driver [%s]\n",
+-			udc->driver->function);
++	dev_dbg(NULL, "unregistering UDC driver [%s]\n",
++		udc->driver->function);
+ 
+ 	usb_gadget_disconnect(udc->gadget);
+ 	udc->driver->disconnect(udc->gadget);
+@@ -252,13 +249,13 @@ void usb_del_gadget_udc(struct usb_gadge
+ 		if (udc->gadget == gadget)
+ 			goto found;
+ 
+-	dev_err(gadget->dev.parent, "gadget not registered.\n");
++	dev_err(NULL, "gadget not registered.\n");
+ 	mutex_unlock(&udc_lock);
+ 
+ 	return;
+ 
+ found:
+-	dev_vdbg(gadget->dev.parent, "unregistering gadget\n");
++	dev_vdbg(NULL, "unregistering gadget\n");
+ 
+ 	list_del(&udc->list);
+ 	mutex_unlock(&udc_lock);
+@@ -295,8 +292,8 @@ static int udc_bind_to_driver(struct usb
+ {
+ 	int ret;
+ 
+-	dev_dbg(&udc->dev, "registering UDC driver [%s]\n",
+-			driver->function);
++	dev_dbg(NULL, "registering UDC driver [%s]\n",
++		driver->function);
+ 
+ 	udc->driver = driver;
+ 
+@@ -315,7 +312,7 @@ static int udc_bind_to_driver(struct usb
+ 	return 0;
+ err1:
+ 	if (ret != -EISNAM)
+-		dev_err(&udc->dev, "failed to start %s: %d\n",
++		dev_err(NULL, "failed to start %s: %d\n",
+ 			udc->driver->function, ret);
+ 	udc->driver = NULL;
+ 	return ret;
+Index: u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+===================================================================
+--- u-boot.orig/drivers/usb/gadget/dwc2_udc_otg.c
++++ u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+@@ -1195,7 +1195,7 @@ pr_info("%s@%d: ggpio=%08x\n", __func__,
+ 
+ 	the_controller->driver = 0;
+ 
+-	ret = usb_add_gadget_udc((struct device *)dev, &the_controller->gadget);
++	ret = usb_add_gadget_udc(NULL, &the_controller->gadget);
+ 
+ 	return ret;
+ }

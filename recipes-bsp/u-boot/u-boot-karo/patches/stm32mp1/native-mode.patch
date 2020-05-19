@@ -1,0 +1,52 @@
+Index: u-boot/lib/fdtdec.c
+===================================================================
+--- u-boot.orig/lib/fdtdec.c
++++ u-boot/lib/fdtdec.c
+@@ -964,8 +964,11 @@ static int decode_timing_property(const
+ 		result->typ = fdtdec_get_int(blob, node, name, 0);
+ 		result->min = result->typ;
+ 		result->max = result->typ;
++		debug("%s@%d: %s=%u\n", __func__, __LINE__, name, result->typ);
+ 	} else {
+ 		ret = fdtdec_get_int_array(blob, node, name, &result->min, 3);
++		debug("%s@%d: %s=<%u %u %u>\n", __func__, __LINE__, name,
++		      result->min, result->typ, result->max);
+ 	}
+ 
+ 	return ret;
+@@ -975,23 +978,28 @@ int fdtdec_decode_display_timing(const v
+ 				 struct display_timing *dt)
+ {
+ 	int i, node, timings_node;
+-	u32 val = 0;
+-	int ret = 0;
++	u32 val;
++	int ret;
+ 
+ 	timings_node = fdt_subnode_offset(blob, parent, "display-timings");
+ 	if (timings_node < 0)
+ 		return timings_node;
+ 
+-	for (i = 0, node = fdt_first_subnode(blob, timings_node);
+-	     node > 0 && i != index;
+-	     node = fdt_next_subnode(blob, node))
+-		i++;
+-
++	ret = fdtdec_lookup_phandle(blob, timings_node, "native-mode");
++	if (ret > 0) {
++		node = ret;
++	} else {
++		for (i = 0, node = fdt_first_subnode(blob, timings_node);
++		     node > 0 && i != index;
++		     node = fdt_next_subnode(blob, node))
++			i++;
++	}
+ 	if (node < 0)
+ 		return node;
+ 
+ 	memset(dt, 0, sizeof(*dt));
+ 
++	ret = 0;
+ 	ret |= decode_timing_property(blob, node, "hback-porch",
+ 				      &dt->hback_porch);
+ 	ret |= decode_timing_property(blob, node, "hfront-porch",

@@ -1,0 +1,314 @@
+Index: u-boot/arch/arm/dts/stm32mp157c.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157c.dtsi
++++ u-boot/arch/arm/dts/stm32mp157c.dtsi
+@@ -1332,6 +1332,8 @@
+ 		};
+ 
+ 		qspi: spi@58003000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
+ 			compatible = "st,stm32f469-qspi";
+ 			reg = <0x58003000 0x1000>, <0x70000000 0x10000000>;
+ 			reg-names = "qspi", "qspi_mm";
+@@ -1379,12 +1381,6 @@
+ 			status = "disabled";
+ 		};
+ 
+-		stmmac_axi_config_0: stmmac-axi-config {
+-			snps,wr_osr_lmt = <0x7>;
+-			snps,rd_osr_lmt = <0x7>;
+-			snps,blen = <0 0 0 0 16 8 4>;
+-		};
+-
+ 		ethernet0: ethernet@5800a000 {
+ 			compatible = "st,stm32mp1-dwmac", "snps,dwmac-4.20a";
+ 			reg = <0x5800a000 0x2000>;
+@@ -1562,6 +1558,12 @@
+ 		};
+ 	};
+ 
++	stmmac_axi_config_0: stmmac-axi-config {
++		snps,wr_osr_lmt = <0x7>;
++		snps,rd_osr_lmt = <0x7>;
++		snps,blen = <0 0 0 0 16 8 4>;
++	};
++
+ 	mlahb {
+ 		compatible = "simple-bus";
+ 		#address-cells = <1>;
+Index: u-boot/arch/arm/dts/stm32mp157xaa-pinctrl-u-boot.dtsi
+===================================================================
+--- /dev/null
++++ u-boot/arch/arm/dts/stm32mp157xaa-pinctrl-u-boot.dtsi
+@@ -0,0 +1,20 @@
++// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
++/*
++ * Copyright : STMicroelectronics 2018
++ */
++
++/ {
++	aliases {
++		gpio25 = &gpioz;
++		pinctrl1 = &pinctrl_z;
++	};
++};
++
++&gpioz {
++	u-boot,dm-pre-reloc;
++};
++
++&pinctrl_z {
++	u-boot,dm-pre-reloc;
++};
++
+Index: u-boot/arch/arm/dts/stm32mp157xaa-pinctrl.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157xaa-pinctrl.dtsi
++++ u-boot/arch/arm/dts/stm32mp157xaa-pinctrl.dtsi
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include "stm32mp157-pinctrl.dtsi"
++
+ / {
+ 	soc {
+ 		pinctrl: pin-controller@50002000 {
+@@ -76,15 +77,9 @@
+ 				gpio-ranges = <&pinctrl 0 160 8>;
+ 			};
+ 		};
+-
+-		pinctrl_z: pin-controller-z@54004000 {
+-			st,package = <STM32MP_PKG_AA>;
+-
+-			gpioz: gpio@54004000 {
+-				status = "okay";
+-				ngpios = <8>;
+-				gpio-ranges = <&pinctrl_z 0 400 8>;
+-			};
+-		};
+ 	};
+ };
++
++&pinctrl_z {
++	st,package = <STM32MP_PKG_AA>;
++};
+Index: u-boot/arch/arm/dts/stm32mp157xab-pinctrl.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157xab-pinctrl.dtsi
++++ u-boot/arch/arm/dts/stm32mp157xab-pinctrl.dtsi
+@@ -58,5 +58,7 @@
+ 				gpio-ranges = <&pinctrl 0 112 2>;
+ 			};
+ 		};
++
++		/delete-node/ pin-controller-z@54004000;
+ 	};
+ };
+Index: u-boot/arch/arm/dts/stm32mp157xac-pinctrl.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157xac-pinctrl.dtsi
++++ u-boot/arch/arm/dts/stm32mp157xac-pinctrl.dtsi
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include "stm32mp157-pinctrl.dtsi"
++
+ / {
+ 	soc {
+ 		pinctrl: pin-controller@50002000 {
+@@ -64,15 +65,10 @@
+ 				gpio-ranges = <&pinctrl 0 128 12>;
+ 			};
+ 		};
+-
+-		pinctrl_z: pin-controller-z@54004000 {
+-			st,package = <STM32MP_PKG_AC>;
+-
+-			gpioz: gpio@54004000 {
+-				status = "okay";
+-				ngpios = <8>;
+-				gpio-ranges = <&pinctrl_z 0 400 8>;
+-			};
+-		};
+ 	};
+ };
++
++&pinctrl_z {
++	st,package = <STM32MP_PKG_AC>;
++};
++
+Index: u-boot/arch/arm/dts/stm32mp157-pinctrl.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157-pinctrl.dtsi
++++ u-boot/arch/arm/dts/stm32mp157-pinctrl.dtsi
+@@ -637,7 +637,7 @@
+ 				};
+ 			};
+ 
+-			m_can1_sleep_pins_a: m_can1-sleep-0 {
++			m_can1_sleep_pins_a: m-can1-sleep-0 {
+ 				pins {
+ 					pinmux = <STM32_PINMUX('H', 13, ANALOG)>, /* CAN1_TX */
+ 						 <STM32_PINMUX('I', 9, ANALOG)>; /* CAN1_RX */
+@@ -1031,13 +1031,6 @@
+ 				};
+ 			};
+ 
+-			stusb1600_pins_a: stusb1600-0 {
+-				pins {
+-					pinmux = <STM32_PINMUX('I', 11, ANALOG)>;
+-					bias-pull-up;
+-				};
+-			};
+-
+ 			uart4_pins_a: uart4-0 {
+ 				pins1 {
+ 					pinmux = <STM32_PINMUX('G', 11, AF6)>; /* UART4_TX */
+Index: u-boot/arch/arm/dts/stm32mp157-u-boot.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157-u-boot.dtsi
++++ u-boot/arch/arm/dts/stm32mp157-u-boot.dtsi
+@@ -3,6 +3,7 @@
+  * Copyright : STMicroelectronics 2018
+  */
+ 
++
+ / {
+ 	aliases {
+ 		gpio0 = &gpioa;
+@@ -16,9 +17,7 @@
+ 		gpio8 = &gpioi;
+ 		gpio9 = &gpioj;
+ 		gpio10 = &gpiok;
+-		gpio25 = &gpioz;
+ 		pinctrl0 = &pinctrl;
+-		pinctrl1 = &pinctrl_z;
+ 	};
+ 
+ 	clocks {
+@@ -107,10 +106,6 @@
+ 	u-boot,dm-pre-reloc;
+ };
+ 
+-&gpioz {
+-	u-boot,dm-pre-reloc;
+-};
+-
+ &iwdg2 {
+ 	u-boot,dm-pre-reloc;
+ };
+@@ -124,10 +119,6 @@
+ 	u-boot,dm-pre-reloc;
+ };
+ 
+-&pinctrl_z {
+-	u-boot,dm-pre-reloc;
+-};
+-
+ &pwr_regulators {
+ 	u-boot,dm-pre-reloc;
+ };
+Index: u-boot/arch/arm/dts/stm32mp157a-dk1-u-boot.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157a-dk1-u-boot.dtsi
++++ u-boot/arch/arm/dts/stm32mp157a-dk1-u-boot.dtsi
+@@ -5,6 +5,7 @@
+ 
+ #include <dt-bindings/clock/stm32mp1-clksrc.h>
+ #include "stm32mp157-u-boot.dtsi"
++#include "stm32mp157xaa-pinctrl-u-boot.dtsi"
+ #include "stm32mp15-ddr3-1x4Gb-1066-binG.dtsi"
+ 
+ / {
+Index: u-boot/arch/arm/dts/stm32mp157a-dk1.dts
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157a-dk1.dts
++++ u-boot/arch/arm/dts/stm32mp157a-dk1.dts
+@@ -557,3 +557,13 @@
+ 	vdda-supply = <&vdd>;
+ 	status = "okay";
+ };
++
++&pinctrl {
++	stusb1600_pins_a: stusb1600-0 {
++		pins {
++			pinmux = <STM32_PINMUX('I', 11, ANALOG)>;
++			bias-pull-up;
++		};
++	};
++};
++
+Index: u-boot/arch/arm/mach-stm32mp/Kconfig
+===================================================================
+--- u-boot.orig/arch/arm/mach-stm32mp/Kconfig
++++ u-boot/arch/arm/mach-stm32mp/Kconfig
+@@ -27,12 +27,6 @@ config SPL
+ config SYS_SOC
+ 	default "stm32mp"
+ 
+-config SYS_MALLOC_LEN
+-	default 0x2000000
+-
+-config ENV_SIZE
+-	default 0x2000
+-
+ config STM32MP15x
+ 	bool "Support STMicroelectronics STM32MP15x Soc"
+ 	select ARCH_SUPPORT_PSCI if !STM32MP1_TRUSTED
+@@ -57,6 +51,7 @@ config STM32MP15x
+ choice
+ 	prompt "STM32MP15x board select"
+ 	optional
++	depends on STM32MP15x
+ 
+ config TARGET_ST_STM32MP15x
+ 	bool "STMicroelectronics STM32MP15x boards"
+Index: u-boot/arch/arm/dts/stm32mp157xad-pinctrl.dtsi
+===================================================================
+--- u-boot.orig/arch/arm/dts/stm32mp157xad-pinctrl.dtsi
++++ u-boot/arch/arm/dts/stm32mp157xad-pinctrl.dtsi
+@@ -58,5 +58,7 @@
+ 				gpio-ranges = <&pinctrl 0 112 2>;
+ 			};
+ 		};
++
++		/delete-node/ pin-controller-z@54004000;
+ 	};
+ };
+Index: u-boot/arch/arm/mach-stm32mp/bsec.c
+===================================================================
+--- u-boot.orig/arch/arm/mach-stm32mp/bsec.c
++++ u-boot/arch/arm/mach-stm32mp/bsec.c
+@@ -365,7 +365,7 @@ static int stm32mp_bsec_read(struct udev
+ 		shadow = false;
+ 	}
+ 
+-	if (offs < 0 || (offs % 4) || (size % 4))
++	if (offs % 4 || size % 4)
+ 		return -EINVAL;
+ 
+ 	otp = offs / sizeof(u32);
+@@ -402,7 +402,7 @@ static int stm32mp_bsec_write(struct ude
+ 		shadow = false;
+ 	}
+ 
+-	if (offs < 0 || (offs % 4) || (size % 4))
++	if (offs % 4 || size % 4)
+ 		return -EINVAL;
+ 
+ 	otp = offs / sizeof(u32);
+Index: u-boot/drivers/remoteproc/rproc-elf-loader.c
+===================================================================
+--- u-boot.orig/drivers/remoteproc/rproc-elf-loader.c
++++ u-boot/drivers/remoteproc/rproc-elf-loader.c
+@@ -162,7 +162,7 @@ int rproc_elf_sanity_check(ulong addr, u
+ 	Elf32_Ehdr *ehdr = (Elf32_Ehdr *)addr;
+ 
+ 	if (!addr) {
+-		dev_err(dev, "Invalid firmware address\n");
++		pr_err("Invalid firmware address\n");
+ 		return -EFAULT;
+ 	}
+ 

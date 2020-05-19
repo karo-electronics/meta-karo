@@ -1,0 +1,20 @@
+Index: u-boot/drivers/ram/stm32mp1/stm32mp1_interactive.c
+===================================================================
+--- u-boot.orig/drivers/ram/stm32mp1/stm32mp1_interactive.c
++++ u-boot/drivers/ram/stm32mp1/stm32mp1_interactive.c
+@@ -10,6 +10,7 @@
+ #include <malloc.h>
+ #include <ram.h>
+ #include <reset.h>
++#include <watchdog.h>
+ #include "stm32mp1_ddr.h"
+ #include "stm32mp1_tests.h"
+ 
+@@ -382,6 +383,7 @@ bool stm32mp1_ddr_interactive(void *priv
+ 		unsigned long start = get_timer(0);
+ 
+ 		while (1) {
++			WATCHDOG_RESET();
+ 			if (tstc() && (getc() == 'd')) {
+ 				next_step = STEP_DDR_RESET;
+ 				break;

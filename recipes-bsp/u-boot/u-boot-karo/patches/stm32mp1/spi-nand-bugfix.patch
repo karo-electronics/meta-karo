@@ -1,0 +1,20 @@
+Index: u-boot/drivers/mtd/nand/spi/core.c
+===================================================================
+--- u-boot.orig/drivers/mtd/nand/spi/core.c
++++ u-boot/drivers/mtd/nand/spi/core.c
+@@ -965,6 +965,7 @@ int spinand_match_and_init(struct spinan
+ static int spinand_detect(struct spinand_device *spinand)
+ {
+ 	struct nand_device *nand = spinand_to_nand(spinand);
++	struct udevice *dev = spinand->slave->dev;
+ 	int ret;
+ 
+ 	ret = spinand_reset_op(spinand);
+@@ -1028,6 +1029,7 @@ static int spinand_init(struct spinand_d
+ {
+ 	struct mtd_info *mtd = spinand_to_mtd(spinand);
+ 	struct nand_device *nand = mtd_to_nanddev(mtd);
++	struct udevice *dev = spinand->slave->dev;
+ 	int ret, i;
+ 
+ 	/*

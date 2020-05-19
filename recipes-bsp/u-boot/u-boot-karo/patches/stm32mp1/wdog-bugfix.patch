@@ -1,0 +1,18 @@
+Index: u-boot/include/wdt.h
+===================================================================
+--- u-boot.orig/include/wdt.h
++++ u-boot/include/wdt.h
+@@ -134,10 +134,11 @@ static inline int initr_watchdog(void)
+ 		timeout = dev_read_u32_default(gd->watchdog_dev, "timeout-sec",
+ 					       WATCHDOG_TIMEOUT_SECS);
+ 	}
+-	wdt_start(gd->watchdog_dev, timeout * 1000, 0);
++	if (timeout)
++		wdt_start(gd->watchdog_dev, timeout * 1000, 0);
+ 	gd->flags |= GD_FLG_WDT_READY;
+ 	printf("WDT:   Started with%s servicing (%ds timeout)\n",
+-	       IS_ENABLED(CONFIG_WATCHDOG) ? "" : "out", timeout);
++	       (IS_ENABLED(CONFIG_WATCHDOG) && timeout) ? "" : "out", timeout);
+ 
+ 	return 0;
+ }

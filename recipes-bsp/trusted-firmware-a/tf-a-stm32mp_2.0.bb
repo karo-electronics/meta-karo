@@ -7,11 +7,6 @@ SRC_URI = "https://github.com/ARM-software/arm-trusted-firmware/archive/v${PV}.t
 SRC_URI[md5sum] = "21038abbf572c273fa87d296bcd5dad2"
 SRC_URI[sha256sum] = "7d699a1683bb7a5909de37b6eb91b6e38db32cd6fc5ae48a08eb0718d6504ae4"
 
-SRC_URI += " \
-    file://0001-st-update-r1.patch \
-    file://0002-st-update-r1.1.0.patch \
-    "
-
 TF_VERSION = "2.0"
 PV = "${TF_VERSION}"
 
@@ -30,12 +25,12 @@ include ${@oe.utils.ifelse(d.getVar('ST_ARCHIVER_ENABLE') == '1', 'tf-a-stm32mp-
 BBCLASSEXTEND = "devupstream:target"
 
 SRC_URI_class-devupstream = "git://github.com/STMicroelectronics/arm-trusted-firmware.git;protocol=https;name=tfa;branch=v2.0-stm32mp"
-SRCREV_class-devupstream = "69cc28c5a1b877cf67def7f94dece087f3917b1c"
+SRCREV_class-devupstream = "1f0e5b69680e101b567dcd41f15fb99d0b05d74e"
 SRCREV_FORMAT_class-devupstream = "tfa"
 PV_class-devupstream = "${TF_VERSION}+github+${SRCPV}"
 # ---------------------------------
 # Configure default preference to manage dynamic selection between tarball and github
 # ---------------------------------
-STM32MP_SOURCE_SELECTION ?= "tarball"
+STM32MP_SOURCE_SELECTION ?= "github"
 
 DEFAULT_PREFERENCE = "${@bb.utils.contains('STM32MP_SOURCE_SELECTION', 'github', '-1', '1', d)}"

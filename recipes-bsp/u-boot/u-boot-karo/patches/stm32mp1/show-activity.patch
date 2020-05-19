@@ -1,0 +1,104 @@
+Index: u-boot/arch/powerpc/lib/interrupts.c
+===================================================================
+--- u-boot.orig/arch/powerpc/lib/interrupts.c
++++ u-boot/arch/powerpc/lib/interrupts.c
+@@ -16,6 +16,15 @@
+ #endif
+ 
+ #ifndef CONFIG_MPC83XX_TIMER
++#ifdef CONFIG_SHOW_ACTIVITY
++void board_show_activity (ulong) __attribute__((weak, alias("__board_show_activity")));
++
++void __board_show_activity (ulong dummy)
++{
++	return;
++}
++#endif /* CONFIG_SHOW_ACTIVITY */
++
+ #ifndef CONFIG_SYS_WATCHDOG_FREQ
+ #define CONFIG_SYS_WATCHDOG_FREQ (CONFIG_SYS_HZ / 2)
+ #endif
+@@ -86,6 +95,10 @@ void timer_interrupt(struct pt_regs *reg
+ #ifdef CONFIG_LED_STATUS
+ 	status_led_tick(timestamp);
+ #endif /* CONFIG_LED_STATUS */
++
++#ifdef CONFIG_SHOW_ACTIVITY
++	board_show_activity (timestamp);
++#endif /* CONFIG_SHOW_ACTIVITY */
+ }
+ 
+ ulong get_timer (ulong base)
+Index: u-boot/common/cli_readline.c
+===================================================================
+--- u-boot.orig/common/cli_readline.c
++++ u-boot/common/cli_readline.c
+@@ -570,6 +570,12 @@ int cli_readline_into_buffer(const char
+ 			return -2;	/* timed out */
+ 		WATCHDOG_RESET();	/* Trigger watchdog, if needed */
+ 
++#ifdef CONFIG_SHOW_ACTIVITY
++		while (!tstc()) {
++			show_activity(0);
++			WATCHDOG_RESET();
++		}
++#endif
+ 		c = getc();
+ 
+ 		/*
+Index: u-boot/drivers/timer/mpc83xx_timer.c
+===================================================================
+--- u-boot.orig/drivers/timer/mpc83xx_timer.c
++++ u-boot/drivers/timer/mpc83xx_timer.c
+@@ -174,6 +174,10 @@ void timer_interrupt(struct pt_regs *reg
+ #ifdef CONFIG_LED_STATUS
+ 	status_led_tick(priv->timestamp);
+ #endif /* CONFIG_LED_STATUS */
++
++#ifdef CONFIG_SHOW_ACTIVITY
++	board_show_activity(priv->timestamp);
++#endif /* CONFIG_SHOW_ACTIVITY */
+ }
+ 
+ void wait_ticks(ulong ticks)
+Index: u-boot/include/common.h
+===================================================================
+--- u-boot.orig/include/common.h
++++ u-boot/include/common.h
+@@ -40,6 +40,10 @@
+ #include <vsprintf.h>
+ #include <net.h>
+ #include <bootstage.h>
++
++#ifdef CONFIG_SHOW_ACTIVITY
++void show_activity(int arg);
++#endif
+ #endif	/* __ASSEMBLY__ */
+ 
+ /* Pull in stuff for the build system */
+Index: u-boot/net/net.c
+===================================================================
+--- u-boot.orig/net/net.c
++++ u-boot/net/net.c
+@@ -562,6 +562,9 @@ restart:
+ 	 */
+ 	for (;;) {
+ 		WATCHDOG_RESET();
++#ifdef CONFIG_SHOW_ACTIVITY
++		show_activity(1);
++#endif
+ 		if (arp_timeout_check() > 0)
+ 			time_start = get_timer(0);
+ 
+Index: u-boot/scripts/config_whitelist.txt
+===================================================================
+--- u-boot.orig/scripts/config_whitelist.txt
++++ u-boot/scripts/config_whitelist.txt
+@@ -1544,6 +1544,7 @@ CONFIG_SHARP_LM8V31
+ CONFIG_SHARP_LQ035Q7DH06
+ CONFIG_SHEEVA_88SV131
+ CONFIG_SHEEVA_88SV331xV5
++CONFIG_SHOW_ACTIVITY
+ CONFIG_SH_CMT_CLK_FREQ
+ CONFIG_SH_DSP
+ CONFIG_SH_ETHER_ALIGNE_SIZE

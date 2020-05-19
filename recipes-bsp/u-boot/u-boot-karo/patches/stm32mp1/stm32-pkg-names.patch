@@ -1,0 +1,19 @@
+Index: u-boot/include/dt-bindings/pinctrl/stm32-pinfunc.h
+===================================================================
+--- u-boot.orig/include/dt-bindings/pinctrl/stm32-pinfunc.h
++++ u-boot/include/dt-bindings/pinctrl/stm32-pinfunc.h
+@@ -33,10 +33,10 @@
+ #define STM32_PINMUX(port, line, mode) (((PIN_NO(port, line)) << 8) | (mode))
+ 
+ /*  package information */
+-#define STM32MP_PKG_AA	0x1
+-#define STM32MP_PKG_AB	0x2
+-#define STM32MP_PKG_AC	0x4
+-#define STM32MP_PKG_AD	0x8
++#define STM32MP_PKG_AA	0x1	/* LFBGA448 */
++#define STM32MP_PKG_AB	0x2	/* LFBGA354 */
++#define STM32MP_PKG_AC	0x4	/* TFBGA361 */
++#define STM32MP_PKG_AD	0x8	/* TFBGA257 */
+ 
+ #endif /* _DT_BINDINGS_STM32_PINFUNC_H */
+ 

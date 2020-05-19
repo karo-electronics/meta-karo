@@ -20,6 +20,8 @@ SERIAL_CONSOLES = "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
+                          kernel-devicetree \
+                          u-boot-karo \
 "
 
 # Blacklist evbug kernel module
@@ -35,7 +37,7 @@ FLASHLAYOUT_CONFIG_LABELS = "emmc"
 # =========================================================================
 # Trusted firmware debug
 # =========================================================================
-TF_DEBUG ?= "0"
+TF_DEBUG ?= "1"
 
 # =========================================================================
 # Flashlayouts

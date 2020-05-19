@@ -1,0 +1,49 @@
+Index: u-boot/cmd/Kconfig
+===================================================================
+--- u-boot.orig/cmd/Kconfig
++++ u-boot/cmd/Kconfig
+@@ -1460,6 +1460,11 @@ config BOOTP_VCI_STRING
+ 	default "U-Boot.arm" if ARM
+ 	default "U-Boot"
+ 
++config BOOTP_RANDOM_ID
++	bool "Use a random BOOTP ID"
++	depends on CMD_BOOTP
++	select LIB_RAND
++
+ config CMD_TFTPBOOT
+ 	bool "tftpboot"
+ 	default y
+Index: u-boot/net/bootp.c
+===================================================================
+--- u-boot.orig/net/bootp.c
++++ u-boot/net/bootp.c
+@@ -741,7 +741,7 @@ void bootp_request(void)
+ 	else		/* After 3rd BOOTP request max 8192 * 1ms */
+ 		rand_ms = rand() >> 19;
+ 
+-	printf("Random delay: %ld ms...\n", rand_ms);
++	debug("Random delay: %ld ms...\n", rand_ms);
+ 	mdelay(rand_ms);
+ 
+ #endif	/* CONFIG_BOOTP_RANDOM_DELAY */
+@@ -790,7 +790,7 @@ void bootp_request(void)
+ #else
+ 	extlen = bootp_extended((u8 *)bp->bp_vend);
+ #endif
+-
++#ifndef CONFIG_BOOTP_RANDOM_ID
+ 	/*
+ 	 *	Bootp ID is the lower 4 bytes of our ethernet address
+ 	 *	plus the current time in ms.
+@@ -800,6 +800,10 @@ void bootp_request(void)
+ 		| ((u32)net_ethaddr[4] << 8)
+ 		| (u32)net_ethaddr[5];
+ 	bootp_id += get_timer(0);
++#else
++	bootp_id = rand();
++#endif
++	debug("Using BOOTP ID: %08x\n", bootp_id);
+ 	bootp_id = htonl(bootp_id);
+ 	bootp_add_id(bootp_id);
+ 	net_copy_u32(&bp->bp_id, &bootp_id);

@@ -20,6 +20,7 @@ KERNEL_IMAGETYPE ??= "uImage"
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
+                          u-boot-karo \
 "
 
 # Ship imx-sdma firmware

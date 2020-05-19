@@ -1,0 +1,72 @@
+Index: u-boot/drivers/mmc/stm32_sdmmc2.c
+===================================================================
+--- u-boot.orig/drivers/mmc/stm32_sdmmc2.c
++++ u-boot/drivers/mmc/stm32_sdmmc2.c
+@@ -10,6 +10,7 @@
+ #include <dm.h>
+ #include <fdtdec.h>
+ #include <malloc.h>
++#include <linux/compat.h>
+ #include <linux/libfdt.h>
+ #include <mmc.h>
+ #include <reset.h>
+@@ -78,9 +79,9 @@ struct stm32_sdmmc2_ctx {
+ #define SDMMC_CLKCR_DDR			BIT(18)
+ #define SDMMC_CLKCR_BUSSPEED		BIT(19)
+ #define SDMMC_CLKCR_SELCLKRX_MASK	GENMASK(21, 20)
+-#define SDMMC_CLKCR_SELCLKRX_CK		0
+-#define SDMMC_CLKCR_SELCLKRX_CKIN	BIT(20)
+-#define SDMMC_CLKCR_SELCLKRX_FBCK	BIT(21)
++#define SDMMC_CLKCR_SELCLKRX_CK		(0 << 20)
++#define SDMMC_CLKCR_SELCLKRX_CKIN	(1 << 20)
++#define SDMMC_CLKCR_SELCLKRX_FBCK	(2 << 20)
+ 
+ /* SDMMC_CMD register */
+ #define SDMMC_CMD_CMDINDEX		GENMASK(5, 0)
+@@ -609,13 +610,24 @@ static int stm32_sdmmc2_set_ios(struct u
+ 
+ static int stm32_sdmmc2_getcd(struct udevice *dev)
+ {
++	int ret;
+ 	struct stm32_sdmmc2_priv *priv = dev_get_priv(dev);
+ 
+-	debug("stm32_sdmmc2_getcd called\n");
+-
+-	if (dm_gpio_is_valid(&priv->cd_gpio))
+-		return dm_gpio_get_value(&priv->cd_gpio);
++	debug("%s() called\n", __func__);
+ 
++	ret = dm_gpio_is_valid(&priv->cd_gpio);
++	if (ret) {
++		int cd = dm_gpio_get_value(&priv->cd_gpio);
++
++		if (cd < 0) {
++			dev_err(dev, "Failed to read CD GPIO: %d\n", cd);
++			return 1;
++		}
++		dev_dbg(dev, "CD gpio is %sactive (%d)\n", cd ? "" : "in",
++			!cd ^ !(priv->cd_gpio.flags & GPIOD_ACTIVE_LOW));
++		return cd;
++	}
++	dev_dbg(dev, "CD GPIO is not valid\n");
+ 	return 1;
+ }
+ 
+@@ -667,9 +679,14 @@ static int stm32_sdmmc2_probe(struct ude
+ 	if (ret)
+ 		goto clk_disable;
+ 
+-	gpio_request_by_name(dev, "cd-gpios", 0, &priv->cd_gpio,
+-			     GPIOD_IS_IN);
+-
++	ret = gpio_request_by_name(dev, "cd-gpios", 0, &priv->cd_gpio,
++				   GPIOD_IS_IN);
++	if (ret) {
++		if (ret == -ENOENT)
++			dev_dbg(dev, "No CD gpio\n");
++		else
++			dev_err(dev, "Failed to get CD gpio: %d\n", ret);
++	}
+ 	cfg->f_min = 400000;
+ 	cfg->f_max = dev_read_u32_default(dev, "max-frequency", 52000000);
+ 	cfg->voltages = MMC_VDD_32_33 | MMC_VDD_33_34 | MMC_VDD_165_195;

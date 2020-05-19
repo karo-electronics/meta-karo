@@ -1,0 +1,106 @@
+Index: u-boot/drivers/core/of_access.c
+===================================================================
+--- u-boot.orig/drivers/core/of_access.c
++++ u-boot/drivers/core/of_access.c
+@@ -64,6 +64,7 @@ struct alias_prop {
+ 	char stem[0];
+ };
+ 
++#ifdef NP_PARENT_BUGFIX
+ int of_n_addr_cells(const struct device_node *np)
+ {
+ 	const __be32 *ip;
+@@ -93,6 +94,39 @@ int of_n_size_cells(const struct device_
+ 	/* No #size-cells property for the root node */
+ 	return OF_ROOT_NODE_SIZE_CELLS_DEFAULT;
+ }
++#else
++int of_n_addr_cells(const struct device_node *np)
++{
++	const __be32 *ip;
++
++	do {
++		if (np->parent)
++			np = np->parent;
++		ip = of_get_property(np, "#address-cells", NULL);
++		if (ip)
++			return be32_to_cpup(ip);
++	} while (np->parent);
++
++	/* No #address-cells property for the root node */
++	return OF_ROOT_NODE_ADDR_CELLS_DEFAULT;
++}
++
++int of_n_size_cells(const struct device_node *np)
++{
++	const __be32 *ip;
++
++	do {
++		if (np->parent)
++			np = np->parent;
++		ip = of_get_property(np, "#size-cells", NULL);
++		if (ip)
++			return be32_to_cpup(ip);
++	} while (np->parent);
++
++	/* No #size-cells property for the root node */
++	return OF_ROOT_NODE_SIZE_CELLS_DEFAULT;
++}
++#endif
+ 
+ int of_simple_addr_cells(const struct device_node *np)
+ {
+@@ -582,6 +616,7 @@ static int __of_parse_phandle_with_args(
+ 
+ 	/* Retrieve the phandle list property */
+ 	list = of_get_property(np, list_name, &size);
++	debug("%s@%d: %s=%p\n", __func__, __LINE__, list_name, list);
+ 	if (!list)
+ 		return -ENOENT;
+ 	list_end = list + size / sizeof(*list);
+@@ -596,6 +631,8 @@ static int __of_parse_phandle_with_args(
+ 		 * arguments.  Skip forward to the next entry.
+ 		 */
+ 		phandle = be32_to_cpup(list++);
++		debug("%s@%d: list[%d]=%u\n", __func__, __LINE__,
++		      size / sizeof(*list) - (list_end - (list - 1)), phandle);
+ 		if (phandle) {
+ 			/*
+ 			 * Find the provider node and parse the #*-cells
+Index: u-boot/drivers/core/of_addr.c
+===================================================================
+--- u-boot.orig/drivers/core/of_addr.c
++++ u-boot/drivers/core/of_addr.c
+@@ -48,10 +48,17 @@ struct of_bus {
+ static void of_bus_default_count_cells(const struct device_node *np,
+ 				       int *addrc, int *sizec)
+ {
++#ifdef NP_PARENT_BUGFIX
+ 	if (addrc)
+ 		*addrc = of_n_addr_cells(np->parent);
+ 	if (sizec)
+ 		*sizec = of_n_size_cells(np->parent);
++#else
++	if (addrc)
++		*addrc = of_n_addr_cells(np);
++	if (sizec)
++		*sizec = of_n_size_cells(np);
++#endif
+ }
+ 
+ static u64 of_bus_default_map(__be32 *addr, const __be32 *range,
+Index: u-boot/include/dm/of_access.h
+===================================================================
+--- u-boot.orig/include/dm/of_access.h
++++ u-boot/include/dm/of_access.h
+@@ -17,6 +17,10 @@
+ #ifndef _DM_OF_ACCESS_H
+ #define _DM_OF_ACCESS_H
+ 
++#ifdef CONFIG_OF_LIVE
++#define NP_PARENT_BUGFIX
++#endif
++
+ #include <dm/of.h>
+ 
+ /**

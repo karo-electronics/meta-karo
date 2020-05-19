@@ -1,0 +1,12 @@
+Index: u-boot/include/env_callback.h
+===================================================================
+--- u-boot.orig/include/env_callback.h
++++ u-boot/include/env_callback.h
+@@ -44,7 +44,6 @@
+ 
+ #ifdef CONFIG_NET
+ #define NET_CALLBACKS \
+-	"bootfile:bootfile," \
+ 	"ipaddr:ipaddr," \
+ 	"gatewayip:gatewayip," \
+ 	"netmask:netmask," \

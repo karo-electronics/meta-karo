@@ -1,0 +1,414 @@
+Index: u-boot/drivers/core/of_access.c
+===================================================================
+--- u-boot.orig/drivers/core/of_access.c
++++ u-boot/drivers/core/of_access.c
+@@ -703,20 +703,22 @@ struct device_node *of_parse_phandle(con
+ 
+ int of_parse_phandle_with_args(const struct device_node *np,
+ 			       const char *list_name, const char *cells_name,
+-			       int index, struct of_phandle_args *out_args)
++			       int cell_count, int index,
++			       struct of_phandle_args *out_args)
+ {
+ 	if (index < 0)
+ 		return -EINVAL;
+ 
+-	return __of_parse_phandle_with_args(np, list_name, cells_name, 0,
+-					    index, out_args);
++	return __of_parse_phandle_with_args(np, list_name, cells_name,
++					    cell_count, index, out_args);
+ }
+ 
+ int of_count_phandle_with_args(const struct device_node *np,
+-			       const char *list_name, const char *cells_name)
++			       const char *list_name, const char *cells_name,
++			       int cell_count)
+ {
+-	return __of_parse_phandle_with_args(np, list_name, cells_name, 0,
+-					    -1, NULL);
++	return __of_parse_phandle_with_args(np, list_name, cells_name,
++					    cell_count, -1, NULL);
+ }
+ 
+ static void of_alias_add(struct alias_prop *ap, struct device_node *np,
+Index: u-boot/drivers/core/ofnode.c
+===================================================================
+--- u-boot.orig/drivers/core/ofnode.c
++++ u-boot/drivers/core/ofnode.c
+@@ -3,6 +3,9 @@
+  * Copyright (c) 2017 Google, Inc
+  * Written by Simon Glass <sjg@chromium.org>
+  */
++//#define DEBUG
++
++#define Debug(fmt...) do { if (0) printf(fmt); } while (0)
+ 
+ #include <common.h>
+ #include <dm.h>
+@@ -22,7 +25,14 @@ int ofnode_read_u32(ofnode node, const c
+ 	debug("%s: %s: ", __func__, propname);
+ 
+ 	if (ofnode_is_np(node)) {
+-		return of_read_u32(ofnode_to_np(node), propname, outp);
++		int ret;
++
++		ret = of_read_u32(ofnode_to_np(node), propname, outp);
++		if (ret)
++			debug("error: %d\n", ret);
++		else
++			debug("%#x (%d)\n", *outp, *outp);
++		return ret;
+ 	} else {
+ 		const fdt32_t *cell;
+ 		int len;
+@@ -167,7 +177,7 @@ ofnode ofnode_find_subnode(ofnode node,
+ 	ofnode subnode;
+ 
+ 	assert(ofnode_valid(node));
+-	debug("%s: %s: ", __func__, subnode_name);
++	Debug("%s: %s->%s: ", __func__, ofnode_get_name(node), subnode_name);
+ 
+ 	if (ofnode_is_np(node)) {
+ 		const struct device_node *np = ofnode_to_np(node);
+@@ -182,7 +192,7 @@ ofnode ofnode_find_subnode(ofnode node,
+ 				ofnode_to_offset(node), subnode_name);
+ 		subnode = offset_to_ofnode(ooffset);
+ 	}
+-	debug("%s\n", ofnode_valid(subnode) ?
++	Debug("%s\n", ofnode_valid(subnode) ?
+ 	      ofnode_get_name(subnode) : "<none>");
+ 
+ 	return subnode;
+@@ -386,9 +396,13 @@ int ofnode_parse_phandle_with_args(ofnod
+ 		struct of_phandle_args args;
+ 		int ret;
+ 
++		Debug("%s@%d: parsing phandle[%d] '%s/%s'\n", __func__, __LINE__,
++		      index, node.np->full_name, list_name);
++
+ 		ret = of_parse_phandle_with_args(ofnode_to_np(node),
+-						 list_name, cells_name, index,
+-						 &args);
++						 list_name, cells_name,
++						 cell_count, index, &args);
++		Debug("%s@%d: ret=%d\n", __func__, __LINE__, ret);
+ 		if (ret)
+ 			return ret;
+ 		ofnode_from_of_phandle_args(&args, out_args);
+@@ -409,15 +423,17 @@ int ofnode_parse_phandle_with_args(ofnod
+ }
+ 
+ int ofnode_count_phandle_with_args(ofnode node, const char *list_name,
+-				   const char *cells_name)
++				   const char *cells_name, int cell_count)
+ {
+ 	if (ofnode_is_np(node))
+ 		return of_count_phandle_with_args(ofnode_to_np(node),
+-				list_name, cells_name);
++						  list_name, cells_name,
++						  cell_count);
+ 	else
+ 		return fdtdec_parse_phandle_with_args(gd->fdt_blob,
+-				ofnode_to_offset(node), list_name, cells_name,
+-				0, -1, NULL);
++						      ofnode_to_offset(node),
++						      list_name, cells_name,
++						      cell_count, -1, NULL);
+ }
+ 
+ ofnode ofnode_path(const char *path)
+@@ -460,7 +476,7 @@ static int decode_timing_property(ofnode
+ 
+ 	length = ofnode_read_size(node, name);
+ 	if (length < 0) {
+-		debug("%s: could not find property %s\n",
++		Debug("%s: could not find property %s\n",
+ 		      ofnode_get_name(node), name);
+ 		return length;
+ 	}
+@@ -890,7 +906,7 @@ int ofnode_write_string(ofnode node, con
+ 
+ 	assert(ofnode_valid(node));
+ 
+-	debug("%s: %s = %s", __func__, propname, value);
++	Debug("%s: %s = %s\n", __func__, propname, value);
+ 
+ 	return ofnode_write_prop(node, propname, strlen(value) + 1, value);
+ }
+Index: u-boot/drivers/core/read.c
+===================================================================
+--- u-boot.orig/drivers/core/read.c
++++ u-boot/drivers/core/read.c
+@@ -200,10 +200,11 @@ int dev_read_phandle_with_args(const str
+ }
+ 
+ int dev_count_phandle_with_args(const struct udevice *dev,
+-				const char *list_name, const char *cells_name)
++				const char *list_name, const char *cells_name,
++				int cell_count)
+ {
+ 	return ofnode_count_phandle_with_args(dev_ofnode(dev), list_name,
+-					      cells_name);
++					      cells_name, cell_count);
+ }
+ 
+ int dev_read_addr_cells(const struct udevice *dev)
+Index: u-boot/include/dm/of_access.h
+===================================================================
+--- u-boot.orig/include/dm/of_access.h
++++ u-boot/include/dm/of_access.h
+@@ -348,6 +348,7 @@ struct device_node *of_parse_phandle(con
+  * @np:		pointer to a device tree node containing a list
+  * @list_name:	property name that contains a list
+  * @cells_name:	property name that specifies phandles' arguments count
++ * @cell_count: hardcoded value of cell count if cells_name is NULL
+  * @index:	index of a phandle to parse out
+  * @out_args:	optional pointer to output arguments structure (will be filled)
+  * @return 0 on success (with @out_args filled out if not NULL), -ENOENT if
+@@ -381,7 +382,8 @@ struct device_node *of_parse_phandle(con
+  */
+ int of_parse_phandle_with_args(const struct device_node *np,
+ 			       const char *list_name, const char *cells_name,
+-			       int index, struct of_phandle_args *out_args);
++			       int cell_count, int index,
++			       struct of_phandle_args *out_args);
+ 
+ /**
+  * of_count_phandle_with_args() - Count the number of phandle in a list
+@@ -389,6 +391,7 @@ int of_parse_phandle_with_args(const str
+  * @np:		pointer to a device tree node containing a list
+  * @list_name:	property name that contains a list
+  * @cells_name:	property name that specifies phandles' arguments count
++ * @cell_count: hardcoded value of cell count if cells_name is NULL
+  * @return number of phandle found, -ENOENT if
+  *	@list_name does not exist, -EINVAL if a phandle was not found,
+  *	@cells_name could not be found, the arguments were truncated or there
+@@ -399,7 +402,8 @@ int of_parse_phandle_with_args(const str
+  *
+  */
+ int of_count_phandle_with_args(const struct device_node *np,
+-			       const char *list_name, const char *cells_name);
++			       const char *list_name, const char *cells_name,
++			       int cell_count);
+ 
+ /**
+  * of_alias_scan() - Scan all properties of the 'aliases' node
+Index: u-boot/include/dm/ofnode.h
+===================================================================
+--- u-boot.orig/include/dm/ofnode.h
++++ u-boot/include/dm/ofnode.h
+@@ -482,7 +482,7 @@ int ofnode_read_string_count(ofnode node
+  * @node:	device tree node containing a list
+  * @list_name:	property name that contains a list
+  * @cells_name:	property name that specifies phandles' arguments count
+- * @cells_count: Cell count to use if @cells_name is NULL
++ * @cell_count: Cell count to use if @cells_name is NULL
+  * @index:	index of a phandle to parse out
+  * @out_args:	optional pointer to output arguments structure (will be filled)
+  * @return 0 on success (with @out_args filled out if not NULL), -ENOENT if
+@@ -505,12 +505,13 @@ int ofnode_parse_phandle_with_args(ofnod
+  * @node:	device tree node containing a list
+  * @list_name:	property name that contains a list
+  * @cells_name:	property name that specifies phandles' arguments count
++ * @cell_count: Cell count to use if @cells_name is NULL
+  * @return number of phandle on success, -ENOENT if @list_name does not
+  *      exist, -EINVAL if a phandle was not found, @cells_name could not
+  *      be found.
+  */
+ int ofnode_count_phandle_with_args(ofnode node, const char *list_name,
+-				   const char *cells_name);
++				   const char *cells_name, int cell_count);
+ 
+ /**
+  * ofnode_path() - find a node by full path
+Index: u-boot/include/dm/read.h
+===================================================================
+--- u-boot.orig/include/dm/read.h
++++ u-boot/include/dm/read.h
+@@ -377,7 +377,7 @@ int dev_read_string_count(const struct u
+  * @dev:	device whose node containing a list
+  * @list_name:	property name that contains a list
+  * @cells_name:	property name that specifies phandles' arguments count
+- * @cells_count: Cell count to use if @cells_name is NULL
++ * @cell_count: Cell count to use if @cells_name is NULL
+  * @index:	index of a phandle to parse out
+  * @out_args:	optional pointer to output arguments structure (will be filled)
+  * @return 0 on success (with @out_args filled out if not NULL), -ENOENT if
+@@ -392,7 +392,7 @@ int dev_read_phandle_with_args(const str
+ /**
+  * dev_count_phandle_with_args() - Return phandle number in a list
+  *
+- * This function is usefull to get phandle number contained in a property list.
++ * This function is useful to get phandle number contained in a property list.
+  * For example, this allows to allocate the right amount of memory to keep
+  * clock's reference contained into the "clocks" property.
+  *
+@@ -400,12 +400,14 @@ int dev_read_phandle_with_args(const str
+  * @dev:	device whose node containing a list
+  * @list_name:	property name that contains a list
+  * @cells_name:	property name that specifies phandles' arguments count
++ * @cell_count: Cell count to use if @cells_name is NULL
+  * @Returns number of phandle found on success, on error returns appropriate
+  * errno value.
+  */
+ 
+ int dev_count_phandle_with_args(const struct udevice *dev,
+-				const char *list_name, const char *cells_name);
++				const char *list_name, const char *cells_name,
++				int cell_count);
+ 
+ /**
+  * dev_read_addr_cells() - Get the number of address cells for a device's node
+@@ -781,10 +783,12 @@ static inline int dev_read_phandle_with_
+ }
+ 
+ static inline int dev_count_phandle_with_args(const struct udevice *dev,
+-		const char *list_name, const char *cells_name)
++					      const char *list_name,
++					      const char *cells_name,
++					      int cell_count)
+ {
+ 	return ofnode_count_phandle_with_args(dev_ofnode(dev), list_name,
+-					      cells_name);
++					      cells_name, cell_count);
+ }
+ 
+ static inline int dev_read_addr_cells(const struct udevice *dev)
+Index: u-boot/board/st/stm32mp1/stm32mp1.c
+===================================================================
+--- u-boot.orig/board/st/stm32mp1/stm32mp1.c
++++ u-boot/board/st/stm32mp1/stm32mp1.c
+@@ -345,7 +345,7 @@ static int board_check_usb_power(void)
+ 	 * for each of them
+ 	 */
+ 	adc_count = ofnode_count_phandle_with_args(node, "st,adc_usb_pd",
+-						   "#io-channel-cells");
++						   "#io-channel-cells", 0);
+ 	if (adc_count < 0) {
+ 		if (adc_count == -ENOENT)
+ 			return 0;
+Index: u-boot/drivers/clk/clk-uclass.c
+===================================================================
+--- u-boot.orig/drivers/clk/clk-uclass.c
++++ u-boot/drivers/clk/clk-uclass.c
+@@ -151,10 +151,10 @@ int clk_get_by_index_nodev(ofnode node,
+ int clk_get_bulk(struct udevice *dev, struct clk_bulk *bulk)
+ {
+ 	int i, ret, err, count;
+-	
++
+ 	bulk->count = 0;
+ 
+-	count = dev_count_phandle_with_args(dev, "clocks", "#clock-cells");
++	count = dev_count_phandle_with_args(dev, "clocks", "#clock-cells", 0);
+ 	if (count < 1)
+ 		return count;
+ 
+@@ -189,7 +189,7 @@ static int clk_set_default_parents(struc
+ 	int ret;
+ 
+ 	num_parents = dev_count_phandle_with_args(dev, "assigned-clock-parents",
+-						  "#clock-cells");
++						  "#clock-cells", 0);
+ 	if (num_parents < 0) {
+ 		debug("%s: could not read assigned-clock-parents for %p\n",
+ 		      __func__, dev);
+Index: u-boot/drivers/net/designware.c
+===================================================================
+--- u-boot.orig/drivers/net/designware.c
++++ u-boot/drivers/net/designware.c
+@@ -684,7 +684,8 @@ int designware_eth_probe(struct udevice
+ 	int i, clock_nb;
+ 
+ 	priv->clock_count = 0;
+-	clock_nb = dev_count_phandle_with_args(dev, "clocks", "#clock-cells");
++	clock_nb = dev_count_phandle_with_args(dev, "clocks", "#clock-cells",
++					       0);
+ 	if (clock_nb > 0) {
+ 		priv->clocks = devm_kcalloc(dev, clock_nb, sizeof(struct clk),
+ 					    GFP_KERNEL);
+Index: u-boot/drivers/reset/reset-uclass.c
+===================================================================
+--- u-boot.orig/drivers/reset/reset-uclass.c
++++ u-boot/drivers/reset/reset-uclass.c
+@@ -102,10 +102,10 @@ int reset_get_by_index_nodev(ofnode node
+ int reset_get_bulk(struct udevice *dev, struct reset_ctl_bulk *bulk)
+ {
+ 	int i, ret, err, count;
+-	
++
+ 	bulk->count = 0;
+ 
+-	count = dev_count_phandle_with_args(dev, "resets", "#reset-cells");
++	count = dev_count_phandle_with_args(dev, "resets", "#reset-cells", 0);
+ 	if (count < 1)
+ 		return count;
+ 
+Index: u-boot/drivers/usb/host/ehci-generic.c
+===================================================================
+--- u-boot.orig/drivers/usb/host/ehci-generic.c
++++ u-boot/drivers/usb/host/ehci-generic.c
+@@ -85,7 +85,7 @@ static int ehci_usb_probe(struct udevice
+ 	err = 0;
+ 	priv->clock_count = 0;
+ 	clock_nb = ofnode_count_phandle_with_args(dev_ofnode(dev), "clocks",
+-						  "#clock-cells");
++						  "#clock-cells", 0);
+ 	if (clock_nb > 0) {
+ 		priv->clocks = devm_kcalloc(dev, clock_nb, sizeof(struct clk),
+ 					    GFP_KERNEL);
+@@ -115,7 +115,7 @@ static int ehci_usb_probe(struct udevice
+ 
+ 	priv->reset_count = 0;
+ 	reset_nb = ofnode_count_phandle_with_args(dev_ofnode(dev), "resets",
+-						  "#reset-cells");
++						  "#reset-cells", 0);
+ 	if (reset_nb > 0) {
+ 		priv->resets = devm_kcalloc(dev, reset_nb,
+ 					    sizeof(struct reset_ctl),
+Index: u-boot/drivers/usb/host/ohci-generic.c
+===================================================================
+--- u-boot.orig/drivers/usb/host/ohci-generic.c
++++ u-boot/drivers/usb/host/ohci-generic.c
+@@ -84,7 +84,8 @@ static int ohci_usb_probe(struct udevice
+ 
+ 	err = 0;
+ 	priv->clock_count = 0;
+-	clock_nb = dev_count_phandle_with_args(dev, "clocks", "#clock-cells");
++	clock_nb = dev_count_phandle_with_args(dev, "clocks", "#clock-cells",
++					       0);
+ 	if (clock_nb > 0) {
+ 		priv->clocks = devm_kcalloc(dev, clock_nb, sizeof(struct clk),
+ 					    GFP_KERNEL);
+@@ -110,7 +111,8 @@ static int ohci_usb_probe(struct udevice
+ 	}
+ 
+ 	priv->reset_count = 0;
+-	reset_nb = dev_count_phandle_with_args(dev, "resets", "#reset-cells");
++	reset_nb = dev_count_phandle_with_args(dev, "resets", "#reset-cells",
++					       0);
+ 	if (reset_nb > 0) {
+ 		priv->resets = devm_kcalloc(dev, reset_nb,
+ 					    sizeof(struct reset_ctl),
+Index: u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+===================================================================
+--- u-boot.orig/drivers/usb/gadget/dwc2_udc_otg.c
++++ u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+@@ -962,7 +962,7 @@ int dwc2_phy_setup(struct udevice *dev,
+ 	if (!dev_read_prop(dev, "phys", NULL))
+ 		return 0;
+ 
+-	count = dev_count_phandle_with_args(dev, "phys", "#phy-cells");
++	count = dev_count_phandle_with_args(dev, "phys", "#phy-cells", 0);
+ 	if (count <= 0)
+ 		return count;
+ 
+@@ -1182,6 +1182,8 @@ static int dwc2_udc_otg_probe(struct ude
+ 			     GGPIO_STM32_OTG_GCCFG_VBDEN |
+ 			     GGPIO_STM32_OTG_GCCFG_IDEN);
+ 	}
++pr_info("%s@%d: ggpio=%08x\n", __func__, __LINE__,
++	readl(&usbotg_reg->ggpio));
+ 
+ 	if (platdata->force_b_session_valid)
+ 		/* Override B session bits : value and enable */

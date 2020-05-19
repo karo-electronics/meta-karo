@@ -146,30 +146,30 @@ fi
 if [ -z "$DISTRO" ]; then
     DISTRO="karo-minimal"
 fi
-
-case $DISTRO in
-karo-*)
-    distro_dir="$(dirname "$(find layers -path */conf/distro/${DISTRO}.conf -printf "%h")")"
-    if [ "$distro_dir" = "." ];then
+shopt -q nullglob && nullglob=false || nullglob=true
+$nullglob && shopt -s nullglob
+distro_dirs="`find layers -path "*/conf/distro/${DISTRO}.conf" -printf "%h\n"`"
+if [ -z "$distro_dirs" ];then
     echo "Unsupported distro: '$DISTRO'" >&2
     usage && clean_up
     return 1
+fi
+bitbake_target=""
+for d in $distro_dirs;do
+    dir="`dirname "${d}"`/../recipes-core/images"
+    [ -d "$dir" ] || continue
+    distro_images="`cd "$dir" && ls *.bb`"
+    bitbake_target="${bitbake_target} ${distro_images//.bb/ }"
+done
+for t in $bitbake_target;do
+    if [ "${t/-image/}" = "${DISTRO}" ];then
+        bitbake_target="$t"
+        break
+    elif [ "${DISTRO}" = "karo-wayland" ];then
+        bitbake_target="karo-image-weston"
+        break;
     fi
-    distro_images="$(cd "$distro_dir/../recipes-core/images/";ls *.bb)"
-    bitbake_target="${distro_images//.bb/ }"
-    ;;
-*wayland)
-    bitbake_target="core-image-weston"
-    ;;
-poky)
-    bitbake_target="u-boot-karo"
-    ;;
-*)
-    echo "Unsupported distro: '$DISTRO'" >&2
-    usage && clean_up
-    return 1
-    ;;
-esac
+done
 
 OEROOT=$PWD/layers/poky
 if [ -e $PWD/layers/oe-core ]; then
@@ -178,8 +178,6 @@ fi
 
 # Ensure all files in layers/base are kept in sync with project root
 updated=false
-shopt -q nullglob && nullglob=false || nullglob=true
-$nullglob && shopt -s nullglob
 for f in "$CWD/layers/meta-karo/base/"*; do
     file="$(basename $f)"
     if [ "$file" = "conf" ] || echo "$file" | grep -q '~$'; then
@@ -240,7 +238,7 @@ fi
 
 cat <<EOF
 
-Welcome to Ka-Ro electronics TX module BSP
+Welcome to Ka-Ro electronics TX and QS module BSP
 
 The Yocto Project has extensive documentation about OE including a
 reference manual which can be found at:
@@ -249,13 +247,13 @@ reference manual which can be found at:
 For more information about OpenEmbedded see their website:
     https://www.openembedded.org/
 
-For a Ka-Ro specific Yocto guide please refer to:
-    "Getting Started" > "Yocto Guide" in the respective TX module page on
+For Ka-Ro specific documentation please refer to:
+    "Getting Started" > "Documentation" in the products page on
     https://www.karo-electronics.com
 
 You can start your build now with:
 $(for i in ${bitbake_target:-core-image-minimal};do \
-	echo "    bitbake $i"; \
+    echo "    bitbake $i"; \
 done )
 
 EOF

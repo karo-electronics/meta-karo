@@ -1,0 +1,1054 @@
+Index: u-boot/drivers/net/dwc_eth_qos.c
+===================================================================
+--- u-boot.orig/drivers/net/dwc_eth_qos.c
++++ u-boot/drivers/net/dwc_eth_qos.c
+@@ -41,6 +41,7 @@
+ #include <wait_bit.h>
+ #include <asm/gpio.h>
+ #include <asm/io.h>
++#include <dm/device_compat.h>
+ 
+ /* Core registers */
+ 
+@@ -315,7 +316,7 @@ struct eqos_priv {
+ 	void *rx_pkt;
+ 	bool started;
+ 	bool reg_access_ok;
+-	int phy_addr;
++	u32 phy_addr;
+ 	int phy_reset_duration;
+ 	int phy_reset_post_delay;
+ };
+@@ -529,37 +530,37 @@ static int eqos_start_clks_tegra186(stru
+ 
+ 	ret = clk_enable(&eqos->clk_slave_bus);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_slave_bus) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_slave_bus) failed: %d\n", ret);
+ 		goto err;
+ 	}
+ 
+ 	ret = clk_enable(&eqos->clk_master_bus);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_master_bus) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_master_bus) failed: %d\n", ret);
+ 		goto err_disable_clk_slave_bus;
+ 	}
+ 
+ 	ret = clk_enable(&eqos->clk_rx);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_rx) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_rx) failed: %d\n", ret);
+ 		goto err_disable_clk_master_bus;
+ 	}
+ 
+ 	ret = clk_enable(&eqos->clk_ptp_ref);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_ptp_ref) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_ptp_ref) failed: %d\n", ret);
+ 		goto err_disable_clk_rx;
+ 	}
+ 
+ 	ret = clk_set_rate(&eqos->clk_ptp_ref, 125 * 1000 * 1000);
+ 	if (ret < 0) {
+-		pr_err("clk_set_rate(clk_ptp_ref) failed: %d\n", ret);
++		dev_err(dev, "clk_set_rate(clk_ptp_ref) failed: %d\n", ret);
+ 		goto err_disable_clk_ptp_ref;
+ 	}
+ 
+ 	ret = clk_enable(&eqos->clk_tx);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_tx) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_tx) failed: %d\n", ret);
+ 		goto err_disable_clk_ptp_ref;
+ 	}
+ 
+@@ -588,26 +589,26 @@ static int eqos_start_clks_stm32(struct
+ 
+ 	ret = clk_enable(&eqos->clk_master_bus);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_master_bus) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_master_bus) failed: %d\n", ret);
+ 		goto err;
+ 	}
+ 
+ 	ret = clk_enable(&eqos->clk_rx);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_rx) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_rx) failed: %d\n", ret);
+ 		goto err_disable_clk_master_bus;
+ 	}
+ 
+ 	ret = clk_enable(&eqos->clk_tx);
+ 	if (ret < 0) {
+-		pr_err("clk_enable(clk_tx) failed: %d\n", ret);
++		dev_err(dev, "clk_enable(clk_tx) failed: %d\n", ret);
+ 		goto err_disable_clk_rx;
+ 	}
+ 
+ 	if (clk_valid(&eqos->clk_ck)) {
+ 		ret = clk_enable(&eqos->clk_ck);
+ 		if (ret < 0) {
+-			pr_err("clk_enable(clk_ck) failed: %d\n", ret);
++			dev_err(dev, "clk_enable(clk_ck) failed: %d\n", ret);
+ 			goto err_disable_clk_tx;
+ 		}
+ 	}
+@@ -665,8 +666,9 @@ static int eqos_start_resets_tegra186(st
+ 
+ 	ret = dm_gpio_set_value(&eqos->phy_reset_gpio, 1);
+ 	if (ret < 0) {
+-		pr_err("dm_gpio_set_value(phy_reset, assert) failed: %d\n",
+-		       ret);
++		dev_err(dev,
++			"dm_gpio_set_value(phy_reset, assert) failed: %d\n",
++			ret);
+ 		return ret;
+ 	}
+ 
+@@ -674,14 +676,15 @@ static int eqos_start_resets_tegra186(st
+ 
+ 	ret = dm_gpio_set_value(&eqos->phy_reset_gpio, 0);
+ 	if (ret < 0) {
+-		pr_err("dm_gpio_set_value(phy_reset, deassert) failed: %d\n",
++		dev_err(dev,
++			"dm_gpio_set_value(phy_reset, deassert) failed: %d\n",
+ 		       ret);
+ 		return ret;
+ 	}
+ 
+ 	ret = reset_assert(&eqos->reset_ctl);
+ 	if (ret < 0) {
+-		pr_err("reset_assert() failed: %d\n", ret);
++		dev_err(dev, "reset_assert() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -689,7 +692,7 @@ static int eqos_start_resets_tegra186(st
+ 
+ 	ret = reset_deassert(&eqos->reset_ctl);
+ 	if (ret < 0) {
+-		pr_err("reset_deassert() failed: %d\n", ret);
++		dev_err(dev, "reset_deassert() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -710,7 +713,7 @@ static int eqos_start_resets_stm32(struc
+ 	debug("%s@%d: Asserting PHY reset\n", __func__, __LINE__);
+ 	ret = dm_gpio_set_value(&eqos->phy_reset_gpio, 1);
+ 	if (ret < 0) {
+-		pr_err("dm_gpio_set_value(phy_reset, assert) failed: %d\n",
++		dev_err(dev, "failed to assert phy_reset GPIO: %d\n",
+ 		       ret);
+ 		return ret;
+ 	}
+@@ -720,7 +723,7 @@ static int eqos_start_resets_stm32(struc
+ 	debug("%s@%d: Deasserting PHY reset\n", __func__, __LINE__);
+ 	ret = dm_gpio_set_value(&eqos->phy_reset_gpio, 0);
+ 	if (ret < 0) {
+-		pr_err("dm_gpio_set_value(phy_reset, deassert) failed: %d\n",
++		dev_err(dev, "failed to deassert phy_reset GPIO: %d\n",
+ 		       ret);
+ 		return ret;
+ 	}
+@@ -769,14 +772,14 @@ static int eqos_calibrate_pads_tegra186(
+ 	ret = wait_for_bit_le32(&eqos->tegra186_regs->auto_cal_status,
+ 				EQOS_AUTO_CAL_STATUS_ACTIVE, true, 10, false);
+ 	if (ret) {
+-		pr_err("calibrate didn't start\n");
++		dev_err(dev, "calibrate didn't start\n");
+ 		goto failed;
+ 	}
+ 
+ 	ret = wait_for_bit_le32(&eqos->tegra186_regs->auto_cal_status,
+ 				EQOS_AUTO_CAL_STATUS_ACTIVE, false, 10, false);
+ 	if (ret) {
+-		pr_err("calibrate didn't finish\n");
++		dev_err(dev, "calibrate didn't finish\n");
+ 		goto failed;
+ 	}
+ 
+@@ -908,13 +911,14 @@ static int eqos_set_tx_clk_speed_tegra18
+ 		rate = 2.5 * 1000 * 1000;
+ 		break;
+ 	default:
+-		pr_err("invalid speed %d\n", eqos->phy->speed);
++		dev_err(dev, "invalid speed %d\n", eqos->phy->speed);
+ 		return -EINVAL;
+ 	}
+ 
+ 	ret = clk_set_rate(&eqos->clk_tx, rate);
+ 	if (ret < 0) {
+-		pr_err("clk_set_rate(tx_clk, %lu) failed: %d\n", rate, ret);
++		dev_err(dev, "clk_set_rate(tx_clk, %lu) failed: %d\n",
++			rate, ret);
+ 		return ret;
+ 	}
+ 
+@@ -939,7 +943,7 @@ static int eqos_adjust_link(struct udevi
+ 	else
+ 		ret = eqos_set_half_duplex(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_set_*_duplex() failed: %d\n", ret);
++		dev_err(dev, "eqos_set_*_duplex() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -957,32 +961,32 @@ static int eqos_adjust_link(struct udevi
+ 		ret = eqos_set_mii_speed_10(dev);
+ 		break;
+ 	default:
+-		pr_err("invalid speed %d\n", eqos->phy->speed);
++		dev_err(dev, "invalid speed %d\n", eqos->phy->speed);
+ 		return -EINVAL;
+ 	}
+ 	if (ret < 0) {
+-		pr_err("eqos_set_*mii_speed*() failed: %d\n", ret);
++		dev_err(dev, "eqos_set_*mii_speed*() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+ 	if (en_calibration) {
+ 		ret = eqos->config->ops->eqos_calibrate_pads(dev);
+ 		if (ret < 0) {
+-			pr_err("eqos_calibrate_pads() failed: %d\n",
++			dev_err(dev, "eqos_calibrate_pads() failed: %d\n",
+ 			       ret);
+ 			return ret;
+ 		}
+ 	} else {
+ 		ret = eqos->config->ops->eqos_disable_calibration(dev);
+ 		if (ret < 0) {
+-			pr_err("eqos_disable_calibration() failed: %d\n",
++			dev_err(dev, "eqos_disable_calibration() failed: %d\n",
+ 			       ret);
+ 			return ret;
+ 		}
+ 	}
+ 	ret = eqos->config->ops->eqos_set_tx_clk_speed(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_set_tx_clk_speed() failed: %d\n", ret);
++		dev_err(dev, "eqos_set_tx_clk_speed() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -1053,19 +1057,19 @@ static int eqos_start(struct udevice *de
+ 
+ 	ret = phy_startup(eqos->phy);
+ 	if (ret < 0) {
+-		pr_err("phy_startup() failed: %d\n", ret);
++		dev_err(dev, "phy_startup() failed: %d\n", ret);
+ 		goto err_shutdown_phy;
+ 	}
+ 
+ 	if (!eqos->phy->link) {
+-		pr_err("No link\n");
++		dev_err(dev, "No link\n");
+ 		ret = -ENOTCONN;
+ 		goto err_shutdown_phy;
+ 	}
+ 
+ 	ret = eqos_adjust_link(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_adjust_link() failed: %d\n", ret);
++		dev_err(dev, "eqos_adjust_link() failed: %d\n", ret);
+ 		goto err_shutdown_phy;
+ 	}
+ 
+@@ -1277,7 +1281,7 @@ static int eqos_start(struct udevice *de
+ err_shutdown_phy:
+ 	phy_shutdown(eqos->phy);
+ err:
+-	pr_err("%s() FAILED: %d\n", __func__, ret);
++	dev_err(dev, "%s() FAILED: %d\n", __func__, ret);
+ 	return ret;
+ }
+ 
+@@ -1496,7 +1500,7 @@ static int eqos_probe_resources_tegra186
+ 
+ 	ret = reset_get_by_name(dev, "eqos", &eqos->reset_ctl);
+ 	if (ret) {
+-		pr_err("reset_get_by_name(rst) failed: %d\n", ret);
++		dev_err(dev, "reset_get_by_name(rst) failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+@@ -1504,39 +1508,40 @@ static int eqos_probe_resources_tegra186
+ 				   &eqos->phy_reset_gpio,
+ 				   GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+ 	if (ret) {
+-		pr_err("gpio_request_by_name(phy reset) failed: %d\n", ret);
++		dev_err(dev, "failed to request phy-reset-gpios: %d\n",
++			ret);
+ 		goto err_free_reset_eqos;
+ 	}
+ 	eqos->phy_reset_duration = 2;
+ 
+ 	ret = clk_get_by_name(dev, "slave_bus", &eqos->clk_slave_bus);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(slave_bus) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(slave_bus) failed: %d\n", ret);
+ 		goto err_free_gpio_phy_reset;
+ 	}
+ 
+ 	ret = clk_get_by_name(dev, "master_bus", &eqos->clk_master_bus);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(master_bus) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(master_bus) failed: %d\n", ret);
+ 		goto err_free_clk_slave_bus;
+ 	}
+ 
+ 	ret = clk_get_by_name(dev, "rx", &eqos->clk_rx);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(rx) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(rx) failed: %d\n", ret);
+ 		goto err_free_clk_master_bus;
+ 	}
+ 
+ 	ret = clk_get_by_name(dev, "ptp_ref", &eqos->clk_ptp_ref);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(ptp_ref) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(ptp_ref) failed: %d\n", ret);
+ 		goto err_free_clk_rx;
+ 		return ret;
+ 	}
+ 
+ 	ret = clk_get_by_name(dev, "tx", &eqos->clk_tx);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(tx) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(tx) failed: %d\n", ret);
+ 		goto err_free_clk_ptp_ref;
+ 	}
+ 
+@@ -1578,7 +1583,7 @@ static int eqos_probe_resources_stm32(st
+ 	interface = eqos->config->interface(dev);
+ 
+ 	if (interface == PHY_INTERFACE_MODE_NONE) {
+-		pr_err("Invalid PHY interface\n");
++		dev_err(dev, "Invalid PHY interface\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1588,19 +1593,19 @@ static int eqos_probe_resources_stm32(st
+ 
+ 	ret = clk_get_by_name(dev, "stmmaceth", &eqos->clk_master_bus);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(master_bus) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(master_bus) failed: %d\n", ret);
+ 		goto err_probe;
+ 	}
+ 
+ 	ret = clk_get_by_name(dev, "mac-clk-rx", &eqos->clk_rx);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(rx) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(rx) failed: %d\n", ret);
+ 		goto err_free_clk_master_bus;
+ 	}
+ 
+ 	ret = clk_get_by_name(dev, "mac-clk-tx", &eqos->clk_tx);
+ 	if (ret) {
+-		pr_err("clk_get_by_name(tx) failed: %d\n", ret);
++		dev_err(dev, "clk_get_by_name(tx) failed: %d\n", ret);
+ 		goto err_free_clk_rx;
+ 	}
+ 
+@@ -1613,7 +1618,7 @@ static int eqos_probe_resources_stm32(st
+ 				   &eqos->phy_reset_gpio,
+ 				   GPIOD_IS_OUT | GPIOD_IS_OUT_ACTIVE);
+ 	if (ret && ret != -ENOENT) {
+-		pr_err("requesting phy-reset-gpio failed: %d\n", ret);
++		dev_err(dev, "requesting phy-reset-gpio failed: %d\n", ret);
+ 		goto err_free_clk_tx;
+ 	}
+ 
+@@ -1644,21 +1649,27 @@ static phy_interface_t eqos_get_interfac
+ 	struct eqos_priv *eqos = dev_get_priv(dev);
+ 	const char *phy_mode;
+ 	phy_interface_t interface = PHY_INTERFACE_MODE_NONE;
+-	int phy_addr;
++	uint phy_handle;
++	int ret;
+ 
+ 	debug("%s(dev=%p):\n", __func__, dev);
+ 
+-	phy_mode = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "phy-mode",
+-			       NULL);
++	phy_mode = dev_read_string(dev, "phy-mode");
+ 	if (phy_mode)
+ 		interface = phy_get_interface_by_name(phy_mode);
+ 
+-	phy_addr = fdtdec_lookup_phandle(gd->fdt_blob, dev_of_offset(dev),
+-					 "phy-handle");
+-	if (phy_addr > 0)
+-		eqos->phy_addr = fdtdec_get_int(gd->fdt_blob, phy_addr,
+-						"reg", 0);
+-
++	ret = dev_read_u32(dev, "phy-handle", &phy_handle);
++	if (ret == 0) {
++		ofnode phy_node = ofnode_get_by_phandle(phy_handle);
++
++		debug("phy_node='%s'\n", ofnode_get_name(phy_node));
++		ret = ofnode_read_u32(phy_node, "reg", &eqos->phy_addr);
++		if (ret)
++			printf("Failed to get PHY addr from DT: %d\n", ret);
++		debug("phy_addr=%08x\n", eqos->phy_addr);
++	} else {
++		printf("phy-handle not found\n");
++	}
+ 	return interface;
+ }
+ 
+@@ -1715,9 +1726,9 @@ static int eqos_probe(struct udevice *de
+ 	eqos->dev = dev;
+ 	eqos->config = (void *)dev_get_driver_data(dev);
+ 
+-	eqos->regs = devfdt_get_addr(dev);
++	eqos->regs = dev_read_addr(dev);
+ 	if (eqos->regs == FDT_ADDR_T_NONE) {
+-		pr_err("devfdt_get_addr() failed\n");
++		dev_err(dev, "dev_read_addr() failed\n");
+ 		return -ENODEV;
+ 	}
+ 	eqos->mac_regs = (void *)(eqos->regs + EQOS_MAC_REGS_BASE);
+@@ -1727,19 +1738,19 @@ static int eqos_probe(struct udevice *de
+ 
+ 	ret = eqos_probe_resources_core(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_probe_resources_core() failed: %d\n", ret);
++		dev_err(dev, "eqos_probe_resources_core() failed: %d\n", ret);
+ 		return ret;
+ 	}
+ 
+ 	ret = eqos->config->ops->eqos_probe_resources(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_probe_resources() failed: %d\n", ret);
++		dev_err(dev, "eqos_probe_resources() failed: %d\n", ret);
+ 		goto err_remove_resources_core;
+ 	}
+ 
+ 	eqos->mii = mdio_alloc();
+ 	if (!eqos->mii) {
+-		pr_err("mdio_alloc() failed\n");
++		dev_err(dev, "mdio_alloc() failed\n");
+ 		ret = -ENOMEM;
+ 		goto err_remove_resources_tegra;
+ 	}
+@@ -1750,19 +1761,19 @@ static int eqos_probe(struct udevice *de
+ 
+ 	ret = mdio_register(eqos->mii);
+ 	if (ret < 0) {
+-		pr_err("mdio_register() failed: %d\n", ret);
++		dev_err(dev, "mdio_register() failed: %d\n", ret);
+ 		goto err_free_mdio;
+ 	}
+ 
+ 	ret = eqos->config->ops->eqos_start_clks(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_start_clks() failed: %d\n", ret);
++		dev_err(dev, "eqos_start_clks() failed: %d\n", ret);
+ 		goto err_unregister_mdio;
+ 	}
+ 
+ 	ret = eqos->config->ops->eqos_start_resets(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_start_resets() failed: %d\n", ret);
++		dev_err(dev, "eqos_start_resets() failed: %d\n", ret);
+ 		goto err_stop_clks;
+ 	}
+ 
+@@ -1774,13 +1785,13 @@ static int eqos_probe(struct udevice *de
+ 				EQOS_DMA_MODE_SWR, false,
+ 				eqos->config->swr_wait, false);
+ 	if (ret) {
+-		pr_err("EQOS_DMA_MODE_SWR stuck\n");
++		dev_err(dev, "EQOS_DMA_MODE_SWR stuck\n");
+ 		goto err_stop_resets;
+ 	}
+ 
+ 	ret = eqos->config->ops->eqos_calibrate_pads(dev);
+ 	if (ret < 0) {
+-		pr_err("eqos_calibrate_pads() failed: %d\n", ret);
++		dev_err(dev, "eqos_calibrate_pads() failed: %d\n", ret);
+ 		goto err_stop_resets;
+ 	}
+ 	rate = eqos->config->ops->eqos_get_tick_clk_rate(dev);
+@@ -1791,13 +1802,13 @@ static int eqos_probe(struct udevice *de
+ 	eqos->phy = phy_connect(eqos->mii, eqos->phy_addr, dev,
+ 				eqos->config->interface(dev));
+ 	if (!eqos->phy) {
+-		pr_err("phy_connect() failed\n");
++		dev_err(dev, "phy_connect() failed\n");
+ 		ret = -EIO;
+ 		goto err_stop_resets;
+ 	}
+ 	ret = phy_config(eqos->phy);
+ 	if (ret < 0) {
+-		pr_err("phy_config() failed: %d\n", ret);
++		dev_err(dev, "phy_config() failed: %d\n", ret);
+ 		goto err_shutdown_phy;
+ 	}
+ 
+Index: u-boot/drivers/serial/serial_stm32.c
+===================================================================
+--- u-boot.orig/drivers/serial/serial_stm32.c
++++ u-boot/drivers/serial/serial_stm32.c
+@@ -218,7 +218,7 @@ static int stm32_serial_ofdata_to_platda
+ {
+ 	struct stm32x7_serial_platdata *plat = dev_get_platdata(dev);
+ 
+-	plat->base = devfdt_get_addr(dev);
++	plat->base = dev_read_addr(dev);
+ 	if (plat->base == FDT_ADDR_T_NONE)
+ 		return -EINVAL;
+ 
+Index: u-boot/drivers/video/stm32/stm32_ltdc.c
+===================================================================
+--- u-boot.orig/drivers/video/stm32/stm32_ltdc.c
++++ u-boot/drivers/video/stm32/stm32_ltdc.c
+@@ -365,8 +365,7 @@ static int stm32_ltdc_probe(struct udevi
+ 
+ 	ret = panel_get_display_timing(panel, &timings);
+ 	if (ret) {
+-		ret = fdtdec_decode_display_timing(gd->fdt_blob,
+-						   dev_of_offset(panel),
++		ret = ofnode_decode_display_timing(dev_ofnode(panel),
+ 						   0, &timings);
+ 		if (ret) {
+ 			dev_err(dev, "decode display timing error %d\n", ret);
+Index: u-boot/drivers/firmware/psci.c
+===================================================================
+--- u-boot.orig/drivers/firmware/psci.c
++++ u-boot/drivers/firmware/psci.c
+@@ -64,11 +64,9 @@ static int psci_bind(struct udevice *dev
+ 
+ static int psci_probe(struct udevice *dev)
+ {
+-	DECLARE_GLOBAL_DATA_PTR;
+ 	const char *method;
+ 
+-	method = fdt_stringlist_get(gd->fdt_blob, dev_of_offset(dev), "method",
+-				    0, NULL);
++	method = ofnode_read_string(dev_ofnode(dev), "method");
+ 	if (!method) {
+ 		pr_warn("missing \"method\" property\n");
+ 		return -ENXIO;
+@@ -151,7 +149,7 @@ static const struct udevice_id psci_of_m
+ 	{ .compatible = "arm,psci" },
+ 	{ .compatible = "arm,psci-0.2" },
+ 	{ .compatible = "arm,psci-1.0" },
+-	{},
++	{}
+ };
+ 
+ U_BOOT_DRIVER(psci) = {
+Index: u-boot/drivers/pinctrl/pinctrl_stm32.c
+===================================================================
+--- u-boot.orig/drivers/pinctrl/pinctrl_stm32.c
++++ u-boot/drivers/pinctrl/pinctrl_stm32.c
+@@ -284,7 +284,8 @@ static int prep_gpio_dsc(struct stm32_gp
+ 	return 0;
+ }
+ 
+-static int prep_gpio_ctl(struct stm32_gpio_ctl *gpio_ctl, u32 gpio_fn, int node)
++static int prep_gpio_ctl(struct stm32_gpio_ctl *gpio_ctl, u32 gpio_fn,
++			 ofnode node)
+ {
+ 	gpio_fn &= 0x00FF;
+ 	gpio_ctl->af = 0;
+@@ -305,16 +306,16 @@ static int prep_gpio_ctl(struct stm32_gp
+ 		break;
+ 	}
+ 
+-	gpio_ctl->speed = fdtdec_get_int(gd->fdt_blob, node, "slew-rate", 0);
++	gpio_ctl->speed = ofnode_read_u32_default(node, "slew-rate", 0);
+ 
+-	if (fdtdec_get_bool(gd->fdt_blob, node, "drive-open-drain"))
++	if (ofnode_read_bool(node, "drive-open-drain"))
+ 		gpio_ctl->otype = STM32_GPIO_OTYPE_OD;
+ 	else
+ 		gpio_ctl->otype = STM32_GPIO_OTYPE_PP;
+ 
+-	if (fdtdec_get_bool(gd->fdt_blob, node, "bias-pull-up"))
++	if (ofnode_read_bool(node, "bias-pull-up"))
+ 		gpio_ctl->pupd = STM32_GPIO_PUPD_UP;
+-	else if (fdtdec_get_bool(gd->fdt_blob, node, "bias-pull-down"))
++	else if (ofnode_read_bool(node, "bias-pull-down"))
+ 		gpio_ctl->pupd = STM32_GPIO_PUPD_DOWN;
+ 	else
+ 		gpio_ctl->pupd = STM32_GPIO_PUPD_NO;
+@@ -326,7 +327,7 @@ static int prep_gpio_ctl(struct stm32_gp
+ 	return 0;
+ }
+ 
+-static int stm32_pinctrl_config(int offset)
++static int stm32_pinctrl_config(ofnode node)
+ {
+ 	u32 pin_mux[MAX_PINS_ONE_IP];
+ 	int rv, len;
+@@ -334,24 +335,30 @@ static int stm32_pinctrl_config(int offs
+ 	/*
+ 	 * check for "pinmux" property in each subnode (e.g. pins1 and pins2 for
+ 	 * usart1) of pin controller phandle "pinctrl-0"
+-	 * */
+-	fdt_for_each_subnode(offset, gd->fdt_blob, offset) {
++	 */
++
++	ofnode_for_each_subnode(node, node) {
+ 		struct stm32_gpio_dsc gpio_dsc;
+ 		struct stm32_gpio_ctl gpio_ctl;
+ 		int i;
+ 
+-		len = fdtdec_get_int_array_count(gd->fdt_blob, offset,
+-						 "pinmux", pin_mux,
+-						 ARRAY_SIZE(pin_mux));
+-		debug("%s: no of pinmux entries= %d\n", __func__, len);
++		len = ofnode_read_size(node, "pinmux");
+ 		if (len < 0)
+-			return -EINVAL;
++			return len;
++		len /= sizeof(u32);
++		if (len > ARRAY_SIZE(pin_mux))
++			return -EOVERFLOW;
++		rv = ofnode_read_u32_array(node, "pinmux", pin_mux, len);
++		debug("%s: no of '%s' pinmux entries=%d\n", __func__,
++		      ofnode_get_name(node), len);
++		if (rv < 0)
++			return rv;
+ 		for (i = 0; i < len; i++) {
+ 			struct gpio_desc desc;
+ 
+ 			debug("%s: pinmux = %x\n", __func__, *(pin_mux + i));
+ 			prep_gpio_dsc(&gpio_dsc, *(pin_mux + i));
+-			prep_gpio_ctl(&gpio_ctl, *(pin_mux + i), offset);
++			prep_gpio_ctl(&gpio_ctl, *(pin_mux + i), node);
+ 			rv = uclass_get_device_by_seq(UCLASS_GPIO,
+ 						      gpio_dsc.port,
+ 						      &desc.dev);
+@@ -400,7 +407,7 @@ static int stm32_pinctrl_bind(struct ude
+ #if CONFIG_IS_ENABLED(PINCTRL_FULL)
+ static int stm32_pinctrl_set_state(struct udevice *dev, struct udevice *config)
+ {
+-	return stm32_pinctrl_config(dev_of_offset(config));
++	return stm32_pinctrl_config(dev_ofnode(config));
+ }
+ #else /* PINCTRL_FULL */
+ static int stm32_pinctrl_set_state_simple(struct udevice *dev,
+@@ -409,7 +416,7 @@ static int stm32_pinctrl_set_state_simpl
+ 	const void *fdt = gd->fdt_blob;
+ 	const fdt32_t *list;
+ 	uint32_t phandle;
+-	int config_node;
++	ofnode config_node;
+ 	int size, i, ret;
+ 
+ 	list = fdt_getprop(fdt, dev_of_offset(periph), "pinctrl-0", &size);
+@@ -422,8 +429,8 @@ static int stm32_pinctrl_set_state_simpl
+ 	for (i = 0; i < size; i++) {
+ 		phandle = fdt32_to_cpu(*list++);
+ 
+-		config_node = fdt_node_offset_by_phandle(fdt, phandle);
+-		if (config_node < 0) {
++		config_node = ofnode_get_by_phandle(phandle);
++		if (!ofnode_valid(config_node)) {
+ 			pr_err("prop pinctrl-0 index %d invalid phandle\n", i);
+ 			return -EINVAL;
+ 		}
+Index: u-boot/drivers/watchdog/stm32mp_wdt.c
+===================================================================
+--- u-boot.orig/drivers/watchdog/stm32mp_wdt.c
++++ u-boot/drivers/watchdog/stm32mp_wdt.c
+@@ -90,7 +90,7 @@ static int stm32mp_wdt_probe(struct udev
+ 
+ 	debug("IWDG init\n");
+ 
+-	priv->base = devfdt_get_addr(dev);
++	priv->base = dev_read_addr(dev);
+ 	if (priv->base == FDT_ADDR_T_NONE)
+ 		return -EINVAL;
+ 
+Index: u-boot/drivers/core/fdtaddr.c
+===================================================================
+--- u-boot.orig/drivers/core/fdtaddr.c
++++ u-boot/drivers/core/fdtaddr.c
+@@ -21,6 +21,7 @@ fdt_addr_t devfdt_get_addr_index(const s
+ #if CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA)
+ 	fdt_addr_t addr;
+ 
++	WARN_ON(of_live_active());
+ 	if (CONFIG_IS_ENABLED(OF_TRANSLATE)) {
+ 		const fdt32_t *reg;
+ 		int len = 0;
+@@ -42,7 +43,8 @@ fdt_addr_t devfdt_get_addr_index(const s
+ 		reg = fdt_getprop(gd->fdt_blob, dev_of_offset(dev), "reg",
+ 				  &len);
+ 		if (!reg || (len <= (index * sizeof(fdt32_t) * (na + ns)))) {
+-			debug("Req index out of range\n");
++			debug("Req index %u out of range 0..%d / (%d * %d)\n",
++			      index, len, na, ns);
+ 			return FDT_ADDR_T_NONE;
+ 		}
+ 
+Index: u-boot/drivers/usb/cdns3/core.c
+===================================================================
+--- u-boot.orig/drivers/usb/cdns3/core.c
++++ u-boot/drivers/usb/cdns3/core.c
+@@ -108,7 +108,7 @@ static int cdns3_core_init_role(struct c
+ 	enum usb_dr_mode dr_mode;
+ 	int ret = 0;
+ 
+-	dr_mode = usb_get_dr_mode(dev_of_offset(dev));
++	dr_mode = usb_get_dr_mode(dev_ofnode(dev));
+ 	cdns->role = USB_ROLE_NONE;
+ 
+ 	/*
+Index: u-boot/drivers/usb/cdns3/gadget.c
+===================================================================
+--- u-boot.orig/drivers/usb/cdns3/gadget.c
++++ u-boot/drivers/usb/cdns3/gadget.c
+@@ -2579,7 +2579,7 @@ static int cdns3_gadget_start(struct cdn
+ 	if (!priv_dev->onchip_buffers)
+ 		priv_dev->onchip_buffers = 256;
+ 
+-	max_speed = usb_get_maximum_speed(dev_of_offset(cdns->dev));
++	max_speed = usb_get_maximum_speed(dev_ofnode(cdns->dev));
+ 
+ 	/* Check the maximum_speed parameter */
+ 	switch (max_speed) {
+Index: u-boot/drivers/usb/common/common.c
+===================================================================
+--- u-boot.orig/drivers/usb/common/common.c
++++ u-boot/drivers/usb/common/common.c
+@@ -7,6 +7,7 @@
+  */
+ 
+ #include <common.h>
++#include <dm/ofnode.h>
+ #include <linux/libfdt.h>
+ #include <linux/usb/otg.h>
+ #include <linux/usb/ch9.h>
+@@ -20,15 +21,15 @@ static const char *const usb_dr_modes[]
+ 	[USB_DR_MODE_OTG]		= "otg",
+ };
+ 
+-enum usb_dr_mode usb_get_dr_mode(int node)
++enum usb_dr_mode usb_get_dr_mode(ofnode node)
+ {
+-	const void *fdt = gd->fdt_blob;
+ 	const char *dr_mode;
+ 	int i;
+ 
+-	dr_mode = fdt_getprop(fdt, node, "dr_mode", NULL);
++	dr_mode = ofnode_read_string(node, "dr_mode");
+ 	if (!dr_mode) {
+-		pr_err("usb dr_mode not found\n");
++		pr_err("usb dr_mode not found in %s node\n",
++		       ofnode_get_name(node));
+ 		return USB_DR_MODE_UNKNOWN;
+ 	}
+ 
+@@ -48,13 +49,12 @@ static const char *const speed_names[] =
+ 	[USB_SPEED_SUPER] = "super-speed",
+ };
+ 
+-enum usb_device_speed usb_get_maximum_speed(int node)
++enum usb_device_speed usb_get_maximum_speed(ofnode node)
+ {
+-	const void *fdt = gd->fdt_blob;
+ 	const char *max_speed;
+ 	int i;
+ 
+-	max_speed = fdt_getprop(fdt, node, "maximum-speed", NULL);
++	max_speed = ofnode_read_string(node, "maximum-speed");
+ 	if (!max_speed) {
+ 		pr_err("usb maximum-speed not found\n");
+ 		return USB_SPEED_UNKNOWN;
+Index: u-boot/drivers/usb/dwc3/dwc3-generic.c
+===================================================================
+--- u-boot.orig/drivers/usb/dwc3/dwc3-generic.c
++++ u-boot/drivers/usb/dwc3/dwc3-generic.c
+@@ -88,9 +88,9 @@ static int dwc3_generic_remove(struct ud
+ static int dwc3_generic_ofdata_to_platdata(struct udevice *dev)
+ {
+ 	struct dwc3_generic_plat *plat = dev_get_platdata(dev);
+-	int node = dev_of_offset(dev);
++	ofnode node = dev_ofnode(dev);
+ 
+-	plat->base = devfdt_get_addr(dev);
++	plat->base = dev_read_addr(dev);
+ 
+ 	plat->maximum_speed = usb_get_maximum_speed(node);
+ 	if (plat->maximum_speed == USB_SPEED_UNKNOWN) {
+@@ -284,13 +284,13 @@ struct dwc3_glue_ops ti_ops = {
+ 
+ static int dwc3_glue_bind(struct udevice *parent)
+ {
+-	const void *fdt = gd->fdt_blob;
+-	int node;
++	ofnode node;
+ 	int ret;
+ 
+-	for (node = fdt_first_subnode(fdt, dev_of_offset(parent)); node > 0;
+-	     node = fdt_next_subnode(fdt, node)) {
+-		const char *name = fdt_get_name(fdt, node, NULL);
++	for (node = ofnode_first_subnode(dev_ofnode(parent));
++	     ofnode_valid(node);
++	     node = ofnode_next_subnode(node)) {
++		const char *name = ofnode_get_name(node);
+ 		enum usb_dr_mode dr_mode;
+ 		struct udevice *dev;
+ 		const char *driver = NULL;
+Index: u-boot/drivers/usb/dwc3/dwc3-meson-g12a.c
+===================================================================
+--- u-boot.orig/drivers/usb/dwc3/dwc3-meson-g12a.c
++++ u-boot/drivers/usb/dwc3/dwc3-meson-g12a.c
+@@ -393,7 +393,7 @@ static int dwc3_meson_g12a_probe(struct
+ 	}
+ #endif
+ 
+-	priv->otg_mode = usb_get_dr_mode(dev_of_offset(dev));
++	priv->otg_mode = usb_get_dr_mode(dev_ofnode(dev));
+ 
+ 	ret = dwc3_meson_g12a_usb_init(priv);
+ 	if (ret)
+Index: u-boot/drivers/usb/host/dwc3-sti-glue.c
+===================================================================
+--- u-boot.orig/drivers/usb/host/dwc3-sti-glue.c
++++ u-boot/drivers/usb/host/dwc3-sti-glue.c
+@@ -13,6 +13,7 @@
+ #include <fdtdec.h>
+ #include <linux/libfdt.h>
+ #include <dm/lists.h>
++#include <dm/ofnode.h>
+ #include <regmap.h>
+ #include <reset-uclass.h>
+ #include <syscon.h>
+@@ -153,18 +154,17 @@ static int sti_dwc3_glue_ofdata_to_platd
+ static int sti_dwc3_glue_bind(struct udevice *dev)
+ {
+ 	struct sti_dwc3_glue_platdata *plat = dev_get_platdata(dev);
+-	int dwc3_node;
++	ofnode dwc3_node;
+ 
+ 	/* check if one subnode is present */
+-	dwc3_node = fdt_first_subnode(gd->fdt_blob, dev_of_offset(dev));
+-	if (dwc3_node <= 0) {
++	dwc3_node = ofnode_first_subnode(dev_ofnode(dev));
++	if (!ofnode_valid(dwc3_node)) {
+ 		pr_err("Can't find subnode for %s\n", dev->name);
+ 		return -ENODEV;
+ 	}
+ 
+ 	/* check if the subnode compatible string is the dwc3 one*/
+-	if (fdt_node_check_compatible(gd->fdt_blob, dwc3_node,
+-				      "snps,dwc3") != 0) {
++	if (!ofnode_device_is_compatible(dwc3_node, "snps,dwc3")) {
+ 		pr_err("Can't find dwc3 subnode for %s\n", dev->name);
+ 		return -ENODEV;
+ 	}
+Index: u-boot/drivers/usb/host/ehci-mx6.c
+===================================================================
+--- u-boot.orig/drivers/usb/host/ehci-mx6.c
++++ u-boot/drivers/usb/host/ehci-mx6.c
+@@ -513,7 +513,7 @@ static int ehci_usb_ofdata_to_platdata(s
+ 	struct usb_platdata *plat = dev_get_platdata(dev);
+ 	enum usb_dr_mode dr_mode;
+ 
+-	dr_mode = usb_get_dr_mode(dev_of_offset(dev));
++	dr_mode = usb_get_dr_mode(dev_ofnode(dev));
+ 
+ 	switch (dr_mode) {
+ 	case USB_DR_MODE_HOST:
+Index: u-boot/drivers/usb/host/xhci-dwc3.c
+===================================================================
+--- u-boot.orig/drivers/usb/host/xhci-dwc3.c
++++ u-boot/drivers/usb/host/xhci-dwc3.c
+@@ -155,7 +155,7 @@ static int xhci_dwc3_probe(struct udevic
+ 
+ 	writel(reg, &dwc3_reg->g_usb2phycfg[0]);
+ 
+-	dr_mode = usb_get_dr_mode(dev_of_offset(dev));
++	dr_mode = usb_get_dr_mode(dev_ofnode(dev));
+ 	if (dr_mode == USB_DR_MODE_UNKNOWN)
+ 		/* by default set dual role mode to HOST */
+ 		dr_mode = USB_DR_MODE_HOST;
+Index: u-boot/drivers/usb/musb-new/ti-musb.c
+===================================================================
+--- u-boot.orig/drivers/usb/musb-new/ti-musb.c
++++ u-boot/drivers/usb/musb-new/ti-musb.c
+@@ -49,49 +49,34 @@ static void ti_musb_set_phy_power(struct
+ 
+ #if CONFIG_IS_ENABLED(OF_CONTROL)
+ 
+-static int ti_musb_get_usb_index(int node)
++static int ti_musb_get_usb_index(ofnode node)
+ {
+-	const void *fdt = gd->fdt_blob;
+-	int i = 0;
+-	char path[64];
+-	const char *alias_path;
+-	char alias[16];
+-
+-	fdt_get_path(fdt, node, path, sizeof(path));
+-
+-	do {
+-		snprintf(alias, sizeof(alias), "usb%d", i);
+-		alias_path = fdt_get_alias(fdt, alias);
+-		if (alias_path == NULL) {
+-			debug("USB index not found\n");
+-			return -ENOENT;
+-		}
+-
+-		if (!strcmp(path, alias_path))
+-			return i;
+-
+-		i++;
+-	} while (alias_path);
++	int i;
++	int ret;
+ 
+-	return -ENOENT;
++	ret = dev_read_alias_seq(node, &i);
++	return ret == 0 ? i : ret;
+ }
+ 
+ static int ti_musb_ofdata_to_platdata(struct udevice *dev)
+ {
+ 	struct ti_musb_platdata *platdata = dev_get_platdata(dev);
+ 	const void *fdt = gd->fdt_blob;
+-	int node = dev_of_offset(dev);
+-	int phys;
+-	int ctrl_mod;
++	ofnode node = dev_ofnode(dev);
+ 	int usb_index;
+ 	struct musb_hdrc_config *musb_config;
++	ofnode_phandle_args ph;
++	int ret;
+ 
+ 	platdata->base = (void *)devfdt_get_addr_index(dev, 1);
+ 
+-	phys = fdtdec_lookup_phandle(fdt, node, "phys");
+-	ctrl_mod = fdtdec_lookup_phandle(fdt, phys, "ti,ctrl_mod");
+-	platdata->ctrl_mod_base = (void *)fdtdec_get_addr(fdt, ctrl_mod, "reg");
+-	usb_index = ti_musb_get_usb_index(node);
++	ret = dev_read_phandle_with_args(dev, "phys", NULL, 0, 0, &ph);
++	if (ret == 0)
++		ret = ofnode_read_phandle_with_args(ph.node, "ti,ctrl_mod",
++						    NULL, 0, 0, &ph);
++	if (ret == 0)
++		platdata->ctrl_mod_base = ofnode_read_u32(ph.node, "reg");
++	usb_index = ti_musb_get_usb_index(dev);
+ 	switch (usb_index) {
+ 	case 1:
+ 		platdata->ctrl_mod_base += AM335X_USB1_CTRL;
+@@ -106,8 +91,9 @@ static int ti_musb_ofdata_to_platdata(st
+ 	musb_config = malloc(sizeof(struct musb_hdrc_config));
+ 	memset(musb_config, 0, sizeof(struct musb_hdrc_config));
+ 
+-	musb_config->multipoint = fdtdec_get_int(fdt, node,
+-						 "mentor,multipoint", -1);
++	musb_config->multipoint = ofnode_read_u32_default(node,
++							  "mentor,multipoint",
++							  -1);
+ 	if (musb_config->multipoint < 0) {
+ 		pr_err("MUSB multipoint DT entry missing\n");
+ 		return -ENOENT;
+@@ -115,15 +101,15 @@ static int ti_musb_ofdata_to_platdata(st
+ 
+ 	musb_config->dyn_fifo = 1;
+ 
+-	musb_config->num_eps = fdtdec_get_int(fdt, node, "mentor,num-eps",
+-					      -1);
++	musb_config->num_eps = ofnode_read_u32_default(node,
++						       "mentor,num-eps", -1);
+ 	if (musb_config->num_eps < 0) {
+ 		pr_err("MUSB num-eps DT entry missing\n");
+ 		return -ENOENT;
+ 	}
+ 
+-	musb_config->ram_bits = fdtdec_get_int(fdt, node, "mentor,ram-bits",
+-					       -1);
++	musb_config->ram_bits = ofnode_read_u32_default(node,
++							"mentor,ram-bits", -1);
+ 	if (musb_config->ram_bits < 0) {
+ 		pr_err("MUSB ram-bits DT entry missing\n");
+ 		return -ENOENT;
+@@ -131,7 +117,8 @@ static int ti_musb_ofdata_to_platdata(st
+ 
+ 	platdata->plat.config = musb_config;
+ 
+-	platdata->plat.power = fdtdec_get_int(fdt, node, "mentor,power", -1);
++	platdata->plat.power = ofnode_read_u32_default(node,
++						       "mentor,power", -1);
+ 	if (platdata->plat.power < 0) {
+ 		pr_err("MUSB mentor,power DT entry missing\n");
+ 		return -ENOENT;
+@@ -178,7 +165,6 @@ static int ti_musb_host_remove(struct ud
+ static int ti_musb_host_ofdata_to_platdata(struct udevice *dev)
+ {
+ 	struct ti_musb_platdata *platdata = dev_get_platdata(dev);
+-	const void *fdt = gd->fdt_blob;
+ 	int node = dev_of_offset(dev);
+ 	int ret;
+ 
+@@ -216,7 +202,6 @@ struct ti_musb_peripheral {
+ static int ti_musb_peripheral_ofdata_to_platdata(struct udevice *dev)
+ {
+ 	struct ti_musb_platdata *platdata = dev_get_platdata(dev);
+-	const void *fdt = gd->fdt_blob;
+ 	int node = dev_of_offset(dev);
+ 	int ret;
+ 
+@@ -285,14 +270,14 @@ U_BOOT_DRIVER(ti_musb_peripheral) = {
+ #if CONFIG_IS_ENABLED(OF_CONTROL)
+ static int ti_musb_wrapper_bind(struct udevice *parent)
+ {
+-	const void *fdt = gd->fdt_blob;
+-	int node;
++	ofnode node;
+ 	int ret;
+ 
+-	for (node = fdt_first_subnode(fdt, dev_of_offset(parent)); node > 0;
+-	     node = fdt_next_subnode(fdt, node)) {
++	for (node = ofnode_first_subnode(dev_ofnode(parent));
++	     ofnode_valid(node);
++	     node = ofnode_next_subnode(node)) {
+ 		struct udevice *dev;
+-		const char *name = fdt_get_name(fdt, node, NULL);
++		const char *name = ofnode_get_name(node);
+ 		enum usb_dr_mode dr_mode;
+ 		struct driver *drv;
+ 
+Index: u-boot/include/linux/usb/otg.h
+===================================================================
+--- u-boot.orig/include/linux/usb/otg.h
++++ u-boot/include/linux/usb/otg.h
+@@ -23,7 +23,7 @@ enum usb_dr_mode {
+  * The function gets phy interface string from property 'dr_mode',
+  * and returns the correspondig enum usb_dr_mode
+  */
+-enum usb_dr_mode usb_get_dr_mode(int node);
++enum usb_dr_mode usb_get_dr_mode(ofnode node);
+ 
+ /**
+  * usb_get_maximum_speed() - Get maximum speed for given device
+@@ -32,6 +32,6 @@ enum usb_dr_mode usb_get_dr_mode(int nod
+  * The function gets phy interface string from property 'maximum-speed',
+  * and returns the correspondig enum usb_device_speed
+  */
+-enum usb_device_speed usb_get_maximum_speed(int node);
++enum usb_device_speed usb_get_maximum_speed(ofnode node);
+ 
+ #endif /* __LINUX_USB_OTG_H */
+Index: u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+===================================================================
+--- u-boot.orig/drivers/usb/gadget/dwc2_udc_otg.c
++++ u-boot/drivers/usb/gadget/dwc2_udc_otg.c
+@@ -1039,7 +1039,7 @@ void dwc2_phy_shutdown(struct udevice *d
+ static int dwc2_udc_otg_ofdata_to_platdata(struct udevice *dev)
+ {
+ 	struct dwc2_plat_otg_data *platdata = dev_get_platdata(dev);
+-	int node = dev_of_offset(dev);
++	ofnode node = dev_ofnode(dev);
+ 	ulong drvdata;
+ 	void (*set_params)(struct dwc2_plat_otg_data *data);
+ 	int ret;

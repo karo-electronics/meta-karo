@@ -1,0 +1,48 @@
+Index: u-boot/drivers/video/backlight_gpio.c
+===================================================================
+--- u-boot.orig/drivers/video/backlight_gpio.c
++++ u-boot/drivers/video/backlight_gpio.c
+@@ -31,8 +31,8 @@ static int gpio_backlight_ofdata_to_plat
+ 	ret = gpio_request_by_name(dev, "gpios", 0, &priv->gpio,
+ 				   GPIOD_IS_OUT);
+ 	if (ret) {
+-		debug("%s: Warning: cannot get GPIO: ret=%d\n",
+-		      __func__, ret);
++		pr_warn("%s: Warning: cannot get GPIO: ret=%d\n",
++			__func__, ret);
+ 		return ret;
+ 	}
+ 
+Index: u-boot/drivers/video/simple_panel.c
+===================================================================
+--- u-boot.orig/drivers/video/simple_panel.c
++++ u-boot/drivers/video/simple_panel.c
+@@ -56,8 +56,8 @@ static int simple_panel_ofdata_to_platda
+ 		ret = uclass_get_device_by_phandle(UCLASS_REGULATOR, dev,
+ 						   "power-supply", &priv->reg);
+ 		if (ret) {
+-			debug("%s: Warning: cannot get power supply: ret=%d\n",
+-			      __func__, ret);
++			pr_warn("%s: Warning: cannot get power supply: ret=%d\n",
++				__func__, ret);
+ 			if (ret != -ENOENT)
+ 				return ret;
+ 		}
+@@ -65,14 +65,14 @@ static int simple_panel_ofdata_to_platda
+ 	ret = uclass_get_device_by_phandle(UCLASS_PANEL_BACKLIGHT, dev,
+ 					   "backlight", &priv->backlight);
+ 	if (ret) {
+-		debug("%s: Cannot get backlight: ret=%d\n", __func__, ret);
++		pr_err("%s: Cannot get backlight: ret=%d\n", __func__, ret);
+ 		return log_ret(ret);
+ 	}
+ 	ret = gpio_request_by_name(dev, "enable-gpios", 0, &priv->enable,
+ 				   GPIOD_IS_OUT);
+ 	if (ret) {
+-		debug("%s: Warning: cannot get enable GPIO: ret=%d\n",
+-		      __func__, ret);
++		pr_warn("%s: Warning: cannot get enable GPIO: ret=%d\n",
++			__func__, ret);
+ 		if (ret != -ENOENT)
+ 			return log_ret(ret);
+ 	}

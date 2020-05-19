@@ -1,0 +1,13 @@
+Index: u-boot/cmd/led.c
+===================================================================
+--- u-boot.orig/cmd/led.c
++++ u-boot/cmd/led.c
+@@ -128,7 +128,7 @@ int do_led(cmd_tbl_t *cmdtp, int flag, i
+ }
+ 
+ #ifdef CONFIG_LED_BLINK
+-#define BLINK "|blink [blink-freq in ms]"
++#define BLINK "|blink <blink-freq in ms>"
+ #else
+ #define BLINK ""
+ #endif
