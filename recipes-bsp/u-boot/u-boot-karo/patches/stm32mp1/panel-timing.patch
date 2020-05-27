@@ -2,7 +2,7 @@ Index: u-boot/drivers/core/ofnode.c
 ===================================================================
 --- u-boot.orig/drivers/core/ofnode.c
 +++ u-boot/drivers/core/ofnode.c
-@@ -496,18 +496,24 @@ int ofnode_decode_display_timing(ofnode
+@@ -489,18 +489,23 @@ int ofnode_decode_display_timing(ofnode
  				 struct display_timing *dt)
  {
  	int i;
@@ -14,7 +14,6 @@ Index: u-boot/drivers/core/ofnode.c
  	timings = ofnode_find_subnode(parent, "display-timings");
 -	if (!ofnode_valid(timings))
 -		return -EINVAL;
-+	Debug("%s@%d: timings=%p\n", __func__, __LINE__, timings.np);
 +	if (!ofnode_valid(timings)) {
 +		node = ofnode_find_subnode(parent, "panel-timing");
 +		if (!ofnode_valid(node))

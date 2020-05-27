@@ -100,7 +100,8 @@ SRC_URI_append_stm32mp1 = " \
 	file://_ofnode_to_np-bugfix.patch \
 	file://phy-stm32-bugfix.patch \
 	file://stm32prog.patch \
-	file://buggy-dev-workaround.patch \
 	file://udc-remove-dev.patch \
 	file://txmp-support.patch \
+	file://reloc-bugfix.patch \
+	file://reloc-checks.patch \
 "

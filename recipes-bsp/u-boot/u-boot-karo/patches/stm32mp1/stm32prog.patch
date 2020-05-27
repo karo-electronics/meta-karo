@@ -126,12 +126,11 @@ Index: u-boot/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
 ===================================================================
 --- /dev/null
 +++ u-boot/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
-@@ -0,0 +1,1599 @@
+@@ -0,0 +1,1598 @@
 +// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
 +/*
 + * Copyright (C) 2018, STMicroelectronics - All Rights Reserved
 + */
-+#define DEBUG
 +
 +#include <common.h>
 +#include <console.h>

@@ -2,14 +2,13 @@ Index: u-boot/board/karo/txmp/txmp.c
 ===================================================================
 --- /dev/null
 +++ u-boot/board/karo/txmp/txmp.c
-@@ -0,0 +1,1037 @@
+@@ -0,0 +1,1027 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2019, Lothar Waßmann <LW@KARO-electronics.de>
 + *     based on: board/st/stmp32mp1/board.c
 + *     Copyright (C) 2018, STMicroelectronics - All Rights Reserved
 + */
-+#define DEBUG
 +
 +#include <config.h>
 +#include <common.h>
@@ -123,7 +122,7 @@ Index: u-boot/board/karo/txmp/txmp.c
 +	struct udevice *dev;
 +
 +	ret = uclass_get_device(UCLASS_VIDEO, 0, &dev);
-+	printf("uclass_get_device(UCLASS_VIDEO) returned %d\n", ret);
++	debug("uclass_get_device(UCLASS_VIDEO) returned %d\n", ret);
 +	if (ret)
 +		return;
 +
@@ -598,7 +597,6 @@ Index: u-boot/board/karo/txmp/txmp.c
 +	struct udevice *dev;
 +	struct clk clk;
 +
-+	pr_err("%s@%d: \n", __func__, __LINE__);
 +	debug("%s@%d: \n", __func__, __LINE__);
 +
 +	/* find the usb otg node */
@@ -652,7 +650,6 @@ Index: u-boot/board/karo/txmp/txmp.c
 +	usbotg_reset.dev = dev;
 +	usbotg_reset.id = args.args[0];
 +
-+debug("%s@%d: \n", __func__, __LINE__);
 +	/* Phy */
 +	if (!(ofnode_parse_phandle_with_args(node, "phys",
 +					     "#phy-cells", 0, 0, &args))) {
@@ -678,19 +675,14 @@ Index: u-boot/board/karo/txmp/txmp.c
 +				goto clk_err;
 +			}
 +		}
-+		printf("usbotg PHY addr=%08lx\n", stm32mp_otg_data.regs_phy);
 +	}
 +
-+debug("%s@%d: \n", __func__, __LINE__);
 +	/* Parse and store data needed for gadget */
 +	stm32mp_otg_data.regs_otg = ofnode_get_addr(node);
-+debug("%s@%d: \n", __func__, __LINE__);
 +	if (stm32mp_otg_data.regs_otg == FDT_ADDR_T_NONE) {
 +		printf("usbotg: can't get base address\n");
-+debug("%s@%d: \n", __func__, __LINE__);
 +		goto clk_err;
 +	}
-+debug("%s@%d: \n", __func__, __LINE__);
 +
 +	stm32mp_otg_data.rx_fifo_sz = ofnode_read_u32_default(node,
 +							      "g-rx-fifo-size",
@@ -913,8 +905,6 @@ Index: u-boot/board/karo/txmp/txmp.c
 +#if defined(CONFIG_SYS_DFU_DATA_BUF_SIZE)
 +	printf("CONFIG_SYS_MALLOC_LEN=%08x CONFIG_SYS_DFU_DATA_BUF_SIZE=%08x\n",
 +	       CONFIG_SYS_MALLOC_LEN, CONFIG_SYS_DFU_DATA_BUF_SIZE);
-+#else
-+	printf("CONFIG_SYS_MALLOC_LEN=%08x\n", CONFIG_SYS_MALLOC_LEN);
 +#endif
 +	txmp_set_bootdevice();
 +
@@ -1134,7 +1124,7 @@ Index: u-boot/board/karo/txmp/Makefile
 ===================================================================
 --- /dev/null
 +++ u-boot/board/karo/txmp/Makefile
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,12 @@
 +# SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
 +#
 +# Copyright (C) 2018, STMicroelectronics - All Rights Reserved
@@ -1146,14 +1136,12 @@ Index: u-boot/board/karo/txmp/Makefile
 +else
 +	obj-y += txmp.o
 +endif
-+ifneq ($(CONFIG_KARO_UBOOT_MFG),)
-+	obj-$(CONFIG_MTD_RAW_NAND) += nand.o
-+endif
++obj-$(CONFIG_MTD_RAW_NAND) += nand.o
 Index: u-boot/include/configs/txmp.h
 ===================================================================
 --- /dev/null
 +++ u-boot/include/configs/txmp.h
-@@ -0,0 +1,217 @@
+@@ -0,0 +1,219 @@
 +/* SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause */
 +/*
 + * Copyright (C) 2018, STMicroelectronics - All Rights Reserved
@@ -1182,6 +1170,9 @@ Index: u-boot/include/configs/txmp.h
 + */
 +#define CONFIG_SYS_SDRAM_BASE		STM32_DDR_BASE
 +#define CONFIG_SYS_INIT_SP_ADDR		CONFIG_SYS_TEXT_BASE
++/* required for exception handlers to work */
++#define IRAM_BASE_ADDR			(STM32_SYSRAM_BASE + \
++					 STM32_SYSRAM_SIZE)
 +
 +/*
 + * Console I/O buffer size
@@ -1224,8 +1215,7 @@ Index: u-boot/include/configs/txmp.h
 +
 +/* limit SYSRAM usage to first 128 KB */
 +#define CONFIG_SPL_MAX_SIZE		0x00020000
-+#define CONFIG_SPL_STACK		(STM32_SYSRAM_BASE + \
-+					 STM32_SYSRAM_SIZE)
++#define CONFIG_SPL_STACK		IRAM_BASE_ADDR
 +#endif /* CONFIG_SPL */
 +
 +#define CONFIG_SYS_MEMTEST_START	STM32_DDR_BASE
@@ -1842,7 +1832,7 @@ Index: u-boot/configs/qsmp-1570_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1570_defconfig
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,137 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -1957,6 +1947,7 @@ Index: u-boot/configs/qsmp-1570_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -1983,7 +1974,7 @@ Index: u-boot/configs/qsmp-1570_mfg_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1570_mfg_defconfig
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,107 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -2077,6 +2068,7 @@ Index: u-boot/configs/qsmp-1570_mfg_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_GADGET=y
@@ -2094,7 +2086,7 @@ Index: u-boot/configs/qsmp-1570_noenv_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1570_noenv_defconfig
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,126 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -2206,6 +2198,7 @@ Index: u-boot/configs/qsmp-1570_noenv_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -2224,7 +2217,7 @@ Index: u-boot/configs/qsmp-1570_trusted_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1570_trusted_defconfig
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,120 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -2322,6 +2315,7 @@ Index: u-boot/configs/qsmp-1570_trusted_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -2521,13 +2515,12 @@ Index: u-boot/board/karo/common/fdt.c
 ===================================================================
 --- /dev/null
 +++ u-boot/board/karo/common/fdt.c
-@@ -0,0 +1,318 @@
+@@ -0,0 +1,317 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * (C) Copyright 2019 Lothar Waßmann <LW@KARO-electronics.de>
 + *
 + */
-+#define DEBUG
 +
 +#include <common.h>
 +#include <console.h>
@@ -2665,7 +2658,7 @@ Index: u-boot/board/karo/common/fdt.c
 +		if (ret) {
 +			printf("Failed to build live oftree: %d\n", ret);
 +		} else {
-+			printf("Live oftree built at: %p\n", live_fdt);
++			debug("Live oftree built at: %p\n", live_fdt);
 +		}
 +	}
 +	karo_set_fdtsize(fdt);
@@ -5000,6 +4993,7 @@ Index: u-boot/configs/qsmp-1510_defconfig
 +CONFIG_DISTRO_DEFAULTS=y
 +# CONFIG_ANDROID_BOOT_IMAGE is not set
 +CONFIG_FIT=y
++CONFIG_NAND_BOOT=y
 +CONFIG_QSPI_BOOT=y
 +CONFIG_BOOTDELAY=1
 +CONFIG_BOOTCOMMAND="run bootcmd_${boot_mode} bootm_cmd"
@@ -5025,11 +5019,11 @@ Index: u-boot/configs/qsmp-1510_defconfig
 +# CONFIG_CMD_FLASH is not set
 +CONFIG_CMD_FUSE=y
 +CONFIG_CMD_GPIO=y
-+CONFIG_CMD_GPT=y
 +CONFIG_CMD_I2C=y
 +# CONFIG_CMD_LOADS is not set
 +CONFIG_CMD_MMC=y
 +CONFIG_CMD_MTD=y
++CONFIG_CMD_NAND=y
 +CONFIG_CMD_READ=y
 +CONFIG_CMD_REMOTEPROC=y
 +CONFIG_CMD_SF_TEST=y
@@ -5048,7 +5042,6 @@ Index: u-boot/configs/qsmp-1510_defconfig
 +CONFIG_CMD_UBI=y
 +# CONFIG_SPL_DOS_PARTITION is not set
 +# CONFIG_ISO_PARTITION is not set
-+CONFIG_PARTITION_TYPE_GUID=y
 +CONFIG_OF_LIVE=y
 +CONFIG_DEFAULT_DEVICE_TREE="stm32mp151a-qsmp-1510"
 +CONFIG_ENV_IS_IN_NAND=y
@@ -5058,7 +5051,7 @@ Index: u-boot/configs/qsmp-1510_defconfig
 +CONFIG_FASTBOOT_BUF_SIZE=0x02000000
 +CONFIG_FASTBOOT_USB_DEV=1
 +CONFIG_FASTBOOT_FLASH=y
-+CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_FLASH_NAND=y
 +CONFIG_DM_HWSPINLOCK=y
 +CONFIG_HWSPINLOCK_STM32=y
 +CONFIG_DM_I2C=y
@@ -5071,7 +5064,6 @@ Index: u-boot/configs/qsmp-1510_defconfig
 +CONFIG_DM_MMC=y
 +CONFIG_STM32_SDMMC2=y
 +CONFIG_MTD=y
-+CONFIG_MTD_RAW_NAND=y
 +CONFIG_SPL_NAND_SIMPLE=y
 +CONFIG_MTD_SPI_NAND=y
 +CONFIG_DM_SPI_FLASH=y
@@ -5098,6 +5090,7 @@ Index: u-boot/configs/qsmp-1510_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -5125,7 +5118,7 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1510_mfg_defconfig
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,116 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5141,6 +5134,7 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 +CONFIG_DISTRO_DEFAULTS=y
 +# CONFIG_ANDROID_BOOT_IMAGE is not set
 +CONFIG_FIT=y
++CONFIG_NAND_BOOT=y
 +CONFIG_QSPI_BOOT=y
 +CONFIG_BOOTDELAY=0
 +CONFIG_BOOTCOMMAND="run bootcmd_${boot_mode} bootm_cmd"
@@ -5157,6 +5151,7 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 +# CONFIG_CMD_FLASH is not set
 +CONFIG_CMD_FUSE=y
 +CONFIG_CMD_GPIO=y
++# CONFIG_CMD_GPT is not set
 +CONFIG_CMD_I2C=y
 +# CONFIG_CMD_LOADS is not set
 +CONFIG_CMD_MMC=y
@@ -5164,6 +5159,7 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 +CONFIG_CMD_NAND=y
 +CONFIG_CMD_READ=y
 +CONFIG_CMD_REMOTEPROC=y
++CONFIG_CMD_SF_TEST=y
 +CONFIG_CMD_USB=y
 +CONFIG_CMD_USB_MASS_STORAGE=y
 +CONFIG_BOOTP_RANDOM_ID=y
@@ -5186,7 +5182,7 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 +CONFIG_FASTBOOT_BUF_SIZE=0x02000000
 +CONFIG_FASTBOOT_USB_DEV=1
 +CONFIG_FASTBOOT_FLASH=y
-+CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_FLASH_NAND=y
 +CONFIG_DM_HWSPINLOCK=y
 +CONFIG_HWSPINLOCK_STM32=y
 +CONFIG_DM_I2C=y
@@ -5199,7 +5195,6 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 +CONFIG_DM_MMC=y
 +CONFIG_STM32_SDMMC2=y
 +CONFIG_MTD=y
-+CONFIG_MTD_RAW_NAND=y
 +CONFIG_MTD_SPI_NAND=y
 +CONFIG_DM_SPI_FLASH=y
 +CONFIG_SF_DEFAULT_MODE=0
@@ -5224,6 +5219,7 @@ Index: u-boot/configs/qsmp-1510_mfg_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -5243,7 +5239,7 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1510_noenv_defconfig
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,129 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5257,7 +5253,6 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +CONFIG_TXMP_SPI=y
 +CONFIG_TXMP_NAND=y
 +CONFIG_KARO_UBOOT_NOENV=y
-+CONFIG_SPL_FS_FAT=y
 +CONFIG_SPL_SPI_FLASH_SUPPORT=y
 +CONFIG_SPL_SPI_SUPPORT=y
 +# CONFIG_ARMV7_VIRT is not set
@@ -5266,11 +5261,11 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +CONFIG_DISTRO_DEFAULTS=y
 +# CONFIG_ANDROID_BOOT_IMAGE is not set
 +CONFIG_FIT=y
++CONFIG_NAND_BOOT=y
 +CONFIG_QSPI_BOOT=y
 +CONFIG_BOOTDELAY=-1
 +CONFIG_BOOTCOMMAND="run bootcmd_${boot_mode} bootm_cmd"
 +CONFIG_VERSION_VARIABLE=y
-+CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_USE_PARTITION=y
 +CONFIG_SPL_ENV_SUPPORT=y
 +CONFIG_SPL_SAVEENV=y
 +CONFIG_SPL_FS_EXT4=y
@@ -5288,11 +5283,11 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +# CONFIG_CMD_FLASH is not set
 +CONFIG_CMD_FUSE=y
 +CONFIG_CMD_GPIO=y
-+CONFIG_CMD_GPT=y
 +CONFIG_CMD_I2C=y
 +# CONFIG_CMD_LOADS is not set
 +CONFIG_CMD_MMC=y
 +CONFIG_CMD_MTD=y
++CONFIG_CMD_NAND=y
 +CONFIG_CMD_READ=y
 +CONFIG_CMD_REMOTEPROC=y
 +CONFIG_CMD_SF_TEST=y
@@ -5306,9 +5301,9 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +CONFIG_CMD_UUID=y
 +CONFIG_CMD_EXT4_WRITE=y
 +CONFIG_CMD_MTDPARTS=y
++CONFIG_CMD_UBI=y
 +# CONFIG_SPL_DOS_PARTITION is not set
 +# CONFIG_ISO_PARTITION is not set
-+CONFIG_PARTITION_TYPE_GUID=y
 +CONFIG_OF_LIVE=y
 +CONFIG_DEFAULT_DEVICE_TREE="stm32mp151a-qsmp-1510"
 +CONFIG_ENV_IS_IN_NAND=y
@@ -5318,7 +5313,7 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +CONFIG_FASTBOOT_BUF_SIZE=0x02000000
 +CONFIG_FASTBOOT_USB_DEV=1
 +CONFIG_FASTBOOT_FLASH=y
-+CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_FLASH_NAND=y
 +CONFIG_DM_HWSPINLOCK=y
 +CONFIG_HWSPINLOCK_STM32=y
 +CONFIG_DM_I2C=y
@@ -5331,10 +5326,12 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +CONFIG_DM_MMC=y
 +CONFIG_STM32_SDMMC2=y
 +CONFIG_MTD=y
++CONFIG_SPL_NAND_SIMPLE=y
 +CONFIG_MTD_SPI_NAND=y
 +CONFIG_DM_SPI_FLASH=y
 +CONFIG_SF_DEFAULT_MODE=0
 +CONFIG_SF_DEFAULT_SPEED=50000000
++CONFIG_SPI_FLASH_NETSOL=y
 +CONFIG_PHY_MICREL=y
 +CONFIG_PHY_MICREL_KSZ90X1=y
 +CONFIG_DM_ETH=y
@@ -5356,6 +5353,7 @@ Index: u-boot/configs/qsmp-1510_noenv_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -5375,7 +5373,7 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1510_trusted_defconfig
-@@ -0,0 +1,117 @@
+@@ -0,0 +1,123 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5390,6 +5388,7 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 +CONFIG_DISTRO_DEFAULTS=y
 +# CONFIG_ANDROID_BOOT_IMAGE is not set
 +CONFIG_FIT=y
++CONFIG_NAND_BOOT=y
 +CONFIG_QSPI_BOOT=y
 +CONFIG_BOOTDELAY=-2
 +CONFIG_BOOTCOMMAND="run bootcmd_${boot_mode} bootm_cmd"
@@ -5406,13 +5405,14 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 +# CONFIG_CMD_FLASH is not set
 +CONFIG_CMD_FUSE=y
 +CONFIG_CMD_GPIO=y
-+CONFIG_CMD_GPT=y
 +CONFIG_CMD_I2C=y
 +# CONFIG_CMD_LOADS is not set
 +CONFIG_CMD_MMC=y
 +CONFIG_CMD_MTD=y
++CONFIG_CMD_NAND=y
 +CONFIG_CMD_READ=y
 +CONFIG_CMD_REMOTEPROC=y
++CONFIG_CMD_SF_TEST=y
 +CONFIG_CMD_USB=y
 +CONFIG_CMD_USB_MASS_STORAGE=y
 +CONFIG_BOOTP_RANDOM_ID=y
@@ -5427,7 +5427,6 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 +CONFIG_CMD_MTDPARTS=y
 +CONFIG_CMD_UBI=y
 +# CONFIG_ISO_PARTITION is not set
-+CONFIG_PARTITION_TYPE_GUID=y
 +CONFIG_OF_LIVE=y
 +CONFIG_DEFAULT_DEVICE_TREE="stm32mp151a-qsmp-1510"
 +CONFIG_ENV_IS_IN_NAND=y
@@ -5437,7 +5436,7 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 +CONFIG_FASTBOOT_BUF_SIZE=0x02000000
 +CONFIG_FASTBOOT_USB_DEV=1
 +CONFIG_FASTBOOT_FLASH=y
-+CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_FLASH_NAND=y
 +CONFIG_DM_HWSPINLOCK=y
 +CONFIG_HWSPINLOCK_STM32=y
 +CONFIG_DM_I2C=y
@@ -5451,6 +5450,10 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 +CONFIG_STM32_SDMMC2=y
 +CONFIG_MTD=y
 +CONFIG_MTD_SPI_NAND=y
++CONFIG_DM_SPI_FLASH=y
++CONFIG_SF_DEFAULT_MODE=0
++CONFIG_SF_DEFAULT_SPEED=50000000
++CONFIG_SPI_FLASH_NETSOL=y
 +CONFIG_PHY_MICREL=y
 +CONFIG_PHY_MICREL_KSZ90X1=y
 +CONFIG_DM_ETH=y
@@ -5470,6 +5473,7 @@ Index: u-boot/configs/qsmp-1510_trusted_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -5497,7 +5501,7 @@ Index: u-boot/configs/qsmp-1530_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1530_defconfig
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,137 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5612,6 +5616,7 @@ Index: u-boot/configs/qsmp-1530_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -5638,7 +5643,7 @@ Index: u-boot/configs/qsmp-1530_mfg_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1530_mfg_defconfig
-@@ -0,0 +1,106 @@
+@@ -0,0 +1,107 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5732,6 +5737,7 @@ Index: u-boot/configs/qsmp-1530_mfg_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_GADGET=y
@@ -5749,7 +5755,7 @@ Index: u-boot/configs/qsmp-1530_noenv_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1530_noenv_defconfig
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,126 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5861,6 +5867,7 @@ Index: u-boot/configs/qsmp-1530_noenv_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -5879,7 +5886,7 @@ Index: u-boot/configs/qsmp-1530_trusted_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/qsmp-1530_trusted_defconfig
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,120 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -5977,6 +5984,7 @@ Index: u-boot/configs/qsmp-1530_trusted_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -6003,7 +6011,7 @@ Index: u-boot/configs/txmp-1530_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/txmp-1530_defconfig
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,133 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -6114,6 +6122,7 @@ Index: u-boot/configs/txmp-1530_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -6140,7 +6149,7 @@ Index: u-boot/configs/txmp-1530_mfg_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/txmp-1530_mfg_defconfig
-@@ -0,0 +1,102 @@
+@@ -0,0 +1,103 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -6230,6 +6239,7 @@ Index: u-boot/configs/txmp-1530_mfg_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_GADGET=y
@@ -6247,7 +6257,7 @@ Index: u-boot/configs/txmp-1530_noenv_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/txmp-1530_noenv_defconfig
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,122 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -6355,6 +6365,7 @@ Index: u-boot/configs/txmp-1530_noenv_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -6373,7 +6384,7 @@ Index: u-boot/configs/txmp-1530_trusted_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/txmp-1530_trusted_defconfig
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,116 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -6467,6 +6478,7 @@ Index: u-boot/configs/txmp-1530_trusted_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -6739,7 +6751,7 @@ Index: u-boot/configs/txmp-1570_noenv_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/txmp-1570_noenv_defconfig
-@@ -0,0 +1,121 @@
+@@ -0,0 +1,122 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -6847,6 +6859,7 @@ Index: u-boot/configs/txmp-1570_noenv_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -6865,7 +6878,7 @@ Index: u-boot/configs/txmp-1570_trusted_defconfig
 ===================================================================
 --- /dev/null
 +++ u-boot/configs/txmp-1570_trusted_defconfig
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,116 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_STM32MP=y
 +CONFIG_SYS_MALLOC_F_LEN=0x3000
@@ -6959,6 +6972,7 @@ Index: u-boot/configs/txmp-1570_trusted_defconfig
 +CONFIG_STM32_QSPI=y
 +CONFIG_USB=y
 +CONFIG_DM_USB=y
++CONFIG_DM_USB_GADGET=y
 +CONFIG_USB_EHCI_HCD=y
 +CONFIG_USB_EHCI_GENERIC=y
 +CONFIG_USB_DWC2=y
@@ -6981,3 +6995,22 @@ Index: u-boot/configs/txmp-1570_trusted_defconfig
 +# CONFIG_REGEX is not set
 +CONFIG_FDT_FIXUP_PARTITIONS=y
 +# CONFIG_EFI_LOADER is not set
+Index: u-boot/board/karo/txmp/nand.c
+===================================================================
+--- /dev/null
++++ u-boot/board/karo/txmp/nand.c
+@@ -0,0 +1,14 @@
++// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
++/*
++ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
++ */
++
++#include <config.h>
++#include <common.h>
++#include <nand.h>
++
++int board_nand_init(struct nand_chip *nand)
++{
++	pr_info("%s@%d: \n", __func__, __LINE__);
++	return 0;
++}

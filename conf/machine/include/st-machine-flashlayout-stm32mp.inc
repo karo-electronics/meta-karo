@@ -68,8 +68,8 @@ FLASHLAYOUT_TYPE_LABELS_emmc = "${MACHINE}"
 #           5) Default 'list' to 'none' when not defined
 # -----------------------------------------------------------------------------
 
-FLASHLAYOUT_PARTITION_LABELS_basic_emmc           = "fsbl1-boot ssbl-boot fsbl1 fsbl2 ssbl bootfs rootfs"
-FLASHLAYOUT_PARTITION_LABELS_trusted_emmc           = "fsbl1-boot ssbl-boot fsbl1 fsbl2 ssbl bootfs rootfs"
+FLASHLAYOUT_PARTITION_LABELS_basic_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs"
+#FLASHLAYOUT_PARTITION_LABELS_trusted_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs"
 
 # -----------------------------------------------------------------------------
 # Partition configuration for each partition label
@@ -169,16 +169,16 @@ FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl-boot    = "u-boot-mfg.bin"
 FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl1        = "tf-a.stm32"
 FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl1  = "u-boot-spl.stm32"
 #FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl1  = "none"
-FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl2        = "tf-a.stm32"
+#FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl2        = "tf-a.stm32"
 #FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl2  = "u-boot-spl.stm32"
-FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl2  = "none"
+#FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl2  = "none"
 FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl         = "u-boot.bin"
 #FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl         = "none"
 FLASHLAYOUT_PARTITION_BIN2LOAD_basic_ssbl   = "u-boot.bin"
 #FLASHLAYOUT_PARTITION_BIN2LOAD_basic_ssbl   = "none"
 #FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl2        = "u-boot.stm32"
-FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl2        = "none"
-FLASHLAYOUT_PARTITION_BIN2LOAD_env          = "none"
+#FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl2        = "none"
+#FLASHLAYOUT_PARTITION_BIN2LOAD_env          = "none"
 FLASHLAYOUT_PARTITION_BIN2LOAD_bootfs       = "${STM32MP_BOOTFS_IMAGE}-${MACHINE}.ext4"
 FLASHLAYOUT_PARTITION_BIN2LOAD_rootfs       = "${IMAGE_LINK_NAME}.ext4"
 FLASHLAYOUT_PARTITION_BIN2LOAD_userfs       = "${STM32MP_USERFS_IMAGE}-${MACHINE}.ext4"

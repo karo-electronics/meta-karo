@@ -19,14 +19,15 @@ Index: u-boot/include/dm/ofnode.h
   *
   * This cannot be called if the reference contains an offset.
   *
-@@ -157,8 +158,8 @@ static inline bool ofnode_is_np(ofnode n
+@@ -156,9 +157,8 @@ static inline bool ofnode_is_np(ofnode n
+ 	 * Check our assumption that flat tree offsets are not used when a
  	 * live tree is in use.
  	 */
- 	assert(!ofnode_valid(node) ||
+-	assert(!ofnode_valid(node) ||
 -	       (of_live_active() ? _ofnode_to_np(node)
 -				  : _ofnode_to_np(node)));
-+	       (of_live_active() ? ofnode_to_np(node)
-+				  : ofnode_to_np(node)));
++	assert(ofnode_valid(node));
++	assert(of_live_active() ? node.of_offset < 0 : 1);
  #endif
  	return of_live_active() && ofnode_valid(node);
  }

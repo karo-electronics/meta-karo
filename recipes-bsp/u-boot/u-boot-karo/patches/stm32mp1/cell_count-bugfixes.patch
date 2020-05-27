@@ -35,17 +35,7 @@ Index: u-boot/drivers/core/ofnode.c
 ===================================================================
 --- u-boot.orig/drivers/core/ofnode.c
 +++ u-boot/drivers/core/ofnode.c
-@@ -3,6 +3,9 @@
-  * Copyright (c) 2017 Google, Inc
-  * Written by Simon Glass <sjg@chromium.org>
-  */
-+//#define DEBUG
-+
-+#define Debug(fmt...) do { if (0) printf(fmt); } while (0)
- 
- #include <common.h>
- #include <dm.h>
-@@ -22,7 +25,14 @@ int ofnode_read_u32(ofnode node, const c
+@@ -22,7 +22,14 @@ int ofnode_read_u32(ofnode node, const c
  	debug("%s: %s: ", __func__, propname);
  
  	if (ofnode_is_np(node)) {
@@ -61,41 +51,18 @@ Index: u-boot/drivers/core/ofnode.c
  	} else {
  		const fdt32_t *cell;
  		int len;
-@@ -167,7 +177,7 @@ ofnode ofnode_find_subnode(ofnode node,
- 	ofnode subnode;
- 
- 	assert(ofnode_valid(node));
--	debug("%s: %s: ", __func__, subnode_name);
-+	Debug("%s: %s->%s: ", __func__, ofnode_get_name(node), subnode_name);
- 
- 	if (ofnode_is_np(node)) {
- 		const struct device_node *np = ofnode_to_np(node);
-@@ -182,7 +192,7 @@ ofnode ofnode_find_subnode(ofnode node,
- 				ofnode_to_offset(node), subnode_name);
- 		subnode = offset_to_ofnode(ooffset);
- 	}
--	debug("%s\n", ofnode_valid(subnode) ?
-+	Debug("%s\n", ofnode_valid(subnode) ?
- 	      ofnode_get_name(subnode) : "<none>");
- 
- 	return subnode;
-@@ -386,9 +396,13 @@ int ofnode_parse_phandle_with_args(ofnod
- 		struct of_phandle_args args;
+@@ -387,8 +394,8 @@ int ofnode_parse_phandle_with_args(ofnod
  		int ret;
  
-+		Debug("%s@%d: parsing phandle[%d] '%s/%s'\n", __func__, __LINE__,
-+		      index, node.np->full_name, list_name);
-+
  		ret = of_parse_phandle_with_args(ofnode_to_np(node),
 -						 list_name, cells_name, index,
 -						 &args);
 +						 list_name, cells_name,
 +						 cell_count, index, &args);
-+		Debug("%s@%d: ret=%d\n", __func__, __LINE__, ret);
  		if (ret)
  			return ret;
  		ofnode_from_of_phandle_args(&args, out_args);
-@@ -409,15 +423,17 @@ int ofnode_parse_phandle_with_args(ofnod
+@@ -409,15 +416,17 @@ int ofnode_parse_phandle_with_args(ofnod
  }
  
  int ofnode_count_phandle_with_args(ofnode node, const char *list_name,
@@ -117,24 +84,6 @@ Index: u-boot/drivers/core/ofnode.c
  }
  
  ofnode ofnode_path(const char *path)
-@@ -460,7 +476,7 @@ static int decode_timing_property(ofnode
- 
- 	length = ofnode_read_size(node, name);
- 	if (length < 0) {
--		debug("%s: could not find property %s\n",
-+		Debug("%s: could not find property %s\n",
- 		      ofnode_get_name(node), name);
- 		return length;
- 	}
-@@ -890,7 +906,7 @@ int ofnode_write_string(ofnode node, con
- 
- 	assert(ofnode_valid(node));
- 
--	debug("%s: %s = %s", __func__, propname, value);
-+	Debug("%s: %s = %s\n", __func__, propname, value);
- 
- 	return ofnode_write_prop(node, propname, strlen(value) + 1, value);
- }
 Index: u-boot/drivers/core/read.c
 ===================================================================
 --- u-boot.orig/drivers/core/read.c
@@ -403,12 +352,3 @@ Index: u-boot/drivers/usb/gadget/dwc2_udc_otg.c
  	if (count <= 0)
  		return count;
  
-@@ -1182,6 +1182,8 @@ static int dwc2_udc_otg_probe(struct ude
- 			     GGPIO_STM32_OTG_GCCFG_VBDEN |
- 			     GGPIO_STM32_OTG_GCCFG_IDEN);
- 	}
-+pr_info("%s@%d: ggpio=%08x\n", __func__, __LINE__,
-+	readl(&usbotg_reg->ggpio));
- 
- 	if (platdata->force_b_session_valid)
- 		/* Override B session bits : value and enable */

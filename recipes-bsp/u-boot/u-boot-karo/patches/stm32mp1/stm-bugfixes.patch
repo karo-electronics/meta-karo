@@ -170,15 +170,7 @@ Index: u-boot/arch/arm/dts/stm32mp157-u-boot.dtsi
 ===================================================================
 --- u-boot.orig/arch/arm/dts/stm32mp157-u-boot.dtsi
 +++ u-boot/arch/arm/dts/stm32mp157-u-boot.dtsi
-@@ -3,6 +3,7 @@
-  * Copyright : STMicroelectronics 2018
-  */
- 
-+
- / {
- 	aliases {
- 		gpio0 = &gpioa;
-@@ -16,9 +17,7 @@
+@@ -16,9 +16,7 @@
  		gpio8 = &gpioi;
  		gpio9 = &gpioj;
  		gpio10 = &gpiok;
@@ -188,7 +180,7 @@ Index: u-boot/arch/arm/dts/stm32mp157-u-boot.dtsi
  	};
  
  	clocks {
-@@ -107,10 +106,6 @@
+@@ -107,10 +105,6 @@
  	u-boot,dm-pre-reloc;
  };
  
@@ -199,7 +191,7 @@ Index: u-boot/arch/arm/dts/stm32mp157-u-boot.dtsi
  &iwdg2 {
  	u-boot,dm-pre-reloc;
  };
-@@ -124,10 +119,6 @@
+@@ -124,10 +118,6 @@
  	u-boot,dm-pre-reloc;
  };
  

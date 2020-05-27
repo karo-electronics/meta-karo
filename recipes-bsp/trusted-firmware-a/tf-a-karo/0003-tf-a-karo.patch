@@ -2,7 +2,7 @@ Index: arm-trusted-firmware.git/build.sh
 ===================================================================
 --- /dev/null
 +++ arm-trusted-firmware.git/build.sh
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,59 @@
 +#!/bin/bash
 +options="r"
 +debug=true
@@ -60,6 +60,7 @@ Index: arm-trusted-firmware.git/build.sh
 +    echo make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} PLAT=${PLAT:-txmp} DTB_FILE_NAME="$dtb" "${make_opts[@]}" "$@"
 +    make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} PLAT=${PLAT:-txmp} DTB_FILE_NAME="$dtb" "${make_opts[@]}" "$@"
 +    cp -avu "${builddir}/tf-a-${dtb%.*}.stm32" "${installdir}/tf-a-${dtb%.*}${suffix}-${date}.stm32"
++    ln -snvf "tf-a-${dtb%.*}${suffix}-${date}.stm32" "${installdir}/tf-a-${dtb%.*}${suffix}.stm32"
 +done
 Index: arm-trusted-firmware.git/fdts/stm32mp15-ddr3-1x2Gb-1866-binF.dtsi
 ===================================================================
@@ -1335,26 +1336,6 @@ Index: arm-trusted-firmware.git/fdts/stm32mp151a-qsmp.h
 +#define DDR_ADDRMAP6	0x0F0F0606
 +
 +#include "stm32mp15-mx.h"
-Index: arm-trusted-firmware.git/fdts/stm32mp157cad-pinctrl.dtsi
-===================================================================
---- arm-trusted-firmware.git.orig/fdts/stm32mp157cad-pinctrl.dtsi
-+++ arm-trusted-firmware.git/fdts/stm32mp157cad-pinctrl.dtsi
-@@ -5,6 +5,7 @@
-  */
- 
- #include "stm32mp157-pinctrl.dtsi"
-+
- / {
- 	soc {
- 		pinctrl: pin-controller@50002000 {
-@@ -58,5 +59,7 @@
- 				gpio-ranges = <&pinctrl 0 112 2>;
- 			};
- 		};
-+
-+		/delete-node/ pin-controller-z@54004000;
- 	};
- };
 Index: arm-trusted-firmware.git/plat/karo/txmp/bl2_plat_setup.c
 ===================================================================
 --- /dev/null
@@ -6834,7 +6815,7 @@ Index: arm-trusted-firmware.git/plat/karo/txmp/stm32mp1_shared_resources.c
 ===================================================================
 --- /dev/null
 +++ arm-trusted-firmware.git/plat/karo/txmp/stm32mp1_shared_resources.c
-@@ -0,0 +1,831 @@
+@@ -0,0 +1,830 @@
 +// SPDX-License-Identifier: BSD-3-Clause
 +/*
 + * Copyright (c) 2017-2019, STMicroelectronics
@@ -7665,7 +7646,6 @@ Index: arm-trusted-firmware.git/plat/karo/txmp/stm32mp1_shared_resources.c
 +	check_etzpc_secure_configuration();
 +	check_gpio_secure_configuration();
 +}
-+
 Index: arm-trusted-firmware.git/plat/karo/txmp/stm32mp1_stack_protector.c
 ===================================================================
 --- /dev/null
