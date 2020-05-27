@@ -68,7 +68,7 @@ FLASHLAYOUT_TYPE_LABELS_emmc = "${MACHINE}"
 #           5) Default 'list' to 'none' when not defined
 # -----------------------------------------------------------------------------
 
-FLASHLAYOUT_PARTITION_LABELS_basic_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs"
+FLASHLAYOUT_PARTITION_LABELS_basic_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs userfs"
 #FLASHLAYOUT_PARTITION_LABELS_trusted_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs"
 
 # -----------------------------------------------------------------------------
