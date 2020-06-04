@@ -28,6 +28,25 @@ S = "${WORKDIR}/git"
 
 BOOT_TOOLS_mx8m = "imx-boot-tools"
 
+# append git hash to u-boot name
+SCMVERSION ??= "y"
+LOCALVERSION ??= "+karo"
+
+UBOOT_LOCALVERSION = "${LOCALVERSION}"
+
+do_compile_prepend() {
+	if [ "${SCMVERSION}" = "y" ]; then
+		# Add GIT revision to the local version
+		head=`cd ${S} ; git rev-parse --verify --short HEAD 2> /dev/null`
+		printf "%s%s%s" "${UBOOT_LOCALVERSION}" +g $head > ${S}/.scmversion
+		printf "%s%s%s" "${UBOOT_LOCALVERSION}" +g $head > ${B}/.scmversion
+    else
+		printf "%s" "${UBOOT_LOCALVERSION}" > ${S}/.scmversion
+		printf "%s" "${UBOOT_LOCALVERSION}" > ${B}/.scmversion
+	fi
+}
+
+
 do_deploy_append_mx8m () {
     # Deploy the mkimage, u-boot-nodtb.bin and fsl-imx8mq-XX.dtb for mkimage to generate boot binary
     if [ -n "${UBOOT_CONFIG}" ]; then
