@@ -31,25 +31,28 @@ SRC_URI_append = " \
 	file://0010-interrupts-extended-bugfix.patch \
 	file://0011-rtc-bugfix.patch \
 	file://0012-txmp-support.patch \
+	file://0013-dsi83-with-tm101-panel-on-qsbase2.patch \
 "
 
 SRC_URI_append_stm32mp1 = " \
 	file://defconfig \
-	file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp15-karo-mipi-mb.dtsi;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp15-qsmp.dtsi;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp153a-qsmp-1530-qsbase1.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp153a-qsmp-1530.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot  \
-	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot  \
+	file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-karo-mipi-mb.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-qsmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-qsmp-1530-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-qsmp-1530.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase2.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
 "
 
 COMPATIBLE_MACHINE_stm32mp1 = "(txmp-.*|qsmp-.*)"
