@@ -14,7 +14,7 @@ UBOOT_ENTRYPOINT_txul ?= "0x80008000"
 UBOOT_CONFIG ??= "mfg generic"
 
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
-PREFERRED_VERSION_linux-karo = "5.4"
+PREFERRED_VERSION_linux-karo = "5.7"
 KERNEL_IMAGETYPE ??= "uImage"
 
 # Ship kernel modules
