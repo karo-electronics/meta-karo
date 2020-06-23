@@ -17,22 +17,22 @@ SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
 	file://defconfig \
-	file://0002-display-support.patch \
-	file://0003-panel-dpi-bus-format.patch \
-	file://0004-drm-mode-video-mode-bus-flags.patch \
-	file://0001-usbotg_id-bugfix.patch \
-	file://0002-usb-phy-bugfix.patch \
-	file://0003-qspi-bus-bugfix.patch \
-	file://0004-stmmac-axi-bugfix.patch \
-	file://0005-stm32cryp-dependencies.patch \
-	file://0006-remove-pinctrl-z.patch \
-	file://0007-dwc2-usbotg-bugfix.patch \
-	file://0008-ehci-wakeirq.patch \
-	file://0009-optional-irqs.patch \
-	file://0010-interrupts-extended-bugfix.patch \
-	file://0011-rtc-bugfix.patch \
-	file://0012-txmp-support.patch \
-	file://0013-dsi83-with-tm101-panel-on-qsbase2.patch \
+	file://0001-display-support.patch \
+	file://0002-panel-dpi-bus-format.patch \
+	file://0003-ltdc-missing-bus-flags.patch \
+	file://0004-usbotg_id-bugfix.patch \
+	file://0005-usb-phy-bugfix.patch \
+	file://0006-qspi-bus-bugfix.patch \
+	file://0007-stmmac-axi-bugfix.patch \
+	file://0008-stm32cryp-dependencies.patch \
+	file://0009-remove-pinctrl-z.patch \
+	file://0010-dwc2-usbotg-bugfix.patch \
+	file://0011-ehci-wakeirq.patch \
+	file://0012-optional-irqs.patch \
+	file://0013-interrupts-extended-bugfix.patch \
+	file://0014-rtc-bugfix.patch \
+	file://0015-txmp-support.patch \
+	file://0016-dsi83-with-tm101-panel-on-qsbase2.patch \
 	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
 	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
 "
