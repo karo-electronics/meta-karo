@@ -33,6 +33,8 @@ SRC_URI_append = " \
 	file://0014-rtc-bugfix.patch \
 	file://0015-txmp-support.patch \
 	file://0016-dsi83-with-tm101-panel-on-qsbase2.patch \
+	file://0017-raspberrypi-7inch-touchscreen-support.patch \
+	file://0018-can-m_can-make-m_can-driver-work-again-with-sleep-st.patch \
 	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
 	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
 "
@@ -96,6 +98,8 @@ SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570-qsbase2.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase2-dsi83.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase2-raspi.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
