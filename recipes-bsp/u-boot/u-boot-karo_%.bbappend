@@ -6,6 +6,7 @@ SRC_URI_append = " \
 
 SRC_URI_append_mx6 = " \
 	file://0001-dont-use-soft-float.patch \
+	file://ums-watchdog-reset.patch \
 "
 
 SRC_URI_append_stm32mp1 = " \
@@ -59,4 +60,5 @@ SRC_URI_append_stm32mp1 = " \
 	file://txmp-support.patch \
 	file://reloc-bugfix.patch \
 	file://reloc-checks.patch \
+	file://ums-watchdog-reset.patch \
 "
