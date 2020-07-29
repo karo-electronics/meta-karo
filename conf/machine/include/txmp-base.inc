@@ -8,6 +8,10 @@ KBUILD_BUILD_HOST := "karo-electronics.de"
 
 UBOOT_CONFIG ??= "mfg generic"
 
+EXTRA_IMAGEDEPENDS += "u-boot-karo"
+PREFERRED_PROVIDER_u-boot ??= "u-boot-karo"
+PREFERRED_PROVIDER_virtual/bootloader ??= "u-boot-karo"
+
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
 PREFERRED_VERSION_linux-karo = "5.7"
 KERNEL_IMAGETYPE = "uImage"
