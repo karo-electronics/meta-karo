@@ -61,4 +61,5 @@ SRC_URI_append_stm32mp1 = " \
 	file://reloc-bugfix.patch \
 	file://reloc-checks.patch \
 	file://ums-watchdog-reset.patch \
+	file://gpt-eraseblk-alignment.patch \
 "
