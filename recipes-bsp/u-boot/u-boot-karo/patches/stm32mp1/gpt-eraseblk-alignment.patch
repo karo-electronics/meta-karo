@@ -74,7 +74,7 @@ Index: u-boot-2020-04-rc4/disk/part_efi.c
  int gpt_fill_pte(struct blk_desc *dev_desc,
  		 gpt_header *gpt_h, gpt_entry *gpt_e,
  		 disk_partition_t *partitions, int parts)
-@@ -455,15 +509,23 @@ int gpt_fill_pte(struct blk_desc *dev_de
+@@ -455,15 +509,22 @@ int gpt_fill_pte(struct blk_desc *dev_de
  		gpt_e[i].starting_lba = cpu_to_le64(start);
  
  		if (offset > (last_usable_lba + 1)) {
