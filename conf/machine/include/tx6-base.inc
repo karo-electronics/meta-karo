@@ -38,7 +38,7 @@ KERNEL_MODULE_PROBECONF += "evbug"
 module_conf_evbug = "blacklist evbug"
 
 # Set Serial consoles
-SERIAL_CONSOLES = "115200;ttymxc0 115200;ttymxc1 115200;ttymxc2"
+SERIAL_CONSOLES ?= "115200;ttymxc0 115200;ttymxc1 115200;ttymxc2"
 
 MACHINE_FEATURES = " \
                  alsa \
