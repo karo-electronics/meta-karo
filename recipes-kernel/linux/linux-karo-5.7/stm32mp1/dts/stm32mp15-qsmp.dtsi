@@ -101,17 +101,23 @@
 
 &sdmmc2 {
 	/* eMMC */
-	pinctrl-names = "default", "opendrain", "sleep";
 	pinctrl-0 = <&qsmp_sdmmc2_pins>;
 	pinctrl-1 = <&qsmp_sdmmc2_opendrain_pins>;
 	pinctrl-2 = <&qsmp_sdmmc2_sleep_pins>;
 	bus-width = <8>;
-	vmmc-supply = <&reg_3v3>;
-	no-1-8-v;
-	no-sd;
-	no-sdio;
-	st,neg-edge;
-	non-removable;
+};
+
+&spi4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi4_pins>;
+	pinctrl-1 = <&spi4_sleep_pins>;
+	status = "okay";
+};
+
+&spi6 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&spi6_pins &spi6_pins_z>;
+	pinctrl-1 = <&spi6_sleep_pins &spi6_sleep_pins_z>;
 	status = "okay";
 };
 
@@ -412,6 +418,28 @@
 		};
 	};
 
+
+	spi6_pins: spi6-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('A', 6, AF8) /* SPI6_MISO */
+				  STM32_PINMUX('A', 5, AF8) /* SPI6_SCK */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+	};
+
+	spi6_sleep_pins: spi6-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('A', 6, ANALOG) /* SPI6_MISO */
+				  STM32_PINMUX('A', 5, ANALOG) /* SPI6_SCK */
+			>;
+		};
+	};
+
 	qsmp_usart2_pins: qsmp-usart2-pins {
 		pins1 {
 			pinmux = <
@@ -493,6 +521,27 @@
 			pinmux = <
 				  STM32_PINMUX('Z', 0, ANALOG) /* I2C2_SCL */
 				  STM32_PINMUX('Z', 1, ANALOG) /* I2C2_SDA */
+			>;
+		};
+	};
+
+	spi6_pins_z: spi6-pins-z {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('Z', 3, AF8) /* SPI6_NSS */
+				  STM32_PINMUX('Z', 2, AF8) /* SPI6_MOSI */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+	};
+
+	spi6_sleep_pins_z: spi6-sleep-pins-z {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('Z', 3, ANALOG) /* SPI6_NSS */
+				  STM32_PINMUX('Z', 2, ANALOG) /* SPI6_MOSI */
 			>;
 		};
 	};
