@@ -137,14 +137,14 @@
 		data-mapping = "rgb24";
 
 		panel-timing {
-			clock-frequency = <33264000>;
-			hactive = <800>;
+			clock-frequency = <25200000>;
+			hactive = <640>;
 			vactive = <480>;
-			hback-porch = <88>;
-			hsync-len = <128>;
-			hfront-porch = <40>;
-			vback-porch = <33>;
-			vsync-len = <2>;
+			hback-porch = <114>;
+			hsync-len = <30>;
+			hfront-porch = <16>;
+			vback-porch = <32>;
+			vsync-len = <3>;
 			vfront-porch = <10>;
 			hsync-active = <0>;
 			vsync-active = <0>;

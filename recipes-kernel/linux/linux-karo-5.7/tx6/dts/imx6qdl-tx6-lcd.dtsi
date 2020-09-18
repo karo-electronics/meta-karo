@@ -71,12 +71,29 @@
 	};
 
 	lcd_panel: lcd-panel {
-		compatible = "edt,etm0700g0dh6";
+		compatible = "panel-dpi";
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_lcd0_pwr>;
 		enable-gpios = <&gpio3 29 GPIO_ACTIVE_HIGH>;
 		power-supply = <&reg_3v3>;
 		backlight = <&backlight>;
+		data-mapping = "rgb24";
+
+		panel-timing {
+			clock-frequency = <25200000>;
+			hactive = <640>;
+			vactive = <480>;
+			hback-porch = <114>;
+			hsync-len = <30>;
+			hfront-porch = <16>;
+			vback-porch = <32>;
+			vsync-len = <3>;
+			vfront-porch = <10>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <1>;
+			pixelclk-active = <0>;
+		};
 
 		port {
 			lcd_panel_in: endpoint {

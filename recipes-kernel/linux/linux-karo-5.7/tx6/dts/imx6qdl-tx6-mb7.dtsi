@@ -52,12 +52,6 @@
 		power-supply = <&reg_lcd1_pwr>;
 	};
 
-	lcd-panel {
-		compatible = "edt,et057090dhu";
-		bus-format-override = "rgb24";
-		pixelclk-active = <0>;
-	};
-
 	lvds0-panel {
 		compatible = "edt,etml1010g0dka";
 		bus-format-override = "spwg-18";
