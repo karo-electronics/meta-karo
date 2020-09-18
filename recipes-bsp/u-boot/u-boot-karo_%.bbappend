@@ -6,7 +6,6 @@ SRC_URI_append = " \
 
 SRC_URI_append_mx6 = " \
 	file://0001-dont-use-soft-float.patch \
-	file://ums-watchdog-reset.patch \
 "
 
 SRC_URI_append_stm32mp1 = " \

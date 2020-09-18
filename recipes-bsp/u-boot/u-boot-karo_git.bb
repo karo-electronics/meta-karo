@@ -12,7 +12,7 @@ DEPENDS_append_stm32mp1 = " bison-native"
 
 SRCBRANCH_mx6 = "master"
 SRC_URI_mx6 = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
-SRCREV_mx6 = "6d7e3f066d2b977b02f6a471e749030d62ae5bde"
+SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
 
 SRCBRANCH_stm32mp1 = "master"
 SRC_URI_stm32mp1 = "git://git.denx.de/u-boot.git;protocol=git;branch=${SRCBRANCH}"

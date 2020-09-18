@@ -3804,7 +3804,7 @@ Index: u-boot/arch/arm/dts/stm32mp15-karo.dtsi
 +	uart4_pins_mx: uart4-pins-mx {
 +		pins1 {
 +			pinmux = <STM32_PINMUX('B', 2, AF8)>; /* UART4_RX */
-+			bias-disable;
++			bias-pull-up;
 +		};
 +
 +		pins2 {
@@ -4496,7 +4496,7 @@ Index: u-boot/arch/arm/dts/stm32mp151a-qsmp-1510-u-boot.dtsi
 ===================================================================
 --- /dev/null
 +++ u-boot/arch/arm/dts/stm32mp151a-qsmp-1510-u-boot.dtsi
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,71 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/*
 + * Copyright (C) 2020: Lothar Waßmann <LW@KARO-electronics.de>
@@ -4566,8 +4566,6 @@ Index: u-boot/arch/arm/dts/stm32mp151a-qsmp-1510-u-boot.dtsi
 +
 +	pins2 {
 +		u-boot,dm-pre-reloc;
-+		/* pull-up on rx to avoid floating level */
-+		bias-pull-up;
 +	};
 +};
 Index: u-boot/arch/arm/dts/stm32mp151a-qsmp-1510.dts
@@ -4625,7 +4623,7 @@ Index: u-boot/arch/arm/dts/stm32mp153a-qsmp-1530-u-boot.dtsi
 ===================================================================
 --- /dev/null
 +++ u-boot/arch/arm/dts/stm32mp153a-qsmp-1530-u-boot.dtsi
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,71 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/*
 + * Copyright (C) 2020: Lothar Waßmann <LW@KARO-electronics.de>
@@ -4695,8 +4693,6 @@ Index: u-boot/arch/arm/dts/stm32mp153a-qsmp-1530-u-boot.dtsi
 +
 +	pins2 {
 +		u-boot,dm-pre-reloc;
-+		/* pull-up on rx to avoid floating level */
-+		bias-pull-up;
 +	};
 +};
 Index: u-boot/arch/arm/dts/stm32mp153a-qsmp-1530.dts
@@ -4750,7 +4746,7 @@ Index: u-boot/arch/arm/dts/stm32mp153a-txmp-1530-u-boot.dtsi
 ===================================================================
 --- /dev/null
 +++ u-boot/arch/arm/dts/stm32mp153a-txmp-1530-u-boot.dtsi
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,71 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/*
 + * Copyright (C) 2019: Lothar Waßmann <LW@KARO-electronics.de>
@@ -4820,8 +4816,6 @@ Index: u-boot/arch/arm/dts/stm32mp153a-txmp-1530-u-boot.dtsi
 +
 +	pins2 {
 +		u-boot,dm-pre-reloc;
-+		/* pull-up on rx to avoid floating level */
-+		bias-pull-up;
 +	};
 +};
 Index: u-boot/arch/arm/dts/stm32mp153a-txmp-1530.dts
@@ -4847,7 +4841,7 @@ Index: u-boot/arch/arm/dts/stm32mp157c-txmp-1570-u-boot.dtsi
 ===================================================================
 --- /dev/null
 +++ u-boot/arch/arm/dts/stm32mp157c-txmp-1570-u-boot.dtsi
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,71 @@
 +// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 +/*
 + * Copyright (C) 2019: Lothar Waßmann <LW@KARO-electronics.de>
@@ -4917,8 +4911,6 @@ Index: u-boot/arch/arm/dts/stm32mp157c-txmp-1570-u-boot.dtsi
 +
 +	pins2 {
 +		u-boot,dm-pre-reloc;
-+		/* pull-up on rx to avoid floating level */
-+		bias-pull-up;
 +	};
 +};
 Index: u-boot/arch/arm/dts/stm32mp157c-txmp-1570.dts
