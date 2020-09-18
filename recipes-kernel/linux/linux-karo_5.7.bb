@@ -35,6 +35,7 @@ SRC_URI_append = " \
 	file://0016-dsi83-with-tm101-panel-on-qsbase2.patch \
 	file://0017-raspberrypi-7inch-touchscreen-support.patch \
 	file://0018-can-m_can-make-m_can-driver-work-again-with-sleep-st.patch \
+	file://0019-parrallel-display-bus-flags-from-display-info.patch \
 	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
 	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
 "
