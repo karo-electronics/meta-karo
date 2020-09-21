@@ -109,8 +109,8 @@
 
 &spi4 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&spi4_pins>;
-	pinctrl-1 = <&spi4_sleep_pins>;
+	pinctrl-0 = <&qsmp_spi4_pins>;
+	pinctrl-1 = <&qsmp_spi4_sleep_pins>;
 	status = "okay";
 };
 
