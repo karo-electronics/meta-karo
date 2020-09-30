@@ -111,14 +111,14 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&qsmp_spi4_pins>;
 	pinctrl-1 = <&qsmp_spi4_sleep_pins>;
-	status = "okay";
+	status = "disabled";
 };
 
 &spi6 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&spi6_pins &spi6_pins_z>;
 	pinctrl-1 = <&spi6_sleep_pins &spi6_sleep_pins_z>;
-	status = "okay";
+	status = "disabled";
 };
 
 &usart2 {
@@ -401,6 +401,7 @@
 				  STM32_PINMUX('E', 2, AF5) /* SPI4_SCK */
 				  STM32_PINMUX('E', 5, AF5) /* SPI4_MISO */
 				  STM32_PINMUX('E', 14, AF5) /* SPI4_MOSI */
+				  STM32_PINMUX('E', 11, AF5) /* SPI4_NSS */
 			>;
 			bias-disable;
 			drive-push-pull;
@@ -414,6 +415,7 @@
 				  STM32_PINMUX('E', 2, ANALOG) /* SPI4_SCK */
 				  STM32_PINMUX('E', 5, ANALOG) /* SPI4_MISO */
 				  STM32_PINMUX('E', 14, ANALOG) /* SPI4_MOSI */
+				  STM32_PINMUX('E', 11, ANALOG) /* SPI4_NSS */
 			>;
 		};
 	};
