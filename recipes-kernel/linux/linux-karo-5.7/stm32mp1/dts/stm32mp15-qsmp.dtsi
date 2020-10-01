@@ -111,14 +111,16 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&qsmp_spi4_pins>;
 	pinctrl-1 = <&qsmp_spi4_sleep_pins>;
-	status = "disabled";
+	cs-gpios = <&gpioe 11 GPIO_ACTIVE_LOW>;
+	status = "okay";
 };
 
 &spi6 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&spi6_pins &spi6_pins_z>;
 	pinctrl-1 = <&spi6_sleep_pins &spi6_sleep_pins_z>;
-	status = "disabled";
+	cs-gpios = <&gpioz 3 GPIO_ACTIVE_LOW>;
+	status = "okay";
 };
 
 &usart2 {
