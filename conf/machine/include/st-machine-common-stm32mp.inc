@@ -51,15 +51,15 @@ BOOTFS_PARTITION_SIZE = "65536"
 # So:
 #   rootfs < Multivolume UBI - (uboot_config + uboot_config_r + bootfs + userfs + UBI Overhead + 4 * 9*eraseblocks)
 #   rootfs < 1016.5MiB - (256KiB + 256KiB + 64MiB + 16MiB + 128MiB + 53360KiB + 4 * 9 * 256KiB)
-#   rootfs < 746.8MiB
-# Proposed value for rootfs is 746MiB
-ROOTFS_PARTITION_SIZE = "763904"
+#   rootfs < 1GiB
+# Proposed value for rootfs is 2GiB
+ROOTFS_PARTITION_SIZE = "2097152"
 # Proposed value for userfs is 128MB (4*32MB)
 USERFS_PARTITION_SIZE = "131072"
 
 # Define the max size for ROOTFS image being built
 # On other image partition such settings is directly done in image recipe
-IMAGE_ROOTFS_MAXSIZE ?= "${ROOTFS_PARTITION_SIZE}"
+IMAGE_ROOTFS_MAXSIZE ?= ""
 
 # Define specific U-Boot config partition settings
 STM32MP_UBOOTCONFIG_NAME   = "uboot_config"

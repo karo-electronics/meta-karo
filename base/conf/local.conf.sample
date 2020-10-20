@@ -108,7 +108,7 @@ DISTRO ?= "karo-minimal"
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
 # We default to deb:
-PACKAGE_CLASSES ?= "package_deb"
+PACKAGE_CLASSES ?= "package_rpm"
 
 #
 # SDK target architecture

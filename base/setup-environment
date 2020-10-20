@@ -166,7 +166,7 @@ for t in $bitbake_target;do
         bitbake_target="$t"
         break
     elif [ "${DISTRO}" = "karo-wayland" ];then
-        bitbake_target="karo-image-weston"
+        bitbake_target="karo-image-weston karo-image-qt5"
         break;
     fi
 done
