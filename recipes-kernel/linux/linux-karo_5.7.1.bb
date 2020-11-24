@@ -116,7 +116,7 @@ SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp151a-qsmp-1510.dts;subdir=git/arch/arm/boot \
 "
 
-LOCALVERSION = "-stable"
+LOCALVERSION = "-karo"
 KERNEL_IMAGETYPE_mx6 = "uImage"
 KERNEL_IMAGETYPE_stm32mp1 = "uImage"
 
@@ -131,5 +131,13 @@ COMPATIBLE_MACHINE_txul = "(txul-.*)"
 COMPATIBLE_MACHINE_stm32mp1 = "(txmp-.*|qsmp-.*)"
 
 do_configure_prepend() {
+set -x
+    # Add GIT revision to the local version
+    head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
+    if ! [ -s "${S}/.scmversion" ] || ! grep -q "$head" ${S}/.scmversion;then
+        echo "+g$head" > "${S}/.scmversion"
+    fi
     install -v "${WORKDIR}/defconfig" "${B}/.config"
+    sed -i '/CONFIG_LOCALVERSION/d' "${B}/.config"
+    echo 'CONFIG_LOCALVERSION="${LOCALVERSION}"' >> "${B}/.config"
 }
