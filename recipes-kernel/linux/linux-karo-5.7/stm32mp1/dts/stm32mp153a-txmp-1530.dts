@@ -6,7 +6,7 @@
 /dts-v1/;
 
 #include "stm32mp153.dtsi"
-#include "stm32mp15-txmp.dtsi"
+#include "stm32mp153-txmp.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1530 module";

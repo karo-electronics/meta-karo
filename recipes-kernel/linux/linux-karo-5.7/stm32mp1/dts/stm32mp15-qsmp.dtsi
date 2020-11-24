@@ -9,8 +9,6 @@
 
 / {
 	aliases {
-		can0 = &m_can1;
-		can1 = &m_can2;
 		i2c1 = &i2c2;
 		i2c2 = &i2c1;
 		mmc1 = &sdmmc1;
@@ -60,6 +58,7 @@
 		reg = <3>;
 		interrupt-parent = <&gpioa>;
 		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
+		micrel,force-master;
 		rxd0-skew-ps = <(420 + 6)>;
 		rxd1-skew-ps = <(420 + 5)>;
 		rxd2-skew-ps = <(420 - 1)>;
@@ -76,14 +75,9 @@
 };
 
 &module_led {
+	pinctrl-0 = <&qsmp_led_pins>;
+	pinctrl-1 = <&qsmp_led_sleep_pins>;
 	gpios = <&gpioa 13 GPIO_ACTIVE_LOW>;
-};
-
-&m_can1 {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&qsmp_fdcan1_pins>;
-	pinctrl-1 = <&qsmp_fdcan1_sleep_pins>;
-	status = "okay";
 };
 
 &sdmmc1 {
@@ -214,29 +208,6 @@
 		};
 	};
 
-	qsmp_fdcan1_pins: qsmp-fdcan1-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('D', 0, AF9)>; /* FDCAN1_RX */
-			bias-disable;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('D', 1, AF9)>; /* FDCAN1_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-	};
-
-	qsmp_fdcan1_sleep_pins: qsmp-fdcan1-sleep-pins {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('D', 0, ANALOG) /* FDCAN1_RX */
-				  STM32_PINMUX('D', 1, ANALOG) /* FDCAN1_TX */
-			>;
-		};
-	};
-
 	qsmp_i2c1_pins: qsmp_i2c1-pins {
 		pins {
 			pinmux = <
@@ -255,6 +226,22 @@
 				  STM32_PINMUX('D', 12, ANALOG) /* I2C1_SCL */
 				  STM32_PINMUX('F', 15, ANALOG) /* I2C1_SDA */
 			>;
+		};
+	};
+
+	qsmp_led_pins: qsmp-led-pins {
+		pins {
+			pinmux = <STM32_PINMUX('A', 13, GPIO)>; /* module LED */
+			bias-pull-up;
+			drive-push-pull;
+			output-low;
+			slew-rate = <0>;
+		};
+	};
+
+	qsmp_led_sleep_pins: qsmp-led-sleep-pins {
+		pins {
+			pinmux = <STM32_PINMUX('A', 13, ANALOG)>; /* module LED */
 		};
 	};
 

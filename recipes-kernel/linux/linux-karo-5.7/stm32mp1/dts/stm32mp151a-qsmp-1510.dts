@@ -1,0 +1,34 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "stm32mp151.dtsi"
+#include "stm32mp15-qsmp.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1510 solder-in module";
+	compatible = "karo,stm32mp151a-qsmp-1510", "st,stm32mp151";
+	aliases {
+		/delete-property/ spinor0;
+	};
+};
+
+&sdmmc2 {
+	status = "disabled";
+};
+
+&qspi {
+	/delete-node/ spi-flash@0;
+	flash0: spi-nand@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "stf1ge4u00m", "spi-nand";
+		reg = <0>;
+		spi-max-frequency = <104000000>;
+		memory-map = <0x90000000 0x1000000>;
+		status = "okay";
+	};
+};

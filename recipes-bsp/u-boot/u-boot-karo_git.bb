@@ -2,21 +2,23 @@ require recipes-bsp/u-boot/u-boot.inc
 
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPLv2+"
-LIC_FILES_CHKSUM_mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
-LIC_FILES_CHKSUM_stm32mp1 = "file://Licenses/README;md5=30503fd321432fc713238f582193b78e"
+LIC_FILES_CHKSUM = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
+LIC_FILES_CHKSUM_stm32mp1 = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
 PROVIDES += "u-boot"
 
 DEPENDS_append = " bc-native"
-DEPENDS_append_stm32mp1 = " bison-native"
+DEPENDS_append_stm32mp1 = " bison-native xxd-native"
+
+RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
+
+SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
 SRCBRANCH_mx6 = "master"
-SRC_URI_mx6 = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
 
-SRCBRANCH_stm32mp1 = "master"
-SRC_URI_stm32mp1 = "git://git.denx.de/u-boot.git;protocol=git;branch=${SRCBRANCH}"
-SRCREV_stm32mp1 = "e0718b3ab754860bd47677e6b4fc5b70da42c4ab"
+SRCBRANCH_stm32mp1 = "karo-txmp"
+SRCREV_stm32mp1 = "981613a49ca25c7504c480163484425839da8796"
 
 S = "${WORKDIR}/git"
 
@@ -62,7 +64,7 @@ do_deploy_append_stm32mp1 () {
         done
         unset i
     else
-        bbfatal "Wrong u-boot-stm32mp configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
+        bbfatal "Wrong u-boot-karo configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
     fi
 }
 

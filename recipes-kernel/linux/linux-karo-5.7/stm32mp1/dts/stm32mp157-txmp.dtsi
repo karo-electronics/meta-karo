@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright 2020 (C) Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include "stm32mp157.dtsi"
+#include "stm32mp15-txmp.dtsi"
+#include "stm32mp157-karo.dtsi"
+
+&dsi {
+	status = "okay";
+};

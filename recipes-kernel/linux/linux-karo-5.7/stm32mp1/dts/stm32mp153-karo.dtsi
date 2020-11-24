@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright 2020 (C) Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include "stm32mp15-karo.dtsi"
+
+&m_can1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&fdcan1_pins>;
+	pinctrl-1 = <&fdcan1_sleep_pins>;
+	status = "okay";
+};
+
+&pinctrl {
+	fdcan1_pins: fdcan1-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('D', 0, AF9)>; /* FDCAN1_RX */
+			bias-disable;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('D', 1, AF9)>; /* FDCAN1_TX */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	fdcan1_sleep_pins: fdcan1-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('D', 0, ANALOG) /* FDCAN1_RX */
+				  STM32_PINMUX('D', 1, ANALOG) /* FDCAN1_TX */
+			>;
+		};
+	};
+};

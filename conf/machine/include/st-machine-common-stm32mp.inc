@@ -11,6 +11,10 @@ BOOTSCHEME_LABELS ??= "basic trusted"
 # Don't include kernels in standard images
 #RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""
 
+MACHINE_FEATURES_append = " emmc"
+#IMAGE_FSTYPES ?= "tar.bz2"
+IMAGE_FSTYPES_append = "${@bb.utils.contains('MACHINE_FEATURES',"emmc"," ext4","",d)}"
+
 # =========================================================================
 # Image
 # =========================================================================
@@ -38,10 +42,10 @@ MOUNT_PARTITIONS_LIST += "${STM32MP_USERFS_LABEL},${STM32MP_USERFS_MOUNTPOINT_IM
 # Define image partition size (supposed to be set as max size in image recipe)
 # Proposed value for bootfs is 64MB
 BOOTFS_PARTITION_SIZE = "65536"
-# Proposed value for rootfs should fit our highest constraint: NAND size (1GiB)
+# Proposed value for rootfs should fit our highest constraint: NAND size (128MiB)
 # For optee bootscheme we have the maximum partitions:
 #   FSBL1 + SSBL + SSBL2 + TEEH + TEED + TEEX + Multivolume UBI = NAND size
-#   Multivolume UBI = 1GiB - (2MiB + 2MiB + 2MiB + 512KiB + 512KiB + 512KiB) = 1016.5MiB
+#   Multivolume UBI = 128MiB - (2MiB + 2MiB + 2MiB + 512KiB + 512KiB + 512KiB) = 1016.5MiB
 # With multivolume UBI split:
 #   Multivolume UBI > uboot_config + uboot_config_r + bootfs + rootfs + userfs + UBI Overhead
 # From http://www.linux-mtd.infradead.org/doc/ubi.html#L_overhead, we compute
@@ -49,9 +53,8 @@ BOOTFS_PARTITION_SIZE = "65536"
 #   (20*4096/1024 + 4) * 256KiB + (256KiB - 248KiB) * (1016.5MiB/256KiB - 20*4096/1024 - 4) = 53360KiB
 # In addition, for each UBIFS, our NAND consummed 9 extra eraseblocks
 # So:
-#   rootfs < Multivolume UBI - (uboot_config + uboot_config_r + bootfs + userfs + UBI Overhead + 4 * 9*eraseblocks)
-#   rootfs < 1016.5MiB - (256KiB + 256KiB + 64MiB + 16MiB + 128MiB + 53360KiB + 4 * 9 * 256KiB)
-#   rootfs < 1GiB
+#   rootfs < Multivolume UBI - (rootfs + env + dtb + kernel + userfs + UBI Overhead + 4 * 9*eraseblocks)
+#   rootfs < 120.5MiB - (256KiB + 64MiB + 16MiB + 128MiB + 53360KiB + 4 * 9 * 256KiB)
 # Proposed value for rootfs is 2GiB
 ROOTFS_PARTITION_SIZE = "2097152"
 # Proposed value for userfs is 128MB (4*32MB)
@@ -65,13 +68,10 @@ IMAGE_ROOTFS_MAXSIZE ?= ""
 STM32MP_UBOOTCONFIG_NAME   = "uboot_config"
 UBOOTCONFIG_PARTITION_SIZE = "256"
 
-# Default FSTYPES requested
-IMAGE_FSTYPES ?= "tar.xz ext4"
-
 # Define specific EXT4 command line:
 #   - Create minimal inode number (as it is done by default in image_types.bbclass)
 #   - Add label name (maximum length of the volume label is 16 bytes)
-#     So use IMAGE_NAME_SUFFIX name by removing the '.' and truncing to 16 caracters
+#     So use IMAGE_NAME_SUFFIX name by removing the '.' and truncating to 16 caracters
 #   - Deactivate metadata_csum and dir_index (hashed b-trees): update not supported
 #     by U-Boot
 EXTRA_IMAGECMD_ext4 = "-i 4096 -L ${@d.getVar('IMAGE_NAME_SUFFIX').replace('.', '', 1)[:16]} -O ^metadata_csum,^dir_index"

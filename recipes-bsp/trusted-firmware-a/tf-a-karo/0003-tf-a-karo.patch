@@ -1,67 +1,3 @@
-Index: arm-trusted-firmware.git/build.sh
-===================================================================
---- /dev/null
-+++ arm-trusted-firmware.git/build.sh
-@@ -0,0 +1,59 @@
-+#!/bin/bash
-+options="r"
-+debug=true
-+installdir=/tftpboot/txmp
-+date=$(date -I)
-+
-+set -e
-+
-+while getopts "$options" opt;do
-+    case $opt in
-+	r)
-+	    debug=false
-+	    ;;
-+	\?)
-+	    exit 1
-+	    ;;
-+	*)
-+	    echo "unsupported option -- $opt"
-+	    usage
-+    esac
-+done
-+shift $(($OPTIND - 1))
-+
-+export CROSS_COMPILE=${CROSS_COMPILE:-arm-cortexa7-linux-gnueabi-}
-+ARCH=${ARCH:-aarch32}
-+
-+make_opts=()
-+make_opts[${#make_opts[@]}]="VENDOR=karo"
-+make_opts[${#make_opts[@]}]="ARM_ARCH_MAJOR=7"
-+make_opts[${#make_opts[@]}]="AARCH32_SP=sp_min"
-+if $debug;then
-+    make_opts[${#make_opts[@]}]="DEBUG=1"
-+    make_opts[${#make_opts[@]}]="LOG_LEVEL=40"
-+    builddir=build/${PLAT:-txmp}/debug
-+    suffix=-dbg
-+else
-+    make_opts[${#make_opts[@]}]="LOG_LEVEL=10"
-+    builddir=build/${PLAT:-txmp}/release
-+    suffix=""
-+fi
-+#make_opts[${#make_opts[@]}]="ENABLE_ASSERT=1"
-+#make_opts[${#make_opts[@]}]="ENABLE_BACKTRACE=1"
-+#make_opts[${#make_opts[@]}]="AARCH32_INSTRUCTION_SET=A32"
-+#make_opts[${#make_opts[@]}]="AARCH32_EXCEPTION_DEBUG=1"
-+
-+dtb_files=(
-+    stm32mp153a-txmp-1530.dtb
-+    stm32mp157c-txmp-1570.dtb
-+    stm32mp151a-qsmp-1510.dtb
-+    stm32mp153a-qsmp-1530.dtb
-+    stm32mp157c-qsmp-1570.dtb
-+)
-+
-+for dtb in "${dtb_files[@]}";do
-+    echo make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} PLAT=${PLAT:-txmp} DTB_FILE_NAME="$dtb" "${make_opts[@]}" "$@"
-+    make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} PLAT=${PLAT:-txmp} DTB_FILE_NAME="$dtb" "${make_opts[@]}" "$@"
-+    cp -avu "${builddir}/tf-a-${dtb%.*}.stm32" "${installdir}/tf-a-${dtb%.*}${suffix}-${date}.stm32"
-+    ln -snvf "tf-a-${dtb%.*}${suffix}-${date}.stm32" "${installdir}/tf-a-${dtb%.*}${suffix}.stm32"
-+done
 Index: arm-trusted-firmware.git/fdts/stm32mp15-ddr3-1x2Gb-1866-binF.dtsi
 ===================================================================
 --- /dev/null
@@ -559,7 +495,7 @@ Index: arm-trusted-firmware.git/fdts/stm32mp15-qsmp.dtsi
 ===================================================================
 --- /dev/null
 +++ arm-trusted-firmware.git/fdts/stm32mp15-qsmp.dtsi
-@@ -0,0 +1,295 @@
+@@ -0,0 +1,297 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
 +/*
 + * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
@@ -660,7 +596,7 @@ Index: arm-trusted-firmware.git/fdts/stm32mp15-qsmp.dtsi
 +		CLK_SPI2S23_DISABLED
 +		CLK_SPI45_HSI
 +		CLK_SPI6_HSI
-+		CLK_I2C46_CSI
++		CLK_I2C46_PCLK5
 +		CLK_SDMMC3_DISABLED
 +		CLK_USBO_USBPHY
 +		CLK_ADC_CKPER
@@ -688,25 +624,25 @@ Index: arm-trusted-firmware.git/fdts/stm32mp15-qsmp.dtsi
 +	status = "okay";
 +	secure-status = "okay";
 +
-+	pll1: st,pll@0 {
++	st,pll@0 {
 +		reg = <0>;
 +		cfg = <2 80 0 1 1 1>;
 +		frac = <2048>;
 +	};
 +
-+	pll2: st,pll@1 {
++	st,pll@1 {
 +		reg = <1>;
 +		cfg = <2 65 1 1 0 5>;
 +		frac = <5120>;
 +	};
 +
-+	pll3: st,pll@2 {
++	st,pll@2 {
 +		reg = <2>;
 +		cfg = <1 33 1 16 36 1>;
 +		frac = <6660>;
 +	};
 +
-+	pll4: st,pll@3 {
++	st,pll@3 {
 +		reg = <3>;
 +		cfg = <1 49 11 6 7 3>;
 +	};
@@ -718,13 +654,15 @@ Index: arm-trusted-firmware.git/fdts/stm32mp15-qsmp.dtsi
 +};
 +
 +&sdmmc2 {
++	/* eMMC */
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&sdmmc2_pins_mx>;
-+	/* USER CODE BEGIN sdmmc2 */
 +	bus-width = <4>;
++	no-sd;
++	no-sdio;
++//	st,neg-edge;
 +	non-removable;
 +	no-1-8-v;
-+	/* USER CODE END sdmmc2 */
 +	status = "okay";
 +};
 +
@@ -908,8 +846,8 @@ Index: arm-trusted-firmware.git/fdts/stm32mp15-txmp.dtsi
 +		CLK_SPI2S23_PLL4P
 +		CLK_SPI45_DISABLED
 +		CLK_SPI6_DISABLED
-+		CLK_I2C46_CSI
-+		CLK_SDMMC3_PLL4P
++		CLK_I2C46_PCLK5
++		CLK_SDMMC3_HCLK2
 +		CLK_USBO_USBPHY
 +		CLK_ADC_CKPER
 +		CLK_CEC_DISABLED
@@ -936,25 +874,25 @@ Index: arm-trusted-firmware.git/fdts/stm32mp15-txmp.dtsi
 +	status = "okay";
 +	secure-status = "okay";
 +
-+	pll1: st,pll@0 {
++	st,pll@0 {
 +		reg = <0>;
 +		cfg = <2 80 0 1 1 1>;
 +		frac = <2048>;
 +	};
 +
-+	pll2: st,pll@1 {
++	st,pll@1 {
 +		reg = <1>;
 +		cfg = <2 65 1 1 0 5>;
 +		frac = <5120>;
 +	};
 +
-+	pll3: st,pll@2 {
++	st,pll@2 {
 +		reg = <2>;
 +		cfg = <1 33 1 16 36 1>;
 +		frac = <6660>;
 +	};
 +
-+	pll4: st,pll@3 {
++	st,pll@3 {
 +		reg = <3>;
 +		cfg = <1 49 11 6 7 3>;
 +	};
@@ -999,7 +937,7 @@ Index: arm-trusted-firmware.git/fdts/stm32mp151a-qsmp-1510.dts
 ===================================================================
 --- /dev/null
 +++ arm-trusted-firmware.git/fdts/stm32mp151a-qsmp-1510.dts
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,19 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
 +/*
 + * Copyright (C) STMicroelectronics 2019 - All Rights Reserved
@@ -1008,305 +946,16 @@ Index: arm-trusted-firmware.git/fdts/stm32mp151a-qsmp-1510.dts
 +
 +/dts-v1/;
 +
-+#include <dt-bindings/clock/stm32mp1-clksrc.h>
-+#include <dt-bindings/power/stm32mp1-power.h>
 +#include "stm32mp151a-qsmp.h"
-+
-+#include "stm32mp157c.dtsi"
-+#include "stm32mp157cac-pinctrl.dtsi"
-+#include "stm32mp15-ddr.dtsi"
-+#include "stm32mp157c-security.dtsi"
++#include "stm32mp15-qsmp.dtsi"
 +
 +/ {
 +	model = "Ka-Ro electronics GmbH QSMP-1510 solder-in module";
 +	compatible = "st,stm32mp157c-qsmp-1510", "st,stm32mp151";
-+
-+	aliases {
-+		mmc0 = &sdmmc2;
-+		mmc1 = &sdmmc1;
-+		mmc2 = &sdmmc3;
-+		serial0 = &uart4;
-+		serial1 = &usart2;
-+		serial2 = &usart3;
-+	};
-+
-+	chosen {
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges;
-+		stdout-path = "serial0:115200n8";
-+	};
-+
-+	sram: sram@10050000 {
-+		compatible = "mmio-sram";
-+		reg = <0x10050000 0x10000>;
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges = <0 0x10050000 0x10000>;
-+
-+		dma_pool: dma_pool@0 {
-+			reg = <0x0 0x10000>;
-+			pool;
-+		};
-+	};
-+
-+	usb_phy_tuning: usb-phy-tuning {
-+		st,hs-dc-level = <2>;
-+		st,fs-rftime-tuning;
-+		st,hs-rftime-reduction;
-+		st,hs-current-trim = <15>;
-+		st,hs-impedance-trim = <1>;
-+		st,squelch-level = <3>;
-+		st,hs-rx-offset = <2>;
-+		st,no-lsfs-sc;
-+	};
-+};
-+
-+&bsec {
-+	status = "okay";
-+	secure-status = "okay";
-+};
-+
-+&iwdg2 {
-+	timeout-sec = <32>;
-+	status = "okay";
-+};
-+
-+&rcc {
-+	st,csi-cal;
-+	st,hsi-cal;
-+	st,cal-sec = <60>;
-+	st,clksrc = <
-+		CLK_MPU_PLL1P
-+		CLK_AXI_PLL2P
-+		CLK_MCU_PLL3P
-+		CLK_PLL12_HSE
-+		CLK_PLL3_HSE
-+		CLK_PLL4_HSE
-+		CLK_RTC_LSI
-+		CLK_MCO1_DISABLED
-+		CLK_MCO2_DISABLED
-+	>;
-+	st,clkdiv = <
-+		1	/* MPU */
-+		0	/* AXI */
-+		0	/* MCU */
-+		1	/* APB1 */
-+		1	/* APB2 */
-+		1	/* APB3 */
-+		1	/* APB4 */
-+		2	/* APB5 */
-+		0	/* RTC */
-+		0	/* MCO1 */
-+		0	/* MCO2 */
-+	>;
-+	st,pkcs = <
-+		CLK_CKPER_HSE
-+		CLK_QSPI_ACLK
-+		CLK_ETH_PLL4P
-+		CLK_SDMMC12_HCLK6
-+		CLK_STGEN_HSI
-+		CLK_USBPHY_HSE
-+		CLK_SPI2S1_DISABLED
-+		CLK_SPI2S23_DISABLED
-+		CLK_SPI45_HSI
-+		CLK_SPI6_HSI
-+		CLK_I2C46_CSI
-+		CLK_SDMMC3_DISABLED
-+		CLK_USBO_USBPHY
-+		CLK_ADC_CKPER
-+		CLK_CEC_DISABLED
-+		CLK_I2C12_PCLK1
-+		CLK_I2C35_PCLK1
-+		CLK_UART1_DISABLED
-+		CLK_UART24_HSI
-+		CLK_UART35_HSI
-+		CLK_UART6_DISABLED
-+		CLK_UART78_DISABLED
-+		CLK_SPDIF_DISABLED
-+		CLK_FDCAN_HSE
-+		CLK_SAI1_DISABLED
-+		CLK_SAI2_PLL4Q
-+		CLK_SAI3_DISABLED
-+		CLK_SAI4_DISABLED
-+		CLK_LPTIM1_PCLK1
-+		CLK_LPTIM23_DISABLED
-+		CLK_LPTIM45_DISABLED
-+		CLK_RNG1_LSI
-+	>;
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	status = "okay";
-+	secure-status = "okay";
-+
-+	pll1: st,pll@0 {
-+		reg = <0>;
-+		cfg = <2 80 0 1 1 1>;
-+		frac = <2048>;
-+	};
-+
-+	pll2: st,pll@1 {
-+		reg = <1>;
-+		cfg = <2 65 1 1 0 5>;
-+		frac = <5120>;
-+	};
-+
-+	pll3: st,pll@2 {
-+		reg = <2>;
-+		cfg = <1 33 1 16 36 1>;
-+		frac = <6660>;
-+	};
-+
-+	pll4: st,pll@3 {
-+		reg = <3>;
-+		cfg = <1 49 11 6 7 3>;
-+	};
-+};
-+
-+&rtc {
-+	status = "okay";
-+	secure-status = "okay";
 +};
 +
 +&sdmmc2 {
-+	/* eMMC */
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&sdmmc2_pins_mx>;
-+	bus-width = <4>;
-+	no-sd;
-+	no-sdio;
-+	st,neg-edge;
-+	non-removable;
-+	no-1-8-v;
-+	status = "okay";
-+};
-+
-+&uart4 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&uart4_pins_mx>;
-+	status = "okay";
-+};
-+
-+&usart2 {
-+	pinctrl-names = "default", "sleep";
-+	pinctrl-0 = <&usart2_pins_mx>;
-+	pinctrl-1 = <&usart2_sleep_pins_mx>;
-+	status = "okay";
-+};
-+
-+&usart3 {
-+	pinctrl-names = "default", "sleep";
-+	pinctrl-0 = <&usart3_pins_mx>;
-+	pinctrl-1 = <&usart3_sleep_pins_mx>;
-+	status = "okay";
-+};
-+
-+&usbotg_hs {
-+	status = "okay";
-+};
-+
-+&pwr {
-+	system_suspend_supported_soc_modes = <
-+		STM32_PM_CSLEEP_RUN
-+		STM32_PM_CSTOP_ALLOW_LP_STOP
-+		STM32_PM_CSTOP_ALLOW_STANDBY_DDR_SR
-+	>;
-+	system_off_soc_mode = <STM32_PM_CSTOP_ALLOW_STANDBY_DDR_OFF>;
-+};
-+
-+&pinctrl {
-+	sdmmc2_pins_mx: sdmmc2-pins-mx {
-+		pins1 {
-+			pinmux = <
-+				  STM32_PINMUX('B', 14, AF9)	/* SDMMC2_D0 */
-+				  STM32_PINMUX('B', 15, AF9)	/* SDMMC2_D1 */
-+				  STM32_PINMUX('B', 3, AF9)	/* SDMMC2_D2 */
-+				  STM32_PINMUX('B', 4, AF9)	/* SDMMC2_D3 */
-+				  STM32_PINMUX('A', 8, AF9)	/* SDMMC2_D4 */
-+				  STM32_PINMUX('B', 9, AF9)	/* SDMMC2_D5 */
-+				  STM32_PINMUX('C', 6, AF9)	/* SDMMC2_D6 */
-+				  STM32_PINMUX('C', 7, AF9)	/* SDMMC2_D7 */
-+				  STM32_PINMUX('G', 6, AF10)	/* SDMMC2_CMD */
-+			>;
-+			bias-disable;
-+			drive-push-pull;
-+			slew-rate = <1>;
-+		};
-+
-+		pins2 {
-+			pinmux = <STM32_PINMUX('E', 3, AF9)>; /* SDMMC2_CK */
-+			bias-disable;
-+			drive-push-pull;
-+			slew-rate = <3>;
-+		};
-+	};
-+
-+	uart4_pins_mx: uart4-pins-mx {
-+		pins1 {
-+			pinmux = <STM32_PINMUX('B', 2, AF8)>; /* UART4_RX */
-+			bias-pull-up;
-+		};
-+
-+		pins2 {
-+			pinmux = <STM32_PINMUX('G', 11, AF6)>; /* UART4_TX */
-+			bias-disable;
-+			drive-push-pull;
-+			slew-rate = <0>;
-+		};
-+	};
-+
-+	usart2_pins_mx: usart2-pins-mx {
-+		pins1 {
-+			pinmux = <
-+				  STM32_PINMUX('D', 3, AF7) /* USART2_CTS */
-+				  STM32_PINMUX('D', 6, AF7) /* USART2_RX */
-+			>;
-+			bias-disable;
-+		};
-+
-+		pins2 {
-+			pinmux = <
-+				  STM32_PINMUX('D', 4, AF7) /* USART2_RTS */
-+				  STM32_PINMUX('D', 5, AF7) /* USART2_TX */
-+			>;
-+			bias-disable;
-+			drive-push-pull;
-+			slew-rate = <0>;
-+		};
-+	};
-+
-+	usart2_sleep_pins_mx: usart2-sleep-pins-mx {
-+		pins {
-+			pinmux = <
-+				  STM32_PINMUX('D', 3, ANALOG) /* USART2_CTS */
-+				  STM32_PINMUX('D', 4, ANALOG) /* USART2_RTS */
-+				  STM32_PINMUX('D', 5, ANALOG) /* USART2_TX */
-+				  STM32_PINMUX('D', 6, ANALOG) /* USART2_RX */
-+			>;
-+		};
-+	};
-+
-+	usart3_pins_mx: usart3-pins-mx {
-+		pins1 {
-+			pinmux = <STM32_PINMUX('B', 10, AF7)>; /* USART3_TX */
-+			bias-disable;
-+			drive-push-pull;
-+			slew-rate = <0>;
-+		};
-+
-+		pins2 {
-+			pinmux = <STM32_PINMUX('B', 12, AF8)>; /* USART3_RX */
-+			bias-disable;
-+		};
-+	};
-+
-+	usart3_sleep_pins_mx: usart3-sleep-pins-mx {
-+		pins {
-+			pinmux = <STM32_PINMUX('B', 10, ANALOG) /* USART3_TX */
-+				  STM32_PINMUX('B', 12, ANALOG) /* USART3_RX */
-+			>;
-+		};
-+	};
++	status = "disabled";
 +};
 Index: arm-trusted-firmware.git/fdts/stm32mp151a-qsmp.h
 ===================================================================

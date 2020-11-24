@@ -47,6 +47,8 @@
 };
 
 &mdio0 {
+	reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
+
 	phy0: ethernet-phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0>;

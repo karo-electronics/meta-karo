@@ -34,3 +34,5 @@ PV_class-devupstream = "${TF_VERSION}+github+${SRCPV}"
 STM32MP_SOURCE_SELECTION ?= "github"
 
 DEFAULT_PREFERENCE = "${@bb.utils.contains('STM32MP_SOURCE_SELECTION', 'github', '-1', '1', d)}"
+
+PROVIDES += "tf-a-karo"

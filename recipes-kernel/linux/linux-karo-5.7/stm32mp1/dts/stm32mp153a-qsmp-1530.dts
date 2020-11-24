@@ -7,7 +7,7 @@
 /dts-v1/;
 
 #include "stm32mp153.dtsi"
-#include "stm32mp15-qsmp.dtsi"
+#include "stm32mp153-qsmp.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1530 solder-in module";

@@ -38,26 +38,6 @@ Index: arm-trusted-firmware.git/plat/st/common/stm32mp_common.c
  {
  	return boot_ctx_address;
  }
-Index: arm-trusted-firmware.git/bl2/aarch32/bl2_arch_setup.c
-===================================================================
---- arm-trusted-firmware.git.orig/bl2/aarch32/bl2_arch_setup.c
-+++ arm-trusted-firmware.git/bl2/aarch32/bl2_arch_setup.c
-@@ -4,6 +4,8 @@
-  * SPDX-License-Identifier: BSD-3-Clause
-  */
- 
-+#include <stdio.h>
-+#include <debug.h>
- #include "../bl2_private.h"
- 
- /*******************************************************************************
-@@ -12,5 +14,5 @@
-  ******************************************************************************/
- void bl2_arch_setup(void)
- {
--
-+	VERBOSE("%s@%d\n", __func__, __LINE__);
- }
 Index: arm-trusted-firmware.git/common/backtrace.c
 ===================================================================
 --- arm-trusted-firmware.git.orig/common/backtrace.c
@@ -941,40 +921,7 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  		uint32_t fifoemptymsk = 0x1 << epnum;
  
  		dwc2_handle.usb_device->diepempmsk &= ~fifoemptymsk;
-@@ -611,14 +607,23 @@ usb_action_t usb_dwc2_it_handler(void *h
- 	usb_dwc2_global_t *usbx = ((usb_dwc2_t *)handle)->usb_global;
- 	uint32_t ep_intr, epint, epnum = 0;
- 	uint32_t temp;
-+	static int idle;
-+
-+	if (!idle) {
-+		VERBOSE("%s@%d: mode=%02x int=%08x\n", __func__, __LINE__,
-+			usb_dwc2_get_mode(usbx), usb_dwc2_read_int(usbx));
-+	}
- 
- 	/* ensure that we are in device mode */
- 	if (usb_dwc2_get_mode(usbx) != USB_OTG_MODE_DEVICE)
- 		return USB_NOTHING;
- 
- 	/* avoid spurious interrupt */
--	if (!usb_dwc2_read_int(usbx))
-+	if (!usb_dwc2_read_int(usbx)) {
-+		idle = 1;
- 		return USB_NOTHING;
-+	}
-+	idle = 0;
- 
- 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_MMIS)
- 		/* incorrect mode, acknowledge the interrupt */
-@@ -627,6 +632,7 @@ usb_action_t usb_dwc2_it_handler(void *h
- 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_OEPINT) {
- 		/* Read in the device interrupt bits */
- 		ep_intr = usb_dwc2_all_out_ep_int(usbx);
-+		VERBOSE("%s@%d: ep_intr=%d\n", __func__, __LINE__, ep_intr);
- 
- 		while (!(ep_intr & 1)) {
- 			epnum++;
-@@ -713,7 +719,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -713,7 +709,7 @@ usb_action_t usb_dwc2_it_handler(void *h
  
  	/* Handle Resume Interrupt */
  	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_WKUINT) {
@@ -983,7 +930,7 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  		/* Clear the Remote Wake-up Signaling */
  		dwc2_handle.usb_device->dctl &= ~USB_OTG_DCTL_RWUSIG;
  		usbx->gintsts = USB_OTG_GINTSTS_WKUINT;
-@@ -722,7 +728,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -722,7 +718,7 @@ usb_action_t usb_dwc2_it_handler(void *h
  
  	/* Handle Suspend Interrupt */
  	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_USBSUSP) {
@@ -992,7 +939,7 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  		usbx->gintsts = USB_OTG_GINTSTS_USBSUSP;
  		if ((dwc2_handle.usb_device->dsts & USB_OTG_DSTS_SUSPSTS) ==
  				USB_OTG_DSTS_SUSPSTS){
-@@ -732,7 +738,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -732,7 +728,7 @@ usb_action_t usb_dwc2_it_handler(void *h
  
  	/* Handle LPM Interrupt */
  	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_LPMINT) {
@@ -1001,7 +948,7 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  		usbx->gintsts = USB_OTG_GINTSTS_LPMINT;
  		*param = (usbx->glpmcfg & USB_OTG_GLPMCFG_BESL) >> 2;
  		return USB_LPM;
-@@ -740,7 +746,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -740,7 +736,7 @@ usb_action_t usb_dwc2_it_handler(void *h
  
  	/* Handle Reset Interrupt */
  	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_USBRST) {
@@ -1010,11 +957,7 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  		dwc2_handle.usb_device->dctl &= ~USB_OTG_DCTL_RWUSIG;
  		usb_dwc2_flush_tx_fifo(usbx, 0);
  
-@@ -765,11 +771,12 @@ usb_action_t usb_dwc2_it_handler(void *h
- 
- 	/* Handle Enumeration done Interrupt */
- 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_ENUMDNE) {
-+		INFO("handle USB: enumeration done\n");
+@@ -768,8 +764,8 @@ usb_action_t usb_dwc2_it_handler(void *h
  		usb_dwc2_activate_setup(usbx);
  		usbx->gusbcfg &= ~USB_OTG_GUSBCFG_TRDT;
  
@@ -1025,20 +968,18 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  
  		usbx->gintsts = USB_OTG_GINTSTS_ENUMDNE;
  		return USB_ENUM_DONE;
-@@ -779,9 +786,9 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -779,8 +775,8 @@ usb_action_t usb_dwc2_it_handler(void *h
  	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_RXFLVL) {
  		usbx->gintmsk &= ~USB_OTG_GINTSTS_RXFLVL;
  		temp = usbx->grxstsp;
 -		*param = (temp & USB_OTG_GRXSTSP_EPNUM);
 -		*param |= ((temp & USB_OTG_GRXSTSP_BCNT) << 0xC);
--
 +		*param = temp & USB_OTG_GRXSTSP_EPNUM;
 +		*param |= (temp & USB_OTG_GRXSTSP_BCNT) << 0xC;
-+		VERBOSE("%s@%d: temp=%08x\n", __func__, __LINE__, temp);
+ 
  		if (((temp & USB_OTG_GRXSTSP_PKTSTS) >> 17) == STS_DATA_UPDT) {
  			if ((temp & USB_OTG_GRXSTSP_BCNT) != 0) {
- 				usbx->gintmsk |= USB_OTG_GINTSTS_RXFLVL;
-@@ -797,32 +804,32 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -797,32 +793,32 @@ usb_action_t usb_dwc2_it_handler(void *h
  
  	/* Handle SOF Interrupt */
  	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_SOF) {
@@ -1076,7 +1017,7 @@ Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
  		temp = usbx->gotgint;
  		if ((temp & USB_OTG_GOTGINT_SEDET) == USB_OTG_GOTGINT_SEDET)
  			return USB_DISCONNECT;
-@@ -833,26 +840,21 @@ usb_action_t usb_dwc2_it_handler(void *h
+@@ -833,26 +829,21 @@ usb_action_t usb_dwc2_it_handler(void *h
  void usb_dwc2_init_driver(usb_handle_t *usb_core_handle,
  			  uint32_t *base_register)
  {
@@ -1224,7 +1165,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  static usb_status_t usb_core_dev_req(usb_handle_t *pdev, usb_setup_req_t *req)
  {
-@@ -289,12 +291,13 @@ static usb_status_t usb_core_dev_req(usb
+@@ -289,9 +291,9 @@ static usb_status_t usb_core_dev_req(usb
  /*
   * usb_core_itf_req
   *         Handle standard usb interface requests
@@ -1237,11 +1178,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  static usb_status_t usb_core_itf_req(usb_handle_t *pdev, usb_setup_req_t *req)
  {
-+	VERBOSE("%s@%d: \n", __func__, __LINE__);
- 	switch (pdev->dev_state) {
- 	case USBD_STATE_CONFIGURED:
- 		if (LOBYTE(req->index) <= USBD_MAX_NUM_INTERFACES) {
-@@ -327,8 +330,8 @@ static usb_status_t usb_core_itf_req(usb
+@@ -327,8 +329,8 @@ static usb_status_t usb_core_itf_req(usb
   */
  static void usb_core_parse_req(usb_setup_req_t *req, uint8_t *pdata)
  {
@@ -1252,7 +1189,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
  	req->value = SWAPBYTE(pdata +  2);
  	req->index = SWAPBYTE(pdata +  4);
  	req->length = SWAPBYTE(pdata +  6);
-@@ -338,10 +341,12 @@ static void usb_core_parse_req(usb_setup
+@@ -338,9 +340,9 @@ static void usb_core_parse_req(usb_setup
   * usb_core_setup_stage
   *         Handle the setup stage
   * pdev: device instance
@@ -1262,12 +1199,9 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
 -static usb_status_t usb_core_setup_stage(usb_handle_t *pdev, uint8_t *psetup)
 +static usb_status_t usb_core_setup_stage(usb_handle_t *pdev, void *psetup)
  {
-+	VERBOSE("%s@%d: \n", __func__, __LINE__);
-+	VERBOSE_HEXDUMP8(&pdev->request, sizeof(pdev->request));
  	usb_core_parse_req(&pdev->request, psetup);
  
- 	pdev->ep0_state = USBD_EP0_SETUP;
-@@ -371,7 +376,7 @@ static usb_status_t usb_core_setup_stage
+@@ -371,7 +373,7 @@ static usb_status_t usb_core_setup_stage
   *         Handle data OUT stage
   * pdev: device instance
   * epnum: endpoint index
@@ -1276,7 +1210,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  static usb_status_t usb_core_data_out(usb_handle_t *pdev, uint8_t epnum,
  				      uint8_t *pdata)
-@@ -408,7 +413,7 @@ static usb_status_t usb_core_data_out(us
+@@ -408,7 +410,7 @@ static usb_status_t usb_core_data_out(us
   *         Handle data in stage
   * pdev: device instance
   * epnum: endpoint index
@@ -1285,7 +1219,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  static usb_status_t usb_core_data_in(usb_handle_t *pdev, uint8_t epnum,
  				     uint8_t *pdata)
-@@ -471,8 +476,8 @@ static usb_status_t usb_core_data_in(usb
+@@ -471,8 +473,8 @@ static usb_status_t usb_core_data_in(usb
  /*
   * usb_core_Suspend
   *         Handle Suspend event
@@ -1296,7 +1230,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  
  static usb_status_t usb_core_suspend(usb_handle_t  *pdev)
-@@ -488,8 +493,8 @@ static usb_status_t usb_core_suspend(usb
+@@ -488,8 +490,8 @@ static usb_status_t usb_core_suspend(usb
  /*
   * usb_core_resume
   *         Handle Resume event
@@ -1307,7 +1241,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  
  static usb_status_t usb_core_resume(usb_handle_t *pdev)
-@@ -503,8 +508,8 @@ static usb_status_t usb_core_resume(usb_
+@@ -503,8 +505,8 @@ static usb_status_t usb_core_resume(usb_
  /*
   * usb_core_sof
   *         Handle SOF event
@@ -1318,7 +1252,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  
  static usb_status_t usb_core_sof(usb_handle_t *pdev)
-@@ -520,8 +525,8 @@ static usb_status_t usb_core_sof(usb_han
+@@ -520,8 +522,8 @@ static usb_status_t usb_core_sof(usb_han
  /*
   * usb_core_DevDisconnected
   *         Handle device disconnection event
@@ -1329,7 +1263,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  static usb_status_t usb_core_disconnect(usb_handle_t *pdev)
  {
-@@ -534,8 +539,8 @@ static usb_status_t usb_core_disconnect(
+@@ -534,8 +536,8 @@ static usb_status_t usb_core_disconnect(
  
  usb_status_t usb_core_handle_it(usb_handle_t *pdev)
  {
@@ -1340,7 +1274,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
  	usb_otg_ep_t *ep;
  
  	switch (pdev->driver->it_handler(pdev->data->instance, &param)) {
-@@ -548,7 +553,7 @@ usb_status_t usb_core_handle_it(usb_hand
+@@ -548,7 +550,7 @@ usb_status_t usb_core_handle_it(usb_hand
  				 pdev->data->in_ep[param].xfer_buff);
  		break;
  	case USB_SETUP:
@@ -1349,31 +1283,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
  		break;
  	case USB_ENUM_DONE:
  		pdev->data->init.speed = USB_OTG_SPEED_HIGH;
-@@ -557,16 +562,23 @@ usb_status_t usb_core_handle_it(usb_hand
- 	case USB_READ_DATA_PACKET:
- 		ep = &pdev->data->out_ep[param & USB_OTG_OUT_EPNUM_MASK];
- 		len = (param & USB_OTG_OUT_COUNT_MASK) >> 0x10;
-+		VERBOSE("%s@%d: READ_DATA_PACKET len %u from ep %u\n",
-+			__func__, __LINE__, len, param & USB_OTG_OUT_EPNUM_MASK);
- 		pdev->driver->read_packet(pdev->data->instance,
- 					  ep->xfer_buff, len);
-+		VERBOSE("%s@%d: done\n", __func__, __LINE__);
- 		ep->xfer_buff += len;
- 		ep->xfer_count += len;
- 		break;
- 	case USB_READ_SETUP_PACKET:
- 		ep = &pdev->data->out_ep[param & USB_OTG_OUT_EPNUM_MASK];
- 		len = (param & USB_OTG_OUT_COUNT_MASK) >> 0x10;
-+		VERBOSE("%s@%d: READ_SETUP_PACKET len %u from ep %u\n",
-+			__func__, __LINE__, len, param & USB_OTG_OUT_EPNUM_MASK);
- 		pdev->driver->read_packet(pdev->data->instance,
- 					  (uint8_t *)pdev->data->setup, 8);
-+		VERBOSE("%s@%d: done\n", __func__, __LINE__);
-+		VERBOSE_HEXDUMP8(pdev->data->setup, len);
- 		ep->xfer_count += len;
- 		break;
- 	case USB_RESUME:
-@@ -595,8 +607,7 @@ usb_status_t usb_core_handle_it(usb_hand
+@@ -595,8 +597,7 @@ usb_status_t usb_core_handle_it(usb_hand
  	case USB_WRITE_EMPTY:
  		pdev->driver->write_empty_tx_fifo(pdev->data->instance, param,
  				     pdev->data->in_ep[param].xfer_len,
@@ -1383,20 +1293,16 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
  				     pdev->data->in_ep[param].maxpacket,
  				     &pdev->data->in_ep[param].xfer_buff);
  		break;
-@@ -653,8 +664,11 @@ usb_status_t usb_core_transmit(usb_handl
- 	pcd_handle_t *hpcd = (pcd_handle_t *)pdev->data;
+@@ -654,7 +655,7 @@ usb_status_t usb_core_transmit(usb_handl
  
  	ep = &hpcd->in_ep[ep_addr & 0x7F];
-+	VERBOSE("%s@%d: ep=%u buf=%p len=%u\n", __func__, __LINE__,
-+		ep_addr & 0x7f, buf, len);
-+	VERBOSE_HEXDUMP8(buf, len);
  
 -	/*setup and start the Xfer */
 +	/* setup and start the Xfer */
  	ep->xfer_buff = buf;
  	ep->xfer_len = len;
  	ep->xfer_count = 0;
-@@ -679,7 +693,7 @@ usb_status_t usb_core_transmit(usb_handl
+@@ -679,7 +680,7 @@ usb_status_t usb_core_transmit(usb_handl
  
  void usb_core_ctl_error(usb_handle_t *pdev)
  {
@@ -1405,7 +1311,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
  	usb_core_set_stall(pdev, 0x80);
  	usb_core_set_stall(pdev, 0);
  }
-@@ -688,7 +702,7 @@ void usb_core_ctl_error(usb_handle_t *pd
+@@ -688,7 +689,7 @@ void usb_core_ctl_error(usb_handle_t *pd
   * usb_core_stop
   *         Stop the USB Device Core.
   * pdev: Device Handle
@@ -1414,7 +1320,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  usb_status_t usb_core_stop(usb_handle_t *pdev)
  {
-@@ -706,7 +720,7 @@ usb_status_t usb_core_stop(usb_handle_t
+@@ -706,7 +707,7 @@ usb_status_t usb_core_stop(usb_handle_t
   * usb_core_stop
   *         Stop the USB Device Core.
   * pdev: Device Handle
@@ -1423,7 +1329,7 @@ Index: arm-trusted-firmware.git/lib/usb/usb_core.c
   */
  usb_status_t register_usb_driver(usb_handle_t *pdev, const usb_driver_t *driver,
  				 void *driver_handle)
-@@ -721,7 +735,7 @@ usb_status_t register_usb_driver(usb_han
+@@ -721,7 +722,7 @@ usb_status_t register_usb_driver(usb_han
   * usb_core_stop
   *         Stop the USB Device Core.
   * pdev: Device Handle

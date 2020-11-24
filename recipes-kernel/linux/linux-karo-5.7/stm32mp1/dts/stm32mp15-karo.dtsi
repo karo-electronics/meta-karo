@@ -50,8 +50,6 @@
 
 &ethernet0 {
 	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&ethernet0_rmii_pins>;
-	pinctrl-1 = <&ethernet0_rmii_pins_sleep>;
 	phy-handle = <&phy0>;
 	status = "okay";
 
@@ -59,7 +57,6 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		compatible = "snps,dwmac-mdio";
-		reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
 	};
 };
 
@@ -75,13 +72,6 @@
 	status = "okay";
 };
 
-&m_can2 {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&fdcan2_pins>;
-	pinctrl-1 = <&fdcan2_sleep_pins>;
-	status = "okay";
-};
-
 &pwr_regulators {
 	vdd-supply = <&reg_3v3>;
 	vdd_3v3_usbfs-supply = <&reg18>;
@@ -93,7 +83,7 @@
 	reg = <0x58003000 0x1000>, <0x70000000 0x1000000>;
 	status = "okay";
 
-	flash0: gd25q16c@0 {
+	flash0: spi-flash@0 {
 		#address-cells = <1>;
 		#size-cells = <1>;
 		compatible = "gd25q16c", "spi-flash";

@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright 2020 (C) Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include "stm32mp15-qsmp.dtsi"
+#include "stm32mp153-karo.dtsi"
+
+/ {
+	aliases {
+		can0 = &m_can1;
+		can1 = &m_can2;
+	};
+};
+
+&m_can1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&qsmp_fdcan1_pins>;
+	pinctrl-1 = <&qsmp_fdcan1_sleep_pins>;
+	status = "okay";
+};
+
+&m_can2 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&qsmp_fdcan2_pins>;
+	pinctrl-1 = <&qsmp_fdcan2_sleep_pins>;
+	status = "okay";
+};
+
+&pinctrl {
+	qsmp_fdcan1_pins: qsmp-fdcan1-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('D', 0, AF9)>; /* FDCAN1_RX */
+			bias-disable;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('D', 1, AF9)>; /* FDCAN1_TX */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	qsmp_fdcan1_sleep_pins: qsmp-fdcan1-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('D', 0, ANALOG) /* FDCAN1_RX */
+				  STM32_PINMUX('D', 1, ANALOG) /* FDCAN1_TX */
+			>;
+		};
+	};
+
+	qsmp_fdcan2_pins: qsmp-fdcan2-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('B', 13, AF9)>; /* FDCAN2_TX */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('B', 5, AF9)>; /* FDCAN2_RX */
+			bias-disable;
+		};
+	};
+
+	qsmp_fdcan2_sleep_pins: qsmp-fdcan2-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('B', 5, ANALOG) /* FDCAN2_RX */
+				  STM32_PINMUX('B', 13, ANALOG) /* FDCAN2_TX */
+			>;
+		};
+	};
+};

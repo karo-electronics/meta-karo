@@ -9,7 +9,8 @@ FLASHLAYOUT_DEPEND_TASKS += "${@bb.utils.contains('EXTRA_IMAGEDEPENDS', 'u-boot-
 # -----------------------------------------------------------------------------
 # Define flashlayout devices
 # -----------------------------------------------------------------------------
-DEVICE_EMMC   = "mmc0"
+DEVICE_EMMC    = "mmc0"
+DEVICE_SPINAND = "spi-nand0"
 
 # -----------------------------------------------------------------------------
 # EMMC
@@ -18,6 +19,12 @@ DEVICE_EMMC   = "mmc0"
 # We need to align this size to get the first offset to use
 DEVICE_START_OFFSET_mmc0    = "0x00080000"
 DEVICE_ALIGNMENT_SIZE_mmc0  = "0x00080000"
+
+# -----------------------------------------------------------------------------
+# SPINAND
+#
+DEVICE_START_OFFSET_spi-nand0 = "0x00000000"
+DEVICE_ALIGNMENT_SIZE_spi-nand0 = "0x00020000"
 
 # -----------------------------------------------------------------------------
 # Define bootscheme labels
@@ -50,6 +57,7 @@ ST_EXAMPLE_IMAGE ??= "0"
 # EMMC
 # Set flashlayout file generation to eval board (mother and daughter) only
 FLASHLAYOUT_TYPE_LABELS_emmc = "${MACHINE}"
+FLASHLAYOUT_TYPE_LABELS_spinand = "${MACHINE}"
 
 # -----------------------------------------------------------------------------
 # Define partitions to use
@@ -69,7 +77,9 @@ FLASHLAYOUT_TYPE_LABELS_emmc = "${MACHINE}"
 # -----------------------------------------------------------------------------
 
 FLASHLAYOUT_PARTITION_LABELS_basic_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs userfs"
-#FLASHLAYOUT_PARTITION_LABELS_trusted_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs"
+#FLASHLAYOUT_PARTITION_LABELS_trusted_emmc        = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs"
+FLASHLAYOUT_PARTITION_LABELS_trusted_spinand      = "fsbl1-boot ssbl-boot fsbl ssbl UBI"
+FLASHLAYOUT_PARTITION_LABELS_basic_spinand        = "fsbl1-boot ssbl-boot fsbl ssbl UBI"
 
 # -----------------------------------------------------------------------------
 # Partition configuration for each partition label
@@ -126,14 +136,18 @@ FLASHLAYOUT_PARTITION_ID_bootfs         = "0x21"
 FLASHLAYOUT_PARTITION_ID_vendorfs       = "0x22"
 FLASHLAYOUT_PARTITION_ID_rootfs         = "0x23"
 FLASHLAYOUT_PARTITION_ID_userfs         = "0x24"
+FLASHLAYOUT_PARTITION_ID_fsbl           = "0x04"
+FLASHLAYOUT_PARTITION_ID_UBI            = "0x24"
 
 FLASHLAYOUT_PARTITION_TYPE                  = "Binary"
 FLASHLAYOUT_PARTITION_TYPE_bootfs           = "System"
 FLASHLAYOUT_PARTITION_TYPE_vendorfs         = "FileSystem"
 FLASHLAYOUT_PARTITION_TYPE_rootfs           = "FileSystem"
 FLASHLAYOUT_PARTITION_TYPE_userfs           = "FileSystem"
+FLASHLAYOUT_PARTITION_TYPE_UBI              = "FileSystem"
 
 FLASHLAYOUT_PARTITION_DEVICE_emmc = "${DEVICE_EMMC}"
+FLASHLAYOUT_PARTITION_DEVICE_spinand = "${DEVICE_SPINAND}"
 # Specific for fsbl1-boot ssbl-boot partitions
 FLASHLAYOUT_PARTITION_DEVICE_basic_fsbl1-boot = "none"
 FLASHLAYOUT_PARTITION_DEVICE_basic_ssbl-boot  = "none"
@@ -145,6 +159,8 @@ FLASHLAYOUT_PARTITION_OFFSET_ssbl-boot  = "0x0"
 FLASHLAYOUT_PARTITION_OFFSET_emmc_fsbl1 = "boot1"
 FLASHLAYOUT_PARTITION_OFFSET_emmc_fsbl2 = "boot2"
 FLASHLAYOUT_PARTITION_OFFSET_emmc_ssbl  = "${DEVICE_START_OFFSET_mmc0}"
+FLASHLAYOUT_PARTITION_OFFSET_spinand_fsbl = "0x0"
+FLASHLAYOUT_PARTITION_OFFSET_spinand_ssbl = "0x00080000"
 
 # Size defined in Kbytes
 FLASHLAYOUT_PARTITION_SIZE_fsbl1    = "256"
@@ -152,36 +168,33 @@ FLASHLAYOUT_PARTITION_SIZE_fsbl2    = "256"
 FLASHLAYOUT_PARTITION_SIZE_ssbl     = "2048"
 FLASHLAYOUT_PARTITION_SIZE_ssbl2    = "2048"
 FLASHLAYOUT_PARTITION_SIZE_env      = "256"
+FLASHLAYOUT_PARTITION_SIZE_spinand_fsbl = "512"
+
 # Specific override for partition size as the configuration should follow
 # the U-Boot source code where these partition sizes are hard coded
 FLASHLAYOUT_PARTITION_SIZE_empty    = "0"
-FLASHLAYOUT_PARTITION_SIZE_emptyfsbl1   = "${FLASHLAYOUT_PARTITION_SIZE_nand-4-256_fsbl1}"
+FLASHLAYOUT_PARTITION_SIZE_emptyfsbl1   = "${FLASHLAYOUT_PARTITION_SIZE_fsbl1}"
 FLASHLAYOUT_PARTITION_SIZE_emptyssbl    = "${FLASHLAYOUT_PARTITION_SIZE_ssbl}"
 FLASHLAYOUT_PARTITION_SIZE_emptyssbl2   = "${FLASHLAYOUT_PARTITION_SIZE_ssbl2}"
-FLASHLAYOUT_PARTITION_SIZE_bootfs   = "${BOOTFS_PARTITION_SIZE}"
-FLASHLAYOUT_PARTITION_SIZE_rootfs   = "${ROOTFS_PARTITION_SIZE}"
-FLASHLAYOUT_PARTITION_SIZE_userfs   = "${USERFS_PARTITION_SIZE}"
+FLASHLAYOUT_PARTITION_SIZE_bootfs       = "${BOOTFS_PARTITION_SIZE}"
+FLASHLAYOUT_PARTITION_SIZE_emmc_rootfs  = "${ROOTFS_PARTITION_SIZE}"
+FLASHLAYOUT_PARTITION_SIZE_spinand_rootfs = "${SPINAND_ROOTFS_PARTITION_SIZE}"
+FLASHLAYOUT_PARTITION_SIZE_userfs       = "${USERFS_PARTITION_SIZE}"
+FLASHLAYOUT_PARTITION_SIZE_UBI          = "${UBI_PARTITION_SIZE}"
 
 # Set binaries to use for each partition
 FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl1-boot   = "tf-a.stm32"
 FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl-boot    = "u-boot-mfg.bin"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl-boot    = "none"
 FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl1        = "tf-a.stm32"
 FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl1  = "u-boot-spl.stm32"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl1  = "none"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl2        = "tf-a.stm32"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl2  = "u-boot-spl.stm32"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl2  = "none"
+FLASHLAYOUT_PARTITION_BIN2LOAD_fsbl         = "tf-a.stm32"
+FLASHLAYOUT_PARTITION_BIN2LOAD_basic_fsbl   = "u-boot-spl.stm32"
 FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl         = "u-boot.bin"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl         = "none"
 FLASHLAYOUT_PARTITION_BIN2LOAD_basic_ssbl   = "u-boot.bin"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_basic_ssbl   = "none"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl2        = "u-boot.stm32"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_ssbl2        = "none"
-#FLASHLAYOUT_PARTITION_BIN2LOAD_env          = "none"
 FLASHLAYOUT_PARTITION_BIN2LOAD_bootfs       = "${STM32MP_BOOTFS_IMAGE}-${MACHINE}.ext4"
 FLASHLAYOUT_PARTITION_BIN2LOAD_rootfs       = "${IMAGE_LINK_NAME}.ext4"
 FLASHLAYOUT_PARTITION_BIN2LOAD_userfs       = "${STM32MP_USERFS_IMAGE}-${MACHINE}.ext4"
+FLASHLAYOUT_PARTITION_BIN2LOAD_UBI          = "${IMAGE_LINK_NAME}-${MACHINE}.ubi"
 
 # -----------------------------------------------------------------------------
 # Use the 'BIN2BOOT_REPLACE_PATTERNS' var to allow dynamic binary renaming for
