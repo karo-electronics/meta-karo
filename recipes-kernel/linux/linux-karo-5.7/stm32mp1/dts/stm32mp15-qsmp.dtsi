@@ -14,8 +14,8 @@
 		i2c1 = &i2c2;
 		i2c2 = &i2c1;
 		mmc1 = &sdmmc1;
-		serial1 = &usart2;
-		serial2 = &usart3;
+		serial1 = &usart3;
+		serial2 = &usart2;
 	};
 };
 
