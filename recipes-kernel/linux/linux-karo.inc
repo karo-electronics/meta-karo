@@ -3,7 +3,9 @@
 
 LICENSE = "GPLv2"
 
-inherit kernel
+LINUX_VERSION_EXTENSION ?= "-karo"
+
+require recipes-kernel/linux/linux-yocto.inc
 
 S = "${WORKDIR}/git"
 

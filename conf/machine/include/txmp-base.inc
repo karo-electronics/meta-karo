@@ -13,7 +13,7 @@ PREFERRED_PROVIDER_u-boot ??= "u-boot-karo"
 PREFERRED_PROVIDER_virtual/bootloader ??= "u-boot-karo"
 
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
-PREFERRED_VERSION_linux-karo = "5.7"
+PREFERRED_VERSION_linux-karo = "5.7.1"
 KERNEL_IMAGETYPE = "uImage"
 
 UBOOT_ENTRYPOINT = "0xc0008000"

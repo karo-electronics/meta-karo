@@ -16,7 +16,9 @@ PROVIDES += "linux"
 SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
-	file://defconfig \
+	file://${KBUILD_DEFCONFIG};subdir=git/arch/arm/configs \
+	${@bb.utils.contains('DISTRO_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
+	${@bb.utils.contains('DISTRO_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
 	file://0001-display-support.patch \
 	file://0002-panel-dpi-bus-format.patch \
 	file://0003-ltdc-missing-bus-flags.patch \
@@ -36,8 +38,7 @@ SRC_URI_append = " \
 	file://0017-raspberrypi-7inch-touchscreen-support.patch \
 	file://0018-can-m_can-make-m_can-driver-work-again-with-sleep-st.patch \
 	file://0019-parrallel-display-bus-flags-from-display-info.patch \
-	${@bb.utils.contains('KERNEL_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
-	${@bb.utils.contains('KERNEL_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
+	file://0020-spi-nand-dma-map-bugfix.patch \
 "
 
 SRC_URI_append_mx6 = " \
@@ -91,8 +92,14 @@ SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153-karo.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157-karo.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-qsmp.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153-qsmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157-qsmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157-txmp.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp153a-qsmp-1530-qsbase1.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp153a-qsmp-1530.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
@@ -105,31 +112,24 @@ SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp151a-qsmp-1510-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp151a-qsmp-1510.dts;subdir=git/arch/arm/boot \
 "
 
 LOCALVERSION = "-stable"
 KERNEL_IMAGETYPE_mx6 = "uImage"
 KERNEL_IMAGETYPE_stm32mp1 = "uImage"
 
-KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi","",d)}"
-KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd","",d)}"
+KBUILD_DEFCONFIG = "defconfig"
+KBUILD_DEFCONFIG_qsmp-1510 = "qsmp-1510_defconfig"
+
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," cfg/wifi.cfg","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," cfg/systemd.cfg","",d)}"
 
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
 COMPATIBLE_MACHINE_stm32mp1 = "(txmp-.*|qsmp-.*)"
 
-# returns all the elements from the src uri that are .cfg files
-def find_cfgs(d):
-    sources=src_patches(d, True)
-    sources_list=[]
-    for s in sources:
-        if s.endswith('.cfg'):
-            sources_list.append(s)
-
-    return sources_list
-
-do_configure_append () {
-    for f in ${@" ".join(find_cfgs(d))};do
-        cat $f >> ${B}/.config
-    done
+do_configure_prepend() {
+    install -v "${WORKDIR}/defconfig" "${B}/.config"
 }
