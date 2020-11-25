@@ -16,9 +16,8 @@ PROVIDES += "linux"
 SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
-	file://${KBUILD_DEFCONFIG};subdir=git/arch/arm/configs \
-	${@bb.utils.contains('DISTRO_FEATURES',"systemd","file://cfg/systemd.cfg","",d)} \
-	${@bb.utils.contains('DISTRO_FEATURES',"wifi","file://cfg/wifi.cfg","",d)} \
+	file://${KBUILD_DEFCONFIG} \
+	${@' file://'.join("${KERNEL_FEATURES}".split(" "))} \
 	file://0001-display-support.patch \
 	file://0002-panel-dpi-bus-format.patch \
 	file://0003-ltdc-missing-bus-flags.patch \
@@ -42,7 +41,6 @@ SRC_URI_append = " \
 "
 
 SRC_URI_append_mx6 = " \
-	${@bb.utils.contains('MACHINE_FEATURES',"nand","file://cfg/nand.cfg","",d)} \
 "
 
 SRC_URI_append_tx6 = " \
@@ -67,8 +65,6 @@ SRC_URI_append_tx6 = " \
 	file://dts/imx6qp-tx6q-8037.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8137-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8137.dts;subdir=git/arch/arm/boot \
-	${@bb.utils.contains('MACHINE_FEATURES',"lvds","file://cfg/lvds.cfg","file://cfg/lcd.cfg",d)} \
-	${@bb.utils.contains('MACHINE_FEATURES',"sata","file://cfg/sata.cfg","",d)} \
 "
 
 SRC_URI_append_txul = " \
@@ -116,7 +112,7 @@ SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp151a-qsmp-1510.dts;subdir=git/arch/arm/boot \
 "
 
-LOCALVERSION = "-karo"
+KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
 KERNEL_IMAGETYPE_mx6 = "uImage"
 KERNEL_IMAGETYPE_stm32mp1 = "uImage"
 
@@ -126,18 +122,37 @@ KBUILD_DEFCONFIG_qsmp-1510 = "qsmp-1510_defconfig"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," cfg/wifi.cfg","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," cfg/systemd.cfg","",d)}"
 
+KERNEL_FEATURES_mx6_append = "${@bb.utils.contains('MACHINE_FEATURES',"nand","cfg/nand.cfg","",d)}"
+KERNEL_FEATURES_tx6_append = "${@bb.utils.contains('MACHINE_FEATURES',"lvds","cfg/lvds.cfg","cfg/lcd.cfg",d)}"
+KERNEL_FEATURES_tx6_append = "${@bb.utils.contains('MACHINE_FEATURES',"sata","cfg/sata.cfg","",d)}"
+
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
 COMPATIBLE_MACHINE_stm32mp1 = "(txmp-.*|qsmp-.*)"
 
+# returns all the elements from the src uri that are .cfg files
+def find_cfgs(d):
+    sources=src_patches(d, True)
+    sources_list=[]
+    for s in sources:
+        if s.endswith('.cfg'):
+            sources_list.append(s)
+
+    return sources_list
+
 do_configure_prepend() {
-set -x
     # Add GIT revision to the local version
     head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
     if ! [ -s "${S}/.scmversion" ] || ! grep -q "$head" ${S}/.scmversion;then
         echo "+g$head" > "${S}/.scmversion"
     fi
-    install -v "${WORKDIR}/defconfig" "${B}/.config"
+    install -v "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/.config"
     sed -i '/CONFIG_LOCALVERSION/d' "${B}/.config"
-    echo 'CONFIG_LOCALVERSION="${LOCALVERSION}"' >> "${B}/.config"
+    echo 'CONFIG_LOCALVERSION="${KERNEL_LOCALVERSION}"' >> "${B}/.config"
+}
+
+do_configure_append () {
+    for f in ${KERNEL_FEATURES};do
+        cat ${WORKDIR}/$f >> ${B}/.config
+    done
 }
