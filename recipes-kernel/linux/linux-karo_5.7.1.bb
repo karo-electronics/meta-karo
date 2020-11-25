@@ -121,6 +121,7 @@ KBUILD_DEFCONFIG_qsmp-1510 = "qsmp-1510_defconfig"
 
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," cfg/wifi.cfg","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," cfg/systemd.cfg","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," cfg/ipv6.cfg","",d)}"
 
 KERNEL_FEATURES_mx6_append = "${@bb.utils.contains('MACHINE_FEATURES',"nand","cfg/nand.cfg","",d)}"
 KERNEL_FEATURES_tx6_append = "${@bb.utils.contains('MACHINE_FEATURES',"lvds","cfg/lvds.cfg","cfg/lcd.cfg",d)}"
