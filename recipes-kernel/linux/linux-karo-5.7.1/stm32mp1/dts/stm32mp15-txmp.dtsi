@@ -357,7 +357,7 @@
 			pinmux = <
 				  STM32_PINMUX('D', 2, AF8) /* UART5_RX */
 			>;
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 
@@ -380,7 +380,7 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('C', 9, AF8)>; /* UART5_CTS */
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 
@@ -403,7 +403,7 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('E', 7, AF7)>; /* UART7_RX */
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 
@@ -426,7 +426,7 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('E', 10, AF7)>; /* UART7_CTS */
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 

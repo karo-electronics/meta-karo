@@ -270,7 +270,6 @@
 	qsmp_sdmmc1_opendrain_pins: qsmp-sdmmc1-opendrain-pins {
 		pins1 {
 			pinmux = <
-				  STM32_PINMUX('D', 2, AF12)	/* SDMMC1_CMD */
 				  STM32_PINMUX('C', 8, AF12)	/* SDMMC1_D0 */
 				  STM32_PINMUX('C', 9, AF12)	/* SDMMC1_D1 */
 				  STM32_PINMUX('C', 10, AF12)	/* SDMMC1_D2 */
@@ -432,18 +431,32 @@
 	qsmp_usart2_pins: qsmp-usart2-pins {
 		pins1 {
 			pinmux = <
-				  STM32_PINMUX('D', 3, AF7) /* USART2_CTS */
 				  STM32_PINMUX('D', 6, AF7) /* USART2_RX */
 			>;
+			bias-pull-up;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('D', 5, AF7) /* USART2_TX */
+			>;
 			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
 		};
 	};
 
 	qsmp_usart2_rtscts_pins: qsmp-usart2-rtscts-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('D', 3, AF7) /* USART2_CTS */
+			>;
+			bias-pull-up;
+		};
+
 		pins2 {
 			pinmux = <
 				  STM32_PINMUX('D', 4, AF7) /* USART2_RTS */
-				  STM32_PINMUX('D', 5, AF7) /* USART2_TX */
 			>;
 			bias-disable;
 			drive-push-pull;
@@ -479,7 +492,7 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('B', 12, AF8)>; /* USART3_RX */
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 
