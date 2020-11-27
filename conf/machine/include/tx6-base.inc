@@ -28,7 +28,7 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS = " \
         linux-firmware-imx-sdma-imx6q \
 "
 
-# Shit vpu firmware
+# Ship vpu firmware
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append_karo-wayland = " \
         linux-firmware-imx-vpu \
 "
