@@ -166,7 +166,7 @@ if $build_dir_setup_enabled;then
             break
         fi
         if [ "$DISTRO" = "karo-wayland" ];then
-            bitbake_target="karo-image-weston karo-image-mulitmedia"
+            bitbake_target="karo-image-weston"
         fi
     done
 fi
