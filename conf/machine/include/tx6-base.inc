@@ -44,7 +44,6 @@ MACHINE_FEATURES = " \
                  alsa \
                  rtc \
                  serial \
-                 touchscreen \
                  usbgadget \
                  usbhost \
                  vfat \
