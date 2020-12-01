@@ -21,6 +21,15 @@ UBOOT_ENTRYPOINT = "0xc0008000"
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
 
+MACHINE_FEATURES = " \
+                 alsa \
+                 rtc \
+                 serial \
+                 usbgadget \
+                 usbhost \
+                 vfat \
+"
+
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
