@@ -4,8 +4,7 @@
  */
 
 #include "stm32mp157.dtsi"
-#include "stm32mp15-txmp.dtsi"
-#include "stm32mp157-karo.dtsi"
+#include "stm32mp153-txmp.dtsi"
 
 &dsi {
 	status = "okay";

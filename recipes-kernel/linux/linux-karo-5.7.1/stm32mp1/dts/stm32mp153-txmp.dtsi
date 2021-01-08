@@ -5,7 +5,6 @@
 
 #include "stm32mp153.dtsi"
 #include "stm32mp15-txmp.dtsi"
-#include "stm32mp153-karo.dtsi"
 
 &m_can1 {
 	pinctrl-names = "default", "sleep";
