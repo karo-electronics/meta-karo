@@ -38,6 +38,7 @@ SRC_URI_append = " \
 	file://0018-can-m_can-make-m_can-driver-work-again-with-sleep-st.patch \
 	file://0019-parrallel-display-bus-flags-from-display-info.patch \
 	file://0020-spi-nand-dma-map-bugfix.patch \
+	file://0021-smsc-phy-clk-enable.patch \
 "
 
 SRC_URI_append_tx6 = " \

@@ -85,21 +85,21 @@
 		etnphy0: ethernet-phy@0 {
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <0>;
+			clocks = <&clks IMX6UL_CLK_ENET_REF>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_etnphy0_int>;
 			interrupt-parent = <&gpio5>;
 			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
-			status = "okay";
 		};
 
 		etnphy1: ethernet-phy@2 {
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <2>;
+			clocks = <&clks IMX6UL_CLK_ENET_REF>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_etnphy1_int>;
 			interrupt-parent = <&gpio4>;
 			interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
-			status = "okay";
 		};
 	};
 };

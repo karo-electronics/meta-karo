@@ -295,6 +295,7 @@
 		etnphy: ethernet-phy@0 {
 			compatible = "ethernet-phy-ieee802.3-c22";
 			reg = <0>;
+			clocks = <&clks IMX6QDL_CLK_ENET_REF>;
 			pinctrl-names = "default";
 			pinctrl-0 = <&pinctrl_etnphy_int>;
 			interrupt-parent = <&gpio7>;
