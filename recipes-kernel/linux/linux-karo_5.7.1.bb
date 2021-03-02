@@ -40,27 +40,38 @@ SRC_URI_append = " \
 	file://0020-spi-nand-dma-map-bugfix.patch \
 "
 
-SRC_URI_append_mx6 = " \
-"
-
 SRC_URI_append_tx6 = " \
-	file://dts/imx6dl-tx6u-8033.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6s-8134.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6s-8135.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6dl-comtft.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8034-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6s-8034.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8035-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6s-8035.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8134-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6s-8134.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6s-8135-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6u-8133-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6dl-tx6u-80xx-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6s-8135.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-801x.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6dl-tx6u-8033-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/imx6q-tx6q-10x0-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-8033.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-80xx-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-811x.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-8133-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6dl-tx6u-81xx-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-1010-comtft.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-1010.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-1020-comtft.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6q-tx6q-1020-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-1020.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6q-tx6q-1036-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-1036.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-10x0-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-1110.dts;subdir=git/arch/arm/boot \
+	file://dts/imx6q-tx6q-11x0-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qdl-tx6-lcd.dtsi;subdir=git/arch/arm/boot \
 	file://dts/imx6qdl-tx6-lvds.dtsi;subdir=git/arch/arm/boot \
 	file://dts/imx6qdl-tx6-mb7.dtsi;subdir=git/arch/arm/boot \
+	file://dts/imx6qdl-tx6.dtsi;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8037-mb7.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8037.dts;subdir=git/arch/arm/boot \
 	file://dts/imx6qp-tx6q-8137-mb7.dts;subdir=git/arch/arm/boot \
