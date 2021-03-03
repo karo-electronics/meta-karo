@@ -555,13 +555,12 @@ diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconf
 index c071f7c407b6..74b0f98f526c 100644
 --- a/drivers/input/touchscreen/Kconfig
 +++ b/drivers/input/touchscreen/Kconfig
-@@ -1310,4 +1310,11 @@ config TOUCHSCREEN_IQS5XX
+@@ -1310,4 +1310,10 @@ config TOUCHSCREEN_IQS5XX
  	  To compile this driver as a module, choose M here: the
  	  module will be called iqs5xx.
  
 +config TOUCHSCREEN_RPI_FT5406
 +	tristate "RaspberryPi 7inch touchscreen ft5406"
-+	default y
 +	depends on I2C
 +	help
 +	  Controls the official RaspberryPi 7inch ft5406 touch ic.
