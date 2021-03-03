@@ -329,6 +329,7 @@
 		     &pinctrl_etnphy0_rst_sleep>;
 	phy-mode = "rmii";
 	phy-reset-gpios = <&gpio5 6 GPIO_ACTIVE_LOW>;
+	phy-reset-duration = <25>;
 	phy-reset-post-delay = <10>;
 	phy-supply = <&reg_3v3_etn>;
 	phy-handle = <&etnphy0>;
