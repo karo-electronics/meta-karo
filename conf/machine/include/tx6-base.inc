@@ -23,14 +23,10 @@ MACHINE_EXTRA_RRECOMMENDS = " \
                           u-boot-karo \
 "
 
-# Ship imx-sdma firmware
+# Ship imx-sdma & vpu firmware
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS = " \
         linux-firmware-imx-sdma-imx6q \
-"
-
-# Ship vpu firmware
-MACHINE_ESSENTIAL_EXTRA_RDEPENDS_append_karo-wayland = " \
-        linux-firmware-imx-vpu \
+        ${@bb.utils.contains('DISTRO_FEATURES',"wayland","linux-firmware-imx-vpu","",d)} \
 "
 
 # Blacklist evbug kernel module
