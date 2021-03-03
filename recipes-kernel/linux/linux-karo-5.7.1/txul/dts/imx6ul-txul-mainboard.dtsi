@@ -90,6 +90,7 @@
 			pinctrl-0 = <&pinctrl_etnphy0_int>;
 			interrupt-parent = <&gpio5>;
 			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+			smsc,disable-energy-detect;
 		};
 
 		etnphy1: ethernet-phy@2 {
@@ -100,6 +101,7 @@
 			pinctrl-0 = <&pinctrl_etnphy1_int>;
 			interrupt-parent = <&gpio4>;
 			interrupts = <27 IRQ_TYPE_EDGE_FALLING>;
+			smsc,disable-energy-detect;
 		};
 	};
 };
