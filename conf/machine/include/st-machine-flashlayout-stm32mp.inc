@@ -17,7 +17,7 @@ DEVICE_SPINAND = "spi-nand0"
 # Extra space is required to store 'Protective MBR' and 'Primary GPT Header'
 # Currently the required size is 17kBytes (i.e. 0x4400)
 # We need to align this size to get the first offset to use
-DEVICE_START_OFFSET_mmc0    = "0x00080000"
+DEVICE_START_OFFSET_mmc0    = "0x00100000"
 DEVICE_ALIGNMENT_SIZE_mmc0  = "0x00080000"
 
 # -----------------------------------------------------------------------------
