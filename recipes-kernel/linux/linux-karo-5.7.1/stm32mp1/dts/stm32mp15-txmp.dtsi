@@ -107,17 +107,19 @@
 
 &uart5 {
 	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&txmp_uart5_pins &txmp_uart5_rtscts_pins>;
-	pinctrl-1 = <&txmp_uart5_sleep_pins &txmp_uart5_rtscts_sleep_pins>;
-	uart-has-rtscts;
+	pinctrl-0 = <&txmp_uart5_pins>;
+	pinctrl-1 = <&txmp_uart5_sleep_pins>;
+	rts-gpios = <&gpioc 8 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpioc 9 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
 &uart7 {
 	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&txmp_uart7_pins &txmp_uart7_rtscts_pins>;
-	pinctrl-1 = <&txmp_uart7_sleep_pins &txmp_uart7_rtscts_sleep_pins>;
-	uart-has-rtscts;
+	pinctrl-0 = <&txmp_uart7_pins>;
+	pinctrl-1 = <&txmp_uart7_sleep_pins>;
+	rts-gpios = <&gpioe 9 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpioe 10 GPIO_ACTIVE_LOW>;
 	status = "okay";
 };
 
