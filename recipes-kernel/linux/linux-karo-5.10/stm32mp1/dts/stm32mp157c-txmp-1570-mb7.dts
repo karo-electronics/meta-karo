@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "stm32mp157c-txmp-1570.dts"
+#include "stm32mp15-karo-mb7.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH TXMP-1570 module on MB7 baseboard";
+};
+
+&gpu {
+	status = "okay";
+};
+
+&pwr_regulators {
+	/delete-property/ wakeup-gpios;
+};

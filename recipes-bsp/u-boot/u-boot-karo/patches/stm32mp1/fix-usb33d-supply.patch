@@ -1,0 +1,13 @@
+diff --git a/arch/arm/dts/stm32mp15-karo.dtsi b/arch/arm/dts/stm32mp15-karo.dtsi
+index 90588ef75b..8ff812e6d4 100644
+--- a/arch/arm/dts/stm32mp15-karo.dtsi
++++ b/arch/arm/dts/stm32mp15-karo.dtsi
+@@ -304,7 +304,7 @@
+ };
+ 
+ &usb33 {
+-	usb33-supply = <&reg18>;
++	usb33d-supply = <&reg18>;
+ };
+ 
+ &qspi {

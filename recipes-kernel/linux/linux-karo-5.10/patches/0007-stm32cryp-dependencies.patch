@@ -1,0 +1,16 @@
+Index: karo-tx-linux/drivers/crypto/stm32/Kconfig
+===================================================================
+--- karo-tx-linux.orig/drivers/crypto/stm32/Kconfig
++++ karo-tx-linux/drivers/crypto/stm32/Kconfig
+@@ -23,9 +23,11 @@ config CRYPTO_DEV_STM32_HASH
+ config CRYPTO_DEV_STM32_CRYP
+ 	tristate "Support for STM32 cryp accelerators"
+ 	depends on ARCH_STM32
++	select CRYPTO_AEAD2
+ 	select CRYPTO_HASH
+ 	select CRYPTO_ENGINE
+ 	select CRYPTO_LIB_DES
++	select CRYPTO_SKCIPHER
+ 	help
+ 	  This enables support for the CRYP (AES/DES/TDES) hw accelerator which
+ 	  can be found on STMicroelectronics STM32 SOC.

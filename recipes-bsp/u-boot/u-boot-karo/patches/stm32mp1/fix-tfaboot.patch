@@ -1,0 +1,28 @@
+commit fd94493f4885b1fc129b3a8a373f0abbbcf3338d
+Author: Markus Bauer <mb@karo-electronics.de>
+Date:   Tue Mar 16 15:47:30 2021 +0000
+
+    fix TFABOOT
+
+diff --git a/board/karo/txmp/txmp.c b/board/karo/txmp/txmp.c
+index 28d23b54c6..06747c94ae 100644
+--- a/board/karo/txmp/txmp.c
++++ b/board/karo/txmp/txmp.c
+@@ -119,7 +119,7 @@ int checkboard(void)
+ 
+ 	debug("%s@%d:\n", __func__, __LINE__);
+ 
+-	if (IS_ENABLED(CONFIG_STM32MP1_TRUSTED))
++	if (IS_ENABLED(CONFIG_TFABOOT))
+ 		mode = "trusted";
+ 	else
+ 		mode = "basic";
+@@ -214,7 +214,7 @@ static void board_key_check(void)
+ 
+ static void sysconf_init(void)
+ {
+-#ifndef CONFIG_STM32MP1_TRUSTED
++#ifndef CONFIG_TFABOOT
+ 	void *syscfg;
+ #ifdef CONFIG_DM_REGULATOR
+ 	struct udevice *pwr_dev;

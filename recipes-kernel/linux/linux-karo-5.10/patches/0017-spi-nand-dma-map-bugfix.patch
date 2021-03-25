@@ -1,0 +1,22 @@
+diff --git a/drivers/mtd/nand/spi/macronix.c b/drivers/mtd/nand/spi/macronix.c
+index 3786b1b03b3b..a5c02c9d4aae 100644
+--- a/drivers/mtd/nand/spi/macronix.c
++++ b/drivers/mtd/nand/spi/macronix.c
+@@ -54,13 +54,15 @@ static int mx35lf1ge4ab_get_eccsr(struct spinand_device *spinand, u8 *eccsr)
+ 	struct spi_mem_op op = SPI_MEM_OP(SPI_MEM_OP_CMD(0x7c, 1),
+ 					  SPI_MEM_OP_NO_ADDR,
+ 					  SPI_MEM_OP_DUMMY(1, 1),
+-					  SPI_MEM_OP_DATA_IN(1, eccsr, 1));
++					  SPI_MEM_OP_DATA_IN(1,
++							spinand->scratchbuf,
++							1));
+ 
+ 	int ret = spi_mem_exec_op(spinand->spimem, &op);
+ 	if (ret)
+ 		return ret;
+ 
+-	*eccsr &= MACRONIX_ECCSR_MASK;
++	*eccsr = *spinand->scratchbuf & MACRONIX_ECCSR_MASK;
+ 	return 0;
+ }
+ 

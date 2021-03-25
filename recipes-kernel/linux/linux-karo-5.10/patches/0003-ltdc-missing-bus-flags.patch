@@ -1,0 +1,95 @@
+commit f2acb60293dd375623127dc3c67d95f2d22ed65b
+Author: Markus Bauer <mb@karo-electronics.de>
+Date:   Tue Mar 16 12:29:30 2021 +0100
+
+    LTDC: add missing bus-flags
+
+diff --git a/drivers/gpu/drm/stm/ltdc.c b/drivers/gpu/drm/stm/ltdc.c
+index 6e28f707092f..0f72a46f3e78 100644
+--- a/drivers/gpu/drm/stm/ltdc.c
++++ b/drivers/gpu/drm/stm/ltdc.c
+@@ -29,11 +29,13 @@
+ #include <drm/drm_gem_cma_helper.h>
+ #include <drm/drm_gem_framebuffer_helper.h>
+ #include <drm/drm_of.h>
++#include <drm/drm_panel.h>
+ #include <drm/drm_plane_helper.h>
+ #include <drm/drm_probe_helper.h>
+ #include <drm/drm_vblank.h>
+ 
+ #include <video/videomode.h>
++#include <video/of_display_timing.h>
+ 
+ #include "ltdc.h"
+ 
+@@ -567,10 +569,16 @@ static void ltdc_crtc_mode_set_nofb(struct drm_crtc *crtc)
+ 	if (vm.flags & DISPLAY_FLAGS_VSYNC_HIGH)
+ 		val |= GCR_VSPOL;
+ 
+-	if (vm.flags & DISPLAY_FLAGS_DE_LOW)
++	/*
++	 * The last two options are not stored inside videomode when its
++	 * extracted back from drm_display_mode.
++	 * Because of this, we store bus_flags when searching for panel
++	 * seperately inside ltdc device.
++	 */
++	if (ldev->bus_flags & DRM_BUS_FLAG_DE_LOW)
+ 		val |= GCR_DEPOL;
+ 
+-	if (vm.flags & DISPLAY_FLAGS_PIXDATA_NEGEDGE)
++	if (ldev->bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE)
+ 		val |= GCR_PCPOL;
+ 
+ 	reg_update_bits(ldev->regs, LTDC_GCR,
+@@ -1188,11 +1196,14 @@ int ltdc_load(struct drm_device *ddev)
+ 	struct device_node *np = dev->of_node;
+ 	struct drm_bridge *bridge;
+ 	struct drm_panel *panel;
++	struct display_timing *timing;
+ 	struct drm_crtc *crtc;
++	struct videomode vm;
+ 	struct reset_control *rstc;
+ 	struct resource *res;
+ 	int irq, i, nb_endpoints;
+ 	int ret = -ENODEV;
++	u32 bus_flags;
+ 
+ 	DRM_DEBUG_DRIVER("\n");
+ 
+@@ -1228,6 +1239,24 @@ int ltdc_load(struct drm_device *ddev)
+ 			goto err;
+ 
+ 		if (panel) {
++			/* get timings from panel again to get also drm_bus_flags! */
++			timing = devm_kzalloc(dev, sizeof(*timing), GFP_KERNEL);
++			if (!timing)
++				return -ENOMEM;
++
++			ret = of_get_display_timing(panel->dev->of_node, "panel-timing", timing);
++			if (ret < 0) {
++				dev_err(dev, "%pOF: no panel-timing node found for \"panel-dpi\" binding\n",
++					np);
++				return ret;
++			}
++
++			/* Extract bus_flags from display_timing */
++			bus_flags = 0;
++			vm.flags = timing->flags;
++			drm_bus_flags_from_videomode(&vm, &bus_flags);
++			ldev->bus_flags = bus_flags;
++
+ 			bridge = drm_panel_bridge_add_typed(panel,
+ 							    DRM_MODE_CONNECTOR_DPI);
+ 			if (IS_ERR(bridge)) {
+diff --git a/drivers/gpu/drm/stm/ltdc.h b/drivers/gpu/drm/stm/ltdc.h
+index f153b908c70e..a6adf603fbfe 100644
+--- a/drivers/gpu/drm/stm/ltdc.h
++++ b/drivers/gpu/drm/stm/ltdc.h
+@@ -36,6 +36,7 @@ struct ltdc_device {
+ 	struct ltdc_caps caps;
+ 	u32 error_status;
+ 	u32 irq_status;
++	u32 bus_flags;
+ 	struct fps_info plane_fpsi[LTDC_MAX_LAYER];
+ 	struct drm_atomic_state *suspend_state;
+ };

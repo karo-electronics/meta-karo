@@ -1,0 +1,24 @@
+Index: karo-tx-linux/drivers/usb/dwc2/platform.c
+===================================================================
+--- karo-tx-linux.orig/drivers/usb/dwc2/platform.c
++++ karo-tx-linux/drivers/usb/dwc2/platform.c
+@@ -488,7 +488,8 @@ static int dwc2_driver_probe(struct plat
+ 		}
+ 
+ 		ggpio = dwc2_readl(hsotg, GGPIO);
+-		ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
++		if (hsotg->dr_mode == USB_DR_MODE_OTG)
++			ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
+ 		ggpio |= GGPIO_STM32_OTG_GCCFG_VBDEN;
+ 		dwc2_writel(hsotg, ggpio, GGPIO);
+ 	}
+@@ -616,7 +617,8 @@ static int __maybe_unused dwc2_resume(st
+ 			return ret;
+ 
+ 		ggpio = dwc2_readl(dwc2, GGPIO);
+-		ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
++		if (dwc2->dr_mode == USB_DR_MODE_OTG)
++			ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
+ 		ggpio |= GGPIO_STM32_OTG_GCCFG_VBDEN;
+ 		dwc2_writel(dwc2, ggpio, GGPIO);
+ 

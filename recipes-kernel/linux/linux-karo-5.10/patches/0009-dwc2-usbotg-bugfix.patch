@@ -1,0 +1,87 @@
+Index: karo-tx-linux/drivers/usb/dwc2/platform.c
+===================================================================
+--- karo-tx-linux.orig/drivers/usb/dwc2/platform.c
++++ karo-tx-linux/drivers/usb/dwc2/platform.c
+@@ -374,6 +374,7 @@ static bool dwc2_check_core_endianness(s
+  * in the device private data. This allows the driver to access the dwc2_hsotg
+  * structure on subsequent calls to driver methods for this device.
+  */
++#define DWC2_INTR_PATCH
+ static int dwc2_driver_probe(struct platform_device *dev)
+ {
+ 	struct dwc2_hsotg *hsotg;
+@@ -413,7 +414,7 @@ static int dwc2_driver_probe(struct plat
+ 	hsotg->irq = platform_get_irq(dev, 0);
+ 	if (hsotg->irq < 0)
+ 		return hsotg->irq;
+-
++#ifndef DWC2_INTR_PATCH
+ 	dev_dbg(hsotg->dev, "registering common handler for irq%d\n",
+ 		hsotg->irq);
+ 	retval = devm_request_irq(hsotg->dev, hsotg->irq,
+@@ -421,7 +422,7 @@ static int dwc2_driver_probe(struct plat
+ 				  dev_name(hsotg->dev), hsotg);
+ 	if (retval)
+ 		return retval;
+-
++#endif
+ 	hsotg->vbus_supply = devm_regulator_get_optional(hsotg->dev, "vbus");
+ 	if (IS_ERR(hsotg->vbus_supply)) {
+ 		retval = PTR_ERR(hsotg->vbus_supply);
+@@ -526,7 +527,15 @@ static int dwc2_driver_probe(struct plat
+ 		}
+ 		hsotg->hcd_enabled = 1;
+ 	}
+-
++#ifdef DWC2_INTR_PATCH
++	dev_dbg(hsotg->dev, "registering common handler for irq%d\n",
++		hsotg->irq);
++	retval = devm_request_irq(hsotg->dev, hsotg->irq,
++				  dwc2_handle_common_intr, IRQF_SHARED,
++				  dev_name(hsotg->dev), hsotg);
++	if (retval)
++		goto error_init;
++#endif
+ 	platform_set_drvdata(dev, hsotg);
+ 	hsotg->hibernated = 0;
+ 
+Index: karo-tx-linux/drivers/usb/dwc2/core_intr.c
+===================================================================
+--- karo-tx-linux.orig/drivers/usb/dwc2/core_intr.c
++++ karo-tx-linux/drivers/usb/dwc2/core_intr.c
+@@ -486,6 +486,8 @@ static void dwc2_handle_usb_suspend_intr
+ 	dev_dbg(hsotg->dev, "USB SUSPEND\n");
+ 
+ 	if (dwc2_is_device_mode(hsotg)) {
++		if (WARN_ON(!hsotg->gadget_enabled))
++			return;
+ 		/*
+ 		 * Check the Device status register to determine if the Suspend
+ 		 * state is active
+@@ -540,6 +542,8 @@ skip_power_saving:
+ 			call_gadget(hsotg, suspend);
+ 		}
+ 	} else {
++		if (WARN_ON(!hsotg->hcd_enabled))
++			return;
+ 		if (hsotg->op_state == OTG_STATE_A_PERIPHERAL) {
+ 			dev_dbg(hsotg->dev, "a_peripheral->a_host\n");
+ 
+@@ -586,6 +590,8 @@ static void dwc2_handle_lpm_intr(struct
+ 	enslpm = glpmcfg & GLPMCFG_ENBLSLPM;
+ 
+ 	if (dwc2_is_device_mode(hsotg)) {
++		if (WARN_ON(!hsotg->gadget_enabled))
++			return;
+ 		dev_dbg(hsotg->dev, "HIRD_THRES_EN = %d\n", hird_thres_en);
+ 
+ 		if (hird_thres_en && hird >= hird_thres) {
+@@ -784,6 +790,8 @@ irqreturn_t dwc2_handle_common_intr(int
+ 		dev_warn(hsotg->dev, "Controller is dead\n");
+ 		goto out;
+ 	}
++	if (WARN_ON(!(hsotg->gadget_enabled || hsotg->hcd_enabled)))
++		goto out;
+ 
+ 	/* Reading current frame number value in device or host modes. */
+ 	if (dwc2_is_device_mode(hsotg))

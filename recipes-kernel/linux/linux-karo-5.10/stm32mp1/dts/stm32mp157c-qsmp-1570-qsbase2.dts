@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2020 Markus Bauer <mb@karo-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "stm32mp157c-qsmp-1570.dts"
+#include "stm32mp15-karo-qsbase2.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSBASE2 baseboard";
+};

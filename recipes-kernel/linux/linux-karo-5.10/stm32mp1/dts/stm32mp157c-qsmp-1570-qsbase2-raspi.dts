@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2020 Markus Bauer <mb@karo-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "stm32mp157c-qsmp-1570.dts"
+#include "stm32mp15-karo-qsbase2.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSBASE2 baseboard with RaspberryPi 7 inch Display";
+};
+
+&dsi {
+	status = "okay";
+
+	ports {
+		port@1 {
+			reg = <1>;
+			dsi_out: endpoint {
+				remote-endpoint = <&dsi_panel_in>;
+			};
+		};
+	};
+
+	panel@0 {
+		compatible = "rpi,tc358762";
+		reg = <0>;
+		dsi-lanes = <1>;
+		video-mode = <2>;
+		panel-width-mm = <154>;
+		panel-height-mm = <86>;
+
+		port {
+			dsi_panel_in: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
+	};
+};
+
+&gpu {
+	status = "okay";
+};
+
+&i2c6 {
+	status = "okay";
+
+	rpi_display: rpi_display@45 {
+		compatible = "rpi_display";
+		reg = <0x45>;
+	};
+
+	rpi_ft5406: rpi_ft5406@38 {
+		compatible = "rpi_ft5406";
+		reg = <0x38>;
+	};
+};
+
+&ltdc {
+	status = "okay";
+};

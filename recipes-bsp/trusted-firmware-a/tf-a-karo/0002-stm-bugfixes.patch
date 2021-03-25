@@ -1,0 +1,1730 @@
+Index: arm-trusted-firmware.git/plat/st/common/include/stm32mp_common.h
+===================================================================
+--- arm-trusted-firmware.git.orig/plat/st/common/include/stm32mp_common.h
++++ arm-trusted-firmware.git/plat/st/common/include/stm32mp_common.h
+@@ -9,11 +9,12 @@
+ 
+ #include <cdefs.h>
+ #include <stdbool.h>
++#include "boot_api.h"
+ 
+ void __dead2 stm32mp_plat_reset(int cpu);
+ 
+ void stm32mp_save_boot_ctx_address(uintptr_t address);
+-uintptr_t stm32mp_get_boot_ctx_address(void);
++boot_api_context_t *stm32mp_get_boot_ctx_address(void);
+ 
+ bool stm32mp_is_single_core(void);
+ const char *stm32mp_get_cpu_supply_name(void);
+Index: arm-trusted-firmware.git/plat/st/common/stm32mp_common.c
+===================================================================
+--- arm-trusted-firmware.git.orig/plat/st/common/stm32mp_common.c
++++ arm-trusted-firmware.git/plat/st/common/stm32mp_common.c
+@@ -33,14 +33,14 @@ void __dead2 stm32mp_plat_reset(int cpu)
+ }
+ 
+ /* Functions to save and get boot context address given by ROM code */
+-static uintptr_t boot_ctx_address;
++static boot_api_context_t *boot_ctx_address;
+ 
+ void stm32mp_save_boot_ctx_address(uintptr_t address)
+ {
+-	boot_ctx_address = address;
++	boot_ctx_address = (void *)address;
+ }
+ 
+-uintptr_t stm32mp_get_boot_ctx_address(void)
++boot_api_context_t *stm32mp_get_boot_ctx_address(void)
+ {
+ 	return boot_ctx_address;
+ }
+Index: arm-trusted-firmware.git/common/backtrace.c
+===================================================================
+--- arm-trusted-firmware.git.orig/common/backtrace.c
++++ arm-trusted-firmware.git/common/backtrace.c
+@@ -167,7 +167,7 @@ static void unwind_stack(struct frame_re
+ 			 uintptr_t link_register)
+ {
+ 	uintptr_t call_site;
+-	static const char *backtrace_str = "%u: %s: 0x%lx\n";
++	static const char *backtrace_str = "%u: %s: %08lx\n";
+ 	const char *el_str = get_el_str(get_current_el());
+ 
+ 	if (!is_valid_frame_record(fr)) {
+@@ -183,7 +183,7 @@ static void unwind_stack(struct frame_re
+ 	}
+ 
+ 	/* The level 0 of the backtrace is the current backtrace function */
+-	printf(backtrace_str, 0U, el_str, current_pc);
++	//printf(backtrace_str, 0U, el_str, current_pc);
+ 
+ 	/*
+ 	 * The last frame record pointer in the linked list at the beginning of
+Index: arm-trusted-firmware.git/common/bl_common.c
+===================================================================
+--- arm-trusted-firmware.git.orig/common/bl_common.c
++++ arm-trusted-firmware.git/common/bl_common.c
+@@ -170,7 +170,7 @@ static int load_image(unsigned int image
+ 	io_result = plat_get_image_source(image_id, &dev_handle, &image_spec);
+ 	if (io_result != 0) {
+ 		WARN("Failed to obtain reference to image id=%u (%i)\n",
+-			image_id, io_result);
++		     image_id, io_result);
+ 		return io_result;
+ 	}
+ 
+@@ -178,18 +178,18 @@ static int load_image(unsigned int image
+ 	io_result = io_open(dev_handle, image_spec, &image_handle);
+ 	if (io_result != 0) {
+ 		WARN("Failed to access image id=%u (%i)\n",
+-			image_id, io_result);
++		     image_id, io_result);
+ 		return io_result;
+ 	}
+ 
+-	INFO("Loading image id=%u at address %p\n", image_id,
+-		(void *) image_base);
++	INFO("Loading image id=%u at address %08lx\n", image_id,
++	     image_base);
+ 
+ 	/* Find the size of the image */
+ 	io_result = io_size(image_handle, &image_size);
+ 	if ((io_result != 0) || (image_size == 0)) {
+ 		WARN("Failed to determine the size of the image id=%u (%i)\n",
+-			image_id, io_result);
++		     image_id, io_result);
+ 		goto exit;
+ 	}
+ 
+@@ -210,9 +210,8 @@ static int load_image(unsigned int image
+ 		goto exit;
+ 	}
+ 
+-	INFO("Image id=%u loaded: %p - %p\n", image_id, (void *) image_base,
+-	     (void *) (image_base + image_size));
+-
++	INFO("Image id=%u loaded: %08lx - %08lx\n", image_id, image_base,
++	     image_base + image_size);
+ exit:
+ 	io_close(image_handle);
+ 	/* Ignore improbable/unrecoverable error in 'close' */
+Index: arm-trusted-firmware.git/drivers/st/clk/stm32mp1_clk.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/clk/stm32mp1_clk.c
++++ arm-trusted-firmware.git/drivers/st/clk/stm32mp1_clk.c
+@@ -224,45 +224,45 @@ struct stm32mp1_pll_settings {
+ /* Clocks with selectable source and non set/clr register access */
+ #define _CLK_SELEC(off, b, idx, s)			\
+ 	{						\
+-		.offset = (off),			\
+-		.bit = (b),				\
+-		.index = (idx),				\
++		.offset = off,				\
++		.bit = b,				\
++		.index = idx,				\
+ 		.set_clr = 0,				\
+-		.sel = (s),				\
++		.sel = s,				\
+ 		.fixed = _UNKNOWN_ID,			\
+ 	}
+ 
+ /* Clocks with fixed source and non set/clr register access */
+ #define _CLK_FIXED(off, b, idx, f)			\
+ 	{						\
+-		.offset = (off),			\
+-		.bit = (b),				\
+-		.index = (idx),				\
++		.offset = off,				\
++		.bit = b,				\
++		.index = idx,				\
+ 		.set_clr = 0,				\
+ 		.sel = _UNKNOWN_SEL,			\
+-		.fixed = (f),				\
++		.fixed = f,				\
+ 	}
+ 
+ /* Clocks with selectable source and set/clr register access */
+ #define _CLK_SC_SELEC(off, b, idx, s)			\
+ 	{						\
+-		.offset = (off),			\
+-		.bit = (b),				\
+-		.index = (idx),				\
++		.offset = off,				\
++		.bit = b,				\
++		.index = idx,				\
+ 		.set_clr = 1,				\
+-		.sel = (s),				\
++		.sel = s,				\
+ 		.fixed = _UNKNOWN_ID,			\
+ 	}
+ 
+ /* Clocks with fixed source and set/clr register access */
+ #define _CLK_SC_FIXED(off, b, idx, f)			\
+ 	{						\
+-		.offset = (off),			\
+-		.bit = (b),				\
+-		.index = (idx),				\
++		.offset = off,				\
++		.bit = b,				\
++		.index = idx,				\
+ 		.set_clr = 1,				\
+ 		.sel = _UNKNOWN_SEL,			\
+-		.fixed = (f),				\
++		.fixed = f,				\
+ 	}
+ 
+ #define _CLK_PARENT_SEL(_label, _rcc_selr, _parents)		\
+@@ -277,18 +277,18 @@ struct stm32mp1_pll_settings {
+ #define _CLK_PLL(idx, type, off1, off2, off3,		\
+ 		 off4, off5, off6,			\
+ 		 p1, p2, p3, p4)			\
+-	[(idx)] = {					\
+-		.plltype = (type),			\
+-		.rckxselr = (off1),			\
+-		.pllxcfgr1 = (off2),			\
+-		.pllxcfgr2 = (off3),			\
+-		.pllxfracr = (off4),			\
+-		.pllxcr = (off5),			\
+-		.pllxcsgr = (off6),			\
+-		.refclk[0] = (p1),			\
+-		.refclk[1] = (p2),			\
+-		.refclk[2] = (p3),			\
+-		.refclk[3] = (p4),			\
++	[idx] = {					\
++		.plltype = type,			\
++		.rckxselr = off1,			\
++		.pllxcfgr1 = off2,			\
++		.pllxcfgr2 = off3,			\
++		.pllxfracr = off4,			\
++		.pllxcr = off5,				\
++		.pllxcsgr = off6,			\
++		.refclk[0] = p1,			\
++		.refclk[1] = p2,			\
++		.refclk[2] = p3,			\
++		.refclk[3] = p4,			\
+ 	}
+ 
+ static const uint8_t stm32mp1_clks[][2] = {
+@@ -709,9 +709,9 @@ static int stm32mp1_clk_get_gated_id(uns
+ 		}
+ 	}
+ 
+-	ERROR("%s: clk id %d not found\n", __func__, (uint32_t)id);
++	ERROR("%s: clk id %lu not found\n", __func__, id);
+ 
+-	return -EINVAL;
++	return -ENOENT;
+ }
+ 
+ static enum stm32mp1_parent_sel stm32mp1_clk_get_sel(int i)
+@@ -1054,7 +1054,7 @@ static void __clk_enable(struct stm32mp1
+ 					       BIT(gate->bit));
+ 	}
+ 
+-	VERBOSE("Clock %d has been enabled", gate->index);
++	//VERBOSE("Clock %d has been enabled\n", gate->index);
+ }
+ 
+ static void __clk_disable(struct stm32mp1_clk_gate const *gate)
+@@ -1069,7 +1069,7 @@ static void __clk_disable(struct stm32mp
+ 					       BIT(gate->bit));
+ 	}
+ 
+-	VERBOSE("Clock %d has been disabled", gate->index);
++	//VERBOSE("Clock %d has been disabled\n", gate->index);
+ }
+ 
+ static bool __clk_is_enabled(struct stm32mp1_clk_gate const *gate)
+@@ -1097,7 +1097,7 @@ void __stm32mp1_clk_enable(unsigned long
+ 	unsigned int *refcnt;
+ 
+ 	if (i < 0) {
+-		ERROR("Clock %d can't be enabled\n", (uint32_t)id);
++		ERROR("Clock %lu can't be enabled: %d\n", id, i);
+ 		panic();
+ 	}
+ 
+@@ -1120,7 +1120,7 @@ void __stm32mp1_clk_disable(unsigned lon
+ 	unsigned int *refcnt;
+ 
+ 	if (i < 0) {
+-		ERROR("Clock %d can't be disabled\n", (uint32_t)id);
++		ERROR("Clock %lu can't be disabled\n", id);
+ 		panic();
+ 	}
+ 
+@@ -2808,7 +2808,7 @@ static int get_parent_id_parent(unsigned
+ 	}
+ 
+ #if LOG_LEVEL >= LOG_LEVEL_VERBOSE
+-	VERBOSE("No parent selected for %s",
++	VERBOSE("No parent selected for %s\n",
+ 		stm32mp1_clk_parent_name[parent_id]);
+ #endif
+ 
+Index: arm-trusted-firmware.git/drivers/st/ddr/stm32mp1_ddr.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/ddr/stm32mp1_ddr.c
++++ arm-trusted-firmware.git/drivers/st/ddr/stm32mp1_ddr.c
+@@ -274,7 +274,7 @@ static void set_reg(const struct ddr_inf
+ 		uintptr_t ptr = base_addr + desc[i].offset;
+ 
+ 		if (desc[i].par_offset == INVALID_OFFSET) {
+-			ERROR("invalid parameter offset for %s", desc[i].name);
++			ERROR("invalid parameter offset for %s\n", desc[i].name);
+ 			panic();
+ 		} else {
+ 			value = *((uint32_t *)((uintptr_t)param +
+@@ -299,11 +299,10 @@ static void stm32mp1_ddrphy_idone_wait(s
+ 		pgsr = mmio_read_32((uintptr_t)&phy->pgsr);
+ 		time = timeout_start() - start;
+ 		if (time != time0) {
+-			VERBOSE("  > [0x%lx] pgsr = 0x%x &\n",
+-				(uintptr_t)&phy->pgsr, pgsr);
+-			VERBOSE("    [0x%lx] pir = 0x%x (time=%llx)\n",
+-				(uintptr_t)&phy->pir,
+-				mmio_read_32((uintptr_t)&phy->pir),
++			VERBOSE("  > [%p] pgsr = 0x%08x &\n",
++				&phy->pgsr, pgsr);
++			VERBOSE("    [%p] pir = 0x%08x (time=%llx)\n",
++				&phy->pir, mmio_read_32((uintptr_t)&phy->pir),
+ 				time);
+ 		}
+ 
+@@ -332,8 +331,8 @@ static void stm32mp1_ddrphy_idone_wait(s
+ 			error++;
+ 		}
+ 	} while ((pgsr & DDRPHYC_PGSR_IDONE) == 0U && error == 0);
+-	VERBOSE("\n[0x%lx] pgsr = 0x%x\n",
+-		(uintptr_t)&phy->pgsr, pgsr);
++	VERBOSE("[%p] pgsr = 0x%08x\n",
++		&phy->pgsr, pgsr);
+ }
+ 
+ static void stm32mp1_ddrphy_init(struct stm32mp1_ddrphy *phy, uint32_t pir)
+@@ -341,8 +340,7 @@ static void stm32mp1_ddrphy_init(struct
+ 	uint32_t pir_init = pir | DDRPHYC_PIR_INIT;
+ 
+ 	mmio_write_32((uintptr_t)&phy->pir, pir_init);
+-	VERBOSE("[0x%lx] pir = 0x%x -> 0x%x\n",
+-		(uintptr_t)&phy->pir, pir_init,
++	VERBOSE("[%p] pir = 0x%08x -> 0x%08x\n", &phy->pir, pir_init,
+ 		mmio_read_32((uintptr_t)&phy->pir));
+ 
+ 	/* Need to wait 10 configuration clock before start polling */
+@@ -356,8 +354,8 @@ static void stm32mp1_ddrphy_init(struct
+ static void stm32mp1_start_sw_done(struct stm32mp1_ddrctl *ctl)
+ {
+ 	mmio_clrbits_32((uintptr_t)&ctl->swctl, DDRCTRL_SWCTL_SW_DONE);
+-	VERBOSE("[0x%lx] swctl = 0x%x\n",
+-		(uintptr_t)&ctl->swctl,  mmio_read_32((uintptr_t)&ctl->swctl));
++	VERBOSE("[%p] swctl = 0x%08x\n", &ctl->swctl,
++		mmio_read_32((uintptr_t)&ctl->swctl));
+ }
+ 
+ /* Wait quasi dynamic register update */
+@@ -367,23 +365,21 @@ static void stm32mp1_wait_sw_done_ack(st
+ 	uint32_t swstat;
+ 
+ 	mmio_setbits_32((uintptr_t)&ctl->swctl, DDRCTRL_SWCTL_SW_DONE);
+-	VERBOSE("[0x%lx] swctl = 0x%x\n",
+-		(uintptr_t)&ctl->swctl, mmio_read_32((uintptr_t)&ctl->swctl));
++	VERBOSE("[%p] swctl = 0x%08x\n", &ctl->swctl,
++		mmio_read_32((uintptr_t)&ctl->swctl));
+ 
+ 	start = timeout_start();
+ 	do {
+ 		swstat = mmio_read_32((uintptr_t)&ctl->swstat);
+-		VERBOSE("[0x%lx] swstat = 0x%x ",
+-			(uintptr_t)&ctl->swstat, swstat);
+-		VERBOSE("timer in ms 0x%llx = start 0x%llx\r",
++		VERBOSE("[%p] swstat = 0x%08x\n", &ctl->swstat, swstat);
++		VERBOSE("timer in ms 0x%08llx = start 0x%08llx\n",
+ 			timeout_start(), start);
+ 		if (timeout_elapsed(start, TIMEOUT_1S)) {
+ 			panic();
+ 		}
+ 	} while ((swstat & DDRCTRL_SWSTAT_SW_DONE_ACK) == 0U);
+ 
+-	VERBOSE("[0x%lx] swstat = 0x%x\n",
+-		(uintptr_t)&ctl->swstat, swstat);
++	VERBOSE("[%p] swstat = 0x%08x\n", &ctl->swstat, swstat);
+ }
+ 
+ /* Wait quasi dynamic register update */
+@@ -401,9 +397,8 @@ static void stm32mp1_wait_operating_mode
+ 		stat = mmio_read_32((uintptr_t)&priv->ctl->stat);
+ 		operating_mode = stat & DDRCTRL_STAT_OPERATING_MODE_MASK;
+ 		selref_type = stat & DDRCTRL_STAT_SELFREF_TYPE_MASK;
+-		VERBOSE("[0x%lx] stat = 0x%x\n",
+-			(uintptr_t)&priv->ctl->stat, stat);
+-		VERBOSE("timer in ms 0x%llx = start 0x%llx\r",
++		VERBOSE("[%p] stat = 0x%08x\n", &priv->ctl->stat, stat);
++		VERBOSE("timer in ms 0x%llx = start 0x%llx\n",
+ 			timeout_start(), start);
+ 		if (timeout_elapsed(start, TIMEOUT_1S)) {
+ 			panic();
+@@ -433,8 +428,7 @@ static void stm32mp1_wait_operating_mode
+ 		}
+ 	}
+ 
+-	VERBOSE("[0x%lx] stat = 0x%x\n",
+-		(uintptr_t)&priv->ctl->stat, stat);
++	VERBOSE("[%p] stat = 0x%08x\n", &priv->ctl->stat, stat);
+ }
+ 
+ /* Mode Register Writes (MRW or MRS) */
+@@ -443,7 +437,7 @@ static void stm32mp1_mode_register_write
+ {
+ 	uint32_t mrctrl0;
+ 
+-	VERBOSE("MRS: %d = %x\n", addr, data);
++	VERBOSE("MRS: %02x = %08x\n", addr, data);
+ 
+ 	/*
+ 	 * 1. Poll MRSTAT.mr_wr_busy until it is '0'.
+@@ -465,8 +459,7 @@ static void stm32mp1_mode_register_write
+ 		  (((uint32_t)addr << DDRCTRL_MRCTRL0_MR_ADDR_SHIFT) &
+ 		   DDRCTRL_MRCTRL0_MR_ADDR_MASK);
+ 	mmio_write_32((uintptr_t)&priv->ctl->mrctrl0, mrctrl0);
+-	VERBOSE("[0x%lx] mrctrl0 = 0x%x (0x%x)\n",
+-		(uintptr_t)&priv->ctl->mrctrl0,
++	VERBOSE("[%p] mrctrl0 = 0x%08x (0x%08x)\n", &priv->ctl->mrctrl0,
+ 		mmio_read_32((uintptr_t)&priv->ctl->mrctrl0), mrctrl0);
+ 	mmio_write_32((uintptr_t)&priv->ctl->mrctrl1, data);
+ 	VERBOSE("[0x%lx] mrctrl1 = 0x%x\n",
+@@ -980,7 +973,7 @@ void stm32mp1_ddr_init(struct ddr_info *
+ 		stm32mp1_ddr3_dll_off(priv);
+ 	}
+ 
+-	VERBOSE("DDR DQS training : ");
++	VERBOSE("DDR DQS training:\n");
+ 
+ 	time = timeout_start();
+ 
+@@ -1004,10 +997,8 @@ void stm32mp1_ddr_init(struct ddr_info *
+ 	 * Warning : RVTRN  is not supported by this PUBL
+ 	 */
+ 	stm32mp1_ddrphy_init(priv->phy, DDRPHYC_PIR_QSTRN);
+-
+-	/* 11. monitor PUB PGSR.IDONE to poll cpmpletion of training sequence */
++	/* 11. monitor PUB PGSR.IDONE to poll completion of training sequence */
+ 	stm32mp1_ddrphy_idone_wait(priv->phy);
+-
+ 	/* Refresh compensation: forcing refresh command */
+ 	if (config->self_refresh) {
+ 		stm32mp1_refresh_compensation(config, priv->ctl, time);
+Index: arm-trusted-firmware.git/drivers/st/etzpc/etzpc.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/etzpc/etzpc.c
++++ arm-trusted-firmware.git/drivers/st/etzpc/etzpc.c
+@@ -116,7 +116,7 @@ static int etzpc_dt_conf_decprot(int nod
+ 
+ 		id = ((value >> ETZPC_ID_SHIFT) & ETZPC_ID_MASK);
+ 		if (!valid_decprot_id(id)) {
+-			ERROR("Invalid DECPROT %d", id);
++			ERROR("Invalid DECPROT %d\n", id);
+ 			return -1;
+ 		}
+ 
+@@ -292,17 +292,14 @@ int etzpc_init(void)
+ 
+ 	hwcfg = mmio_read_32(etzpc_dev.base + ETZPC_HWCFGR);
+ 
+-	etzpc_dev.num_tzma = (uint8_t)(hwcfg >> ETZPC_HWCFGR_NUM_TZMA_SHIFT);
+-	etzpc_dev.num_per_sec = (uint8_t)(hwcfg >>
+-					  ETZPC_HWCFGR_NUM_PER_SEC_SHIFT);
+-	etzpc_dev.num_ahb_sec = (uint8_t)(hwcfg >>
+-					  ETZPC_HWCFGR_NUM_AHB_SEC_SHIFT);
+-	etzpc_dev.chunck_size = (uint8_t)(hwcfg >>
+-					  ETZPC_HWCFGR_CHUNCKS1N4_SHIFT);
++	etzpc_dev.num_tzma = hwcfg >> ETZPC_HWCFGR_NUM_TZMA_SHIFT;
++	etzpc_dev.num_per_sec = hwcfg >> ETZPC_HWCFGR_NUM_PER_SEC_SHIFT;
++	etzpc_dev.num_ahb_sec = hwcfg >> ETZPC_HWCFGR_NUM_AHB_SEC_SHIFT;
++	etzpc_dev.chunck_size = hwcfg >> ETZPC_HWCFGR_CHUNCKS1N4_SHIFT;
+ 
+ 	etzpc_dev.revision = mmio_read_8(etzpc_dev.base + ETZPC_VERR);
+ 
+-	VERBOSE("ETZPC version 0x%x", etzpc_dev.revision);
++	VERBOSE("ETZPC version 0x%08x\n", etzpc_dev.revision);
+ 
+ 	return etzpc_dt_conf_decprot(node);
+ }
+Index: arm-trusted-firmware.git/drivers/st/iwdg/stm32_iwdg.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/iwdg/stm32_iwdg.c
++++ arm-trusted-firmware.git/drivers/st/iwdg/stm32_iwdg.c
+@@ -178,11 +178,11 @@ void stm32_iwdg_refresh(uint32_t instanc
+ {
+ 	struct stm32_iwdg_instance *iwdg = &stm32_iwdg[instance];
+ 
+-	assert(iwdg);
++	assert(instance < ARRAY_SIZE(stm32_iwdg));
+ 
+ 	if (iwdg->base == 0U) {
+ 		return;
+-        }
++	}
+ 
+ 	stm32mp_clk_enable(iwdg->clock);
+ 
+Index: arm-trusted-firmware.git/drivers/st/pmic/stpmic1.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/pmic/stpmic1.c
++++ arm-trusted-firmware.git/drivers/st/pmic/stpmic1.c
+@@ -798,7 +798,7 @@ void stpmic1_dump_regulators(void)
+ 	for (i = 0U; i < MAX_REGUL; i++) {
+ 		const char *name __unused = regulators_table[i].dt_node_name;
+ 
+-		VERBOSE("PMIC regul %s: %sable, %dmV",
++		VERBOSE("PMIC regul %s: %sable, %dmV\n",
+ 			name,
+ 			stpmic1_is_regulator_enabled(name) ? "en" : "dis",
+ 			stpmic1_regulator_voltage_get(name));
+Index: arm-trusted-firmware.git/drivers/st/tamper/stm32_tamp.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/tamper/stm32_tamp.c
++++ arm-trusted-firmware.git/drivers/st/tamper/stm32_tamp.c
+@@ -317,7 +317,7 @@ int stm32_tamp_init(void)
+ 	uint32_t rev __unused;
+ 
+ 	if (fdt_get_address(&fdt) == 0) {
+-		return -EPERM;
++		return -EINVAL;
+ 	}
+ 
+ 	node = dt_get_node(&dt_tamp, -1, DT_TAMP_COMPAT);
+@@ -329,7 +329,7 @@ int stm32_tamp_init(void)
+ 	assert(dt_tamp.clock != -1);
+ 
+ 	stm32_tamp.base = dt_tamp.base;
+-	stm32_tamp.clock = (uint32_t)dt_tamp.clock;
++	stm32_tamp.clock = dt_tamp.clock;
+ 
+ 	/* Init Tamp clock */
+ 	stm32mp_clk_enable(stm32_tamp.clock);
+@@ -351,8 +351,8 @@ int stm32_tamp_init(void)
+ 		rev & STM32_TAMP_VERR_MINREV);
+ 
+ 	if ((stm32_tamp.hwconf2 & STM32_TAMP_HWCFGR2_TZ) == 0U) {
+-		ERROR("Tamper IP doesn't support trustzone");
+-		return -EPERM;
++		ERROR("Tamper IP doesn't support trustzone\n");
++		return -ENOTSUP;
+ 	}
+ 
+ 	stm32_tamp_set_secured(stm32_tamp.base);
+Index: arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
+===================================================================
+--- arm-trusted-firmware.git.orig/drivers/st/usb_dwc2/usb_dwc2.c
++++ arm-trusted-firmware.git/drivers/st/usb_dwc2/usb_dwc2.c
+@@ -27,12 +27,12 @@ static const usb_driver_t usb_dwc2driver
+ };
+ 
+ /*
+- * USB_OTG_FlushTxFifo : Flush a Tx FIFO
+- * USBx : Selected device
+- * num : FIFO number
++ * USB_OTG_FlushTxFifo: Flush a Tx FIFO
++ * USBx: Selected device
++ * num: FIFO number
+  *       This parameter can be a value from 1 to 15
+  *       15 means Flush all Tx FIFOs
+- * return : status
++ * return: status
+  */
+ static usb_status_t usb_dwc2_flush_tx_fifo(usb_dwc2_global_t *usbx,
+ 					   uint32_t num)
+@@ -51,9 +51,9 @@ static usb_status_t usb_dwc2_flush_tx_fi
+ }
+ 
+ /*
+- * USB_FlushRxFifo : Flush Rx FIFO
+- * param : USBx : Selected device
+- * return : status
++ * USB_FlushRxFifo: Flush Rx FIFO
++ * param: USBx: Selected device
++ * return: status
+  */
+ static usb_status_t usb_dwc2_flush_rx_fifo(usb_dwc2_global_t *usbx)
+ {
+@@ -72,59 +72,57 @@ static usb_status_t usb_dwc2_flush_rx_fi
+ 
+ /*
+  * USB_ReadInterrupts: return the global USB interrupt status
+- * param  USBx : Selected device
+- * return : interrupt register value
++ * param  USBx: Selected device
++ * return: interrupt register value
+  */
+ static uint32_t usb_dwc2_read_int(usb_dwc2_global_t *usbx)
+ {
+-	uint32_t v = 0;
+-
+-	v = usbx->gintsts;
+-	v &= usbx->gintmsk;
++	uint32_t v;
+ 
++	v = usbx->gintsts & usbx->gintmsk;
+ 	return v;
+ }
+ 
+ /*
+- * usb_dwc2_all_out_ep_int : return the USB device OUT endpoints interrupt
+- * param : USBx : Selected device
+- * return : device OUT endpoint interrupts
++ * usb_dwc2_all_out_ep_int: return the USB device OUT endpoints interrupt
++ * param: USBx: Selected device
++ * return: device OUT endpoint interrupts
+  */
+ static uint32_t usb_dwc2_all_out_ep_int(usb_dwc2_global_t *usbx)
+ {
+-	uint32_t v = 0;
++	uint32_t v;
+ 
+ 	v  = dwc2_handle.usb_device->daint;
+ 	v &= dwc2_handle.usb_device->daintmsk;
+ 
+-	return ((v & 0xffff0000) >> 16);
++	return (v & 0xffff0000) >> 16;
+ }
+ 
+ /*
+  * usb_dwc2_all_in_ep_int: return the USB device IN endpoints interrupt
+- * param : USBx : Selected device
+- * return : device IN endpoint interrupts
++ * param: USBx: Selected device
++ * return: device IN endpoint interrupts
+  */
+ static uint32_t usb_dwc2_all_in_ep_int(usb_dwc2_global_t *usbx)
+ {
+-	uint32_t v = 0;
++	uint32_t v;
+ 
+ 	v  = dwc2_handle.usb_device->daint;
+ 	v &= dwc2_handle.usb_device->daintmsk;
+ 
+-	return ((v & 0xFFFF));
++	return v & 0xFFFF;
+ }
+ 
+ /*
+- * usb_dwc2_out_ep_int : returns Device OUT EP Interrupt register
+- * USBx : Selected device
+- * epnum : endpoint number
++ * usb_dwc2_out_ep_int: returns Device OUT EP Interrupt register
++ * USBx: Selected device
++ * epnum: endpoint number
+  *         This parameter can be a value from 0 to 15
+- * return : Device OUT EP Interrupt register
++ * return: Device OUT EP Interrupt register
+  */
+ static uint32_t usb_dwc2_out_ep_int(usb_dwc2_global_t *usbx, uint8_t epnum)
+ {
+-	uint32_t v = 0;
++	uint32_t v;
+ 
+ 	v  = dwc2_handle.usb_out_endpoint[epnum]->epint;
+ 	v &= dwc2_handle.usb_device->doepmsk;
+@@ -133,11 +131,11 @@ static uint32_t usb_dwc2_out_ep_int(usb_
+ }
+ 
+ /*
+- * usb_dwc2_in_ep_int : Returns Device IN EP Interrupt register
+- * param : USBx : Selected device
+- * param : epnum : endpoint number
++ * usb_dwc2_in_ep_int: Returns Device IN EP Interrupt register
++ * param: USBx: Selected device
++ * param: epnum: endpoint number
+  *         This parameter can be a value from 0 to 15
+- * return : Device IN EP Interrupt register
++ * return: Device IN EP Interrupt register
+  */
+ static uint32_t usb_dwc2_in_ep_int(usb_dwc2_global_t *usbx, uint8_t epnum)
+ {
+@@ -147,26 +145,26 @@ static uint32_t usb_dwc2_in_ep_int(usb_d
+ 	emp = dwc2_handle.usb_device->diepempmsk;
+ 	msk |= ((emp >> epnum) & 0x1) << 7;
+ 
+-	return (dwc2_handle.usb_in_endpoint[epnum]->epint & msk);
++	return dwc2_handle.usb_in_endpoint[epnum]->epint & msk;
+ }
+ 
+ /*
+- * usb_dwc2_get_mode : Returns USB core mode
+- * param :  USBx : Selected device
+- * return : core mode : Host or Device
++ * usb_dwc2_get_mode: Returns USB core mode
++ * param:  USBx: Selected device
++ * return: core mode: Host or Device
+  *          This parameter can be one of the these values:
+- *           0 : Host
+- *           1 : Device
++ *           0: Host
++ *           1: Device
+  */
+ static uint32_t usb_dwc2_get_mode(usb_dwc2_global_t *usbx)
+ {
+-	return ((usbx->gintsts) & 0x1);
++	return usbx->gintsts & 0x1;
+ }
+ 
+ /*
+- * usb_dwc2_activate_setup : Activate EP0 for Setup transactions
+- * param : USBx : Selected device
+- * return : status
++ * usb_dwc2_activate_setup: Activate EP0 for Setup transactions
++ * param: USBx: Selected device
++ * return: status
+  */
+ static usb_status_t usb_dwc2_activate_setup(usb_dwc2_global_t *usbx)
+ {
+@@ -183,10 +181,10 @@ static usb_status_t usb_dwc2_activate_se
+ }
+ 
+ /*
+- * usb_dwc2_disable_int :
++ * usb_dwc2_disable_int:
+  *         Disable the controller's Global Int in the AHB Config reg
+- * param : handle : Selected device
+- * return : status
++ * param: handle: Selected device
++ * return: status
+  */
+ usb_status_t usb_dwc2_disable_int(void *handle)
+ {
+@@ -197,9 +195,9 @@ usb_status_t usb_dwc2_disable_int(void *
+ }
+ 
+ /*
+- * usb_dwc2_ep0_out_start : Prepare the EP0 to start the first control setup
+- * param : handle : Selected device
+- * return : status
++ * usb_dwc2_ep0_out_start: Prepare the EP0 to start the first control setup
++ * param: handle: Selected device
++ * return: status
+  */
+ usb_status_t usb_dwc2_ep0_out_start(void *handle)
+ {
+@@ -215,10 +213,10 @@ usb_status_t usb_dwc2_ep0_out_start(void
+ }
+ 
+ /*
+- * usb_dwc2_ep_start_xfer : setup and starts a transfer over an EP
+- * param : handle : Selected device
+- * param : ep: pointer to endpoint structure
+- * return : status
++ * usb_dwc2_ep_start_xfer: setup and starts a transfer over an EP
++ * param: handle: Selected device
++ * param: ep: pointer to endpoint structure
++ * return: status
+  */
+ usb_status_t usb_dwc2_ep_start_xfer(void *handle, usb_otg_ep_t *ep)
+ {
+@@ -330,10 +328,10 @@ usb_status_t usb_dwc2_ep_start_xfer(void
+ }
+ 
+ /*
+- * usb_dwc2_ep0_start_xfer : setup and starts a transfer over the EP  0
+- * param : handle : Selected device
+- * param : ep: pointer to endpoint structure
+- * return : status
++ * usb_dwc2_ep0_start_xfer: setup and starts a transfer over the EP  0
++ * param: handle: Selected device
++ * param: ep: pointer to endpoint structure
++ * return: status
+  */
+ usb_status_t usb_dwc2_ep0_start_xfer(void *handle, usb_otg_ep_t *ep)
+ {
+@@ -406,13 +404,13 @@ usb_status_t usb_dwc2_ep0_start_xfer(voi
+ }
+ 
+ /*
+- * usb_dwc2_write_packet : Writes a packet into the Tx FIFO associated
++ * usb_dwc2_write_packet: Writes a packet into the Tx FIFO associated
+  *         with the EP/channel
+- * param : handle : Selected device
+- * param : src :  pointer to source buffer
+- * param : ch_ep_num : endpoint or host channel number
+- * param : len : Number of bytes to write
+- * return : status
++ * param: handle: Selected device
++ * param: src:  pointer to source buffer
++ * param: ch_ep_num: endpoint or host channel number
++ * param: len: Number of bytes to write
++ * return: status
+  */
+ usb_status_t usb_dwc2_write_packet(void *handle, uint8_t *src,
+ 				   uint8_t ch_ep_num, uint16_t len)
+@@ -435,35 +433,35 @@ usb_status_t usb_dwc2_write_packet(void
+ }
+ 
+ /*
+- * usb_dwc2_read_packet : read a packet from the Tx FIFO associated
++ * usb_dwc2_read_packet: read a packet from the Tx FIFO associated
+  *         with the EP/channel
+- * param : handle : Selected device
+- * param : src : source pointer
+- * param : ch_ep_num : endpoint or host channel number
+- * param : len : Number of bytes to read
+- * return : pointer to destination buffer
++ * param: handle: Selected device
++ * param: src: source pointer
++ * param: ch_ep_num: endpoint or host channel number
++ * param: len: Number of bytes to read
++ * return: pointer to destination buffer
+  */
+ void *usb_dwc2_read_packet(void *handle, uint8_t *dest, uint16_t len)
+ {
+-	uint32_t i = 0;
++	uint32_t i;
+ 	uint32_t count32b = (len + 3) / 4;
+ 	/*usb_dwc2_global_t *USBx = (usb_dwc2_global_t *)handle;*/
+ 
+-	VERBOSE("read packet length %i to 0x%lx\n", len, (uintptr_t)dest);
++	VERBOSE("read packet length %i to %p\n", len, dest);
+ 
+ 	for (i = 0; i < count32b; i++, dest += 4) {
+ 		*(uint32_t *)dest = *dwc2_handle.usb_fifo[0];
+ 		dsb();
+ 	}
+ 
+-	return ((void *)dest);
++	return dest;
+ }
+ 
+ /*
+- * usb_dwc2_EPSetStall : set a stall condition over an EP
+- * param : handle : Selected device
+- * param : ep: pointer to endpoint structure
+- * return : status
++ * usb_dwc2_EPSetStall: set a stall condition over an EP
++ * param: handle: Selected device
++ * param: ep: pointer to endpoint structure
++ * return: status
+  */
+ usb_status_t usb_dwc2_ep_set_stall(void *handle, usb_otg_ep_t *ep)
+ {
+@@ -487,13 +485,13 @@ usb_status_t usb_dwc2_ep_set_stall(void
+ }
+ 
+ /*
+- * usb_dwc2_stop_device : Stop the usb device mode
+- * param : handle : Selected device
+- * return : status
++ * usb_dwc2_stop_device: Stop the usb device mode
++ * param: handle: Selected device
++ * return: status
+  */
+ usb_status_t usb_dwc2_stop_device(void *handle)
+ {
+-	uint32_t i = 0;
++	uint32_t i;
+ 	usb_dwc2_global_t *usbx = ((usb_dwc2_t *)handle)->usb_global;
+ 
+ 	/* Clear Pending interrupt */
+@@ -516,11 +514,11 @@ usb_status_t usb_dwc2_stop_device(void *
+ }
+ 
+ /*
+- * usb_dwc2_set_address : Stop the usb device mode
+- * param : handle : Selected device
+- * param : address : new device address to be assigned
++ * usb_dwc2_set_address: Stop the usb device mode
++ * param: handle: Selected device
++ * param: address: new device address to be assigned
+  *          This parameter can be a value from 0 to 255
+- * return : status
++ * return: status
+  */
+ usb_status_t usb_dwc2_set_address(void *handle, uint8_t address)
+ {
+@@ -533,10 +531,10 @@ usb_status_t usb_dwc2_set_address(void *
+ }
+ 
+ /*
+- * usb_dwc2_dev_disconnect :
++ * usb_dwc2_dev_disconnect:
+  *	Disconnect the USB device by disabling the pull-up/pull-down
+- * param : handle : Selected device
+- * return : status
++ * param: handle: Selected device
++ * return: status
+  */
+ usb_status_t usb_dwc2_dev_disconnect(void *handle)
+ {
+@@ -550,13 +548,13 @@ usb_status_t usb_dwc2_dev_disconnect(voi
+ /*
+  * usb_dwc2_write_empty_tx_fifo
+  *         check FIFO for the next packet to be loaded
+- * param : handle : Selected device
+- * param : epnum : endpoint number
+- * param : xfer_len : block length
+- * param : xfer_count : number of block
+- * param : maxpacket : max packet length
+- * param : xfer_buff : buffer pointer
+- * retval : status
++ * param: handle: Selected device
++ * param: epnum: endpoint number
++ * param: xfer_len: block length
++ * param: xfer_count: number of block
++ * param: maxpacket: max packet length
++ * param: xfer_buff: buffer pointer
++ * retval: status
+  */
+ usb_status_t usb_dwc2_write_empty_tx_fifo(void *handle,
+ 					  uint32_t epnum, uint32_t xfer_len,
+@@ -564,35 +562,33 @@ usb_status_t usb_dwc2_write_empty_tx_fif
+ 					  uint32_t maxpacket,
+ 					  uint8_t **xfer_buff)
+ {
+-	int32_t len = 0;
++	uint32_t len;
+ 	uint32_t len32b;
+ 	usb_dwc2_global_t *usbx = ((usb_dwc2_t *)handle)->usb_global;
+ 
+-	len = xfer_len - *xfer_count;
+-
+-	if ((len > 0) && ((uint32_t)len > maxpacket))
++	len = (xfer_len >= *xfer_count) ? xfer_len - *xfer_count : 0;
++	if (len > maxpacket)
+ 		len = maxpacket;
+ 
+ 	len32b = (len + 3) / 4;
+ 
+ 	while ((dwc2_handle.usb_in_endpoint[epnum]->txfsts &
+ 		USB_OTG_DTXFSTS_INEPTFSAV) > len32b &&
+-		(*xfer_count < xfer_len) && (xfer_len != 0)) {
++		*xfer_count < xfer_len) {
+ 		/* Write the FIFO */
+-		len = xfer_len - *xfer_count;
+-
+-		if ((len > 0) && ((uint32_t)len > maxpacket))
+-			len = maxpacket;
+-
+-		len32b = (len + 3) / 4;
+-
+ 		usb_dwc2_write_packet(usbx, *xfer_buff, epnum, len);
+ 
+ 		*xfer_buff  += len;
+ 		*xfer_count += len;
++
++		len = xfer_len - *xfer_count;
++
++		if (len > maxpacket)
++			len = maxpacket;
++		len32b = (len + 3) / 4;
+ 	}
+ 
+-	if (len <= 0) {
++	if (len == 0) {
+ 		uint32_t fifoemptymsk = 0x1 << epnum;
+ 
+ 		dwc2_handle.usb_device->diepempmsk &= ~fifoemptymsk;
+@@ -713,7 +709,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 
+ 	/* Handle Resume Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_WKUINT) {
+-		INFO("handle USB : Resume\n");
++		INFO("handle USB: Resume\n");
+ 		/* Clear the Remote Wake-up Signaling */
+ 		dwc2_handle.usb_device->dctl &= ~USB_OTG_DCTL_RWUSIG;
+ 		usbx->gintsts = USB_OTG_GINTSTS_WKUINT;
+@@ -722,7 +718,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 
+ 	/* Handle Suspend Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_USBSUSP) {
+-		INFO("handle USB : Suspend int\n");
++		INFO("handle USB: Suspend int\n");
+ 		usbx->gintsts = USB_OTG_GINTSTS_USBSUSP;
+ 		if ((dwc2_handle.usb_device->dsts & USB_OTG_DSTS_SUSPSTS) ==
+ 				USB_OTG_DSTS_SUSPSTS){
+@@ -732,7 +728,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 
+ 	/* Handle LPM Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_LPMINT) {
+-		INFO("handle USB : LPM int enter in suspend\n");
++		INFO("handle USB: LPM int enter in suspend\n");
+ 		usbx->gintsts = USB_OTG_GINTSTS_LPMINT;
+ 		*param = (usbx->glpmcfg & USB_OTG_GLPMCFG_BESL) >> 2;
+ 		return USB_LPM;
+@@ -740,7 +736,7 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 
+ 	/* Handle Reset Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_USBRST) {
+-		INFO("handle USB : Reset\n");
++		INFO("handle USB: Reset\n");
+ 		dwc2_handle.usb_device->dctl &= ~USB_OTG_DCTL_RWUSIG;
+ 		usb_dwc2_flush_tx_fifo(usbx, 0);
+ 
+@@ -768,8 +764,8 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 		usb_dwc2_activate_setup(usbx);
+ 		usbx->gusbcfg &= ~USB_OTG_GUSBCFG_TRDT;
+ 
+-		usbx->gusbcfg |= (uint32_t)((USBD_HS_TRDT_VALUE << 10) &
+-					    USB_OTG_GUSBCFG_TRDT);
++		usbx->gusbcfg |= (USBD_HS_TRDT_VALUE << 10) &
++			USB_OTG_GUSBCFG_TRDT;
+ 
+ 		usbx->gintsts = USB_OTG_GINTSTS_ENUMDNE;
+ 		return USB_ENUM_DONE;
+@@ -779,8 +775,8 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_RXFLVL) {
+ 		usbx->gintmsk &= ~USB_OTG_GINTSTS_RXFLVL;
+ 		temp = usbx->grxstsp;
+-		*param = (temp & USB_OTG_GRXSTSP_EPNUM);
+-		*param |= ((temp & USB_OTG_GRXSTSP_BCNT) << 0xC);
++		*param = temp & USB_OTG_GRXSTSP_EPNUM;
++		*param |= (temp & USB_OTG_GRXSTSP_BCNT) << 0xC;
+ 
+ 		if (((temp & USB_OTG_GRXSTSP_PKTSTS) >> 17) == STS_DATA_UPDT) {
+ 			if ((temp & USB_OTG_GRXSTSP_BCNT) != 0) {
+@@ -797,32 +793,32 @@ usb_action_t usb_dwc2_it_handler(void *h
+ 
+ 	/* Handle SOF Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_SOF) {
+-		INFO("handle USB : SOF\n");
++		INFO("handle USB: SOF\n");
+ 		usbx->gintsts = USB_OTG_GINTSTS_SOF;
+ 		return USB_SOF;
+ 	}
+ 
+ 	/* Handle Incomplete ISO IN Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_IISOIXFR) {
+-		INFO("handle USB : ISO IN\n");
++		INFO("handle USB: ISO IN\n");
+ 		usbx->gintsts = USB_OTG_GINTSTS_IISOIXFR;
+ 	}
+ 
+ 	/* Handle Incomplete ISO OUT Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_PXFR_INCOMPISOOUT) {
+-		INFO("handle USB : ISO OUT\n");
++		INFO("handle USB: ISO OUT\n");
+ 		usbx->gintsts = USB_OTG_GINTSTS_PXFR_INCOMPISOOUT;
+ 	}
+ 
+ 	/* Handle Connection event Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_SRQINT) {
+-		INFO("handle USB : Connect\n");
++		INFO("handle USB: Connect\n");
+ 		usbx->gintsts = USB_OTG_GINTSTS_SRQINT;
+ 	}
+ 
+ 	/* Handle Disconnection event Interrupt */
+ 	if (usb_dwc2_read_int(usbx) & USB_OTG_GINTSTS_OTGINT) {
+-		INFO("handle USB : Disconnect\n");
++		INFO("handle USB: Disconnect\n");
+ 		temp = usbx->gotgint;
+ 		if ((temp & USB_OTG_GOTGINT_SEDET) == USB_OTG_GOTGINT_SEDET)
+ 			return USB_DISCONNECT;
+@@ -833,26 +829,21 @@ usb_action_t usb_dwc2_it_handler(void *h
+ void usb_dwc2_init_driver(usb_handle_t *usb_core_handle,
+ 			  uint32_t *base_register)
+ {
+-	uint32_t i = 0;
+-	uintptr_t base = (uintptr_t)base_register;
++	uint32_t i;
++	void *base = base_register;
+ 
+-	dwc2_handle.usb_global = (usb_dwc2_global_t *)base;
++	dwc2_handle.usb_global = base;
+ 
+-	dwc2_handle.usb_device = (usb_dwc2_device_t *)
+-					(base + USB_OTG_DEVICE_BASE);
++	dwc2_handle.usb_device = base + USB_OTG_DEVICE_BASE;
+ 
+ 	for (i = 0; i < USB_MAX_ENDPOINT_NB; i++) {
+-		dwc2_handle.usb_in_endpoint[i] = (usb_dwc2_endpoint_t *)
+-					(base + USB_OTG_IN_ENDPOINT_BASE +
+-					 (i * sizeof(usb_dwc2_endpoint_t)));
+-		dwc2_handle.usb_out_endpoint[i] = (usb_dwc2_endpoint_t *)
+-					(base + USB_OTG_OUT_ENDPOINT_BASE +
+-					(i * sizeof(usb_dwc2_endpoint_t)));
+-		dwc2_handle.usb_fifo[i] = (uint32_t *)(base +
+-						       USB_OTG_FIFO_BASE +
+-						       (i * USB_OTG_FIFO_SIZE));
++		dwc2_handle.usb_in_endpoint[i] = base + USB_OTG_IN_ENDPOINT_BASE +
++			i * sizeof(usb_dwc2_endpoint_t);
++		dwc2_handle.usb_out_endpoint[i] = base + USB_OTG_OUT_ENDPOINT_BASE +
++			i * sizeof(usb_dwc2_endpoint_t);
++		dwc2_handle.usb_fifo[i] = base + USB_OTG_FIFO_BASE +
++			i * USB_OTG_FIFO_SIZE;
+ 	}
+ 
+-	register_usb_driver(usb_core_handle, &usb_dwc2driver,
+-			    (void *)&dwc2_handle);
++	register_usb_driver(usb_core_handle, &usb_dwc2driver, &dwc2_handle);
+ }
+Index: arm-trusted-firmware.git/include/common/debug.h
+===================================================================
+--- arm-trusted-firmware.git.orig/include/common/debug.h
++++ arm-trusted-firmware.git/include/common/debug.h
+@@ -97,6 +97,7 @@ void __dead2 do_panic(void);
+ 
+ #define panic()				\
+ 	do {				\
++		printf("%s@%d: ", __func__, __LINE__);	\
+ 		backtrace(__func__);	\
+ 		(void)console_flush();	\
+ 		do_panic();		\
+Index: arm-trusted-firmware.git/lib/psci/psci_common.c
+===================================================================
+--- arm-trusted-firmware.git.orig/lib/psci/psci_common.c
++++ arm-trusted-firmware.git/lib/psci/psci_common.c
+@@ -764,6 +764,8 @@ void psci_warmboot_entrypoint(void)
+ 	int cpu_idx = (int) plat_my_core_pos();
+ 	psci_power_state_t state_info = { {PSCI_LOCAL_STATE_RUN} };
+ 
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
++
+ 	/*
+ 	 * Verify that we have been explicitly turned ON or resumed from
+ 	 * suspend.
+Index: arm-trusted-firmware.git/lib/usb/usb_core.c
+===================================================================
+--- arm-trusted-firmware.git.orig/lib/usb/usb_core.c
++++ arm-trusted-firmware.git/lib/usb/usb_core.c
+@@ -8,6 +8,8 @@
+ #include <debug.h>
+ #include "usb_core.h"
+ 
++#include <stm32mp1_dbgmcu.h>
++
+ /*
+  * @brief  Set a STALL condition over an endpoint
+  * @param  hpcd: PCD handle
+@@ -38,9 +40,9 @@ static usb_status_t usb_core_set_stall(u
+ /*
+  * usb_core_get_desc
+  *         Handle Get Descriptor requests
+- * pdev : device instance
+- * req : usb request
+- * return : status
++ * pdev: device instance
++ * req: usb request
++ * return: status
+  */
+ static void usb_core_get_desc(usb_handle_t *pdev,
+ 			      usb_setup_req_t *req)
+@@ -120,15 +122,15 @@ static void usb_core_get_desc(usb_handle
+ /*
+  * usb_core_set_config
+  *         Handle Set device configuration request
+- * pdev : device instance
+- * req : usb request
+- * return : status
++ * pdev: device instance
++ * req: usb request
++ * return: status
+  */
+ static void usb_core_set_config(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+ 	static uint8_t cfgidx;
+ 
+-	cfgidx = (uint8_t)(req->value);
++	cfgidx = req->value;
+ 
+ 	if (cfgidx > USBD_MAX_NUM_CONFIGURATION) {
+ 		usb_core_ctl_error(pdev);
+@@ -188,9 +190,9 @@ static void usb_core_set_config(usb_hand
+ /*
+  * usb_core_get_status
+  *         Handle Get Status request
+- * pdev : device instance
+- * req : usb request
+- * return : status
++ * pdev: device instance
++ * req: usb request
++ * return: status
+  */
+ static void usb_core_get_status(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+@@ -217,9 +219,9 @@ static void usb_core_get_status(usb_hand
+ /*
+  * usb_core_set_address
+  *         Set device address
+- * pdev : device instance
+- * req : usb request
+- * return : status
++ * pdev: device instance
++ * req: usb request
++ * return: status
+  */
+ static void usb_core_set_address(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+@@ -252,9 +254,9 @@ static void usb_core_set_address(usb_han
+ /*
+  * usb_core_dev_req
+  *         Handle standard usb device requests
+- * pdev : device instance
+- * req : usb request
+- * return : status
++ * pdev: device instance
++ * req: usb request
++ * return: status
+  */
+ static usb_status_t usb_core_dev_req(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+@@ -289,9 +291,9 @@ static usb_status_t usb_core_dev_req(usb
+ /*
+  * usb_core_itf_req
+  *         Handle standard usb interface requests
+- * pdev : device instance
+- * req : usb request
+- * return : status
++ * pdev: device instance
++ * req: usb request
++ * return: status
+  */
+ static usb_status_t usb_core_itf_req(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+@@ -327,8 +329,8 @@ static usb_status_t usb_core_itf_req(usb
+  */
+ static void usb_core_parse_req(usb_setup_req_t *req, uint8_t *pdata)
+ {
+-	req->bm_request = *(uint8_t *)(pdata);
+-	req->b_request = *(uint8_t *)(pdata + 1);
++	req->bm_request = pdata[0];
++	req->b_request = pdata[1];
+ 	req->value = SWAPBYTE(pdata +  2);
+ 	req->index = SWAPBYTE(pdata +  4);
+ 	req->length = SWAPBYTE(pdata +  6);
+@@ -338,9 +340,9 @@ static void usb_core_parse_req(usb_setup
+  * usb_core_setup_stage
+  *         Handle the setup stage
+  * pdev: device instance
+- * return : status
++ * return: status
+  */
+-static usb_status_t usb_core_setup_stage(usb_handle_t *pdev, uint8_t *psetup)
++static usb_status_t usb_core_setup_stage(usb_handle_t *pdev, void *psetup)
+ {
+ 	usb_core_parse_req(&pdev->request, psetup);
+ 
+@@ -371,7 +373,7 @@ static usb_status_t usb_core_setup_stage
+  *         Handle data OUT stage
+  * pdev: device instance
+  * epnum: endpoint index
+- * return : status
++ * return: status
+  */
+ static usb_status_t usb_core_data_out(usb_handle_t *pdev, uint8_t epnum,
+ 				      uint8_t *pdata)
+@@ -408,7 +410,7 @@ static usb_status_t usb_core_data_out(us
+  *         Handle data in stage
+  * pdev: device instance
+  * epnum: endpoint index
+- * return : status
++ * return: status
+  */
+ static usb_status_t usb_core_data_in(usb_handle_t *pdev, uint8_t epnum,
+ 				     uint8_t *pdata)
+@@ -471,8 +473,8 @@ static usb_status_t usb_core_data_in(usb
+ /*
+  * usb_core_Suspend
+  *         Handle Suspend event
+- * pdev : device instance
+- * return : status
++ * pdev: device instance
++ * return: status
+  */
+ 
+ static usb_status_t usb_core_suspend(usb_handle_t  *pdev)
+@@ -488,8 +490,8 @@ static usb_status_t usb_core_suspend(usb
+ /*
+  * usb_core_resume
+  *         Handle Resume event
+- * pdev : device instance
+- * return : status
++ * pdev: device instance
++ * return: status
+  */
+ 
+ static usb_status_t usb_core_resume(usb_handle_t *pdev)
+@@ -503,8 +505,8 @@ static usb_status_t usb_core_resume(usb_
+ /*
+  * usb_core_sof
+  *         Handle SOF event
+- * pdev : device instance
+- * return : status
++ * pdev: device instance
++ * return: status
+  */
+ 
+ static usb_status_t usb_core_sof(usb_handle_t *pdev)
+@@ -520,8 +522,8 @@ static usb_status_t usb_core_sof(usb_han
+ /*
+  * usb_core_DevDisconnected
+  *         Handle device disconnection event
+- * pdev : device instance
+- * return : status
++ * pdev: device instance
++ * return: status
+  */
+ static usb_status_t usb_core_disconnect(usb_handle_t *pdev)
+ {
+@@ -534,8 +536,8 @@ static usb_status_t usb_core_disconnect(
+ 
+ usb_status_t usb_core_handle_it(usb_handle_t *pdev)
+ {
+-	uint32_t param = 0;
+-	uint32_t len = 0;
++	uint32_t param;
++	uint32_t len;
+ 	usb_otg_ep_t *ep;
+ 
+ 	switch (pdev->driver->it_handler(pdev->data->instance, &param)) {
+@@ -548,7 +550,7 @@ usb_status_t usb_core_handle_it(usb_hand
+ 				 pdev->data->in_ep[param].xfer_buff);
+ 		break;
+ 	case USB_SETUP:
+-		usb_core_setup_stage(pdev, (uint8_t *)pdev->data->setup);
++		usb_core_setup_stage(pdev, pdev->data->setup);
+ 		break;
+ 	case USB_ENUM_DONE:
+ 		pdev->data->init.speed = USB_OTG_SPEED_HIGH;
+@@ -595,8 +597,7 @@ usb_status_t usb_core_handle_it(usb_hand
+ 	case USB_WRITE_EMPTY:
+ 		pdev->driver->write_empty_tx_fifo(pdev->data->instance, param,
+ 				     pdev->data->in_ep[param].xfer_len,
+-				     (uint32_t *)
+-					&pdev->data->in_ep[param].xfer_count,
++				     &pdev->data->in_ep[param].xfer_count,
+ 				     pdev->data->in_ep[param].maxpacket,
+ 				     &pdev->data->in_ep[param].xfer_buff);
+ 		break;
+@@ -654,7 +655,7 @@ usb_status_t usb_core_transmit(usb_handl
+ 
+ 	ep = &hpcd->in_ep[ep_addr & 0x7F];
+ 
+-	/*setup and start the Xfer */
++	/* setup and start the Xfer */
+ 	ep->xfer_buff = buf;
+ 	ep->xfer_len = len;
+ 	ep->xfer_count = 0;
+@@ -679,7 +680,7 @@ usb_status_t usb_core_transmit(usb_handl
+ 
+ void usb_core_ctl_error(usb_handle_t *pdev)
+ {
+-	ERROR("%s : Send an ERROR\n", __func__);
++	ERROR("%s: Send an ERROR\n", __func__);
+ 	usb_core_set_stall(pdev, 0x80);
+ 	usb_core_set_stall(pdev, 0);
+ }
+@@ -688,7 +689,7 @@ void usb_core_ctl_error(usb_handle_t *pd
+  * usb_core_stop
+  *         Stop the USB Device Core.
+  * pdev: Device Handle
+- * return : USBD Status
++ * return: USBD Status
+  */
+ usb_status_t usb_core_stop(usb_handle_t *pdev)
+ {
+@@ -706,7 +707,7 @@ usb_status_t usb_core_stop(usb_handle_t
+  * usb_core_stop
+  *         Stop the USB Device Core.
+  * pdev: Device Handle
+- * return : USBD Status
++ * return: USBD Status
+  */
+ usb_status_t register_usb_driver(usb_handle_t *pdev, const usb_driver_t *driver,
+ 				 void *driver_handle)
+@@ -721,7 +722,7 @@ usb_status_t register_usb_driver(usb_han
+  * usb_core_stop
+  *         Stop the USB Device Core.
+  * pdev: Device Handle
+- * return : USBD Status
++ * return: USBD Status
+  */
+ usb_status_t register_platform(usb_handle_t *pdev,
+ 			       const usb_desc_t *plat_call_back)
+Index: arm-trusted-firmware.git/lib/usb/usb_st_dfu.c
+===================================================================
+--- arm-trusted-firmware.git.orig/lib/usb/usb_st_dfu.c
++++ arm-trusted-firmware.git/lib/usb/usb_st_dfu.c
+@@ -24,6 +24,7 @@ static uint32_t usbd_detach_req;
+  */
+ static uint8_t usb_dfu_init(usb_handle_t *pdev, uint8_t cfgidx)
+ {
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	/* Nothing to do in this stage */
+ 	return USBD_OK;
+ }
+@@ -37,6 +38,7 @@ static uint8_t usb_dfu_init(usb_handle_t
+  */
+ static uint8_t usb_dfu_de_init(usb_handle_t *pdev, uint8_t cfgidx)
+ {
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	/* Nothing to do in this stage */
+ 	return USBD_OK;
+ }
+@@ -53,6 +55,7 @@ static uint8_t  usb_dfu_data_in(usb_hand
+ 	(void)pdev;
+ 	(void)epnum;
+ 
++	VERBOSE("%s@%d: pdev=%p ep=%u\n", __func__, __LINE__, pdev, epnum);
+ 	return USBD_OK;
+ }
+ 
+@@ -65,8 +68,9 @@ static uint8_t  usb_dfu_data_in(usb_hand
+  */
+ static void usb_dfu_leave(usb_handle_t *pdev)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	hdfu->manif_state = DFU_MANIFEST_COMPLETE;
+ 
+ 	if (DFU_BM_ATTRIBUTE & 0x04) {
+@@ -99,6 +103,7 @@ static uint8_t usb_dfu_ep0_rx_ready(usb_
+ {
+ 	(void)pdev;
+ 
++	VERBOSE("%s@%d: pdev=%p\n", __func__, __LINE__, pdev);
+ 	return USBD_OK;
+ }
+ 
+@@ -110,15 +115,16 @@ static uint8_t usb_dfu_ep0_rx_ready(usb_
+  */
+ static uint8_t usb_dfu_ep0_tx_ready(usb_handle_t *pdev)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
+-	uint16_t len, dfu_version = 0;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
++	uint16_t len, dfu_version;
+ 	uint8_t *serial = pdev->desc->get_dfu_desc(&len);
+ 
++	VERBOSE("%s@%d: pdev=%p\n", __func__, __LINE__, pdev);
+ 	dfu_version = serial[len - 1] << 8 | serial[len - 2];
+ 
+ 	if (hdfu->dev_state == DFU_STATE_DNLOAD_BUSY) {
+ 		if (dfu_version == 0x011a) {
+-			/* Decode the Special Command*/
++			/* Decode the Special Command */
+ 			if (hdfu->wblock_num == 0) {
+ 				if (hdfu->buffer[0] ==
+ 				     DFU_CMD_SETADDRESSPOINTER &&
+@@ -153,12 +159,10 @@ static uint8_t usb_dfu_ep0_tx_ready(usb_
+ 		}
+ 		if ((hdfu->wblock_num > 1 && dfu_version == 0x011a) ||
+ 		    dfu_version != 0x011a) {
++			usb_dfu_media_t *p = pdev->user_data;
+ 			/* Perform the write operation */
+-			if (((usb_dfu_media_t *)
+-			     pdev->user_data)->write_done((uint32_t *)
+-							  hdfu->data_ptr,
+-							  hdfu->wlength)
+-			    != USBD_OK)
++			if (p->write_done((uint32_t *)hdfu->data_ptr,
++					   hdfu->wlength) != USBD_OK)
+ 				return USBD_FAIL;
+ 		}
+ 
+@@ -192,6 +196,7 @@ static uint8_t usb_dfu_sof(usb_handle_t
+ {
+ 	(void)pdev;
+ 
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	return USBD_OK;
+ }
+ 
+@@ -206,6 +211,7 @@ static uint8_t usb_dfu_iso_in_incomplete
+ {
+ 	(void)pdev;
+ 	(void)epnum;
++	VERBOSE("%s@%d: pdev=%p ep=%u\n", __func__, __LINE__, pdev, epnum);
+ 	return USBD_OK;
+ }
+ 
+@@ -220,6 +226,7 @@ static uint8_t usb_dfu_iso_out_incomplet
+ {
+ 	(void)pdev;
+ 	(void)epnum;
++	VERBOSE("%s@%d: pdev=%p ep=%u\n", __func__, __LINE__, pdev, epnum);
+ 	return USBD_OK;
+ }
+ 
+@@ -234,6 +241,7 @@ static uint8_t usb_dfu_data_out(usb_hand
+ {
+ 	(void)pdev;
+ 	(void)epnum;
++	VERBOSE("%s@%d: pdev=%p ep=%u\n", __func__, __LINE__, pdev, epnum);
+ 	return USBD_OK;
+ }
+ 
+@@ -246,7 +254,7 @@ static uint8_t usb_dfu_data_out(usb_hand
+  */
+ static void usb_dfu_detach(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
+ 	INFO("Receive Detach\n");
+ 
+@@ -279,8 +287,9 @@ static void usb_dfu_detach(usb_handle_t
+  */
+ static void usb_dfu_download(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	/* Data setup request */
+ 	if (req->length > 0) {
+ 		if ((hdfu->dev_state == DFU_STATE_IDLE) ||
+@@ -303,8 +312,7 @@ static void usb_dfu_download(usb_handle_
+ 			pdev->ep_out[0].rem_length   = hdfu->wlength;
+ 
+ 			/* Start the transfer */
+-			usb_core_receive(pdev,
+-					 0,
++			usb_core_receive(pdev, 0,
+ 					 (uint8_t *)usbd_dfu_download_address,
+ 					 hdfu->wlength);
+ 
+@@ -344,8 +352,9 @@ static void usb_dfu_download(usb_handle_
+  */
+ static void usb_dfu_upload(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	/* Data setup request */
+ 	if (req->length > 0) {
+ 		if ((hdfu->dev_state == DFU_STATE_IDLE) ||
+@@ -366,23 +375,16 @@ static void usb_dfu_upload(usb_handle_t
+ 				hdfu->dev_status[3] = 0;
+ 				hdfu->dev_status[4] = hdfu->dev_state;
+ 
+-				INFO("UPLOAD :\n");
+-				INFO("\t\tPhase ID : %i\n", usbd_dfu_phase_id);
++				INFO("UPLOAD:\n");
++				INFO("\t\tPhase ID: %i\n", usbd_dfu_phase_id);
+ 				INFO("\t\taddress 0x%lx\n",
+ 				     usbd_dfu_download_address);
+ 
+ 				hdfu->buffer[0] = usbd_dfu_phase_id;
+-				hdfu->buffer[1] = (uint8_t)
+-						  (usbd_dfu_download_address);
+-				hdfu->buffer[2] = (uint8_t)
+-						  (usbd_dfu_download_address >>
+-						   8);
+-				hdfu->buffer[3] = (uint8_t)
+-						  (usbd_dfu_download_address >>
+-						   16);
+-				hdfu->buffer[4] = (uint8_t)
+-						  (usbd_dfu_download_address >>
+-						   24);
++				hdfu->buffer[1] = usbd_dfu_download_address;
++				hdfu->buffer[2] = usbd_dfu_download_address >> 8;
++				hdfu->buffer[3] = usbd_dfu_download_address >> 16;
++				hdfu->buffer[4] = usbd_dfu_download_address >> 24;
+ 
+ 				hdfu->buffer[5] = 0x00;
+ 				hdfu->buffer[6] = 0x00;
+@@ -390,8 +392,8 @@ static void usb_dfu_upload(usb_handle_t
+ 				hdfu->buffer[8] = 0x00;
+ 
+ 				if ((usbd_dfu_download_address ==
+-				    UNDEFINE_DOWN_ADDR) &&
+-				   (usbd_detach_req)) {
++				     UNDEFINE_DOWN_ADDR) &&
++				    usbd_detach_req) {
+ 					INFO("Send detach request\n");
+ 					hdfu->buffer[9] = 0x01;
+ 					pdev->ep_in[0].total_length = 10;
+@@ -405,11 +407,11 @@ static void usb_dfu_upload(usb_handle_t
+ 				pdev->ep0_state = USBD_EP0_DATA_IN;
+ 				/* Start the transfer */
+ 				usb_core_transmit(pdev, 0x00,
+-						  (uint8_t *)&hdfu->buffer[0],
++						  &hdfu->buffer[0],
+ 						  pdev->ep_in[0].total_length);
+ 			} else {
+ 				/* unsupported hdfu->wblock_num */
+-				ERROR("UPLOAD : Unsupported block : %i\n",
++				ERROR("UPLOAD: Unsupported block: %i\n",
+ 				      hdfu->wblock_num);
+ 
+ 				hdfu->dev_state = DFU_ERROR_STALLEDPKT;
+@@ -426,7 +428,7 @@ static void usb_dfu_upload(usb_handle_t
+ 			}
+ 		} else {
+ 			/* Unsupported state */
+-			ERROR("UPLOAD : Unsupported State\n");
++			ERROR("UPLOAD: Unsupported State\n");
+ 
+ 			hdfu->wlength = 0;
+ 			hdfu->wblock_num = 0;
+@@ -437,7 +439,7 @@ static void usb_dfu_upload(usb_handle_t
+ 		}
+ 	} else {
+ 		/* No Data setup request */
+-		INFO("USB : DFU : Nothing to do\n");
++		INFO("USB: DFU: Nothing to do\n");
+ 		hdfu->dev_state = DFU_STATE_IDLE;
+ 
+ 		hdfu->dev_status[1] = 0;
+@@ -455,13 +457,15 @@ static void usb_dfu_upload(usb_handle_t
+  */
+ static void usb_dfu_get_status(usb_handle_t *pdev)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 	uint16_t status;
+ 	uint8_t dfu_bm_attribute = DFU_BM_ATTRIBUTE;
++	usb_dfu_media_t *p = pdev->user_data;
+ 
++	VERBOSE("%s@%d: \n", __func__, __LINE__);
+ 	switch (hdfu->dev_state) {
+ 	case DFU_STATE_DNLOAD_SYNC:
+-		status = ((usb_dfu_media_t *)pdev->user_data)->get_status();
++		status = p->get_status();
+ 
+ 		switch (status) {
+ 		case DFU_MEDIA_STATE_WRITTEN:
+@@ -497,7 +501,7 @@ static void usb_dfu_get_status(usb_handl
+ 			hdfu->dev_status[4] = hdfu->dev_state;
+ 		} else if ((hdfu->manif_state == DFU_MANIFEST_COMPLETE) &&
+ 			   (dfu_bm_attribute & 0x04)) {
+-			INFO("USB : DFU : end of download partition : %i\n",
++			INFO("USB: DFU: end of download partition: %i\n",
+ 			     hdfu->alt_setting);
+ 			hdfu->dev_state = DFU_STATE_IDLE;
+ 			usbd_dfu_operation_complete = 1;
+@@ -518,7 +522,7 @@ static void usb_dfu_get_status(usb_handl
+ 	pdev->ep_in[0].total_length = 6;
+ 	pdev->ep_in[0].rem_length = 6;
+ 	/* Start the transfer */
+-	usb_core_transmit(pdev, 0x00, (uint8_t *)&hdfu->dev_status[0], 6);
++	usb_core_transmit(pdev, 0x00, &hdfu->dev_status[0], 6);
+ }
+ 
+ /*
+@@ -529,7 +533,7 @@ static void usb_dfu_get_status(usb_handl
+  */
+ static void usb_dfu_clear_status(usb_handle_t *pdev)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
+ 	if (hdfu->dev_state == DFU_STATE_ERROR) {
+ 		hdfu->dev_state = DFU_STATE_IDLE;
+@@ -559,7 +563,7 @@ static void usb_dfu_clear_status(usb_han
+  */
+ static void usb_dfu_get_state(usb_handle_t *pdev)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
+ 	/* Return the current state of the DFU interface */
+ 	/* Send the status data over EP0 */
+@@ -579,7 +583,7 @@ static void usb_dfu_get_state(usb_handle
+  */
+ static void usb_dfu_abort(usb_handle_t *pdev)
+ {
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
+ 	if (hdfu->dev_state == DFU_STATE_IDLE ||
+ 	    hdfu->dev_state == DFU_STATE_DNLOAD_SYNC ||
+@@ -608,13 +612,13 @@ static void usb_dfu_abort(usb_handle_t *
+ static uint8_t usb_dfu_setup(usb_handle_t *pdev, usb_setup_req_t *req)
+ {
+ 	uint8_t *pbuf = NULL;
+-	uint16_t len = 0;
++	uint16_t len;
+ 	uint8_t ret = USBD_OK;
+-	usb_dfu_handle_t *hdfu = (usb_dfu_handle_t *)pdev->class_data;
++	usb_dfu_handle_t *hdfu = pdev->class_data;
+ 
+-	VERBOSE("alt_setting %i, bmRequest : 0x%x, brequest : 0x%x\n",
++	VERBOSE("alt_setting %i, bmRequest: 0x%x, brequest: 0x%x len: %u value: 0x%02x\n",
+ 		hdfu->alt_setting, req->bm_request & USB_REQ_TYPE_MASK,
+-		req->b_request);
++		req->b_request, req->length, req->value);
+ 	switch (req->bm_request & USB_REQ_TYPE_MASK) {
+ 	case USB_REQ_TYPE_CLASS:
+ 		usbd_dfu_current_req = req->b_request;
+@@ -649,7 +653,7 @@ static uint8_t usb_dfu_setup(usb_handle_
+ 				break;
+ 
+ 			default:
+-				ERROR("phase ID :%i\n", usbd_dfu_phase_id);
++				ERROR("phase ID: %i\n", usbd_dfu_phase_id);
+ 				usb_core_ctl_error(pdev);
+ 				ret = USBD_FAIL;
+ 				break;
+@@ -661,7 +665,7 @@ static uint8_t usb_dfu_setup(usb_handle_
+ 				break;
+ 
+ 			case DFU_GETSTATUS:
+-				INFO("GETSTATUS :\n");
++				INFO("GETSTATUS:\n");
+ 				usb_dfu_get_status(pdev);
+ 
+ 				switch (hdfu->dev_state) {
+@@ -710,7 +714,7 @@ static uint8_t usb_dfu_setup(usb_handle_
+ 				break;
+ 
+ 			case DFU_GETSTATE:
+-				INFO("GETSTATE :\n");
++				INFO("GETSTATE:\n");
+ 				usb_dfu_get_state(pdev);
+ 
+ 				switch (hdfu->dev_state) {
+@@ -763,13 +767,13 @@ static uint8_t usb_dfu_setup(usb_handle_
+ 				break;
+ 
+ 			default:
+-				ERROR("phase ID :%i\n", DFU_GET_PHASE);
++				ERROR("phase ID: %i\n", DFU_GET_PHASE);
+ 				usb_core_ctl_error(pdev);
+ 				ret = USBD_FAIL;
+ 				break;
+ 			}
+ 		} else {
+-			ERROR("Unknown alternate : %i\n", hdfu->alt_setting);
++			ERROR("Unknown alternate: %i\n", hdfu->alt_setting);
+ 			ret = USBD_FAIL;
+ 		}
+ 		break;
+@@ -799,7 +803,7 @@ static uint8_t usb_dfu_setup(usb_handle_
+ 			break;
+ 
+ 		case USB_REQ_SET_INTERFACE:
+-			hdfu->alt_setting = (uint8_t)(req->value);
++			hdfu->alt_setting = req->value;
+ 			break;
+ 
+ 		default:
+@@ -815,17 +819,16 @@ static uint8_t usb_dfu_setup(usb_handle_
+ }
+ 
+ static const usb_class_t  USBD_DFU_initvalue = {
+-	usb_dfu_init,
+-	usb_dfu_de_init,
+-	usb_dfu_setup,
+-	usb_dfu_ep0_tx_ready,
+-	usb_dfu_ep0_rx_ready,
+-	usb_dfu_data_in,
+-	usb_dfu_data_out,
+-	usb_dfu_sof,
+-	usb_dfu_iso_in_incomplete,
+-	usb_dfu_iso_out_incomplete,
+-	0
++	.init =			usb_dfu_init,
++	.de_init =		usb_dfu_de_init,
++	.setup =		usb_dfu_setup,
++	.ep0_tx_sent =		usb_dfu_ep0_tx_ready,
++	.ep0_rx_ready =		usb_dfu_ep0_rx_ready,
++	.data_in =		usb_dfu_data_in,
++	.data_out =		usb_dfu_data_out,
++	.sof =			usb_dfu_sof,
++	.iso_in_incomplete =	usb_dfu_iso_in_incomplete,
++	.iso_out_incomplete =	usb_dfu_iso_out_incomplete,
+ };
+ 
+ void usb_dfu_register_callback(usb_handle_t *pdev)
