@@ -7,6 +7,7 @@
 
 #include "stm32mp157c-txmp-1570.dts"
 #include "stm32mp15-karo-mb7.dtsi"
+#include "stm32mp15-txmp-lcd-panel.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1570 module on MB7 baseboard";

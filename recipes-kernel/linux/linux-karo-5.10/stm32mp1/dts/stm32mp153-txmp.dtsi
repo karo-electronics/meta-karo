@@ -3,5 +3,5 @@
  * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp153.dtsi"
 #include "stm32mp15-txmp.dtsi"
+#include "stm32mp153-karo.dtsi"

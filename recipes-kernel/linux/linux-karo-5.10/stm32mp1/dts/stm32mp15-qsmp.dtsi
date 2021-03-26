@@ -75,8 +75,6 @@
 };
 
 &module_led {
-	pinctrl-0 = <&qsmp_led_pins>;
-	pinctrl-1 = <&qsmp_led_sleep_pins>;
 	gpios = <&gpioa 13 GPIO_ACTIVE_LOW>;
 };
 
@@ -119,9 +117,10 @@
 
 &usart2 {
 	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&qsmp_usart2_pins &qsmp_usart2_rtscts_pins>;
-	pinctrl-1 = <&qsmp_usart2_sleep_pins &qsmp_usart2_rtscts_sleep_pins>;
-	uart-has-rtscts;
+	pinctrl-0 = <&qsmp_usart2_pins>;
+	pinctrl-1 = <&qsmp_usart2_sleep_pins>;
+	rts-gpios = <&gpiod 4 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpiod 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 	status = "okay";
 };
 
@@ -226,22 +225,6 @@
 				  STM32_PINMUX('D', 12, ANALOG) /* I2C1_SCL */
 				  STM32_PINMUX('F', 15, ANALOG) /* I2C1_SDA */
 			>;
-		};
-	};
-
-	qsmp_led_pins: qsmp-led-pins {
-		pins {
-			pinmux = <STM32_PINMUX('A', 13, GPIO)>; /* module LED */
-			bias-pull-up;
-			drive-push-pull;
-			output-low;
-			slew-rate = <0>;
-		};
-	};
-
-	qsmp_led_sleep_pins: qsmp-led-sleep-pins {
-		pins {
-			pinmux = <STM32_PINMUX('A', 13, ANALOG)>; /* module LED */
 		};
 	};
 

@@ -7,9 +7,13 @@
 
 #include "stm32mp157.dtsi"
 #include "stm32mp15xc.dtsi"
-#include "stm32mp153-txmp.dtsi"
+#include "stm32mp157-txmp.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1570 module";
 	compatible = "karo,stm32mp157c-txmp-1570", "st,stm32mp157";
+};
+
+&cryp1 {
+	status = "okay";
 };

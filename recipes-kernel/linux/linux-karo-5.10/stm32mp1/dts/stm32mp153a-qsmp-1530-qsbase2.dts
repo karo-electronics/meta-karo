@@ -5,13 +5,9 @@
 
 /dts-v1/;
 
-#include "stm32mp157c-qsmp-1570.dts"
+#include "stm32mp153a-qsmp-1530.dts"
 #include "stm32mp15-karo-qsbase2.dtsi"
 
 / {
-	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSBASE2 baseboard";
-};
-
-&dsi {
-     status = "disabled";
+	model = "Ka-Ro electronics GmbH QSMP-1530 module on QSBASE2 baseboard";
 };

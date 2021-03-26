@@ -3,9 +3,5 @@
  * Copyright 2020 (C) Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp157.dtsi"
 #include "stm32mp153-txmp.dtsi"
-
-&dsi {
-	status = "okay";
-};
+#include "stm32mp157-karo.dtsi"

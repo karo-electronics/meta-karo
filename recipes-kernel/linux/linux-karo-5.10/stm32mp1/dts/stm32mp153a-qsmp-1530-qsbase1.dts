@@ -11,3 +11,4 @@
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1530 module on QSBASE1 baseboard";
 };
+

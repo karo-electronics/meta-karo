@@ -1,14 +1,14 @@
-commit 01e5161c3516fcc822005c95a329ff46a34b14ca
+commit 7cd2d7070817220a7985b775c1866d1f68a7eaa2
 Author: Markus Bauer <mb@karo-electronics.de>
-Date:   Fri Jul 3 12:59:18 2020 +0000
+Date:   Fri Mar 26 13:47:42 2021 +0000
 
-    drm: panel: Official RaspberryPi 7inch touchscreen support
+    drm: panel: Official RaspberryPi 7inch touchscreen Ka-Ro version
 
 diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
-index 2e426972686a..01816bbdf5ce 100644
+index beee3c06994f..95d0256446ba 100644
 --- a/drivers/gpu/drm/panel/Kconfig
 +++ b/drivers/gpu/drm/panel/Kconfig
-@@ -450,4 +450,15 @@ config DRM_PANEL_XINPENG_XPP055C272
+@@ -507,4 +507,15 @@ config DRM_PANEL_XINPENG_XPP055C272
  	  Say Y here if you want to enable support for the Xinpeng
  	  XPP055C272 controller for 720x1280 LCD panels with MIPI/RGB/SPI
  	  system interfaces.
@@ -25,20 +25,20 @@ index 2e426972686a..01816bbdf5ce 100644
 +
  endmenu
 diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
-index ab91e3c4e61b..58259b34264d 100644
+index 1ae1c4b49a28..661792b3cd62 100644
 --- a/drivers/gpu/drm/panel/Makefile
 +++ b/drivers/gpu/drm/panel/Makefile
-@@ -48,3 +48,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TD043MTEA1) += panel-tpo-td043mtea1.o
- obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += panel-tpo-tpg110.o
+@@ -54,3 +54,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += panel-tpo-tpg110.o
  obj-$(CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA) += panel-truly-nt35597.o
+ obj-$(CONFIG_DRM_PANEL_VISIONOX_RM69299) += panel-visionox-rm69299.o
  obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
 +obj-$(CONFIG_DRM_PANEL_RPI_7INCH) += panel-rpi-7inch.o
 diff --git a/drivers/gpu/drm/panel/panel-rpi-7inch.c b/drivers/gpu/drm/panel/panel-rpi-7inch.c
 new file mode 100644
-index 000000000000..a25af647a533
+index 000000000000..0b93f81245c3
 --- /dev/null
 +++ b/drivers/gpu/drm/panel/panel-rpi-7inch.c
-@@ -0,0 +1,409 @@
+@@ -0,0 +1,406 @@
 +/*
 + * Copyright (C) 2020, Markus Bauer <mb@karo-electronics.de>
 + * Edited and fitted to our needs.
@@ -150,7 +150,6 @@ index 000000000000..a25af647a533
 +	.vsync_start = 480 + 49,
 +	.vsync_end = 480 + 49 + 2,
 +	.vtotal = 480 + 49 + 2 + 19,
-+	.vrefresh = 50,
 +	.width_mm = 154,
 +	.height_mm = 86,
 +};
@@ -277,9 +276,8 @@ index 000000000000..a25af647a533
 +
 +	mode = drm_mode_duplicate(connector->dev, &tc358762_mode);
 +	if (!mode) {
-+		DRM_ERROR("failed to add mode %ux%ux@%u\n",
-+			  tc358762_mode.hdisplay, tc358762_mode.vdisplay,
-+			  tc358762_mode.vrefresh);
++		DRM_ERROR("failed to add mode %ux%ux\n",
++			  tc358762_mode.hdisplay, tc358762_mode.vdisplay);
 +		return -ENOMEM;
 +	}
 +
@@ -327,7 +325,6 @@ index 000000000000..a25af647a533
 +{
 +	struct tc358762 *panel = dev_get_drvdata(dev);
 +
-+	drm_panel_detach(&panel->base);
 +	drm_panel_remove(&panel->base);
 +
 +	tc358762_disable(&panel->base);
@@ -449,12 +446,12 @@ index 000000000000..a25af647a533
 +MODULE_DESCRIPTION("DRM Driver for toshiba tc358762 Bridge");
 +MODULE_LICENSE("GPL and additional rights");
 diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index c071f7c407b6..74b0f98f526c 100644
+index cc18f54ea887..fb4ae0cb26e6 100644
 --- a/drivers/input/touchscreen/Kconfig
 +++ b/drivers/input/touchscreen/Kconfig
-@@ -1310,4 +1310,10 @@ config TOUCHSCREEN_IQS5XX
+@@ -1335,4 +1335,10 @@ config TOUCHSCREEN_ZINITIX
  	  To compile this driver as a module, choose M here: the
- 	  module will be called iqs5xx.
+ 	  module will be called zinitix.
  
 +config TOUCHSCREEN_RPI_FT5406
 +	tristate "RaspberryPi 7inch touchscreen ft5406"
@@ -464,10 +461,11 @@ index c071f7c407b6..74b0f98f526c 100644
 +
  endif
 diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
-index 94c6162409b3..015021133cc8 100644
+index 6233541e9173..2fe9ee95fa75 100644
 --- a/drivers/input/touchscreen/Makefile
 +++ b/drivers/input/touchscreen/Makefile
-@@ -110,3 +110,4 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
+@@ -111,4 +111,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
+ obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
  obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
  obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
 +obj-$(CONFIG_TOUCHSCREEN_RPI_FT5406)	+= rpi_ft5406.o
@@ -917,12 +915,12 @@ index 000000000000..e9e80dae43a0
 +
 +#endif
 diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 99e151475d8f..9e1276a4293f 100644
+index fafa8b0d8099..e9d59f1d683c 100644
 --- a/drivers/misc/Kconfig
 +++ b/drivers/misc/Kconfig
-@@ -465,6 +465,14 @@ config PVPANIC
- 	  a paravirtualized device provided by QEMU; it lets a virtual machine
- 	  (guest) communicate panic events to the host.
+@@ -466,6 +466,14 @@ config HISI_HIKEY_USB
+ 	  switching between the dual-role USB-C port and the USB-A host ports
+ 	  using only one USB controller.
  
 +config RPI_DISPLAY
 +	tristate "RaspberryPi 7inch Display Power Controller"
@@ -936,11 +934,11 @@ index 99e151475d8f..9e1276a4293f 100644
  source "drivers/misc/eeprom/Kconfig"
  source "drivers/misc/cb710/Kconfig"
 diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 9abf2923d831..3457644cae4c 100644
+index d23231e73330..22cee9898713 100644
 --- a/drivers/misc/Makefile
 +++ b/drivers/misc/Makefile
-@@ -52,6 +52,7 @@ obj-$(CONFIG_ECHO)		+= echo/
- obj-$(CONFIG_VEXPRESS_SYSCFG)	+= vexpress-syscfg.o
+@@ -50,6 +50,7 @@ obj-$(CONFIG_GENWQE)		+= genwqe/
+ obj-$(CONFIG_ECHO)		+= echo/
  obj-$(CONFIG_CXL_BASE)		+= cxl/
  obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
 +obj-$(CONFIG_RPI_DISPLAY)	+= rpi_display.o

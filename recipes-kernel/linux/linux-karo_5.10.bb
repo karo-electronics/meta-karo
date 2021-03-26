@@ -32,11 +32,11 @@ SRC_URI_append = " \
 	file://0012-interrupts-extended-bugfix.patch \
 	file://0013-rtc-bugfix.patch \
 	file://0014-dsi83-with-tm101-panel-on-qsbase2.patch \
+	file://0015-raspberrypi-7inch-touchscreen-support.patch \
 	file://0016-parrallel-display-bus-flags-from-display-info.patch \
 	file://0017-spi-nand-dma-map-bugfix.patch \
 "
 
-#file://0015-raspberrypi-7inch-touchscreen-support.patch
 
 SRC_URI_append_tx6 = " \
 	file://dts/imx6dl-tx6dl-comtft.dts;subdir=git/arch/arm/boot \
@@ -93,30 +93,31 @@ SRC_URI_append_txul = " \
 
 SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp15-karo-mipi-mb.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-qsmp-lcd-panel.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-qsmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-txmp-lcd-panel.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153-qsmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153-txmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157-qsmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157-txmp.dtsi;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-qsmp-1530-qsbase1.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-qsmp-1530.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp153a-txmp-1530.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase2.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase2-dsi83.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase2-raspi.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570-mipi-mb.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp151a-qsmp-1510-qsbase1.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp151a-qsmp-1510.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153-karo.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153-qsmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-qsmp-1530-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-qsmp-1530-qsbase2.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp153a-qsmp-1530.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157-karo.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157-qsmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157-txmp.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase2-dsi83.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase2-raspi.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570-qsbase2.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
+	file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"

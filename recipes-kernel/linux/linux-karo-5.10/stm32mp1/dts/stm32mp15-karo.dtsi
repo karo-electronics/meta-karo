@@ -6,6 +6,7 @@
 #include <dt-bindings/clock/stm32mp1-clks.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
+//#include "stm32mp157-m4-srm.dtsi"
 
 / {
 	aliases {
@@ -37,6 +38,59 @@
 		regulator-max-microvolt = <3300000>;
 		regulator-always-on;
 	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		mcuram2: mcuram2@10000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x10000000 0x40000>;
+			no-map;
+		};
+
+		vdev0vring0: vdev0vring0@10040000 {
+			compatible = "shared-dma-pool";
+			reg = <0x10040000 0x1000>;
+			no-map;
+		};
+
+		vdev0vring1: vdev0vring1@10041000 {
+			compatible = "shared-dma-pool";
+			reg = <0x10041000 0x1000>;
+			no-map;
+		};
+
+		vdev0buffer: vdev0buffer@10042000 {
+			compatible = "shared-dma-pool";
+			reg = <0x10042000 0x4000>;
+			no-map;
+		};
+
+		mcuram: mcuram@30000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x30000000 0x40000>;
+			no-map;
+		};
+
+		retram: retram@38000000 {
+			compatible = "shared-dma-pool";
+			reg = <0x38000000 0x10000>;
+			no-map;
+		};
+	};
+
+	usb_phy_tuning: usb-phy-tuning {
+		st,hs-dc-level = <2>;
+		st,fs-rftime-tuning;
+		st,hs-rftime-reduction;
+		st,hs-current-trim = <15>;
+		st,hs-impedance-trim = <1>;
+		st,squelch-level = <3>;
+		st,hs-rx-offset = <2>;
+		st,no-lsfs-sc;
+	};
 };
 
 &adc {
@@ -46,6 +100,10 @@
 
 &bsec {
 	status = "okay";
+};
+
+&cpu0 {
+	clock-frequency = <650>;
 };
 
 &ethernet0 {
@@ -67,14 +125,37 @@
 	status = "okay";
 };
 
+&ipcc {
+	status = "okay";
+};
+
 &iwdg2 {
 	timeout-sec = <32>;
+	status = "okay";
+};
+
+&m4_rproc {
+	memory-region = <&retram>, <&mcuram>, <&mcuram2>, <&vdev0vring0>,
+			<&vdev0vring1>, <&vdev0buffer>;
+	mboxes = <&ipcc 0>, <&ipcc 1>, <&ipcc 2>;
+	mbox-names = "vq0", "vq1", "shutdown";
+	interrupt-parent = <&exti>;
+	interrupts = <68 1>;
+	wakeup-source;
 	status = "okay";
 };
 
 &pwr_regulators {
 	vdd-supply = <&reg_3v3>;
 	vdd_3v3_usbfs-supply = <&reg18>;
+};
+
+&rng1 {
+	status = "okay";
+};
+
+&rtc {
+	status = "okay";
 };
 
 &qspi {
@@ -142,6 +223,7 @@
 	phy-supply = <&reg_3v3>;
 	vdda1v1-supply = <&reg11>;
 	vdda1v8-supply = <&reg18>;
+	st,phy-tuning = <&usb_phy_tuning>;
 	status = "okay";
 };
 
@@ -149,33 +231,11 @@
 	phy-supply = <&reg_3v3>;
 	vdda1v1-supply = <&reg11>;
 	vdda1v8-supply = <&reg18>;
+	st,phy-tuning = <&usb_phy_tuning>;
 	status = "okay";
 };
 
 &pinctrl {
-	fdcan2_pins: fdcan2-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('B', 13, AF9)>; /* FDCAN2_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('B', 5, AF9)>; /* FDCAN2_RX */
-			bias-disable;
-		};
-	};
-
-	fdcan2_sleep_pins: fdcan2-sleep-pins {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('B', 5, ANALOG) /* FDCAN2_RX */
-				  STM32_PINMUX('B', 13, ANALOG) /* FDCAN2_TX */
-			>;
-		};
-	};
-
 	i2c6_pins: i2c6-pins {
 		pins {
 			pinmux = <

@@ -6,7 +6,7 @@ include conf/machine/include/tune-cortexa7.inc
 KBUILD_BUILD_USER := "support"
 KBUILD_BUILD_HOST := "karo-electronics.de"
 
-UBOOT_CONFIG ??= "mfg generic trusted"
+UBOOT_CONFIG ??= "mfg generic"
 
 EXTRA_IMAGEDEPENDS += "u-boot-karo"
 PREFERRED_PROVIDER_u-boot ??= "u-boot-karo"

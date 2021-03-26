@@ -35,10 +35,6 @@
 	};
 };
 
-&clk_lse {
-	status = "disabled";
-};
-
 &ethernet0 {
 	pinctrl-0 = <&txmp_ethernet0_rmii_pins>;
 	pinctrl-1 = <&txmp_ethernet0_rmii_sleep_pins>;
@@ -48,6 +44,8 @@
 
 &mdio0 {
 	reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
+	reset-delay-us = <10000>;
+	post-reset-delay-us = <1000>;
 
 	phy0: ethernet-phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
@@ -102,15 +100,19 @@
 };
 
 &uart4 {
-	rts-gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
+	rts-gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 };
 
 &uart5 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&txmp_uart5_pins>;
 	pinctrl-1 = <&txmp_uart5_sleep_pins>;
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
 	rts-gpios = <&gpioc 8 GPIO_ACTIVE_LOW>;
-	cts-gpios = <&gpioc 9 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpioc 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 	status = "okay";
 };
 
@@ -118,8 +120,10 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&txmp_uart7_pins>;
 	pinctrl-1 = <&txmp_uart7_sleep_pins>;
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
 	rts-gpios = <&gpioe 9 GPIO_ACTIVE_LOW>;
-	cts-gpios = <&gpioe 10 GPIO_ACTIVE_LOW>;
+	cts-gpios = <&gpioe 10 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 	status = "okay";
 };
 

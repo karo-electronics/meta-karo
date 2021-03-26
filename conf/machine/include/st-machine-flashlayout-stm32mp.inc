@@ -77,7 +77,7 @@ FLASHLAYOUT_TYPE_LABELS_spinand = "${MACHINE}"
 # -----------------------------------------------------------------------------
 
 FLASHLAYOUT_PARTITION_LABELS_basic_emmc           = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs userfs"
-FLASHLAYOUT_PARTITION_LABELS_trusted_emmc         = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs userfs"
+#FLASHLAYOUT_PARTITION_LABELS_trusted_emmc         = "fsbl1-boot ssbl-boot fsbl1 ssbl bootfs rootfs userfs"
 FLASHLAYOUT_PARTITION_LABELS_basic_spinand        = "fsbl1-boot ssbl-boot fsbl ssbl UBI"
 
 # -----------------------------------------------------------------------------
