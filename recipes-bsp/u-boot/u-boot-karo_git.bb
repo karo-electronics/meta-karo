@@ -27,6 +27,7 @@ SCMVERSION ??= "y"
 LOCALVERSION ??= "+karo"
 
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
+UBOOT_INITIAL_ENV = ""
 
 do_compile_prepend() {
 	if [ "${SCMVERSION}" = "y" ]; then

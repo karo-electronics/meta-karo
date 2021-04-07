@@ -1,9 +1,9 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-SRC_URI += " \
-	file://vpu/vpu_fw_imx6d.bin;subdir=git \
-	file://vpu/vpu_fw_imx6q.bin;subdir=git \
-	file://LICENSE.vpu_firmware;subdir=git \
+SRC_URI_append = " \
+	file://vpu/vpu_fw_imx6d.bin;subdir=linux-firmware-${PV} \
+	file://vpu/vpu_fw_imx6q.bin;subdir=linux-firmware-${PV} \
+	file://LICENSE.vpu_firmware;subdir=linux-firmware-${PV} \
 "
 
 PACKAGES =+ "${PN}-imx-vpu-license ${PN}-imx-vpu"

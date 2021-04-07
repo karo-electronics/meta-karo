@@ -8,7 +8,7 @@ diff --git a/drivers/gpu/drm/imx/parallel-display.c b/drivers/gpu/drm/imx/parall
 index 08fafa4bf8c2..ac3a2c407b97 100644
 --- a/drivers/gpu/drm/imx/parallel-display.c
 +++ b/drivers/gpu/drm/imx/parallel-display.c
-@@ -226,9 +226,24 @@ static int imx_pd_bridge_atomic_check(struct drm_bridge *bridge,
+@@ -226,9 +226,21 @@ static int imx_pd_bridge_atomic_check(struct drm_bridge *bridge,
  		return -EINVAL;
  
  	if (bus_flags &
@@ -16,7 +16,6 @@ index 08fafa4bf8c2..ac3a2c407b97 100644
 +	    ~(DRM_BUS_FLAG_DE_LOW |
 +	      DRM_BUS_FLAG_DE_HIGH |
 +	      DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE |
-+	      DRM_BUS_FLAG_PIXDATA_NEGEDGE |
  	      DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE |
 -	      DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE)) {
 +	      DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE |
@@ -24,8 +23,6 @@ index 08fafa4bf8c2..ac3a2c407b97 100644
 +	      DRM_BUS_FLAG_PIXDATA_SAMPLE_NEGEDGE |
 +	      DRM_BUS_FLAG_DATA_MSB_TO_LSB |
 +	      DRM_BUS_FLAG_DATA_LSB_TO_MSB |
-+	      DRM_BUS_FLAG_SYNC_POSEDGE |
-+	      DRM_BUS_FLAG_SYNC_NEGEDGE |
 +	      DRM_BUS_FLAG_SYNC_DRIVE_POSEDGE |
 +	      DRM_BUS_FLAG_SYNC_DRIVE_NEGEDGE |
 +	      DRM_BUS_FLAG_SYNC_SAMPLE_POSEDGE |
