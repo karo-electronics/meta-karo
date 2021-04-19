@@ -1,0 +1,32 @@
+commit be80f5a066f95278d89ecd17a76d38138e6c33e0
+Author: Markus Bauer <mb@karo-electronics.de>
+Date:   Wed Apr 14 09:29:15 2021 +0000
+
+    Fit PLL2_Q for GPU to 533 MHz
+
+diff --git a/fdts/stm32mp15-qsmp.dtsi b/fdts/stm32mp15-qsmp.dtsi
+index dc88d4ab0..c3ca1f426 100644
+--- a/fdts/stm32mp15-qsmp.dtsi
++++ b/fdts/stm32mp15-qsmp.dtsi
+@@ -134,7 +134,7 @@
+ 
+ 	st,pll@1 {
+ 		reg = <1>;
+-		cfg = <2 65 1 1 0 5>;
++		cfg = <2 65 1 0 0 5>;
+ 		frac = <5120>;
+ 	};
+ 
+diff --git a/fdts/stm32mp15-txmp.dtsi b/fdts/stm32mp15-txmp.dtsi
+index 495877256..7d7a8baff 100644
+--- a/fdts/stm32mp15-txmp.dtsi
++++ b/fdts/stm32mp15-txmp.dtsi
+@@ -82,7 +82,7 @@
+ 
+ 	st,pll@1 {
+ 		reg = <1>;
+-		cfg = <2 65 1 1 0 5>;
++		cfg = <2 65 1 0 0 5>;
+ 		frac = <5120>;
+ 	};
+ 

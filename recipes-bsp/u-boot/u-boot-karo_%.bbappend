@@ -12,4 +12,5 @@ SRC_URI_append_stm32mp1 = " \
 	       file://dcache-off.patch \
 	       file://fix-usb33d-supply.patch \
 	       file://fix-tfaboot.patch \
+	       file://fix-gpu-clk.patch \
 "

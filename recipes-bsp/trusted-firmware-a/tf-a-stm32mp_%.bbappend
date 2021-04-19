@@ -3,6 +3,7 @@ SRC_URI_append = " \
     file://0001-stm-dts-bugfixes.patch \
     file://0002-stm-bugfixes.patch \
     file://0003-tf-a-karo.patch \
+    file://0004-pll2-q-gpu-clk.patch \
 "
 
 # Extra make settings
