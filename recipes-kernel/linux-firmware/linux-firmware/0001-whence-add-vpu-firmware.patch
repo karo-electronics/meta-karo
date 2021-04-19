@@ -1,0 +1,22 @@
+diff --git a/WHENCE b/WHENCE
+index d28c674..aab0ad8 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -5091,6 +5091,17 @@ Licence: Redistributable. See LICENSE.sdma_firmware for details
+ 
+ --------------------------------------------------------------------------
+ 
++Driver: imx-vpu - support for i.MX VPU driver
++
++File: vpu/vpu_fw_imx6d.bin
++Version: 1.0
++File: vpu/vpu_fw_imx6q.bin
++Version: 1.0
++
++Licence: Redistributable. See LICENSE.vpu_firmware for details
++
++--------------------------------------------------------------------------
++
+ Driver: adreno - Qualcomm Adreno GPU firmware
+ 
+ File: qcom/a300_pfp.fw
