@@ -7,7 +7,7 @@ index db54b6dcea..fc92247bf1 100644
  PLATFORM_RELFLAGS += -ffunction-sections -fdata-sections \
  		     -fno-common -ffixed-r9
 -PLATFORM_RELFLAGS += $(call cc-option, -msoft-float) \
-+PLATFORM_RELFLAGS += $(call cc-option, -mfloat-abi=hard -mfpu=vfpv4) \
++PLATFORM_RELFLAGS += $(call cc-option, -mfloat-abi=hard -mfpu=vfpv4 -mgeneral-regs-only) \
        $(call cc-option,-mshort-load-bytes,$(call cc-option,-malignment-traps,))
  
  PLATFORM_CPPFLAGS += -D__ARM__
