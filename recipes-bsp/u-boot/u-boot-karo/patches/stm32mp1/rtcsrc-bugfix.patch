@@ -1,0 +1,65 @@
+diff --git a/arch/arm/mach-stm32mp/cpu.c b/arch/arm/mach-stm32mp/cpu.c
+index d467d28201..d9f4495c10 100644
+--- a/arch/arm/mach-stm32mp/cpu.c
++++ b/arch/arm/mach-stm32mp/cpu.c
+@@ -198,10 +198,15 @@ static void update_bootmode(void)
+ 			TAMP_BOOT_MODE_MASK,
+ 			boot_mode << TAMP_BOOT_MODE_SHIFT);
+ }
++#else
++static inline void update_bootmode(void)
++{
++}
+ #endif
+ 
+ u32 get_bootmode(void)
+ {
++	update_bootmode();
+ 	/* read bootmode from TAMP backup register */
+ 	return (readl(TAMP_BOOT_CONTEXT) & TAMP_BOOT_MODE_MASK) >>
+ 		    TAMP_BOOT_MODE_SHIFT;
+diff --git a/drivers/clk/clk_stm32mp1.c b/drivers/clk/clk_stm32mp1.c
+index a7879d7064..447855af99 100644
+--- a/drivers/clk/clk_stm32mp1.c
++++ b/drivers/clk/clk_stm32mp1.c
+@@ -169,6 +169,7 @@ DECLARE_GLOBAL_DATA_PTR;
+ #define RCC_BDCR_RTCCKEN	BIT(20)
+ #define RCC_BDCR_RTCSRC_MASK	GENMASK(17, 16)
+ #define RCC_BDCR_RTCSRC_SHIFT	16
++#define RCC_BDCR_VSWRST		BIT(31)
+ 
+ /* Fields of RCC_RDLSICR register */
+ #define RCC_RDLSICR_LSION	BIT(0)
+@@ -1845,20 +1846,21 @@ static void set_rtcsrc(struct stm32mp1_clk_priv *priv,
+ 		       int lse_css)
+ {
+ 	u32 address = priv->base + RCC_BDCR;
++	u32 bdcr = readl(address);
+ 
+-	if (readl(address) & RCC_BDCR_RTCCKEN)
+-		goto skip_rtc;
+-
+-	if (clksrc == CLK_RTC_DISABLED)
+-		goto skip_rtc;
+-
+-	clrsetbits_le32(address,
+-			RCC_BDCR_RTCSRC_MASK,
+-			clksrc << RCC_BDCR_RTCSRC_SHIFT);
++	if (clksrc != CLK_RTC_DISABLED)
++		bdcr |= RCC_BDCR_RTCCKEN;
++	else
++		bdcr &= ~RCC_BDCR_RTCCKEN;
+ 
+-	setbits_le32(address, RCC_BDCR_RTCCKEN);
++	clksrc &= RCC_SELR_SRC_MASK;
++	if (clksrc << RCC_BDCR_RTCSRC_SHIFT != (bdcr & RCC_BDCR_RTCSRC_MASK)) {
++		setbits_le32(address, RCC_BDCR_VSWRST);
++		bdcr &= ~RCC_BDCR_RTCSRC_MASK;
++		bdcr |= clksrc << RCC_BDCR_RTCSRC_SHIFT;
++	}
++	writel(bdcr, address);
+ 
+-skip_rtc:
+ 	if (lse_css)
+ 		setbits_le32(address, RCC_BDCR_LSECSSON);
+ }

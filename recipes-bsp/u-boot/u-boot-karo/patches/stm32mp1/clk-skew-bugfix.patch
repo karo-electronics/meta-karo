@@ -1,0 +1,44 @@
+Index: u-boot-2020-10-stm/arch/arm/dts/stm32mp15-qsmp-u-boot.dtsi
+===================================================================
+--- u-boot-2020-10-stm.orig/arch/arm/dts/stm32mp15-qsmp-u-boot.dtsi
++++ u-boot-2020-10-stm/arch/arm/dts/stm32mp15-qsmp-u-boot.dtsi
+@@ -15,7 +15,7 @@
+ 		CLK_PLL12_HSE
+ 		CLK_PLL3_HSE
+ 		CLK_PLL4_HSE
+-		CLK_RTC_LSI
++		CLK_RTC_LSE
+ 		CLK_MCO1_DISABLED
+ 		CLK_MCO2_DISABLED
+ 	>;
+@@ -37,7 +37,7 @@
+ 		CLK_QSPI_ACLK
+ 		CLK_ETH_PLL4P
+ 		CLK_SDMMC12_HCLK6
+-		CLK_STGEN_HSI
++		CLK_STGEN_HSE
+ 		CLK_USBPHY_HSE
+ 		CLK_SPI2S1_DISABLED
+ 		CLK_SPI2S23_DISABLED
+Index: u-boot-2020-10-stm/arch/arm/dts/stm32mp15-txmp-u-boot.dtsi
+===================================================================
+--- u-boot-2020-10-stm.orig/arch/arm/dts/stm32mp15-txmp-u-boot.dtsi
++++ u-boot-2020-10-stm/arch/arm/dts/stm32mp15-txmp-u-boot.dtsi
+@@ -15,7 +15,7 @@
+ 		CLK_PLL12_HSE
+ 		CLK_PLL3_HSE
+ 		CLK_PLL4_HSE
+-		CLK_RTC_LSI
++		CLK_RTC_LSE
+ 		CLK_MCO1_DISABLED
+ 		CLK_MCO2_DISABLED
+ 	>;
+@@ -37,7 +37,7 @@
+ 		CLK_QSPI_ACLK
+ 		CLK_ETH_PLL4P
+ 		CLK_SDMMC12_HCLK6
+-		CLK_STGEN_HSI
++		CLK_STGEN_HSE
+ 		CLK_USBPHY_HSE
+ 		CLK_SPI2S1_DISABLED
+ 		CLK_SPI2S23_PLL4P

@@ -11,4 +11,6 @@ SRC_URI_append_mx6 = " \
 SRC_URI_append_stm32mp1 = " \
 	       file://dcache-off.patch \
 	       file://fix-usb33d-supply.patch \
+	       file://rtcsrc-bugfix.patch \
+	       file://clk-skew-bugfix.patch \
 "
