@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) STMicroelectronics 2019 - All Rights Reserved
+ * Author: STM32CubeMX code generation for STMicroelectronics.
+ */
+
+/dts-v1/;
+
+#include "stm32mp151a-qsmp.h"
+#include "stm32mp15-qsmp.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1510 solder-in module";
+	compatible = "st,stm32mp157c-qsmp-1510", "st,stm32mp151";
+};
+
+&sdmmc2 {
+	status = "disabled";
+};
