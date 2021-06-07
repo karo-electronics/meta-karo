@@ -1,10 +1,4 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/tf-a-karo:"
-SRC_URI_append = " \
-    file://0001-stm-dts-bugfixes.patch \
-    file://0002-stm-bugfixes.patch \
-    file://0003-tf-a-karo.patch \
-    file://0004-pll2-q-gpu-clk.patch \
-"
 
 # Extra make settings
 EXTRA_OEMAKE = 'CROSS_COMPILE=${TARGET_PREFIX}'
@@ -13,9 +7,15 @@ EXTRA_OEMAKE += 'VENDOR=karo'
 EXTRA_OEMAKE += 'ARCH=aarch32'
 EXTRA_OEMAKE += 'ARM_ARCH_MAJOR=7'
 
-# Debug support
-EXTRA_OEMAKE += "${@oe.utils.ifelse(d.getVar('TF_DEBUG') == '1', 'DEBUG=1','')}"
-EXTRA_OEMAKE += "${@oe.utils.ifelse(d.getVar('TF_DEBUG') == '1', 'LOG_LEVEL=40','LOG_LEVEL=10')}"
+# Configure default mode (All supported device types)
+EXTRA_OEMAKE += 'STM32MP_SDMMC=1'
+EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE','qsmp-1510','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
+
+TF_A_CONFIG_serialboot += 'DEBUG=1'
+TF_A_CONFIG_serialboot += 'LOG_LEVEL=40'
+TF_A_CONFIG_serialboot += 'STM32MP_USB_PROGRAMMER=1'
+TF_A_CONFIG_trusted += 'LOG_LEVEL=30'
 
 # Set default TF-A config
-TF_A_CONFIG ?= ""
+
+PREFERRED_VERSION_tf-a-stm32mp = "2.2"

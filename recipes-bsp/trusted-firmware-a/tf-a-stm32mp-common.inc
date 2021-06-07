@@ -38,13 +38,6 @@ EXTRA_OEMAKE += 'PLAT=stm32mp1'
 EXTRA_OEMAKE += 'ARCH=aarch32'
 EXTRA_OEMAKE += 'ARM_ARCH_MAJOR=7'
 
-# Debug support
-EXTRA_OEMAKE += 'DEBUG=1'
-EXTRA_OEMAKE += "LOG_LEVEL=40"
-
-# Set default TF-A config
-TF_A_CONFIG ?= ""
-
 # -----------------------------------------------
 # Enable use of work-shared folder
 STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
@@ -53,6 +46,7 @@ STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
 # the symlink.
 do_unpack[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
 do_clean[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
+
 base_do_unpack_append () {
     # Specific part to update devtool-source class
     if bb.data.inherits_class('devtool-source', d):

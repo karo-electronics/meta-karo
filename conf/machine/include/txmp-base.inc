@@ -28,5 +28,3 @@ BIN2BOOT_REPLACE_PATTERNS_fsbl1-boot = "basic;trusted"
 BIN2BOOT_REPLACE_PATTERNS_ssbl-boot = "basic;mfg trusted;mfg"
 FLASHLAYOUT_TYPE_LABELS_emmc = "${TF_A_DEVICETREE}"
 FLASHLAYOUT_TYPE_LABELS_spinand = "${TF_A_DEVICETREE}"
-
-TF_DEBUG ?= "1"
