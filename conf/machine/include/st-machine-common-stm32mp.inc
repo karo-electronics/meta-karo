@@ -81,17 +81,18 @@ EXTRA_IMAGECMD_ext4 = "-i 4096 -L ${@d.getVar('IMAGE_NAME_SUFFIX').replace('.', 
 # tf-a
 # =========================================================================
 # Finally we must compile tf-a in all cases as we need trusted binary to boot
-#EXTRA_IMAGEDEPENDS += "${@bb.utils.contains_any('BOOTSCHEME_LABELS', 'optee trusted', 'tf-a-stm32mp', '', d)}"
 EXTRA_IMAGEDEPENDS += "tf-a-stm32mp"
 
 # Define default TF-A config
-TF_A_CONFIG += "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', 'trusted', '', d)}"
-
-#Add this config until tf-a is able to flash with basic binary
-TF_A_CONFIG += "${@bb.utils.contains('BOOTSCHEME_LABELS', 'basic', 'trusted', '', d)}"
+TF_A_CONFIG_append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', ' trusted', '', d)}"
 
 # Define SECURE_PAYLOAD config to set for each TF_A_CONFIG
-TF_A_CONFIG_trusted = "AARCH32_SP=sp_min"
+TF_A_CONFIG_serialboot  = "AARCH32_SP=sp_min"
+TF_A_CONFIG_trusted     = "AARCH32_SP=sp_min"
+
+# Manage proper update for TF_A_CONFIG_* var
+tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'serialboot', 'TF_A_CONFIG_serialboot', '', d)}"
+tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 
 # List of TF-A device tree to use
 TF_A_DEVICETREE = "${STM32MP_DEVICETREE}"

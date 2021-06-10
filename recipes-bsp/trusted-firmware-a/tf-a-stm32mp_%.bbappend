@@ -30,6 +30,9 @@ TF_A_CONFIG_serialboot += 'LOG_LEVEL=40'
 TF_A_CONFIG_serialboot += 'STM32MP_USB_PROGRAMMER=1'
 TF_A_CONFIG_trusted += 'LOG_LEVEL=30'
 
+EXTRA_IMAGEDEPENDS += "virtual/trusted-firmware-a-serialboot"
+
 # Set default TF-A config
+TF_A_CONFIG += "serialboot"
 
 PREFERRED_VERSION_tf-a-stm32mp = "2.2"
