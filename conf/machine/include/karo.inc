@@ -6,6 +6,9 @@ EXTRA_IMAGEDEPENDS += "u-boot-karo"
 PREFERRED_PROVIDER_u-boot ??= "u-boot-karo"
 PREFERRED_PROVIDER_virtual/bootloader ??= "u-boot-karo"
 
+BUILD_REPRODUCIBLE_BINARIES ?= "0"
+INHERIT_remove = "${@'reproducible_build' if d.getVar('BUILD_REPRODUCIBLE_BINARIES') == '0' else ''}"
+
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
 PREFERRED_VERSION_linux-karo = "5.10"
 KERNEL_IMAGETYPE ??= "uImage"
