@@ -1,0 +1,239 @@
+Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15-pinctrl-z.dtsi
+===================================================================
+--- /dev/null
++++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15-pinctrl-z.dtsi
+@@ -0,0 +1,87 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
++/*
++ * Copyright (C) 2021 Lothar Waßmann <LW@KARO-electronics.de>
++ */
++
++/ {
++	pinctrl_z: pin-controller-z@54004000 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "st,stm32mp157-z-pinctrl";
++		ranges = <0 0x54004000 0x400>;
++		pins-are-numbered;
++		interrupt-parent = <&exti>;
++		st,syscfg = <&exti 0x60 0xff>;
++		hwlocks = <&hsem 0 1>;
++
++		gpioz: gpio@54004000 {
++			gpio-controller;
++			#gpio-cells = <2>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			reg = <0 0x400>;
++			clocks = <&scmi0_clk CK_SCMI0_GPIOZ>;
++			st,bank-name = "GPIOZ";
++			st,bank-ioport = <11>;
++			ngpios = <8>;
++			gpio-ranges = <&pinctrl_z 0 400 8>;
++		};
++	};
++};
++
++&pinctrl_z {
++	i2c2_pins_b2: i2c2-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 0, AF3)>; /* I2C2_SCL */
++			bias-disable;
++			drive-open-drain;
++			slew-rate = <0>;
++		};
++	};
++
++	i2c2_sleep_pins_b2: i2c2-sleep-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 0, ANALOG)>; /* I2C2_SCL */
++		};
++	};
++
++	i2c4_pins_a: i2c4-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 4, AF6)>, /* I2C4_SCL */
++				 <STM32_PINMUX('Z', 5, AF6)>; /* I2C4_SDA */
++			bias-disable;
++			drive-open-drain;
++			slew-rate = <0>;
++		};
++	};
++
++	i2c4_sleep_pins_a: i2c4-sleep-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 4, ANALOG)>, /* I2C4_SCL */
++				 <STM32_PINMUX('Z', 5, ANALOG)>; /* I2C4_SDA */
++		};
++	};
++
++	spi1_pins_a: spi1-0 {
++		pins1 {
++			pinmux = <STM32_PINMUX('Z', 0, AF5)>, /* SPI1_SCK */
++				 <STM32_PINMUX('Z', 2, AF5)>; /* SPI1_MOSI */
++			bias-disable;
++			drive-push-pull;
++			slew-rate = <1>;
++		};
++
++		pins2 {
++			pinmux = <STM32_PINMUX('Z', 1, AF5)>; /* SPI1_MISO */
++			bias-disable;
++		};
++	};
++
++	spi1_sleep_pins_a: spi1-sleep-0 {
++		pins {
++			pinmux = <STM32_PINMUX('Z', 0, ANALOG)>, /* SPI1_SCK */
++				 <STM32_PINMUX('Z', 1, ANALOG)>, /* SPI1_MISO */
++				 <STM32_PINMUX('Z', 2, ANALOG)>; /* SPI1_MOSI */
++		};
++	};
++};
+Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15-pinctrl.dtsi
+===================================================================
+--- linux-dunfell-5.10.10.orig/arch/arm/boot/dts/stm32mp15-pinctrl.dtsi
++++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15-pinctrl.dtsi
+@@ -2080,60 +2080,3 @@
+ 		};
+ 	};
+ };
+-
+-&pinctrl_z {
+-	i2c2_pins_b2: i2c2-0 {
+-		pins {
+-			pinmux = <STM32_PINMUX('Z', 0, AF3)>; /* I2C2_SCL */
+-			bias-disable;
+-			drive-open-drain;
+-			slew-rate = <0>;
+-		};
+-	};
+-
+-	i2c2_sleep_pins_b2: i2c2-sleep-0 {
+-		pins {
+-			pinmux = <STM32_PINMUX('Z', 0, ANALOG)>; /* I2C2_SCL */
+-		};
+-	};
+-
+-	i2c4_pins_a: i2c4-0 {
+-		pins {
+-			pinmux = <STM32_PINMUX('Z', 4, AF6)>, /* I2C4_SCL */
+-				 <STM32_PINMUX('Z', 5, AF6)>; /* I2C4_SDA */
+-			bias-disable;
+-			drive-open-drain;
+-			slew-rate = <0>;
+-		};
+-	};
+-
+-	i2c4_sleep_pins_a: i2c4-sleep-0 {
+-		pins {
+-			pinmux = <STM32_PINMUX('Z', 4, ANALOG)>, /* I2C4_SCL */
+-				 <STM32_PINMUX('Z', 5, ANALOG)>; /* I2C4_SDA */
+-		};
+-	};
+-
+-	spi1_pins_a: spi1-0 {
+-		pins1 {
+-			pinmux = <STM32_PINMUX('Z', 0, AF5)>, /* SPI1_SCK */
+-				 <STM32_PINMUX('Z', 2, AF5)>; /* SPI1_MOSI */
+-			bias-disable;
+-			drive-push-pull;
+-			slew-rate = <1>;
+-		};
+-
+-		pins2 {
+-			pinmux = <STM32_PINMUX('Z', 1, AF5)>; /* SPI1_MISO */
+-			bias-disable;
+-		};
+-	};
+-
+-	spi1_sleep_pins_a: spi1-sleep-0 {
+-		pins {
+-			pinmux = <STM32_PINMUX('Z', 0, ANALOG)>, /* SPI1_SCK */
+-				 <STM32_PINMUX('Z', 1, ANALOG)>, /* SPI1_MISO */
+-				 <STM32_PINMUX('Z', 2, ANALOG)>; /* SPI1_MOSI */
+-		};
+-	};
+-};
+Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp151.dtsi
+===================================================================
+--- linux-dunfell-5.10.10.orig/arch/arm/boot/dts/stm32mp151.dtsi
++++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp151.dtsi
+@@ -1961,29 +1961,6 @@
+ 			};
+ 		};
+ 
+-		pinctrl_z: pin-controller-z@54004000 {
+-			#address-cells = <1>;
+-			#size-cells = <1>;
+-			compatible = "st,stm32mp157-z-pinctrl";
+-			ranges = <0 0x54004000 0x400>;
+-			pins-are-numbered;
+-			interrupt-parent = <&exti>;
+-			st,syscfg = <&exti 0x60 0xff>;
+-			hwlocks = <&hsem 0 1>;
+-
+-			gpioz: gpio@54004000 {
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-				interrupt-controller;
+-				#interrupt-cells = <2>;
+-				reg = <0 0x400>;
+-				clocks = <&scmi0_clk CK_SCMI0_GPIOZ>;
+-				st,bank-name = "GPIOZ";
+-				st,bank-ioport = <11>;
+-				status = "disabled";
+-			};
+-		};
+-
+ 		tamp: tamp@5c00a000 {
+ 			compatible = "simple-bus", "syscon", "simple-mfd";
+ 			reg = <0x5c00a000 0x400>;
+Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15xxaa-pinctrl.dtsi
+===================================================================
+--- linux-dunfell-5.10.10.orig/arch/arm/boot/dts/stm32mp15xxaa-pinctrl.dtsi
++++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15xxaa-pinctrl.dtsi
+@@ -4,6 +4,8 @@
+  * Author: Alexandre Torgue <alexandre.torgue@st.com> for STMicroelectronics.
+  */
+ 
++#include "stm32mp15-pinctrl-z.dtsi"
++
+ &pinctrl {
+ 	st,package = <STM32MP_PKG_AA>;
+ 
+@@ -76,10 +78,4 @@
+ 
+ &pinctrl_z {
+ 	st,package = <STM32MP_PKG_AA>;
+-
+-	gpioz: gpio@54004000 {
+-		status = "okay";
+-		ngpios = <8>;
+-		gpio-ranges = <&pinctrl_z 0 400 8>;
+-	};
+ };
+Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15xxac-pinctrl.dtsi
+===================================================================
+--- linux-dunfell-5.10.10.orig/arch/arm/boot/dts/stm32mp15xxac-pinctrl.dtsi
++++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15xxac-pinctrl.dtsi
+@@ -4,6 +4,8 @@
+  * Author: Alexandre Torgue <alexandre.torgue@st.com> for STMicroelectronics.
+  */
+ 
++#include "stm32mp15-pinctrl-z.dtsi"
++
+ &pinctrl {
+ 	st,package = <STM32MP_PKG_AC>;
+ 
+@@ -64,10 +66,4 @@
+ 
+ &pinctrl_z {
+ 	st,package = <STM32MP_PKG_AC>;
+-
+-	gpioz: gpio@54004000 {
+-		status = "okay";
+-		ngpios = <8>;
+-		gpio-ranges = <&pinctrl_z 0 400 8>;
+-	};
+ };

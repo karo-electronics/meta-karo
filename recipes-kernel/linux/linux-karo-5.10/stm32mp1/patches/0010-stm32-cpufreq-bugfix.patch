@@ -1,0 +1,17 @@
+Index: linux-dunfell-5.10.10/drivers/cpufreq/stm32-cpufreq.c
+===================================================================
+--- linux-dunfell-5.10.10.orig/drivers/cpufreq/stm32-cpufreq.c
++++ linux-dunfell-5.10.10/drivers/cpufreq/stm32-cpufreq.c
+@@ -40,10 +40,8 @@ static int stm32_cpufreq_probe(struct pl
+ 
+ 	/* Get chip info */
+ 	ret = nvmem_cell_read_u8(cpu_dev, "part_number", &part_number);
+-	if (ret) {
+-		dev_err(&pdev->dev, "Failed to get chip info: %d\n", ret);
+-		return ret;
+-	}
++	if (ret)
++		return dev_err_probe(&pdev->dev, ret, "Failed to get chip info\n");
+ 
+ 	supported_hw = BIT((part_number & 0x80) >> 7);
+ 

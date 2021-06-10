@@ -1,0 +1,13 @@
+Index: linux-dunfell-5.10.10/drivers/gpu/drm/stm/drv.c
+===================================================================
+--- linux-dunfell-5.10.10.orig/drivers/gpu/drm/stm/drv.c
++++ linux-dunfell-5.10.10/drivers/gpu/drm/stm/drv.c
+@@ -197,7 +197,7 @@ static int stm_drm_platform_probe(struct
+ 	if (ret)
+ 		goto err_put;
+ 
+-	drm_fbdev_generic_setup(ddev, 16);
++	drm_fbdev_generic_setup(ddev, 0);
+ 
+ 	return 0;
+ 

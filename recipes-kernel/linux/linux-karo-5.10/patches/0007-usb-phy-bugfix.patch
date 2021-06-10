@@ -2,17 +2,18 @@ Index: karo-tx-linux/drivers/usb/core/phy.c
 ===================================================================
 --- karo-tx-linux.orig/drivers/usb/core/phy.c
 +++ karo-tx-linux/drivers/usb/core/phy.c
-@@ -214,13 +214,18 @@ EXPORT_SYMBOL_GPL(usb_phy_roothub_power_
- int usb_phy_roothub_suspend(struct device *controller_dev,
- 			    struct usb_phy_roothub *phy_roothub)
+@@ -215,13 +215,18 @@ EXPORT_SYMBOL_GPL(usb_phy_roothub_power_
+ 			    struct usb_phy_roothub *phy_roothub,
+ 			    unsigned wakeup_enabled_descendants)
  {
--	usb_phy_roothub_power_off(phy_roothub);
 +	int err;
- 
++
  	/* keep the PHYs initialized so the device can wake up the system */
- 	if (device_may_wakeup(controller_dev))
+ 	if (device_may_wakeup(controller_dev) || wakeup_enabled_descendants)
  		return 0;
  
+-	usb_phy_roothub_power_off(phy_roothub);
+-
 -	return usb_phy_roothub_exit(phy_roothub);
 +	err = usb_phy_roothub_exit(phy_roothub);
 +	if (err)
@@ -23,24 +24,30 @@ Index: karo-tx-linux/drivers/usb/core/phy.c
  }
  EXPORT_SYMBOL_GPL(usb_phy_roothub_suspend);
  
-@@ -230,17 +235,17 @@ int usb_phy_roothub_resume(struct device
- 	int err;
+@@ -229,20 +234,20 @@ int usb_phy_roothub_resume(struct device
+ 			   struct usb_phy_roothub *phy_roothub,
+ 			   unsigned wakeup_enabled_descendants)
+ {
+-	int err = 0;
++	int err;
  
  	/* if the device can't wake up the system _exit was called */
--	if (!device_may_wakeup(controller_dev)) {
+-	if (!device_may_wakeup(controller_dev) && !wakeup_enabled_descendants) {
 -		err = usb_phy_roothub_init(phy_roothub);
 -		if (err)
 -			return err;
+-
+-		err = usb_phy_roothub_power_on(phy_roothub);
 -	}
-+	if (device_may_wakeup(controller_dev))
++	if (device_may_wakeup(controller_dev) || wakeup_enabled_descendants)
 +		return 0;
- 
- 	err = usb_phy_roothub_power_on(phy_roothub);
++
++	err = usb_phy_roothub_power_on(phy_roothub);
 +	if (err)
 +		return err;
  
 -	/* undo _init if _power_on failed */
--	if (err && !device_may_wakeup(controller_dev))
+-	if (err && !device_may_wakeup(controller_dev) && !wakeup_enabled_descendants)
 -		usb_phy_roothub_exit(phy_roothub);
 +	err = usb_phy_roothub_init(phy_roothub);
 +	/* undo _power_on if _init failed */

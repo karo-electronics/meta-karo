@@ -21,22 +21,14 @@ SRC_URI_append = " \
 	file://0001-display-support.patch \
 	file://0002-panel-dpi-bus-format.patch \
 	file://0003-ltdc-missing-bus-flags.patch \
-	file://0004-usbotg_id-bugfix.patch \
-	file://0005-usb-phy-bugfix.patch \
-	file://0006-stmmac-axi-bugfix.patch \
 	file://0007-stm32cryp-dependencies.patch \
-	file://0008-remove-pinctrl-z.patch \
-	file://0009-dwc2-usbotg-bugfix.patch \
-	file://0010-ehci-wakeirq.patch \
-	file://0011-optional-irqs.patch \
-	file://0012-interrupts-extended-bugfix.patch \
-	file://0013-rtc-bugfix.patch \
-	file://0014-dsi83-with-tm101-panel-on-qsbase2.patch \
+	file://0010-attiny-regulator-i2c-retries.patch \
+	file://0011-stm-drv-preferred-depth.patch \
 	file://0015-raspberrypi-7inch-touchscreen-support.patch \
-	file://0016-parrallel-display-bus-flags-from-display-info.patch \
+	file://0016-parallel-display-bus-flags-from-display-info.patch \
 	file://0017-spi-nand-dma-map-bugfix.patch \
+	file://0019-fdt5x06-dma-bugfix.patch \
 "
-
 
 SRC_URI_append_tx6 = " \
 	file://dts/imx6dl-tx6dl-comtft.dts;subdir=git/arch/arm/boot \

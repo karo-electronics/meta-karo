@@ -1,0 +1,68 @@
+Index: linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
+===================================================================
+--- linux-dunfell-5.10.10.orig/drivers/input/touchscreen/edt-ft5x06.c
++++ linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
+@@ -821,20 +821,18 @@ static int edt_ft5x06_ts_identify(struct
+ 					struct edt_ft5x06_ts_data *tsdata,
+ 					char *fw_version)
+ {
+-	u8 rdbuf[EDT_NAME_LEN];
++	u8 *rdbuf = kzalloc(EDT_NAME_LEN, GFP_KERNEL);
+ 	char *p;
+ 	int error;
+ 	char *model_name = tsdata->name;
+ 
+-	/* see what we find if we assume it is a M06 *
+-	 * if we get less than EDT_NAME_LEN, we don't want
+-	 * to have garbage in there
+-	 */
+-	memset(rdbuf, 0, sizeof(rdbuf));
++	if (!rdbuf)
++		return -ENOMEM;
++
+ 	error = edt_ft5x06_ts_readwrite(client, 1, "\xBB",
+ 					EDT_NAME_LEN - 1, rdbuf);
+ 	if (error)
+-		return error;
++		goto exit;
+ 
+ 	/* Probe content for something consistent.
+ 	 * M06 starts with a response byte, M12 gives the data directly.
+@@ -883,14 +881,14 @@ static int edt_ft5x06_ts_identify(struct
+ 		error = edt_ft5x06_ts_readwrite(client, 1, "\xA6",
+ 						2, rdbuf);
+ 		if (error)
+-			return error;
++			goto exit;
+ 
+ 		strlcpy(fw_version, rdbuf, 2);
+ 
+ 		error = edt_ft5x06_ts_readwrite(client, 1, "\xA8",
+ 						1, rdbuf);
+ 		if (error)
+-			return error;
++			goto exit;
+ 
+ 		/* This "model identification" is not exact. Unfortunately
+ 		 * not all firmwares for the ft5x06 put useful values in
+@@ -919,7 +917,7 @@ static int edt_ft5x06_ts_identify(struct
+ 			error = edt_ft5x06_ts_readwrite(client, 1, "\x53",
+ 							1, rdbuf);
+ 			if (error)
+-				return error;
++				goto exit;
+ 			strlcpy(fw_version, rdbuf, 1);
+ 			snprintf(model_name, EDT_NAME_LEN,
+ 				 "EVERVISION-FT5726NEi");
+@@ -931,8 +929,9 @@ static int edt_ft5x06_ts_identify(struct
+ 			break;
+ 		}
+ 	}
+-
+-	return 0;
++exit:
++	kfree(rdbuf);
++	return error;
+ }
+ 
+ static void edt_ft5x06_ts_get_defaults(struct device *dev,

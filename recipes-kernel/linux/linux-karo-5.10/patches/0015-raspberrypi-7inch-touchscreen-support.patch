@@ -17,7 +17,7 @@ index beee3c06994f..95d0256446ba 100644
 +	tristate "RaspberryPi 7inch display panel driver"
 +	depends on OF && I2C
 +	depends on DRM_MIPI_DSI
-+	select RPI_DISPLAY
++	imply REGULATOR_RASPBERRYPI_TOUCHSCREEN_ATTINY
 +	select TOUCHSCREEN_RPI_FT5406
 +	select VIDEOMODE_HELPERS
 +	help
@@ -38,11 +38,12 @@ new file mode 100644
 index 000000000000..0b93f81245c3
 --- /dev/null
 +++ b/drivers/gpu/drm/panel/panel-rpi-7inch.c
-@@ -0,0 +1,406 @@
+@@ -0,0 +1,432 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Copyright (C) 2020, Markus Bauer <mb@karo-electronics.de>
++ * Copyright (C) 2021, Markus Bauer <mb@karo-electronics.de>
 + * Edited and fitted to our needs.
-+ * 
++ *
 + * Copyright (C) 2013, NVIDIA Corporation.  All rights reserved.
 + *
 + * Permission is hereby granted, free of charge, to any person obtaining a
@@ -138,20 +139,33 @@ index 000000000000..0b93f81245c3
 +	struct i2c_adapter *ddc;
 +
 +	struct gpio_desc *enable_gpio;
++	struct regulator *power_supply;
 +};
 +
++#define HDISPLAY	800
++#define HFRONT_PORCH	47
++#define HSYNC_LEN	8
++#define HBACK_PORCH	38
++
++#define VDISPLAY	480
++#define VFRONT_PORCH	7
++#define VSYNC_LEN	1
++#define VBACK_PORCH	23
++
++#define VREFRESH	60
++
 +static const struct drm_display_mode tc358762_mode = {
-+	.clock = 24750,
-+	.hdisplay = 800,
-+	.hsync_start = 800 + 54,
-+	.hsync_end = 800 + 54 + 2,
-+	.htotal = 800 + 54 + 2 + 44,
-+	.vdisplay = 480,
-+	.vsync_start = 480 + 49,
-+	.vsync_end = 480 + 49 + 2,
-+	.vtotal = 480 + 49 + 2 + 19,
-+	.width_mm = 154,
-+	.height_mm = 86,
++	.clock = ((HDISPLAY + HFRONT_PORCH + HSYNC_LEN + HBACK_PORCH) *
++		  (VDISPLAY + VFRONT_PORCH + VSYNC_LEN + VBACK_PORCH) *
++		  VREFRESH) / 1000,
++	.hdisplay = HDISPLAY,
++	.hsync_start = HDISPLAY + HFRONT_PORCH,
++	.hsync_end = HDISPLAY + HFRONT_PORCH + HSYNC_LEN,
++	.htotal = HDISPLAY + HFRONT_PORCH + HSYNC_LEN + HBACK_PORCH,
++	.vdisplay = VDISPLAY,
++	.vsync_start = VDISPLAY + VFRONT_PORCH,
++	.vsync_end = VDISPLAY + VFRONT_PORCH + VSYNC_LEN,
++	.vtotal = VDISPLAY + VFRONT_PORCH + VSYNC_LEN + VBACK_PORCH,
 +};
 +
 +static inline struct tc358762 *to_tc358762(struct drm_panel *panel)
@@ -166,9 +180,7 @@ index 000000000000..0b93f81245c3
 +	if (!p->enabled)
 +		return 0;
 +
-+	printk("panel disable\n");
-+
-+	rpi_display_set_bright(0x00);
++	regulator_disable(p->power_supply);
 +
 +	p->enabled = false;
 +
@@ -189,6 +201,7 @@ index 000000000000..0b93f81245c3
 +
 +static int rpi_touchscreen_write(struct mipi_dsi_device *dsi, u16 reg, u32 val)
 +{
++	int ret;
 +	u8 msg[] = {
 +		reg,
 +		reg >> 8,
@@ -198,72 +211,97 @@ index 000000000000..0b93f81245c3
 +		val >> 24,
 +	};
 +
-+	mipi_dsi_generic_write(dsi, msg, sizeof(msg));
-+
-+	return 0;
++	ret = mipi_dsi_generic_write(dsi, msg, sizeof(msg));
++	if (ret == sizeof(msg) + 4)
++		DRM_DEBUG("%s wrote 0x%08x to 0x%03x\n", __func__,
++			  val, reg);
++	else
++		DRM_ERROR("%s failed to write 0x%08x to 0x%03x: %d\n", __func__,
++			  val, reg, ret);
++	return ret;
 +}
 +
-+#if 1
++static struct {
++	int addr;
++	u32 val;
++} tc358762_dsi_data[] = {
++	{ DSI_LANEENABLE, DSI_LANEENABLE_CLOCK | DSI_LANEENABLE_D0, },
++
++	{ PPI_D0S_CLRSIPOCOUNT, 0x05, },
++	{ PPI_D1S_CLRSIPOCOUNT, 0x05, },
++	{ PPI_D0S_ATMR, 0x00, },
++	{ PPI_D1S_ATMR, 0x00, },
++	{ PPI_LPTXTIMECNT, 0x03, },
++
++	{ SPICMR, 0x00, },
++	{ LCDCTRL, 0x00100150, },
++	{ SYSCTRL, 0x040f, },
++
++	{ PPI_STARTPPI, 0x01, },
++	{ DSI_STARTDSI, 0x01, },
++};
++
 +static int tc358762_dsi_init(struct tc358762 *p)
 +{
++	int ret;
 +	struct mipi_dsi_device *dsi = p->dsi;
++	size_t i;
 +
-+	rpi_touchscreen_write(dsi, DSI_LANEENABLE,
-+			      DSI_LANEENABLE_CLOCK |
-+			      DSI_LANEENABLE_D0);
-+
-+	rpi_touchscreen_write(dsi, PPI_D0S_CLRSIPOCOUNT, 0x05);
-+	rpi_touchscreen_write(dsi, PPI_D1S_CLRSIPOCOUNT, 0x05);
-+	rpi_touchscreen_write(dsi, PPI_D0S_ATMR, 0x00);
-+	rpi_touchscreen_write(dsi, PPI_D1S_ATMR, 0x00);
-+	rpi_touchscreen_write(dsi, PPI_LPTXTIMECNT, 0x03);
-+
-+	rpi_touchscreen_write(dsi, SPICMR, 0x00);
-+	rpi_touchscreen_write(dsi, LCDCTRL, 0x00100150);
-+	rpi_touchscreen_write(dsi, SYSCTRL, 0x040f);
++	for (i = 0; i < ARRAY_SIZE(tc358762_dsi_data); i++) {
++		ret = rpi_touchscreen_write(dsi, tc358762_dsi_data[i].addr,
++					    tc358762_dsi_data[i].val);
++		if (ret < 0) {
++			DRM_ERROR("Failed to write %08x to reg %03x: %d\n",
++				  tc358762_dsi_data[i].val,
++				  tc358762_dsi_data[i].addr, ret);
++			return ret;
++		}
++		if (i == 8)
++			msleep(100);
++	}
 +	msleep(100);
-+
-+	rpi_touchscreen_write(dsi, PPI_STARTPPI, 0x01);
-+	rpi_touchscreen_write(dsi, DSI_STARTDSI, 0x01);
-+	msleep(100);
-+
 +	return 0;
 +}
-+#endif
 +
 +static int tc358762_prepare(struct drm_panel *panel)
 +{
++	int ret;
 +	struct tc358762 *p = to_tc358762(panel);
 +
 +	if (p->prepared)
 +		return 0;
 +
 +	if (trigger_bridge) {
-+		pr_info("rpi_display_power_up");
-+		rpi_display_screen_power_up();
++		ret = regulator_enable(p->power_supply);
++		if (ret) {
++			DRM_ERROR("failed to enable power_supply: %d\n", ret);
++			return ret;
++		}
 +		trigger_bridge = 0;
 +		msleep(100);
-+		pr_info("rpi_ft5406_start_polling");
 +		rpi_ft5406_start_polling();
 +	}
 +
-+	tc358762_dsi_init(p);
++	ret = tc358762_dsi_init(p);
++	if (ret)
++		return ret;
 +
 +	p->prepared = true;
 +
-+	return 0;
++	return ret;
 +}
 +
 +static int tc358762_enable(struct drm_panel *panel)
 +{
++	int ret;
 +	struct tc358762 *p = to_tc358762(panel);
 +
 +	if (p->enabled)
 +		return 0;
 +
-+	printk("panel enable\n");
-+
-+	rpi_display_set_bright(0xFF);
++	ret = regulator_enable(p->power_supply);
++	if (ret)
++		return ret;
 +
 +	p->enabled = true;
 +
@@ -350,26 +388,23 @@ index 000000000000..0b93f81245c3
 +	unsigned int lanes;
 +};
 +
-+static const struct of_device_id dsi_of_match[] = {
-+	{
-+		.compatible = "rpi,tc358762",
-+	}, {
-+		/* sentinel */
-+	}
-+};
-+MODULE_DEVICE_TABLE(of, dsi_of_match);
-+
 +static int tc358762_dsi_probe(struct mipi_dsi_device *dsi)
 +{
++	int err;
 +	struct device *dev = &dsi->dev;
 +	struct tc358762 *panel;
-+	int err;
 +
 +	panel = devm_kzalloc(dev, sizeof(*panel), GFP_KERNEL);
 +	if (!panel)
 +		return -ENOMEM;
 +
 +	panel->dsi = dsi;
++	panel->power_supply = devm_regulator_get(dev, "power");
++	if (IS_ERR(panel->power_supply)) {
++		return dev_err_probe(dev, PTR_ERR(panel->power_supply),
++				     "Failed to get power-supply regulator\n");
++	}
++	dev_info(dev, "Got power-supply regulator\n");
 +
 +	mipi_dsi_set_drvdata(dsi, panel);
 +
@@ -388,10 +423,15 @@ index 000000000000..0b93f81245c3
 +
 +	drm_panel_add(&panel->base);
 +
-+	if (err < 0)
-+		return err;
++	err = mipi_dsi_attach(dsi);
++	if (err < 0) {
++		if (err != -EPROBE_DEFER)
++			dev_err(dev, "mipi_dsi_attach failed: %d\n", err);
 +
-+	return mipi_dsi_attach(dsi);
++		drm_panel_remove(&panel->base);
++		return err;
++	}
++	return 0;
 +}
 +
 +static int tc358762_dsi_remove(struct mipi_dsi_device *dsi)
@@ -410,6 +450,12 @@ index 000000000000..0b93f81245c3
 +	tc358762_shutdown(&dsi->dev);
 +}
 +
++static const struct of_device_id dsi_of_match[] = {
++	{ .compatible = "raspberrypi,tc358762", },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, dsi_of_match);
++
 +static struct mipi_dsi_driver tc358762_dsi_driver = {
 +	.driver = {
 +		.name = "bridge-tc358762-dsi",
@@ -419,27 +465,7 @@ index 000000000000..0b93f81245c3
 +	.remove = tc358762_dsi_remove,
 +	.shutdown = tc358762_dsi_shutdown,
 +};
-+
-+static int __init tc358762_init(void)
-+{
-+	int err;
-+
-+	if (IS_ENABLED(CONFIG_DRM_MIPI_DSI)) {
-+		err = mipi_dsi_driver_register(&tc358762_dsi_driver);
-+		if (err < 0)
-+			return err;
-+	}
-+
-+	return 0;
-+}
-+module_init(tc358762_init);
-+
-+static void __exit tc358762_exit(void)
-+{
-+	if (IS_ENABLED(CONFIG_DRM_MIPI_DSI))
-+		mipi_dsi_driver_unregister(&tc358762_dsi_driver);
-+}
-+module_exit(tc358762_exit);
++module_mipi_dsi_driver(tc358762_dsi_driver);
 +
 +MODULE_AUTHOR("Markus Bauer <mb@karo-electronics.de>");
 +MODULE_AUTHOR("Jerry <xbl@rock-chips.com>");
@@ -475,7 +501,8 @@ new file mode 100644
 index 000000000000..80323f60c197
 --- /dev/null
 +++ b/drivers/input/touchscreen/rpi_ft5406.c
-@@ -0,0 +1,365 @@
+@@ -0,0 +1,326 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
 + *
 + * RPI Display FT5406 touch driver.
@@ -502,94 +529,38 @@ index 000000000000..80323f60c197
 +#include <linux/input.h>
 +#include <linux/input/mt.h>
 +#include <linux/module.h>
++#include <linux/regulator/consumer.h>
 +#include <linux/workqueue.h>
 +#include "rpi_ft5406.h"
 +
-+static struct rpi_ft5406_data g_ts_data;
-+
-+static int fts_i2c_read(struct i2c_client *client, char *writebuf,
-+			   int writelen, char *readbuf, int readlen)
-+{
-+	int ret;
-+
-+	if (writelen > 0) {
-+		struct i2c_msg msgs[] = {
-+			{
-+				 .addr = client->addr,
-+				 .flags = 0,
-+				 .len = writelen,
-+				 .buf = writebuf,
-+			 },
-+			{
-+				 .addr = client->addr,
-+				 .flags = I2C_M_RD,
-+				 .len = readlen,
-+				 .buf = readbuf,
-+			 },
-+		};
-+		ret = i2c_transfer(client->adapter, msgs, 2);
-+		if (ret < 0)
-+			LOG_ERR("i2c read error, %d\n", ret);
-+	} else {
-+		struct i2c_msg msgs[] = {
-+			{
-+				 .addr = client->addr,
-+				 .flags = I2C_M_RD,
-+				 .len = readlen,
-+				 .buf = readbuf,
-+			 },
-+		};
-+		ret = i2c_transfer(client->adapter, msgs, 1);
-+		if (ret < 0)
-+			LOG_ERR("i2c read error, %d\n", ret);
-+	}
-+
-+	return ret;
-+}
-+
-+static int fts_read_reg(struct i2c_client *client, u8 addr, u8 *val)
-+{
-+	return fts_i2c_read(client, &addr, 1, val, 1);
-+}
++static struct rpi_ft5406_data *g_ts_data;
 +
 +static int fts_check_fw_ver(struct i2c_client *client)
 +{
-+	u8 reg_addr, fw_ver[3];
++	u8 fw_ver[3];
 +	int ret;
 +
-+	reg_addr = FT_REG_FW_VER;
-+	ret = fts_i2c_read(client, &reg_addr, 1, &fw_ver[0], 1);
++	fw_ver[0] = i2c_smbus_read_byte_data(client, FT_REG_FW_VER);
++	ret = i2c_smbus_read_i2c_block_data(client, FT_REG_FW_MIN_VER, 2,
++					     &fw_ver[1]);
 +	if (ret < 0)
-+		goto error;
-+
-+	reg_addr = FT_REG_FW_MIN_VER;
-+	ret = fts_i2c_read(client, &reg_addr, 1, &fw_ver[1], 1);
-+	if (ret < 0)
-+		goto error;
-+
-+	reg_addr = FT_REG_FW_SUB_MIN_VER;
-+	ret = fts_i2c_read(client, &reg_addr, 1, &fw_ver[2], 1);
-+	if (ret < 0)
-+		goto error;
++		return ret;
++	if (ret != 2)
++		return -EIO;
 +
 +	LOG_INFO("Firmware version = %d.%d.%d\n", fw_ver[0], fw_ver[1], fw_ver[2]);
 +	return 0;
-+
-+error:
-+	return ret;
 +}
 +
 +static int fts_read_td_status(struct rpi_ft5406_data *ts_data)
 +{
-+	u8 td_status;
 +	int ret;
 +
-+	ret = fts_read_reg(ts_data->client, FT_TD_STATUS_REG, &td_status);
-+	if (ret < 0) {
++	ret = i2c_smbus_read_byte_data(ts_data->client, FT_TD_STATUS_REG);
++	if (ret < 0)
 +		LOG_ERR("get reg td_status failed, %d\n", ret);
-+		return ret;
-+	}
-+	return td_status;
++
++	return ret;
 +}
 +
 +static int fts_read_touchdata(struct rpi_ft5406_data *ts_data)
@@ -601,10 +572,11 @@ index 000000000000..80323f60c197
 +
 +	for (i = 0; i < event->touch_point && i < MAX_TOUCH_POINTS; i++) {
 +		reg_addr = FT_TOUCH_X_H_REG + (i * FT_ONE_TCH_LEN);
-+		ret = fts_i2c_read(ts_data->client, &reg_addr, 1, buf,
-+				   FT_ONE_TCH_LEN - 2);
++		ret = i2c_smbus_read_i2c_block_data(ts_data->client, reg_addr,
++						    FT_ONE_TCH_LEN - 2, buf);
 +		if (ret < 0) {
-+			LOG_ERR("read touchdata failed.\n");
++			dev_err(&ts_data->client->dev,
++				"failed to read touchdata: %d\n", ret);
 +			return ret;
 +		}
 +
@@ -634,7 +606,7 @@ index 000000000000..80323f60c197
 +	int i, modified_ids = 0, released_ids;
 +
 +	for (i = 0; i < event->touch_point && i < MAX_TOUCH_POINTS; i++) {
-+		if (event->au8_touch_event[i]== FT_TOUCH_DOWN ||
++		if (event->au8_touch_event[i] == FT_TOUCH_DOWN ||
 +		    event->au8_touch_event[i] == FT_TOUCH_CONTACT) {
 +			modified_ids |= 1 << event->au8_finger_id[i];
 +			input_mt_slot(ts_data->input_dev,
@@ -682,7 +654,7 @@ index 000000000000..80323f60c197
 +static int fts_retry_wait(struct rpi_ft5406_data *ts_data)
 +{
 +	if (ts_data->retry_count < RETRY_COUNT) {
-+		LOG_INFO("wait and retry, count = %d\n", ts_data->retry_count)
++		LOG_INFO("wait and retry, count = %d\n", ts_data->retry_count);
 +		ts_data->retry_count++;
 +		msleep_interruptible(1000);
 +		return 1;
@@ -693,11 +665,22 @@ index 000000000000..80323f60c197
 +
 +static void rpi_ft5406_work(struct work_struct *work)
 +{
-+	struct ts_event *event = &g_ts_data.event;
-+	int ret = 0, count = 5, td_status;
++	struct rpi_ft5406_data *ts_data = container_of(work, struct rpi_ft5406_data,
++						      ft5406_work);
++	struct ts_event *event = &ts_data->event;
++	int ret;
++	int count = 5;
++	int td_status;
++
++	ret = regulator_enable(ts_data->power_supply);
++	if (ret) {
++		dev_err(&ts_data->client->dev, "Failed to enable power_supply: %d\n",
++			ret);
++		return;
++	}
 +
 +	while (count > 0) {
-+		ret = fts_check_fw_ver(g_ts_data.client);
++		ret = fts_check_fw_ver(ts_data->client);
 +		if (ret == 0)
 +			break;
 +		LOG_INFO("checking touch ic, countdown: %d\n", count);
@@ -706,40 +689,48 @@ index 000000000000..80323f60c197
 +	}
 +	if (!count) {
 +		LOG_ERR("checking touch ic timeout, %d\n", ret);
-+		g_ts_data.is_polling = 0;
++		ts_data->is_polling = 0;
 +		return;
 +	}
 +
 +	/* polling 60fps */
 +	while (1) {
-+		td_status = fts_read_td_status(&g_ts_data);
++		td_status = fts_read_td_status(ts_data);
 +		if (td_status < 0) {
-+			ret = fts_retry_wait(&g_ts_data);
++			ret = fts_retry_wait(ts_data);
 +			if (ret == 0) {
 +				LOG_ERR("stop touch polling\n");
-+				g_ts_data.is_polling = 0;
++				ts_data->is_polling = 0;
 +				break;
 +			}
 +		} else if (td_status < VALID_TD_STATUS_VAL + 1 &&
-+			   (td_status > 0 || g_ts_data.known_ids != 0)) {
-+			fts_retry_clear(&g_ts_data);
++			   (td_status > 0 || ts_data->known_ids != 0)) {
++			fts_retry_clear(ts_data);
 +			memset(event, -1, sizeof(struct ts_event));
 +			event->touch_point = td_status;
-+			ret = fts_read_touchdata(&g_ts_data);
++			ret = fts_read_touchdata(ts_data);
 +			if (ret == 0)
-+				fts_report_value(&g_ts_data);
++				fts_report_value(ts_data);
 +		}
 +		msleep_interruptible(17);
 +	}
++
++	regulator_disable(ts_data->power_supply);
 +}
 +
 +void rpi_ft5406_start_polling(void)
 +{
-+	if (g_ts_data.polling_enabled && g_ts_data.is_polling != 1) {
-+		g_ts_data.is_polling = 1;
-+		schedule_work(&g_ts_data.ft5406_work);
++	struct rpi_ft5406_data *ts_data = g_ts_data;
++
++	if (!ts_data)
++		return;
++
++	pr_info("%s\n", __func__);
++	if (ts_data->polling_enabled && ts_data->is_polling != 1) {
++		ts_data->is_polling = 1;
++		schedule_work(&ts_data->ft5406_work);
 +	} else {
-+		g_ts_data.is_polling = 1;
++		ts_data->is_polling = 1;
 +	}
 +}
 +EXPORT_SYMBOL_GPL(rpi_ft5406_start_polling);
@@ -748,37 +739,34 @@ index 000000000000..80323f60c197
 +			const struct i2c_device_id *id)
 +{
 +	struct input_dev *input_dev;
-+	struct device_node *np = client->dev.of_node;
-+	int ret, timeout = 10;
++	struct rpi_ft5406_data *ts_data;
++	int ret;
 +
 +	LOG_INFO("address = 0x%x\n", client->addr);
 +
-+	g_ts_data.client = client;
-+	i2c_set_clientdata(client, &g_ts_data);
++	ts_data = devm_kzalloc(&client->dev, sizeof(*ts_data), GFP_KERNEL);
++	if (!ts_data)
++		return -ENOMEM;
++	g_ts_data = ts_data;
++	ts_data->client = client;
++	i2c_set_clientdata(client, ts_data);
 +
-+	while (!rpi_display_is_connected() && timeout > 0) {
-+		msleep(50);
-+		timeout--;
-+	}
-+
-+	if (!rpi_display_is_connected() && timeout == 0) {
-+		LOG_ERR("wait connected timeout\n");
-+		ret = -ENODEV;
-+		goto timeout_failed;
-+	}
++	ts_data->power_supply = devm_regulator_get(&client->dev, "power");
++	if (IS_ERR(ts_data->power_supply))
++		return dev_err_probe(&client->dev, PTR_ERR(ts_data->power_supply),
++				     "Failed to get power_supply\n");
 +
 +	input_dev = input_allocate_device();
 +	if (!input_dev) {
 +		LOG_ERR("failed to allocate input device\n");
-+		ret = -ENOMEM;
-+		goto input_allocate_failed;
++		return -ENOMEM;
 +	}
 +	input_dev->name = "fts_ts";
 +	input_dev->id.bustype = BUS_I2C;
-+	input_dev->dev.parent = &g_ts_data.client->dev;
++	input_dev->dev.parent = &ts_data->client->dev;
 +
-+	g_ts_data.input_dev = input_dev;
-+	input_set_drvdata(input_dev, &g_ts_data);
++	ts_data->input_dev = input_dev;
++	input_set_drvdata(input_dev, ts_data);
 +
 +	__set_bit(EV_SYN, input_dev->evbit);
 +	__set_bit(EV_KEY, input_dev->evbit);
@@ -797,18 +785,16 @@ index 000000000000..80323f60c197
 +		goto input_register_failed;
 +	}
 +
-+	INIT_WORK(&g_ts_data.ft5406_work, rpi_ft5406_work);
-+	g_ts_data.polling_enabled = 1;
++	INIT_WORK(&ts_data->ft5406_work, rpi_ft5406_work);
++	ts_data->polling_enabled = 1;
 +
-+	if (g_ts_data.is_polling)
-+		schedule_work(&g_ts_data.ft5406_work);
++	if (ts_data->is_polling)
++		schedule_work(&ts_data->ft5406_work);
 +
 +	return 0;
 +
 +input_register_failed:
 +	input_free_device(input_dev);
-+input_allocate_failed:
-+timeout_failed:
 +	return ret;
 +}
 +
@@ -821,6 +807,7 @@ index 000000000000..80323f60c197
 +		input_unregister_device(ts_data->input_dev);
 +		input_free_device(ts_data->input_dev);
 +	}
++	regulator_disable(ts_data->power_supply);
 +	return 0;
 +}
 +
@@ -846,13 +833,15 @@ new file mode 100644
 index 000000000000..e9e80dae43a0
 --- /dev/null
 +++ b/drivers/input/touchscreen/rpi_ft5406.h
-@@ -0,0 +1,67 @@
+@@ -0,0 +1,71 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
 +#ifndef _RPI_FT5406_H_
 +#define _RPI_FT5406_H_
 +
-+#define LOG_DBG(fmt,arg...) pr_debug("rpi-ft5406: %s: "fmt, __func__, ##arg);
-+#define LOG_INFO(fmt,arg...) pr_info("rpi-ft5406: %s: "fmt, __func__, ##arg);
-+#define LOG_ERR(fmt,arg...) pr_err("rpi-ft5406: %s: "fmt, __func__, ##arg);
++#define LOG_DBG(fmt, arg...) pr_debug("rpi-ft5406: %s: "fmt, __func__, ##arg)
++#define LOG_INFO(fmt, arg...) pr_info("rpi-ft5406: %s: "fmt, __func__, ##arg)
++#define LOG_ERR(fmt, arg...) pr_err("rpi-ft5406: %s: "fmt, __func__, ##arg)
 +
 +#define RETRY_COUNT		10
 +#define XY_REVERSE		1
@@ -911,311 +900,17 @@ index 000000000000..e9e80dae43a0
 +	int polling_enabled;
 +	int known_ids;
 +	int retry_count;
++
++	struct regulator *power_supply;
 +};
 +
 +#endif
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index fafa8b0d8099..e9d59f1d683c 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -466,6 +466,14 @@ config HISI_HIKEY_USB
- 	  switching between the dual-role USB-C port and the USB-A host ports
- 	  using only one USB controller.
- 
-+config RPI_DISPLAY
-+	tristate "RaspberryPi 7inch Display Power Controller"
-+	default y
-+	depends on I2C
-+	help
-+	  Attiny88 controlling the power of toshiba tc358762xbg chip
-+	  and backlight of RaspberryPi 7inch display.
-+
- source "drivers/misc/c2port/Kconfig"
- source "drivers/misc/eeprom/Kconfig"
- source "drivers/misc/cb710/Kconfig"
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index d23231e73330..22cee9898713 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -50,6 +50,7 @@ obj-$(CONFIG_GENWQE)		+= genwqe/
- obj-$(CONFIG_ECHO)		+= echo/
- obj-$(CONFIG_CXL_BASE)		+= cxl/
- obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
-+obj-$(CONFIG_RPI_DISPLAY)	+= rpi_display.o
- obj-$(CONFIG_OCXL)		+= ocxl/
- obj-y				+= cardreader/
- obj-$(CONFIG_PVPANIC)   	+= pvpanic.o
-diff --git a/drivers/misc/rpi_display.c b/drivers/misc/rpi_display.c
-new file mode 100644
-index 000000000000..cb64235184c1
---- /dev/null
-+++ b/drivers/misc/rpi_display.c
-@@ -0,0 +1,236 @@
-+/*
-+ *
-+ * Raspberrypi 7inch i2c driver.
-+ *
-+ * Copyright (c) 2016 ASUSTek Computer Inc.
-+ * Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
-+ *
-+ * This software is licensed under the terms of the GNU General Public
-+ * License version 2, as published by the Free Software Foundation, and
-+ * may be copied, distributed, and modified under those terms.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ * GNU General Public License for more details.
-+ *
-+ */
-+
-+#include <drm/rpi_display.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/delay.h>
-+#include <linux/i2c.h>
-+#include <linux/module.h>
-+#include <linux/workqueue.h>
-+#include "rpi_display.h"
-+
-+static struct rpi_display_data *g_mcu_data;
-+static int connected = 0;
-+
-+static int is_hex(char num)
-+{
-+	//0-9, a-f, A-F
-+	if ((47 < num && num < 58) || (64 < num && num < 71) || (96 < num && num < 103))
-+		return 1;
-+	return 0;
-+}
-+
-+static int string_to_byte(const char *source, unsigned char *destination, int size)
-+{
-+	int i = 0, counter = 0;
-+	char c[3] = {0};
-+	unsigned char bytes;
-+
-+	if (size%2 == 1)
-+		return -EINVAL;
-+
-+	for(i = 0; i < size; i++){
-+		if(!is_hex(source[i])) {
-+			return -EINVAL;
-+		}
-+		if(0 == i%2){
-+			c[0] = source[i];
-+			c[1] = source[i+1];
-+			sscanf(c, "%hhx", &bytes);
-+			destination[counter] = bytes;
-+			counter++;
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int send_cmds(struct i2c_client *client, const char *buf)
-+{
-+	int ret, size = strlen(buf);
-+	unsigned char byte_cmd[size/2];
-+
-+	if ((size%2) != 0) {
-+		LOG_ERR("size should be even\n");
-+		return -EINVAL;
-+	}
-+
-+	LOG_INFO("%s\n", buf);
-+
-+	string_to_byte(buf, byte_cmd, size);
-+
-+	ret = i2c_master_send(client, byte_cmd, size/2);
-+	if (ret <= 0) {
-+		LOG_ERR("send command failed, ret = %d\n", ret);
-+		return ret!=0 ? ret : -ECOMM;
-+	}
-+	msleep(20);
-+	return 0;
-+}
-+
-+static int recv_cmds(struct i2c_client *client, char *buf, int size)
-+{
-+	int ret;
-+
-+	ret = i2c_master_recv(client, buf, size);
-+	if (ret <= 0) {
-+		LOG_ERR("receive commands failed, %d\n", ret);
-+		return ret!=0 ? ret : -ECOMM;
-+	}
-+	msleep(20);
-+	return 0;
-+}
-+
-+static int init_cmd_check(struct rpi_display_data *mcu_data)
-+{
-+	int ret;
-+	char recv_buf[1] = {0};
-+
-+	ret = send_cmds(mcu_data->client, "80");
-+	if (ret < 0)
-+		goto error;
-+
-+	recv_cmds(mcu_data->client, recv_buf, 1);
-+	if (ret < 0)
-+		goto error;
-+
-+	LOG_INFO("recv_cmds: 0x%02X\n", recv_buf[0]);
-+	if (recv_buf[0] != 0xC3) {
-+		LOG_ERR("read wrong info\n");
-+		ret = -EINVAL;
-+		goto error;
-+
-+	}
-+	return 0;
-+
-+error:
-+	return ret;
-+}
-+
-+int rpi_display_screen_power_up(void)
-+{
-+	if (!connected)
-+		return -ENODEV;
-+
-+	LOG_INFO("\n");
-+	send_cmds(g_mcu_data->client, "8500");
-+	msleep(800);
-+	send_cmds(g_mcu_data->client, "8501");
-+	send_cmds(g_mcu_data->client, "8104");
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rpi_display_screen_power_up);
-+
-+int rpi_display_set_bright(int bright)
-+{
-+	unsigned char cmd[2];
-+	int ret;
-+
-+	if (!connected)
-+		return -ENODEV;
-+
-+	if (bright > 0xff || bright < 0)
-+		return -EINVAL;
-+
-+	LOG_INFO("bright = 0x%x\n", bright);
-+
-+	cmd[0] = 0x86;
-+	cmd[1] = bright;
-+
-+	ret = i2c_master_send(g_mcu_data->client, cmd, 2);
-+	if (ret <= 0) {
-+		LOG_ERR("send command failed, ret = %d\n", ret);
-+		return ret != 0 ? ret : -ECOMM;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rpi_display_set_bright);
-+
-+int rpi_display_is_connected(void)
-+{
-+	return connected;
-+}
-+EXPORT_SYMBOL_GPL(rpi_display_is_connected);
-+
-+static int rpi_display_probe(struct i2c_client *client,
-+			const struct i2c_device_id *id)
-+{
-+	struct rpi_display_data *mcu_data;
-+	int ret;
-+
-+	LOG_INFO("address = 0x%02x\n", client->addr);
-+
-+	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
-+		LOG_ERR("I2C check functionality failed\n");
-+		return -ENODEV;
-+	}
-+
-+	mcu_data = kzalloc(sizeof(struct rpi_display_data), GFP_KERNEL);
-+	if (mcu_data == NULL) {
-+		LOG_ERR("no memory for device\n");
-+		return -ENOMEM;
-+	}
-+
-+	mcu_data->client = client;
-+	i2c_set_clientdata(client, mcu_data);
-+	g_mcu_data = mcu_data;
-+
-+#if 1
-+	ret = init_cmd_check(mcu_data);
-+	if (ret < 0) {
-+		LOG_ERR("init_cmd_check failed, %d\n", ret);
-+		goto error;
-+	}
-+#endif
-+
-+	connected = 1;
-+
-+	return 0;
-+
-+error:
-+	kfree(mcu_data);
-+	return ret;
-+}
-+
-+static int rpi_display_remove(struct i2c_client *client)
-+{
-+	struct rpi_display_data *mcu_data = i2c_get_clientdata(client);
-+	connected = 0;
-+	kfree(mcu_data);
-+	return 0;
-+}
-+
-+static const struct i2c_device_id rpi_display_id[] = {
-+	{"rpi_display", 0},
-+	{},
-+};
-+
-+static struct i2c_driver rpi_display_driver = {
-+	.driver = {
-+		.name = "rpi_display",
-+	},
-+	.probe = rpi_display_probe,
-+	.remove = rpi_display_remove,
-+	.id_table = rpi_display_id,
-+};
-+module_i2c_driver(rpi_display_driver);
-+
-+MODULE_DESCRIPTION("Tinker Board TouchScreen MCU driver");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/misc/rpi_display.h b/drivers/misc/rpi_display.h
-new file mode 100644
-index 000000000000..83d4ba425d95
---- /dev/null
-+++ b/drivers/misc/rpi_display.h
-@@ -0,0 +1,14 @@
-+#ifndef _RPI_DISPLAY_H_
-+#define _RPI_DISPLAY_H_
-+
-+#define LOG_INFO(fmt,arg...) pr_info("raspi-display: %s: "fmt, __func__, ##arg);
-+#define LOG_ERR(fmt,arg...) pr_err("raspi-display: %s: "fmt, __func__, ##arg);
-+
-+#define MAX_I2C_LEN 255
-+
-+struct rpi_display_data {
-+	struct device *dev;
-+	struct i2c_client *client;
-+};
-+
-+#endif
-\ No newline at end of file
 diff --git a/include/drm/rpi_display.h b/include/drm/rpi_display.h
 new file mode 100644
-index 000000000000..29eea7c9c4c6
+index 000000000000..e9e80dae43a0
 --- /dev/null
-+++ b/include/drm/rpi_display.h
-@@ -0,0 +1,4 @@
-+int rpi_display_screen_power_up(void);
++++ b/drivers/misc/rpi_display.h
+@@ -0,0 +1,3 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
 +void rpi_ft5406_start_polling(void);
-+int rpi_display_set_bright(int bright);
-+int rpi_display_is_connected(void);
-\ No newline at end of file

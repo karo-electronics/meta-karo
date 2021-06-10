@@ -1,8 +1,8 @@
-Index: karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
+Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp151.dtsi
 ===================================================================
---- karo-tx-linux.orig/arch/arm/boot/dts/stm32mp151.dtsi
-+++ karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
-@@ -1366,12 +1366,6 @@
+--- linux-dunfell-5.10.10.orig/arch/arm/boot/dts/stm32mp151.dtsi
++++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp151.dtsi
+@@ -1621,12 +1621,6 @@
  			status = "disabled";
  		};
  
@@ -15,8 +15,8 @@ Index: karo-tx-linux/arch/arm/boot/dts/stm32mp151.dtsi
  		ethernet0: ethernet@5800a000 {
  			compatible = "st,stm32mp1-dwmac", "snps,dwmac-4.20a";
  			reg = <0x5800a000 0x2000>;
-@@ -1705,4 +1699,10 @@
- 			status = "disabled";
+@@ -2031,4 +2025,10 @@
+ 			};
  		};
  	};
 +

@@ -1,0 +1,155 @@
+Index: linux-dunfell-5.10.10/drivers/regulator/rpi-panel-attiny-regulator.c
+===================================================================
+--- linux-dunfell-5.10.10.orig/drivers/regulator/rpi-panel-attiny-regulator.c
++++ linux-dunfell-5.10.10/drivers/regulator/rpi-panel-attiny-regulator.c
+@@ -27,6 +27,39 @@
+ #define REG_POWERON	0x85
+ #define REG_PWM		0x86
+ 
++static inline int attiny_regmap_write(struct regmap *m, unsigned int reg,
++				  unsigned int val, const char *fn, int ln)
++{
++	int ret;
++	int limit = 10;
++
++	do {
++		ret = regmap_write(m, reg, val);
++	} while (ret == -ENXIO && --limit > 0);
++
++	if (ret)
++		pr_err("%s@%d: failed to write 0x%08x to reg 0x%02x: %d\n",
++		       fn, ln, val, reg, ret);
++	return ret;
++}
++
++static inline int attiny_regmap_read(struct regmap *m, unsigned int reg,
++				     unsigned int *val, const char *fn, int ln)
++{
++	int ret;
++	int limit = 10;
++
++	do {
++		ret = regmap_read(m, reg, val);
++	} while (ret == -ENXIO && --limit > 0);
++
++	if (ret)
++		pr_err("%s@%d: failed to read reg 0x%02x: %d\n", fn, ln, reg, ret);
++	return ret;
++}
++#define regmap_write(m, r, v) attiny_regmap_write(m, r, v, __func__, __LINE__)
++#define regmap_read(m, r, v) attiny_regmap_read(m, r, v, __func__, __LINE__)
++
+ static const struct regmap_config attiny_regmap_config = {
+ 	.reg_bits = 8,
+ 	.val_bits = 8,
+@@ -36,29 +69,44 @@ static const struct regmap_config attiny
+ 
+ static int attiny_lcd_power_enable(struct regulator_dev *rdev)
+ {
++	int ret;
++	int limit = 10;
+ 	unsigned int data;
+ 
+-	regmap_write(rdev->regmap, REG_POWERON, 1);
+-	/* Wait for nPWRDWN to go low to indicate poweron is done. */
+-	regmap_read_poll_timeout(rdev->regmap, REG_PORTB, data,
+-					data & BIT(0), 10, 1000000);
++	ret = regmap_write(rdev->regmap, REG_POWERON, 1);
++	if (ret)
++		return ret;
++	do {
++		/* Wait for nPWRDWN to go low to indicate poweron is done. */
++		ret = regmap_read_poll_timeout(rdev->regmap, REG_PORTB, data,
++					       data & BIT(0), 10, 1000000);
++	} while (ret == -ENXIO && --limit > 0);
++
++	if (ret)
++		return ret;
+ 
+ 	/* Default to the same orientation as the closed source
+ 	 * firmware used for the panel.  Runtime rotation
+ 	 * configuration will be supported using VC4's plane
+ 	 * orientation bits.
+ 	 */
+-	regmap_write(rdev->regmap, REG_PORTA, BIT(2));
++	ret = regmap_write(rdev->regmap, REG_PORTA, REG_PORTA_HF);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static int attiny_lcd_power_disable(struct regulator_dev *rdev)
+ {
+-	regmap_write(rdev->regmap, REG_PWM, 0);
+-	regmap_write(rdev->regmap, REG_POWERON, 0);
++	int ret;
++
++	ret = regmap_write(rdev->regmap, REG_PWM, 0);
++	if (ret)
++		return ret;
++	ret = regmap_write(rdev->regmap, REG_POWERON, 0);
++	if (ret)
++		return ret;
+ 	udelay(1);
+-	return 0;
++	return ret;
+ }
+ 
+ static int attiny_lcd_power_is_enabled(struct regulator_dev *rdev)
+@@ -132,7 +180,7 @@ static const struct backlight_ops attiny
+  * I2C driver interface functions
+  */
+ static int attiny_i2c_probe(struct i2c_client *i2c,
+-		const struct i2c_device_id *id)
++			    const struct i2c_device_id *id)
+ {
+ 	struct backlight_properties props = { };
+ 	struct regulator_config config = { };
+@@ -159,14 +207,17 @@ static int attiny_i2c_probe(struct i2c_c
+ 	switch (data) {
+ 	case 0xde: /* ver 1 */
+ 	case 0xc3: /* ver 2 */
++		dev_info(&i2c->dev, "Found Atmel firmware 0x%02x\n", data);
+ 		break;
+ 	default:
+ 		dev_err(&i2c->dev, "Unknown Atmel firmware revision: 0x%02x\n", data);
+ 		return -ENODEV;
+ 	}
+ 
+-	regmap_write(regmap, REG_POWERON, 0);
+-	mdelay(1);
++	ret = regmap_write(regmap, REG_POWERON, 0);
++	if (ret)
++		return ret;
++	mdelay(800);
+ 
+ 	config.dev = &i2c->dev;
+ 	config.regmap = regmap;
+@@ -185,17 +236,23 @@ static int attiny_i2c_probe(struct i2c_c
+ 					    "7inch-touchscreen-panel-bl",
+ 					    &i2c->dev, regmap, &attiny_bl,
+ 					    &props);
+-	if (IS_ERR(bl))
++	if (IS_ERR(bl)) {
++		dev_err(&i2c->dev, "failed to register backlight device: %ld\n",
++			PTR_ERR(bl));
+ 		return PTR_ERR(bl);
++	}
++	bl->props.brightness = props.max_brightness;
++	of_property_read_u32(i2c->dev.of_node, "default-brightness-level",
++			     &bl->props.brightness);
+ 
+-	bl->props.brightness = 0xff;
+-
++	attiny_update_status(bl);
++	dev_info(&i2c->dev, "registered\n");
+ 	return 0;
+ }
+ 
+ static const struct of_device_id attiny_dt_ids[] = {
+ 	{ .compatible = "raspberrypi,7inch-touchscreen-panel-regulator" },
+-	{},
++	{}
+ };
+ MODULE_DEVICE_TABLE(of, attiny_dt_ids);
+ 

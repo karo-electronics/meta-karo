@@ -4,18 +4,17 @@ Date:   Thu Sep 17 13:05:59 2020 +0000
 
     gpu: drm: imx: Use correct bus_flags from drm_display_info and also fix bug in function that checks them
 
-diff --git a/drivers/gpu/drm/imx/parallel-display.c b/drivers/gpu/drm/imx/parallel-display.c
-index 08fafa4bf8c2..ac3a2c407b97 100644
---- a/drivers/gpu/drm/imx/parallel-display.c
-+++ b/drivers/gpu/drm/imx/parallel-display.c
-@@ -226,9 +226,21 @@ static int imx_pd_bridge_atomic_check(struct drm_bridge *bridge,
+Index: linux-dunfell-5.10.10/drivers/gpu/drm/imx/parallel-display.c
+===================================================================
+--- linux-dunfell-5.10.10.orig/drivers/gpu/drm/imx/parallel-display.c
++++ linux-dunfell-5.10.10/drivers/gpu/drm/imx/parallel-display.c
+@@ -213,9 +213,20 @@ static int imx_pd_bridge_atomic_check(st
  		return -EINVAL;
  
  	if (bus_flags &
 -	    ~(DRM_BUS_FLAG_DE_LOW | DRM_BUS_FLAG_DE_HIGH |
 +	    ~(DRM_BUS_FLAG_DE_LOW |
 +	      DRM_BUS_FLAG_DE_HIGH |
-+	      DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE |
  	      DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE |
 -	      DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE)) {
 +	      DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE |

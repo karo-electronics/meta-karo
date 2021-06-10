@@ -1,0 +1,54 @@
+Index: linux-dunfell-5.10.10/drivers/net/phy/smsc.c
+===================================================================
+--- linux-dunfell-5.10.10.orig/drivers/net/phy/smsc.c
++++ linux-dunfell-5.10.10/drivers/net/phy/smsc.c
+@@ -300,6 +300,38 @@ static int smsc_phy_probe(struct phy_dev
+ 	return 0;
+ }
+ 
++static int smsc_phy_suspend(struct phy_device *phydev)
++{
++	if (phydev->suspended)
++		return 0;
++
++	if (phy_interrupt_is_valid(phydev)) {
++		phydev->interrupts = PHY_INTERRUPT_DISABLED;
++		if (phydev->drv->config_intr)
++			phydev->drv->config_intr(phydev);
++	}
++
++	return genphy_suspend(phydev);
++}
++
++static int smsc_phy_resume(struct phy_device *phydev)
++{
++	genphy_resume(phydev);
++
++	if (!phydev->suspended)
++		return 0;
++
++	usleep_range(25000, 26000);
++
++	if (phy_interrupt_is_valid(phydev)) {
++		phydev->interrupts = PHY_INTERRUPT_ENABLED;
++		if (phydev->drv->config_intr)
++			phydev->drv->config_intr(phydev);
++	}
++
++	return 0;
++}
++
+ static struct phy_driver smsc_phy_driver[] = {
+ {
+ 	.phy_id		= 0x0007c0a0, /* OUI=0x00800f, Model#=0x0a */
+@@ -419,8 +453,8 @@ static struct phy_driver smsc_phy_driver
+ 	.get_strings	= smsc_get_strings,
+ 	.get_stats	= smsc_get_stats,
+ 
+-	.suspend	= genphy_suspend,
+-	.resume		= genphy_resume,
++	.suspend	= smsc_phy_suspend,
++	.resume		= smsc_phy_resume,
+ }, {
+ 	.phy_id		= 0x0007c110,
+ 	.phy_id_mask	= 0xfffffff0,
