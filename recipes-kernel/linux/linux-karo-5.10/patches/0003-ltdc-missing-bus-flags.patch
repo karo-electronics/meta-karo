@@ -31,7 +31,7 @@ index 6e28f707092f..0f72a46f3e78 100644
 +	 * The last two options are not stored inside videomode when its
 +	 * extracted back from drm_display_mode.
 +	 * Because of this, we store bus_flags when searching for panel
-+	 * seperately inside ltdc device.
++	 * separately inside ltdc device.
 +	 */
 +	if (ldev->bus_flags & DRM_BUS_FLAG_DE_LOW)
  		val |= GCR_DEPOL;
@@ -51,12 +51,27 @@ index 6e28f707092f..0f72a46f3e78 100644
  	struct reset_control *rstc;
  	struct resource *res;
  	int irq, i, nb_endpoints;
- 	int ret = -ENODEV;
+-	int ret = -ENODEV;
++	int ret;
 +	u32 bus_flags;
  
  	DRM_DEBUG_DRIVER("\n");
  
-@@ -1228,6 +1239,24 @@ int ltdc_load(struct drm_device *ddev)
+@@ -1222,9 +1233,10 @@ int ltdc_load(struct drm_device *ddev)
+ 		return PTR_ERR(ldev->pixel_clk);
+ 	}
+ 
+-	if (clk_prepare_enable(ldev->pixel_clk)) {
+-		DRM_ERROR("Unable to prepare pixel clock\n");
+-		return -ENODEV;
++	ret = clk_prepare_enable(ldev->pixel_clk);
++	if (ret) {
++		DRM_ERROR("Unable to prepare pixel clock: %d\n", ret);
++		return ret;
+ 	}
+ 
+ 	/* Get endpoints if any */
+@@ -1242,6 +1254,24 @@ int ltdc_load(struct drm_device *ddev)
  			goto err;
  
  		if (panel) {
