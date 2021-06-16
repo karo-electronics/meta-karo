@@ -3,75 +3,23 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-/ {
-	aliases {
-		display = &lcd_panel;
-	};
+#include "stm32mp15-karo-lcd-panel.dtsi"
 
-	lcd_backlight: lcd-backlight {
-		compatible = "pwm-backlight";
-		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&txmp_pwm1_pins>;
-		pinctrl-1 = <&txmp_pwm1_sleep_pins>;
-		pwms = <&txmp_pwm1 2 500000 PWM_POLARITY_INVERTED>;
-		brightness-levels = < 1  2  3  4  5  6  7  8  9  10
-				     11 12 13 14 15 16 17 18 19  20
-				     21 22 23 24 25 26 27 28 29  30
-				     31 32 33 34 35 36 37 38 39  40
-				     41 42 43 44 45 46 47 48 49  50
-				     51 52 53 54 55 56 57 58 59  60
-				     61 62 63 64 65 66 67 68 69  70
-				     71 72 73 74 75 76 77 78 79  80
-				     81 82 83 84 85 86 87 88 89  90
-				     91 92 93 94 95 96 97 98 99 100
-				    >;
-		default-brightness-level = <50>;
-	};
-
-	lcd_panel: panel {
-		compatible = "panel-dpi";
-		pinctrl-0 = <&txmp_ltdc_pins>;
-		pinctrl-1 = <&txmp_ltdc_sleep_pins>;
-		backlight = <&lcd_backlight>;
-		enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
-		reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
-		power-supply = <&reg_3v3>;
-		data-mapping = "rgb24";
-		status = "okay";
-
-		panel-timing {
-			clock-frequency = <25200000>;
-			hactive = <640>;
-			vactive = <480>;
-			hback-porch = <114>;
-			hsync-len = <30>;
-			hfront-porch = <16>;
-			vback-porch = <32>;
-			vsync-len = <3>;
-			vfront-porch = <10>;
-			hsync-active = <0>;
-			vsync-active = <0>;
-			de-active = <1>;
-			pixelclk-active = <1>;
-		};
-
-		port {
-			lcd_panel_from_ltdc_ep1: endpoint {
-				remote-endpoint = <&ltdc_ep1_to_lcd_panel>;
-			};
-		};
-	};
+&lcd_backlight {
+	pinctrl-0 = <&txmp_pwm1_pins>;
+	pinctrl-1 = <&txmp_pwm1_sleep_pins>;
+	pwms = <&txmp_pwm1 2 500000 PWM_POLARITY_INVERTED>;
 };
 
-&ltdc {
-	status = "okay";
-
-	port {
-		ltdc_ep1_to_lcd_panel: endpoint@0 {
-			reg = <0>;
-			remote-endpoint = <&lcd_panel_from_ltdc_ep1>;
-		};
-	};
+&lcd_panel {
+	compatible = "panel-dpi";
+	pinctrl-0 = <&txmp_ltdc_pins>;
+	pinctrl-1 = <&txmp_ltdc_sleep_pins>;
+	backlight = <&lcd_backlight>;
+	enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
+	power-supply = <&reg_3v3>;
+	data-mapping = "rgb24";
 };
 
 &timers1 {

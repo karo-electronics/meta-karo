@@ -5,6 +5,7 @@
 
 #include "stm32mp157c-qsmp-1570.dts"
 #include "stm32mp15-karo-qsbase2.dtsi"
+#include "stm32mp15-karo-dsi-panel.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSBASE2 baseboard with RaspberryPi 7 inch Display";
@@ -22,19 +23,19 @@
 			};
 		};
 	};
+};
 
-	panel@0 {
-		compatible = "raspberrypi,tc358762";
-		reg = <0>;
-		dsi-lanes = <1>;
-		video-mode = <2>;
-		panel-width-mm = <154>;
-		panel-height-mm = <86>;
+&dsi_panel {
+	compatible = "raspberrypi,tc358762";
+	dsi-lanes = <1>;
+	video-mode = <2>;
+	panel-width-mm = <154>;
+	panel-height-mm = <86>;
+	power-supply = <&reg_rpi_display>;
 
-		port {
-			dsi_panel_from_dsi: endpoint {
-				remote-endpoint = <&dsi_to_dsi_panel>;
-			};
+	port {
+		dsi_panel_from_dsi: endpoint {
+			remote-endpoint = <&dsi_to_dsi_panel>;
 		};
 	};
 };
@@ -46,17 +47,16 @@
 &i2c6 {
 	status = "okay";
 
-	rpi-display@45 {
-		compatible = "rpi_display";
+	reg_rpi_display: regulator-rpi-display@45 {
+		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
 		reg = <0x45>;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
 	};
 
 	rpi-ft5406@38 {
 		compatible = "rpi_ft5406";
 		reg = <0x38>;
+		power-supply = <&reg_rpi_display>;
 	};
-};
-
-&ltdc {
-	status = "okay";
 };

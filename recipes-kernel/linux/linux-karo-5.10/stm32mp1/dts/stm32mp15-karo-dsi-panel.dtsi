@@ -1,0 +1,40 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
+ *
+ */
+
+/ {
+	aliases {
+		display = &dsi_panel;
+	};
+};
+
+&dsi {
+	ports {
+		port@0 {
+			reg = <0>;
+
+			dsi_from_ltdc_ep0: endpoint {
+				remote-endpoint = <&ltdc_ep0_to_dsi>;
+			};
+		};
+	};
+
+	dsi_panel: panel@0 {
+		reg = <0>;
+		power-supply = <&reg_3v3>;
+		status = "okay";
+	};
+};
+
+&ltdc {
+	status = "okay";
+
+	port {
+		ltdc_ep0_to_dsi: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&dsi_from_ltdc_ep0>;
+		};
+	};
+};

@@ -3,7 +3,7 @@
  * Copyright (C) 2021 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp15-txmp-lcd-panel.dtsi"
+#include "stm32mp15-karo-lcd-panel.dtsi"
 
 &lcd_backlight {
 	pinctrl-0 = <&qsmp_pwm2_pins>;
@@ -15,11 +15,6 @@
 	pinctrl-0 = <&qsmp_ltdc_pins>;
 	pinctrl-1 = <&qsmp_ltdc_sleep_pins>;
 	enable-gpios = <&gpioa 10 GPIO_ACTIVE_HIGH>;
-	/delete-property/ reset-gpios;
-};
-
-&timers1 {
-	status = "disabled";
 };
 
 &timers2 {

@@ -7,30 +7,6 @@
 	/delete-node/ sound;
 };
 
-&dsi {
-	status = "okay";
-
-	ports {
-		port@0 {
-			reg = <0>;
-
-			dsi_in: endpoint {
-				remote-endpoint = <&ltdc_ep0_out>;
-			};
-		};
-	};
-};
-
-&ltdc {
-	status = "okay";
-
-	port {
-		ltdc_ep0_out: endpoint {
-			remote-endpoint = <&dsi_in>;
-		};
-	};
-};
-
 &sdmmc1 {
 	status = "disabled";
 };

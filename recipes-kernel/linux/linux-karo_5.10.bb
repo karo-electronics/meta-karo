@@ -84,6 +84,8 @@ SRC_URI_append_txul = " \
 "
 
 SRC_URI_append_stm32mp1 = " \
+	file://dts/stm32mp15-karo-dsi-panel.dtsi;subdir=git/arch/arm/boot \
+	file://dts/stm32mp15-karo-lcd-panel.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/arch/arm/boot \
