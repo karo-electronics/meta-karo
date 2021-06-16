@@ -8,35 +8,3 @@
 &cpu1 {
 	clock-frequency = <650>;
 };
-
-&m_can2 {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&fdcan2_pins>;
-	pinctrl-1 = <&fdcan2_sleep_pins>;
-	status = "okay";
-};
-
-&pinctrl {
-	fdcan2_pins: fdcan2-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('B', 13, AF9)>; /* FDCAN2_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('B', 5, AF9)>; /* FDCAN2_RX */
-			bias-disable;
-		};
-	};
-
-	fdcan2_sleep_pins: fdcan2-sleep-pins {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('B', 5, ANALOG) /* FDCAN2_RX */
-				  STM32_PINMUX('B', 13, ANALOG) /* FDCAN2_TX */
-			>;
-		};
-	};
-};

@@ -9,7 +9,3 @@
 &cryp1 {
 	status = "okay";
 };
-
-&dsi {
-	status = "okay";
-};

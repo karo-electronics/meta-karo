@@ -11,5 +11,5 @@
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1570 solder-in module";
-	compatible = "karo,stm32mp157c-qsmp-1570", "st,stm32mp157";
+	compatible = "karo,stm32mp157c-qsmp-1570", "karo,qsmp", "st,stm32mp157";
 };

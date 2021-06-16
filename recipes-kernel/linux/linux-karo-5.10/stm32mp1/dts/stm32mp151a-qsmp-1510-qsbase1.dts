@@ -3,8 +3,6 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-/dts-v1/;
-
 #include "stm32mp151a-qsmp-1510.dts"
 #include "stm32mp15-karo-qsbase1.dtsi"
 #include "stm32mp15-qsmp-lcd-panel.dtsi"

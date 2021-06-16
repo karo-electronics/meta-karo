@@ -55,13 +55,8 @@
 			pixelclk-active = <1>;
 		};
 
-		port@0 {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			reg = <0>;
-
-			lcd_panel_from_ltdc_ep1: endpoint@0 {
-				reg = <0>;
+		port {
+			lcd_panel_from_ltdc_ep1: endpoint {
 				remote-endpoint = <&ltdc_ep1_to_lcd_panel>;
 			};
 		};
@@ -71,11 +66,7 @@
 &ltdc {
 	status = "okay";
 
-	port@0 {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg = <0>;
-
+	port {
 		ltdc_ep1_to_lcd_panel: endpoint@0 {
 			reg = <0>;
 			remote-endpoint = <&lcd_panel_from_ltdc_ep1>;
@@ -93,7 +84,7 @@
 		status = "okay";
 	};
 
-	timer@1 {
+	timer@0 {
 		status = "okay";
 	};
 };
@@ -152,7 +143,7 @@
 		};
 	};
 
-	txmp_ltdc_sleep_pins: txmp-lcd-sleep-pins {
+	txmp_ltdc_sleep_pins: txmp-ltdc-sleep-pins {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('G',  7, ANALOG) /* LCD_CLK */

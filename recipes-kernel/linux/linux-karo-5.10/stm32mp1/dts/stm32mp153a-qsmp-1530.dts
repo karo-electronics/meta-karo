@@ -6,10 +6,10 @@
 /dts-v1/;
 
 #include "stm32mp153.dtsi"
-#include "stm32mp15xc.dtsi"
+#include "stm32mp15xa.dtsi"
 #include "stm32mp153-qsmp.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1530 solder-in module";
-	compatible = "karo,stm32mp153a-qsmp-1530", "st,stm32mp153";
+	compatible = "karo,stm32mp153a-qsmp-1530", "karo,qsmp", "st,stm32mp153";
 };

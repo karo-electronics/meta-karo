@@ -3,12 +3,9 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-/dts-v1/;
-
 #include "stm32mp153a-qsmp-1530.dts"
 #include "stm32mp15-karo-qsbase1.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1530 module on QSBASE1 baseboard";
 };
-

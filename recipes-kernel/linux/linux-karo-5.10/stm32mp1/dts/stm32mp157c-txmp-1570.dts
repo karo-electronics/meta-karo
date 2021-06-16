@@ -11,7 +11,7 @@
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1570 module";
-	compatible = "karo,stm32mp157c-txmp-1570", "st,stm32mp157";
+	compatible = "karo,stm32mp157c-txmp-1570", "karo,txmp", "st,stm32mp157";
 };
 
 &cryp1 {

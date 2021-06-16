@@ -3,20 +3,12 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-/dts-v1/;
-
 #include "stm32mp157c-qsmp-1570.dts"
 #include "stm32mp15-karo-qsbase1.dtsi"
 #include "stm32mp15-qsmp-lcd-panel.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSBASE1 baseboard";
-};
-
-&dsi {
-	#address-cells = <1>;
-	#size-cells = <0>;
-	status = "disabled";
 };
 
 &gpu {

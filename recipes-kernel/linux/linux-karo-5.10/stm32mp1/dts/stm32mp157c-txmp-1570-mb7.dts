@@ -3,8 +3,6 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-/dts-v1/;
-
 #include "stm32mp157c-txmp-1570.dts"
 #include "stm32mp15-karo-mb7.dtsi"
 #include "stm32mp15-txmp-lcd-panel.dtsi"

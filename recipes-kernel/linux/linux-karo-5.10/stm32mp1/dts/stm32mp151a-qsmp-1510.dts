@@ -10,7 +10,8 @@
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1510 solder-in module";
-	compatible = "karo,stm32mp151a-qsmp-1510", "st,stm32mp151";
+	compatible = "karo,stm32mp151a-qsmp-1510", "karo,qsmp", "st,stm32mp151";
+
 	aliases {
 		/delete-property/ spinor0;
 	};

@@ -15,6 +15,15 @@
 		serial1 = &usart3;
 		serial2 = &usart2;
 	};
+
+	regulator-etn-3v3 {
+		compatible = "fixed-regulator";
+		regulator-name = "etn-phy";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+		regulator-always-on;
+	};
 };
 
 &adc {
@@ -28,6 +37,10 @@
 	status = "okay";
 };
 
+&dts {
+	status = "okay";
+};
+
 &ethernet0 {
 	pinctrl-0 = <&qsmp_ethernet0_rgmii_pins>;
 	pinctrl-1 = <&qsmp_ethernet0_rgmii_sleep_pins>;
@@ -38,6 +51,7 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_i2c1_pins>;
 	pinctrl-1 = <&qsmp_i2c1_sleep_pins>;
+	clock-frequency = <400000>;
 	status = "disabled";
 };
 
@@ -45,14 +59,11 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_i2c2_pins_z>;
 	pinctrl-1 = <&qsmp_i2c2_sleep_pins_z>;
+	clock-frequency = <400000>;
 	status = "okay";
 };
 
 &mdio0 {
-	reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
-	reset-delay-us = <10000>;
-	post-reset-delay-us = <1000>;
-
 	phy0: ethernet-phy@3 {
 		compatible = "ethernet-phy-id0022.1622";
 		reg = <3>;
@@ -75,7 +86,7 @@
 };
 
 &module_led {
-	gpios = <&gpioa 13 GPIO_ACTIVE_LOW>;
+	gpios = <&gpioa 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 };
 
 &sdmmc1 {
@@ -85,10 +96,10 @@
 	pinctrl-2 = <&qsmp_sdmmc1_sleep_pins>;
 	bus-width = <4>;
 	vmmc-supply = <&reg_3v3>;
-	cd-gpios = <&gpiob 7 GPIO_ACTIVE_LOW>;
+	cd-gpios = <&gpiob 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 	no-1-8-v;
 	st,neg-edge;
-	status = "okay";
+	status = "disabled";
 };
 
 &sdmmc2 {
@@ -103,15 +114,15 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&qsmp_spi4_pins>;
 	pinctrl-1 = <&qsmp_spi4_sleep_pins>;
-	cs-gpios = <&gpioe 11 GPIO_ACTIVE_LOW>;
+	cs-gpios = <&gpioe 11 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 	status = "okay";
 };
 
 &spi6 {
 	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&spi6_pins &spi6_pins_z>;
-	pinctrl-1 = <&spi6_sleep_pins &spi6_sleep_pins_z>;
-	cs-gpios = <&gpioz 3 GPIO_ACTIVE_LOW>;
+	pinctrl-0 = <&qsmp_spi6_pins &qsmp_spi6_pins_z>;
+	pinctrl-1 = <&qsmp_spi6_sleep_pins &qsmp_spi6_sleep_pins_z>;
+	cs-gpios = <&gpioz 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 	status = "okay";
 };
 
@@ -121,6 +132,8 @@
 	pinctrl-1 = <&qsmp_usart2_sleep_pins>;
 	rts-gpios = <&gpiod 4 GPIO_ACTIVE_LOW>;
 	cts-gpios = <&gpiod 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
 	status = "okay";
 };
 
@@ -128,6 +141,8 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_usart3_pins>;
 	pinctrl-1 = <&qsmp_usart3_sleep_pins>;
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
 	status = "okay";
 };
 
@@ -178,10 +193,16 @@
 
 		pins4 {
 			pinmux = <
-				  STM32_PINMUX('G', 5, AF11) /* CLK125 | LED_MODE */
 				  STM32_PINMUX('A', 1, AF11) /* RX_CLK | PHYAD2 */
 			>;
 			bias-pull-down;
+		};
+
+		pins5 {
+			pinmux = <
+				  STM32_PINMUX('G', 5, AF11) /* CLK125 | LED_MODE */
+			>;
+			bias-pull-up;
 		};
 	};
 
@@ -299,9 +320,9 @@
 				  STM32_PINMUX('B', 3, AF9)	/* SDMMC2_D2 */
 				  STM32_PINMUX('B', 4, AF9)	/* SDMMC2_D3 */
 				  STM32_PINMUX('A', 8, AF9)	/* SDMMC2_D4 */
-				  STM32_PINMUX('B', 9, AF9)	/* SDMMC2_D5 */
-				  STM32_PINMUX('C', 6, AF9)	/* SDMMC2_D6 */
-				  STM32_PINMUX('C', 7, AF9)	/* SDMMC2_D7 */
+				  STM32_PINMUX('B', 9, AF10)	/* SDMMC2_D5 */
+				  STM32_PINMUX('C', 6, AF10)	/* SDMMC2_D6 */
+				  STM32_PINMUX('C', 7, AF10)	/* SDMMC2_D7 */
 				  STM32_PINMUX('G', 6, AF10)	/* SDMMC2_CMD */
 			>;
 			bias-disable;
@@ -325,9 +346,9 @@
 				  STM32_PINMUX('B', 3, AF9)	/* SDMMC2_D2 */
 				  STM32_PINMUX('B', 4, AF9)	/* SDMMC2_D3 */
 				  STM32_PINMUX('A', 8, AF9)	/* SDMMC2_D4 */
-				  STM32_PINMUX('B', 9, AF9)	/* SDMMC2_D5 */
-				  STM32_PINMUX('C', 6, AF9)	/* SDMMC2_D6 */
-				  STM32_PINMUX('C', 7, AF9)	/* SDMMC2_D7 */
+				  STM32_PINMUX('B', 9, AF10)	/* SDMMC2_D5 */
+				  STM32_PINMUX('C', 6, AF10)	/* SDMMC2_D6 */
+				  STM32_PINMUX('C', 7, AF10)	/* SDMMC2_D7 */
 			>;
 			bias-disable;
 			drive-push-pull;
@@ -390,7 +411,7 @@
 	};
 
 
-	spi6_pins: spi6-pins {
+	qsmp_spi6_pins: qsmp-spi6-pins {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('A', 6, AF8) /* SPI6_MISO */
@@ -402,7 +423,7 @@
 		};
 	};
 
-	spi6_sleep_pins: spi6-sleep-pins {
+	qsmp_spi6_sleep_pins: qsmp-spi6-sleep-pins {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('A', 6, ANALOG) /* SPI6_MISO */
@@ -510,7 +531,7 @@
 		};
 	};
 
-	spi6_pins_z: spi6-pins-z {
+	qsmp_spi6_pins_z: qsmp-spi6-pins-z {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('Z', 2, AF8) /* SPI6_MOSI */
@@ -521,7 +542,7 @@
 		};
 	};
 
-	spi6_sleep_pins_z: spi6-sleep-pins-z {
+	qsmp_spi6_sleep_pins_z: qsmp-spi6-sleep-pins-z {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('Z', 2, ANALOG) /* SPI6_MOSI */

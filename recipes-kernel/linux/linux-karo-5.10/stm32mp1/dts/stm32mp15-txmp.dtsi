@@ -39,19 +39,29 @@
 	pinctrl-0 = <&txmp_ethernet0_rmii_pins>;
 	pinctrl-1 = <&txmp_ethernet0_rmii_sleep_pins>;
 	phy-mode = "rmii";
+	clock-names = "stmmaceth",
+		      "mac-clk-tx",
+		      "mac-clk-rx",
+		      "ethstp",
+		      "eth-ck";
+	clocks = <&rcc ETHMAC>,
+		 <&rcc ETHTX>,
+		 <&rcc ETHRX>,
+		 <&rcc ETHSTP>,
+		 <&rcc ETHCK_K>;
 	st,eth-ref-clk-sel;
 };
 
 &mdio0 {
-	reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
-	reset-delay-us = <10000>;
-	post-reset-delay-us = <1000>;
-
 	phy0: ethernet-phy@0 {
 		compatible = "ethernet-phy-ieee802.3-c22";
 		reg = <0>;
 		interrupt-parent = <&gpioa>;
 		interrupts = <13 IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
+		reset-assert-us = <25000>;
+		reset-deassert-us = <1000>;
+		clocks = <&rcc ETHCK_K>;
 		smsc,disable-energy-detect;
 	};
 };
@@ -100,8 +110,6 @@
 };
 
 &uart4 {
-	/delete-property/ dma-names;
-	/delete-property/ dmas;
 	rts-gpios = <&gpioa 15 GPIO_ACTIVE_LOW>;
 };
 
@@ -152,12 +160,13 @@
 		};
 
 		pins2 {
+			/* PHY configuration strap pins */
 			pinmux = <
-				  STM32_PINMUX('C', 4, AF11)	/* ETH_RMII_RXD0 */
-				  STM32_PINMUX('C', 5, AF11)	/* ETH_RMII_RXD1 */
-				  STM32_PINMUX('A', 7, AF11)	/* ETH_RMII_CRS_DV */
+				  STM32_PINMUX('C', 4, AF11)	/* ETH_RMII_RXD0/MODE0 */
+				  STM32_PINMUX('C', 5, AF11)	/* ETH_RMII_RXD1/MODE1 */
+				  STM32_PINMUX('A', 7, AF11)	/* ETH_RMII_CRS_DV/MODE2 */
 			>;
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 
@@ -324,27 +333,6 @@
 				  STM32_PINMUX('C', 3, ANALOG) /* SPI2_MOSI */
 				  STM32_PINMUX('C', 2, ANALOG) /* SPI2_MISO */
 				  STM32_PINMUX('A', 9, ANALOG) /* SPI2_SCK */
-			>;
-		};
-	};
-
-	txmp_i2c6_pins: txmp-i2c6-pins {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('A', 11, AF4) /* I2C6_SCL */
-				  STM32_PINMUX('A', 12, AF4) /* I2C6_SDA */
-			>;
-			bias-disable;
-			drive-open-drain;
-			slew-rate = <0>;
-		};
-	};
-
-	txmp_i2c6_sleep_pins: txmp-i2c6-sleep-pins {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('A', 11, ANALOG) /* I2C6_SCL */
-				  STM32_PINMUX('A', 12, ANALOG) /* I2C6_SDA */
 			>;
 		};
 	};

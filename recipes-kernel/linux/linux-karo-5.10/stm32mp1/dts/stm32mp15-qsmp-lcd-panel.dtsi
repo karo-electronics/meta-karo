@@ -77,7 +77,7 @@
 		};
 	};
 
-	qsmp_ltdc_sleep_pins: qsmp-lcd-sleep-pins {
+	qsmp_ltdc_sleep_pins: qsmp-ltdc-sleep-pins {
 		pins {
 			pinmux = <
 				  STM32_PINMUX('G',  7, ANALOG) /* LCD_CLK */

@@ -6,7 +6,6 @@
 #include <dt-bindings/clock/stm32mp1-clks.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
-//#include "stm32mp157-m4-srm.dtsi"
 
 / {
 	aliases {
@@ -15,6 +14,7 @@
 		mmc0 = &sdmmc2;
 		serial0 = &uart4;
 		spinor0 = &flash0;
+		usbh = &usbh_ehci;
 		usbotg = &usbotg_hs;
 	};
 
@@ -130,6 +130,7 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&i2c6_pins>;
 	pinctrl-1 = <&i2c6_sleep_pins>;
+	clock-frequency = <400000>;
 	status = "okay";
 };
 
@@ -138,7 +139,7 @@
 };
 
 &iwdg2 {
-	timeout-sec = <32>;
+	timeout-sec = <60>;
 	status = "okay";
 };
 
@@ -158,14 +159,6 @@
 	vdd_3v3_usbfs-supply = <&reg18>;
 };
 
-&rng1 {
-	status = "okay";
-};
-
-&rtc {
-	status = "okay";
-};
-
 &qspi {
 	pinctrl-names = "default";
 	pinctrl-0 = <&quadspi_pins>;
@@ -182,6 +175,10 @@
 		memory-map = <0x90000000 0x1000000>;
 		status = "disabled";
 	};
+};
+
+&rng1 {
+	status = "okay";
 };
 
 &rtc {
@@ -211,6 +208,8 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&uart4_pins>;
 	pinctrl-1 = <&uart4_sleep_pins>;
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
 	status = "okay";
 };
 
@@ -289,71 +288,6 @@
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <2>;
-		};
-	};
-
-	sdmmc2_pins: sdmmc2-pins {
-		pins1 {
-			pinmux = <
-				  STM32_PINMUX('B', 3, AF9)	/* SDMMC2_D2 */
-				  STM32_PINMUX('B', 4, AF9)	/* SDMMC2_D3 */
-				  STM32_PINMUX('B', 14, AF9)	/* SDMMC2_D0 */
-				  STM32_PINMUX('B', 15, AF9)	/* SDMMC2_D1 */
-				  STM32_PINMUX('G', 6, AF10)	/* SDMMC2_CMD */
-			>;
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <1>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('E', 3, AF9)>; /* SDMMC2_CK */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <3>;
-		};
-	};
-
-	sdmmc2_opendrain_pins: sdmmc2-opendrain-pins {
-		pins1 {
-			pinmux = <
-				  STM32_PINMUX('G', 6, AF10)	/* SDMMC2_CMD */
-			>;
-			bias-disable;
-			drive-open-drain;
-			slew-rate = <1>;
-		};
-
-		pins2 {
-			pinmux = <
-				  STM32_PINMUX('B', 3, AF9)	/* SDMMC2_D2 */
-				  STM32_PINMUX('B', 4, AF9)	/* SDMMC2_D3 */
-				  STM32_PINMUX('B', 14, AF9)	/* SDMMC2_D0 */
-				  STM32_PINMUX('B', 15, AF9)	/* SDMMC2_D1 */
-			>;
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <1>;
-		};
-
-		pins3 {
-			pinmux = <STM32_PINMUX('E', 3, AF9)>; /* SDMMC2_CK */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <3>;
-		};
-	};
-
-	sdmmc2_sleep_pins: sdmmc2-sleep-pins {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('B', 3, ANALOG)	/* SDMMC2_D2 */
-				  STM32_PINMUX('B', 4, ANALOG)	/* SDMMC2_D3 */
-				  STM32_PINMUX('B', 14, ANALOG)	/* SDMMC2_D0 */
-				  STM32_PINMUX('B', 15, ANALOG)	/* SDMMC2_D1 */
-				  STM32_PINMUX('G', 6, ANALOG)	/* SDMMC2_CMD */
-				  STM32_PINMUX('E', 3, ANALOG)	/* SDMMC2_CK */
-			>;
 		};
 	};
 

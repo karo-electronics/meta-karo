@@ -8,36 +8,25 @@
 };
 
 &dsi {
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	status = "disabled";
+	status = "okay";
 
 	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
 		port@0 {
 			reg = <0>;
+
 			dsi_in: endpoint {
-				remote-endpoint = <&ltdc_ep1_out>;
+				remote-endpoint = <&ltdc_ep0_out>;
 			};
 		};
 	};
 };
 
 &ltdc {
-	status = "disabled";
+	status = "okay";
 
-	ports {
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		port@0 {
-			reg = <0>;			
-			ltdc_ep1_out: endpoint@0 {
-				remote-endpoint = <&dsi_in>;
-			};
+	port {
+		ltdc_ep0_out: endpoint {
+			remote-endpoint = <&dsi_in>;
 		};
 	};
 };

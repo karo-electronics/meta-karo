@@ -3,8 +3,6 @@
  * Copyright (C) 2020 Markus Bauer <mb@karo-electronics.de>
  */
 
-/dts-v1/;
-
 #include "stm32mp157c-qsmp-1570.dts"
 #include "stm32mp15-karo-qsbase2.dtsi"
 
@@ -19,14 +17,14 @@
 		port@1 {
 			reg = <1>;
 
-			dsi_out: endpoint {
-				remote-endpoint = <&dsi_panel_in>;
+			dsi_to_dsi_panel: endpoint {
+				remote-endpoint = <&dsi_panel_from_dsi>;
 			};
 		};
 	};
 
 	panel@0 {
-		compatible = "rpi,tc358762";
+		compatible = "raspberrypi,tc358762";
 		reg = <0>;
 		dsi-lanes = <1>;
 		video-mode = <2>;
@@ -34,8 +32,8 @@
 		panel-height-mm = <86>;
 
 		port {
-			dsi_panel_in: endpoint {
-				remote-endpoint = <&dsi_out>;
+			dsi_panel_from_dsi: endpoint {
+				remote-endpoint = <&dsi_to_dsi_panel>;
 			};
 		};
 	};
@@ -48,12 +46,12 @@
 &i2c6 {
 	status = "okay";
 
-	rpi_display: rpi_display@45 {
+	rpi-display@45 {
 		compatible = "rpi_display";
 		reg = <0x45>;
 	};
 
-	rpi_ft5406: rpi_ft5406@38 {
+	rpi-ft5406@38 {
 		compatible = "rpi_ft5406";
 		reg = <0x38>;
 	};
