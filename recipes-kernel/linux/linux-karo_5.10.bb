@@ -104,7 +104,6 @@ SRC_URI_append_stm32mp1 = " \
 	file://dts/stm32mp157-qsmp.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157-txmp.dtsi;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
-	file://dts/stm32mp157c-qsmp-1570-qsbase2-dsi83.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570-qsbase2-raspi.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570-qsbase2.dts;subdir=git/arch/arm/boot \
 	file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
