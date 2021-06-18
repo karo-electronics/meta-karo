@@ -17,3 +17,40 @@
 &sdmmc2 {
 	status = "disabled";
 };
+
+&qspi {
+	pinctrl-names = "default";
+	pinctrl-0 = <&qsmp_qspi_pins>;
+	status = "okay";
+
+	flash0: spi-nand@0 {
+		compatible = "stf1ge4u00m", "spi-nand";
+		reg = <0>;
+		spi-cpol;
+		spi-cpha;
+		spi-rx-bus-width = <2>;
+		spi-max-frequency = <104000000>;
+		status = "okay";
+	};
+};
+
+&pinctrl {
+	 qsmp_qspi_pins: qsmp-qspi-pins {
+	 	pins1 {
+			pinmux = <
+				  STM32_PINMUX('F', 8, AF10) /* QSPI_BK1_IO0 */
+				  STM32_PINMUX('F', 9, AF10) /* QSPI_BK1_IO1 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+	 	pins2 {
+			pinmux = <STM32_PINMUX('F', 10, AF9)>; /* QSPI_CLK */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+	};
+};
