@@ -6,7 +6,7 @@ LICENSE = "BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://license.rst;md5=1dd070c98a281d18d9eefd938729b031"
 
 SRC_URI = "git://github.com/karo-electronics/imx-atf;protocol=https;branch=${SRCBRANCH}"
-SRCREV = "ed425dbc66fee0d13c44b4909c784e1b6608faca"
+SRCREV = "f6f01e8b4f0587e94887e5f1ebd09242d2374353"
 SRCBRANCH = "karo-txmp"
 
 TF_VERSION = "2.2"

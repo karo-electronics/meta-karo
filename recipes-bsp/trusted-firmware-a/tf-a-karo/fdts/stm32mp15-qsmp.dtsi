@@ -106,10 +106,6 @@
 	};
 };
 
-&rtc {
-	status = "okay";
-};
-
 &sdmmc2 {
 	/* eMMC */
 	pinctrl-names = "default";
