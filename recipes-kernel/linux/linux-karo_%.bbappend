@@ -37,4 +37,5 @@ SRC_URI_append_stm32mp1 = " \
 			 file://patches/0007-usb-phy-bugfix.patch \
 			 file://patches/0009-dwc2-usbotg-bugfix.patch \
 			 file://patches/0010-stm32-cpufreq-bugfix.patch \
+			 file://patches/0011-usb-ohci-wakeup-source-suspend.patch \
 "

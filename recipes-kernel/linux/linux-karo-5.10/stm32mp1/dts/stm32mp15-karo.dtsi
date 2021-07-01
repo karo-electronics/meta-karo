@@ -214,11 +214,14 @@
 };
 
 &usbh_ehci {
+	phy-names = "usb";
 	phys = <&usbphyc_port0>;
 	status = "okay";
 };
 
 &usbh_ohci {
+	phy-names = "usb";
+	phys = <&usbphyc_port0>;
 	status = "okay";
 };
 

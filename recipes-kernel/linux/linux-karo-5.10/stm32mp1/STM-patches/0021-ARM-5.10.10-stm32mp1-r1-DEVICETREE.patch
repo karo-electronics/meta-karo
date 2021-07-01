@@ -4622,6 +4622,15 @@ index 84757901cd8d..ca71139f3ad4 100644
  			status = "disabled";
  		};
  
+@@ -1432,6 +1655,8 @@
+ 			clocks = <&rcc USBH>;
+ 			resets = <&rcc USBH_R>;
+ 			interrupts = <GIC_SPI 74 IRQ_TYPE_LEVEL_HIGH>;
++			power-domains = <&pd_core>;
++			wakeup-source;
+ 			status = "disabled";
+ 		};
+ 
 @@ -1440,8 +1669,10 @@
  			reg = <0x5800d000 0x1000>;
  			clocks = <&rcc USBH>;
