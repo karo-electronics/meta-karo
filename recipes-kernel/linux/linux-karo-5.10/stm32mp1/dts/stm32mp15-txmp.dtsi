@@ -9,7 +9,6 @@
 
 / {
 	aliases {
-		can0 = &m_can2;
 		mmc1 = &sdmmc3;
 		serial1 = &uart7;
 		serial2 = &uart5;
