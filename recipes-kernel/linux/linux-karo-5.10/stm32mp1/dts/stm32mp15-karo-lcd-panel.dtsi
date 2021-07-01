@@ -27,6 +27,7 @@
 
 	lcd_panel: panel {
 		compatible = "panel-dpi";
+		pinctrl-names = "default", "sleep";
 		backlight = <&lcd_backlight>;
 		power-supply = <&reg_3v3>;
 		data-mapping = "rgb24";
