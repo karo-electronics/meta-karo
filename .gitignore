@@ -1,0 +1,34 @@
+# Editor files
+*~
+.#*
+\#*#
+
+# quilt directories
+/.pc
+/patches
+
+# Workflow files
+*.diff
+*.bck
+*.bak
+*.backup
+
+# =========================
+# Operating System Files
+# =========================
+
+# Windows(TM)
+# =========================
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows shortcuts
+*.lnk
