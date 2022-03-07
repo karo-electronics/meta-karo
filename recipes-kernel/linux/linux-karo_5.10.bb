@@ -7,7 +7,7 @@ DEPENDS += "lzop-native bc-native"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 SRCBRANCH = "linux-5.10.y"
-SRCREV = "v5.10.23"
+SRCREV = "v5.10.47"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
@@ -20,7 +20,6 @@ SRC_URI_append = " \
 	${@' file://'.join("${KERNEL_FEATURES}".split(" "))} \
 	file://0001-display-support.patch \
 	file://0002-panel-dpi-bus-format.patch \
-	file://0003-ltdc-missing-bus-flags.patch \
 	file://0007-stm32cryp-dependencies.patch \
 	file://0010-attiny-regulator-i2c-retries.patch \
 	file://0011-stm-drv-preferred-depth.patch \

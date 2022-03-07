@@ -1,0 +1,298 @@
+diff --git a/drivers/spi/spi-stm32.c b/drivers/spi/spi-stm32.c
+index 0318f02d62123..c3029c4dc7ff1 100644
+--- a/drivers/spi/spi-stm32.c
++++ b/drivers/spi/spi-stm32.c
+@@ -5,6 +5,7 @@
+ // Copyright (C) 2017, STMicroelectronics - All Rights Reserved
+ // Author(s): Amelie Delaunay <amelie.delaunay@st.com> for STMicroelectronics.
+ 
++#include <linux/bitfield.h>
+ #include <linux/debugfs.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+@@ -31,8 +32,8 @@
+ #define STM32F4_SPI_CR1_CPHA		BIT(0)
+ #define STM32F4_SPI_CR1_CPOL		BIT(1)
+ #define STM32F4_SPI_CR1_MSTR		BIT(2)
+-#define STM32F4_SPI_CR1_BR_SHIFT	3
+ #define STM32F4_SPI_CR1_BR		GENMASK(5, 3)
++#define STM32F4_SPI_CR1_BR_SHIFT	3
+ #define STM32F4_SPI_CR1_SPE		BIT(6)
+ #define STM32F4_SPI_CR1_LSBFRST		BIT(7)
+ #define STM32F4_SPI_CR1_SSI		BIT(8)
+@@ -94,27 +95,22 @@
+ #define STM32H7_SPI_CR1_SSI		BIT(12)
+ 
+ /* STM32H7_SPI_CR2 bit fields */
+-#define STM32H7_SPI_CR2_TSIZE_SHIFT	0
+ #define STM32H7_SPI_CR2_TSIZE		GENMASK(15, 0)
++#define STM32H7_SPI_TSIZE_MAX		GENMASK(15, 0)
+ 
+ /* STM32H7_SPI_CFG1 bit fields */
+-#define STM32H7_SPI_CFG1_DSIZE_SHIFT	0
+ #define STM32H7_SPI_CFG1_DSIZE		GENMASK(4, 0)
+-#define STM32H7_SPI_CFG1_FTHLV_SHIFT	5
+ #define STM32H7_SPI_CFG1_FTHLV		GENMASK(8, 5)
+ #define STM32H7_SPI_CFG1_RXDMAEN	BIT(14)
+ #define STM32H7_SPI_CFG1_TXDMAEN	BIT(15)
+-#define STM32H7_SPI_CFG1_MBR_SHIFT	28
+ #define STM32H7_SPI_CFG1_MBR		GENMASK(30, 28)
++#define STM32H7_SPI_CFG1_MBR_SHIFT	28
+ #define STM32H7_SPI_CFG1_MBR_MIN	0
+ #define STM32H7_SPI_CFG1_MBR_MAX	(GENMASK(30, 28) >> 28)
+ 
+ /* STM32H7_SPI_CFG2 bit fields */
+-#define STM32H7_SPI_CFG2_MIDI_SHIFT	4
+ #define STM32H7_SPI_CFG2_MIDI		GENMASK(7, 4)
+-#define STM32H7_SPI_CFG2_COMM_SHIFT	17
+ #define STM32H7_SPI_CFG2_COMM		GENMASK(18, 17)
+-#define STM32H7_SPI_CFG2_SP_SHIFT	19
+ #define STM32H7_SPI_CFG2_SP		GENMASK(21, 19)
+ #define STM32H7_SPI_CFG2_MASTER		BIT(22)
+ #define STM32H7_SPI_CFG2_LSBFRST	BIT(23)
+@@ -130,17 +126,15 @@
+ #define STM32H7_SPI_IER_EOTIE		BIT(3)
+ #define STM32H7_SPI_IER_TXTFIE		BIT(4)
+ #define STM32H7_SPI_IER_OVRIE		BIT(6)
+-#define STM32H7_SPI_IER_MODFIE		BIT(9)
+ #define STM32H7_SPI_IER_ALL		GENMASK(10, 0)
+ 
+ /* STM32H7_SPI_SR bit fields */
+ #define STM32H7_SPI_SR_RXP		BIT(0)
+ #define STM32H7_SPI_SR_TXP		BIT(1)
+ #define STM32H7_SPI_SR_EOT		BIT(3)
++#define STM32H7_SPI_SR_TXTF		BIT(4)
+ #define STM32H7_SPI_SR_OVR		BIT(6)
+-#define STM32H7_SPI_SR_MODF		BIT(9)
+ #define STM32H7_SPI_SR_SUSP		BIT(11)
+-#define STM32H7_SPI_SR_RXPLVL_SHIFT	13
+ #define STM32H7_SPI_SR_RXPLVL		GENMASK(14, 13)
+ #define STM32H7_SPI_SR_RXWNE		BIT(15)
+ 
+@@ -167,8 +161,6 @@
+ #define SPI_3WIRE_TX		3
+ #define SPI_3WIRE_RX		4
+ 
+-#define SPI_1HZ_NS		1000000000
+-
+ /*
+  * use PIO for small transfers, avoiding DMA setup/teardown overhead for drivers
+  * without fifo buffers.
+@@ -249,7 +241,7 @@ struct stm32_spi_cfg {
+ 	int (*set_mode)(struct stm32_spi *spi, unsigned int comm_type);
+ 	void (*set_data_idleness)(struct stm32_spi *spi, u32 length);
+ 	int (*set_number_of_data)(struct stm32_spi *spi, u32 length);
+-	void (*transfer_one_dma_start)(struct stm32_spi *spi);
++	int (*transfer_one_dma_start)(struct stm32_spi *spi);
+ 	void (*dma_rx_cb)(void *data);
+ 	void (*dma_tx_cb)(void *data);
+ 	int (*transfer_one_irq)(struct stm32_spi *spi);
+@@ -268,7 +260,6 @@ struct stm32_spi_cfg {
+  * @base: virtual memory area
+  * @clk: hw kernel clock feeding the SPI clock generator
+  * @clk_rate: rate of the hw kernel clock feeding the SPI clock generator
+- * @rst: SPI controller reset line
+  * @lock: prevent I/O concurrent access
+  * @irq: SPI controller interrupt line
+  * @fifo_size: size of the embedded fifo in bytes
+@@ -285,7 +276,10 @@ struct stm32_spi_cfg {
+  * @rx_len: number of data to be read in bytes
+  * @dma_tx: dma channel for TX transfer
+  * @dma_rx: dma channel for RX transfer
++ * @dma_completion: completion to wait for end of DMA transfer
+  * @phys_addr: SPI registers physical base address
++ * @xfer_completion: completion to wait for end of transfer
++ * @xfer_status: current transfer status
+  */
+ struct stm32_spi {
+ 	struct device *dev;
+@@ -294,7 +288,6 @@ struct stm32_spi {
+ 	void __iomem *base;
+ 	struct clk *clk;
+ 	u32 clk_rate;
+-	struct reset_control *rst;
+ 	spinlock_t lock; /* prevent I/O concurrent access */
+ 	int irq;
+ 	unsigned int fifo_size;
+@@ -313,7 +306,10 @@ struct stm32_spi {
+ 	int rx_len;
+ 	struct dma_chan *dma_tx;
+ 	struct dma_chan *dma_rx;
++	struct completion dma_completion;
+ 	dma_addr_t phys_addr;
++	struct completion xfer_completion;
++	int xfer_status;
+ };
+ 
+ static const struct stm32_spi_regspec stm32f4_spi_regspec = {
+@@ -417,9 +413,7 @@ static int stm32h7_spi_get_bpw_mask(struct stm32_spi *spi)
+ 	stm32_spi_set_bits(spi, STM32H7_SPI_CFG1, STM32H7_SPI_CFG1_DSIZE);
+ 
+ 	cfg1 = readl_relaxed(spi->base + STM32H7_SPI_CFG1);
+-	max_bpw = (cfg1 & STM32H7_SPI_CFG1_DSIZE) >>
+-		  STM32H7_SPI_CFG1_DSIZE_SHIFT;
+-	max_bpw += 1;
++	max_bpw = FIELD_GET(STM32H7_SPI_CFG1_DSIZE, cfg1) + 1;
+ 
+ 	spin_unlock_irqrestore(&spi->lock, flags);
+ 
+@@ -599,30 +593,30 @@ static void stm32f4_spi_read_rx(struct stm32_spi *spi)
+ /**
+  * stm32h7_spi_read_rxfifo - Read bytes in Receive Data Register
+  * @spi: pointer to the spi controller data structure
+- * @flush: boolean indicating that FIFO should be flushed
+  *
+  * Write in rx_buf depends on remaining bytes to avoid to write beyond
+  * rx_buf end.
+  */
+-static void stm32h7_spi_read_rxfifo(struct stm32_spi *spi, bool flush)
++static void stm32h7_spi_read_rxfifo(struct stm32_spi *spi)
+ {
+ 	u32 sr = readl_relaxed(spi->base + STM32H7_SPI_SR);
+-	u32 rxplvl = (sr & STM32H7_SPI_SR_RXPLVL) >>
+-		     STM32H7_SPI_SR_RXPLVL_SHIFT;
++	u32 rxplvl = FIELD_GET(STM32H7_SPI_SR_RXPLVL, sr);
+ 
+ 	while ((spi->rx_len > 0) &&
+ 	       ((sr & STM32H7_SPI_SR_RXP) ||
+-		(flush && ((sr & STM32H7_SPI_SR_RXWNE) || (rxplvl > 0))))) {
++		((sr & STM32H7_SPI_SR_EOT) &&
++		 ((sr & STM32H7_SPI_SR_RXWNE) || (rxplvl > 0))))) {
+ 		u32 offs = spi->cur_xferlen - spi->rx_len;
+ 
+ 		if ((spi->rx_len >= sizeof(u32)) ||
+-		    (flush && (sr & STM32H7_SPI_SR_RXWNE))) {
++		    (sr & STM32H7_SPI_SR_RXWNE)) {
+ 			u32 *rx_buf32 = (u32 *)(spi->rx_buf + offs);
+ 
+ 			*rx_buf32 = readl_relaxed(spi->base + STM32H7_SPI_RXDR);
+ 			spi->rx_len -= sizeof(u32);
+ 		} else if ((spi->rx_len >= sizeof(u16)) ||
+-			   (flush && (rxplvl >= 2 || spi->cur_bpw > 8))) {
++			   (!(sr & STM32H7_SPI_SR_RXWNE) &&
++			    (rxplvl >= 2 || spi->cur_bpw > 8))) {
+ 			u16 *rx_buf16 = (u16 *)(spi->rx_buf + offs);
+ 
+ 			*rx_buf16 = readw_relaxed(spi->base + STM32H7_SPI_RXDR);
+@@ -635,12 +629,11 @@ static void stm32h7_spi_read_rxfifo(struct stm32_spi *spi, bool flush)
+ 		}
+ 
+ 		sr = readl_relaxed(spi->base + STM32H7_SPI_SR);
+-		rxplvl = (sr & STM32H7_SPI_SR_RXPLVL) >>
+-			 STM32H7_SPI_SR_RXPLVL_SHIFT;
++		rxplvl = FIELD_GET(STM32H7_SPI_SR_RXPLVL, sr);
+ 	}
+ 
+-	dev_dbg(spi->dev, "%s%s: %d bytes left\n", __func__,
+-		flush ? "(flush)" : "", spi->rx_len);
++	dev_dbg(spi->dev, "%s: %d bytes left (sr=%08x)\n",
++		__func__, spi->rx_len, sr);
+ }
+ 
+ /**
+@@ -708,12 +701,7 @@ static void stm32f4_spi_disable(struct stm32_spi *spi)
+  * @spi: pointer to the spi controller data structure
+  *
+  * RX-Fifo is flushed when SPI controller is disabled. To prevent any data
+- * loss, use stm32h7_spi_read_rxfifo(flush) to read the remaining bytes in
+- * RX-Fifo.
+- * Normally, if TSIZE has been configured, we should relax the hardware at the
+- * reception of the EOT interrupt. But in case of error, EOT will not be
+- * raised. So the subsystem unprepare_message call allows us to properly
+- * complete the transfer from an hardware point of view.
++ * loss, use stm32_spi_read_rxfifo to read the remaining bytes in RX-Fifo.
+  */
+ static void stm32h7_spi_disable(struct stm32_spi *spi)
+ {
+@@ -748,7 +736,7 @@ static void stm32h7_spi_disable(struct stm32_spi *spi)
+ 	}
+ 
+ 	if (!spi->cur_usedma && spi->rx_buf && (spi->rx_len > 0))
+-		stm32h7_spi_read_rxfifo(spi, true);
++		stm32h7_spi_read_rxfifo(spi);
+ 
+ 	if (spi->cur_usedma && spi->dma_tx)
+ 		dmaengine_terminate_all(spi->dma_tx);
+@@ -892,8 +880,7 @@ static irqreturn_t stm32f4_spi_irq_thread(int irq, void *dev_id)
+ 	struct spi_master *master = dev_id;
+ 	struct stm32_spi *spi = spi_master_get_devdata(master);
+ 
+-	spi_finalize_current_transfer(master);
+-	stm32f4_spi_disable(spi);
++	complete(&spi->xfer_completion);
+ 
+ 	return IRQ_HANDLED;
+ }
+@@ -907,7 +894,7 @@ static irqreturn_t stm32h7_spi_irq_thread(int irq, void *dev_id)
+ {
+ 	struct spi_master *master = dev_id;
+ 	struct stm32_spi *spi = spi_master_get_devdata(master);
+-	u32 sr, ier, mask;
++	u32 sr, ier, mask, ifcr;
+ 	unsigned long flags;
+ 	bool end = false;
+ 
+@@ -915,47 +902,42 @@ static irqreturn_t stm32h7_spi_irq_thread(int irq, void *dev_id)
+ 
+ 	sr = readl_relaxed(spi->base + STM32H7_SPI_SR);
+ 	ier = readl_relaxed(spi->base + STM32H7_SPI_IER);
++	ifcr = 0;
+ 
+ 	mask = ier;
+-	/* EOTIE is triggered on EOT, SUSP and TXC events. */
++	/*
++	 * EOTIE enables irq from EOT, SUSP and TXC events. We need to set
++	 * SUSP to acknowledge it later. TXC is automatically cleared
++	 */
+ 	mask |= STM32H7_SPI_SR_SUSP;
+ 	/*
+-	 * When TXTF is set, DXPIE and TXPIE are cleared. So in case of
+-	 * Full-Duplex, need to poll RXP event to know if there are remaining
+-	 * data, before disabling SPI.
++	 * DXPIE is set in Full-Duplex, one IT will be raised if TXP and RXP
++	 * are set. So in case of Full-Duplex, need to poll TXP and RXP event.
+ 	 */
+-	if (spi->rx_buf && !spi->cur_usedma)
+-		mask |= STM32H7_SPI_SR_RXP;
++	if ((spi->cur_comm == SPI_FULL_DUPLEX) && (!spi->cur_usedma))
++		mask |= STM32H7_SPI_SR_TXP | STM32H7_SPI_SR_RXP;
+ 
+-	if (!(sr & mask)) {
++	mask &= sr;
++
++	if (!mask) {
+ 		dev_warn(spi->dev, "spurious IT (sr=0x%08x, ier=0x%08x)\n",
+ 			 sr, ier);
+ 		spin_unlock_irqrestore(&spi->lock, flags);
+ 		return IRQ_NONE;
+ 	}
+ 
+-	if (sr & STM32H7_SPI_SR_SUSP) {
++	if (mask & STM32H7_SPI_SR_SUSP) {
+ 		static DEFINE_RATELIMIT_STATE(rs,
+ 					      DEFAULT_RATELIMIT_INTERVAL * 10,
+ 					      1);
+ 		if (__ratelimit(&rs))
+ 			dev_dbg_ratelimited(spi->dev, "Communication suspended\n");
+ 		if (!spi->cur_usedma && (spi->rx_buf && (spi->rx_len > 0)))
+-			stm32h7_spi_read_rxfifo(spi, false);
+-		/*
+-		 * If communication is suspended while using DMA, it means
+-		 * that something went wrong, so stop the current transfer
+-		 */
+-		if (spi->cur_usedma)
+-			end = true;
+-	}
+-
+-	if (sr & STM32H7_SPI_SR_MODF) {
+-		dev_warn(spi->dev, "Mode fault: transfer aborted\n");
+-		end = true;
++			stm32h7_spi_read_rxfifo(spi);
++		ifcr |= STM32H7_SPI_SR_SUSP;
+ 	}
+ 
+-	if (sr & STM32H7_SPI_SR_OVR) {
++	if (mask & STM32H7_SPI_SR_OVR) {
+ 		dev_err(spi->dev, "Overrun: RX data lost\n");
+ 		end = true;
+ 	}
