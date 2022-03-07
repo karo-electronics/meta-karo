@@ -239,6 +239,12 @@ PACKAGECONFIG_append_pn-nativesdk-qemu = " sdl"
 CONF_VERSION = "1"
 
 #
+#
+# provide a default for VIRTUAL-RUNTIME_dev_manager
+#
+VIRTUAL-RUNTIME_dev_manager ??= "udev"
+
+#
 # Root's home is /root and not /home/root !
 #
 ROOT_HOME = "/root"
