@@ -81,6 +81,17 @@ clean_up()
    unset MACHINE SDKMACHINE DISTRO OEROOT
 }
 
+get_timezone() {
+    local tz
+    if [ -s /etc/timezone ];then
+        tz="`cat /etc/timezone`"
+    elif [ -s /etc/localtime ];then
+        tz="`readlink /etc/localtime`"
+        tz="${tz#*zoneinfo/}"
+    fi
+    echo "$tz"
+}
+
 # get command line options
 SHORTOPTS="h"
 LONGOPTS="help"
@@ -231,6 +242,14 @@ if $build_dir_setup_enabled; then
         -e "s,POKY_DISTRO ?=.*,POKY_DISTRO ?= '$POKY_DISTRO',g" \
         -i conf/local.conf
 
+    if [ -z "$DEFAULT_TIMEZONE" ];then
+        DEFAULT_TIMEZONE="`get_timezone`"
+    fi
+    if [ -n "$DEFAULT_TIMEZONE" ] && ! grep -q 'DEFAULT_TIMEZONE = ' conf/local.conf;then
+        cat <<EOF >> conf/local.conf
+DEFAULT_TIMEZONE = "$DEFAULT_TIMEZONE"
+EOF
+    fi
     cp $TEMPLATECONF/* conf/
 
     for s in $HOME/.oe $HOME/.yocto; do
