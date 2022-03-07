@@ -15,6 +15,8 @@ KERNEL_IMAGETYPE ??= "uImage"
 
 MACHINEOVERRIDES =. "use-mainline-bsp:"
 
+IMAGE_CLASSES += "st-partitions-image"
+
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
