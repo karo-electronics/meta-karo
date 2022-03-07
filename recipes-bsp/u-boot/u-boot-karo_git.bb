@@ -30,6 +30,15 @@ LOCALVERSION ??= "+karo"
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
+do_savedefconfig() {
+    for config in ${UBOOT_MACHINE}; do
+        bbplain "Saving ${config} defconfig to:\n${B}/${config}/defconfig"
+        oe_runmake -C ${B}/${config} savedefconfig
+    done
+}
+do_savedefconfig[nostamp] = "1"
+addtask savedefconfig after do_configure
+
 do_compile_prepend() {
 	if [ "${SCMVERSION}" = "y" ]; then
 		# Add GIT revision to the local version
