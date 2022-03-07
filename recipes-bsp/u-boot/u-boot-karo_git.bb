@@ -21,6 +21,7 @@ SRCBRANCH_stm32mp1 = "karo-txmp"
 SRCREV_stm32mp1 = "69a0454b5bfeb566a400b7c9d3e11429970e3d43"
 
 S = "${WORKDIR}/git"
+B = "${WORKDIR}/build"
 
 # append git hash to u-boot name
 SCMVERSION ??= "y"
