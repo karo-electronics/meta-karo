@@ -107,7 +107,9 @@ DISTRO ?= "karo-minimal"
 #  - 'package_ipk' for ipk files are used by opkg (a debian style embedded package manager)
 #  - 'package_rpm' for rpm style packages
 # E.g.: PACKAGE_CLASSES ?= "package_rpm package_deb package_ipk"
-# We default to deb:
+# We would like to default to deb:
+#PACKAGE_CLASSES ?= "package_deb"
+# but get package conflicts when building karo-image-x11 or other images
 PACKAGE_CLASSES ?= "package_rpm"
 
 #
@@ -248,3 +250,5 @@ VIRTUAL-RUNTIME_dev_manager ??= "udev"
 # Root's home is /root and not /home/root !
 #
 ROOT_HOME = "/root"
+
+SANITY_TESTED_DISTROS_append = " devuan-3"
