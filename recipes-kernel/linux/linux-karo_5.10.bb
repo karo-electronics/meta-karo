@@ -124,6 +124,8 @@ KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," cfg/wi
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," cfg/systemd.cfg","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," cfg/ipv6.cfg","",d)}"
 
+KERNEL_FEATURES_append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," cfg/extmod.cfg","",d)}"
+
 KERNEL_FEATURES_append_mx6 = "${@bb.utils.contains('MACHINE_FEATURES',"nand"," cfg/nand.cfg","",d)}"
 KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," cfg/lvds.cfg"," cfg/lcd.cfg",d)}"
 KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"sata"," cfg/sata.cfg","",d)}"
