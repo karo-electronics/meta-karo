@@ -3,10 +3,11 @@ MACHINEOVERRIDES =. "stm32mp1:"
 DEFAULTTUNE ?= "cortexa7thf-neon-vfpv4"
 
 include conf/machine/include/karo.inc
-include conf/machine/include/st-machine-common-stm32mp.inc
 include conf/machine/include/tune-cortexa7.inc
 
-UBOOT_CONFIG ??= "mfg trusted generic"
+MACHINE_FEATURES_append = " emmc"
+
+UBOOT_CONFIG ??= "mfg trusted"
 
 UBOOT_ENTRYPOINT = "0xc0008000"
 
@@ -14,19 +15,24 @@ UBOOT_ENTRYPOINT = "0xc0008000"
 SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
 
 # =========================================================================
-# flashlayout
+# boot scheme
 # =========================================================================
-# Define the config labels to use to generate flashlayout file
-FLASHLAYOUT_CONFIG_LABELS = "emmc"
+# List of supported boot schemes
+BOOTSCHEME_LABELS ??= "trusted"
 
 # =========================================================================
-# Flashlayouts
+# tf-a
 # =========================================================================
-ENABLE_FLASHLAYOUT_CONFIG = "1"
-FLASHLAYOUT_BOOTSCHEME_LABELS = "trusted"
-FLASHLAYOUT_BOOTSCHEME_LABELS += "${@bb.utils.contains('UBOOT_CONFIG','generic','basic','',d)}"
+# Finally we must compile tf-a in all cases as we need trusted binary to boot
+EXTRA_IMAGEDEPENDS += "tf-a-stm32mp"
 
-BIN2BOOT_REPLACE_PATTERNS_fsbl1-boot = "basic;serialboot trusted;serialboot"
-BIN2BOOT_REPLACE_PATTERNS_ssbl-boot = "basic;mfg trusted;mfg"
-FLASHLAYOUT_TYPE_LABELS_emmc = "${TF_A_DEVICETREE}"
-FLASHLAYOUT_TYPE_LABELS_spinand = "${TF_A_DEVICETREE}"
+# Define default TF-A config
+TF_A_CONFIG_append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', ' trusted', '', d)}"
+
+# Define SECURE_PAYLOAD config to set for each TF_A_CONFIG
+TF_A_CONFIG_serialboot  = "AARCH32_SP=sp_min"
+TF_A_CONFIG_trusted     = "AARCH32_SP=sp_min"
+
+# Manage proper update for TF_A_CONFIG_* var
+tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'serialboot', 'TF_A_CONFIG_serialboot', '', d)}"
+tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
