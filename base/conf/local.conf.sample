@@ -88,6 +88,8 @@ SSTATE_DIR ?= "${BSPDIR}/sstate-cache"
 # these defaults.
 #
 DISTRO ?= "karo-minimal"
+DISTRO_FEATURES_append = " alternatives-symlinks-relative"
+
 # The upstream distro of the poky environment defaults to "poky"
 # You can override it by setting the variable POKY_DISTRO
 # As an example of a subclass there is a "bleeding" edge policy configuration
