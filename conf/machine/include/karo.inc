@@ -13,6 +13,8 @@ PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
 PREFERRED_VERSION_linux-karo = "5.10"
 KERNEL_IMAGETYPE ??= "uImage"
 
+MACHINEOVERRIDES =. "use-mainline-bsp:"
+
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
