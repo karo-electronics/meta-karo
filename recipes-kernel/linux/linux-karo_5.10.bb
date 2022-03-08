@@ -28,6 +28,7 @@ SRC_URI_append = " \
 	file://0016-parallel-display-bus-flags-from-display-info.patch \
 	file://0017-spi-nand-dma-map-bugfix.patch \
 	file://0019-fdt5x06-dma-bugfix.patch \
+        file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
 "
 
 SRC_URI_append_tx6 = " \
