@@ -10,7 +10,7 @@ UBOOT_CONFIG ??= "mfg generic"
 # Ship imx-sdma & vpu firmware
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS = " \
         linux-firmware-imx-sdma-imx6q \
-        ${@bb.utils.contains('DISTRO_FEATURES',"wayland","linux-firmware-imx-vpu","",d)} \
+        linux-firmware-imx-vpu \
 "
 
 # Set Serial consoles
