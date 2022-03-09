@@ -8,7 +8,7 @@
 &lcd_backlight {
 	pinctrl-0 = <&qsmp_pwm2_pins>;
 	pinctrl-1 = <&qsmp_pwm2_sleep_pins>;
-	pwms = <&qsmp_pwm2 2 500000 PWM_POLARITY_INVERTED>;
+	pwms = <&qsmp_pwm2 0 500000 PWM_POLARITY_INVERTED>;
 };
 
 &lcd_panel {
