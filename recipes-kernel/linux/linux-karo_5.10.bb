@@ -17,7 +17,7 @@ SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
 
 SRC_URI_append = " \
         file://${KBUILD_DEFCONFIG} \
-        ${@' file://'.join("${KERNEL_FEATURES}".split(" "))} \
+        ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
         file://0001-display-support.patch \
         file://0002-panel-dpi-bus-format.patch \
         file://0007-stm32cryp-dependencies.patch \
@@ -120,15 +120,15 @@ KERNEL_IMAGETYPE_stm32mp1 = "uImage"
 KBUILD_DEFCONFIG = "defconfig"
 KBUILD_DEFCONFIG_qsmp-1510 = "qsmp-1510_defconfig"
 
-KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," cfg/wifi.cfg","",d)}"
-KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," cfg/systemd.cfg","",d)}"
-KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," cfg/ipv6.cfg","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi.cfg","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd.cfg","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.cfg","",d)}"
 
-KERNEL_FEATURES_append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," cfg/extmod.cfg","",d)}"
+KERNEL_FEATURES_append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 
-KERNEL_FEATURES_append_mx6 = "${@bb.utils.contains('MACHINE_FEATURES',"nand"," cfg/nand.cfg","",d)}"
-KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," cfg/lvds.cfg"," cfg/lcd.cfg",d)}"
-KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"sata"," cfg/sata.cfg","",d)}"
+KERNEL_FEATURES_append_mx6 = "${@bb.utils.contains('MACHINE_FEATURES',"nand"," nand.cfg","",d)}"
+KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," lvds.cfg"," lcd.cfg",d)}"
+KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"sata"," sata.cfg","",d)}"
 
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
