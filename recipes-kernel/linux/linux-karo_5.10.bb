@@ -153,10 +153,8 @@ do_configure_prepend() {
     install -v "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/.config"
     sed -i '/CONFIG_LOCALVERSION/d' "${B}/.config"
     echo 'CONFIG_LOCALVERSION="${KERNEL_LOCALVERSION}"' >> "${B}/.config"
-}
 
-do_configure_append () {
     for f in ${KERNEL_FEATURES};do
-        cat ${WORKDIR}/$f >> ${B}/.config
+        cat ${WORKDIR}/cfg/$f >> ${B}/.config
     done
 }
