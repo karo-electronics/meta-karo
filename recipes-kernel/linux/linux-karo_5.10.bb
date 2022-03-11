@@ -120,6 +120,7 @@ KERNEL_IMAGETYPE_stm32mp1 = "uImage"
 KBUILD_DEFCONFIG = "defconfig"
 KBUILD_DEFCONFIG_qsmp-1510 = "qsmp-1510_defconfig"
 
+KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"bluetooth"," bluetooth.cfg","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi.cfg","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd.cfg","",d)}"
 KERNEL_FEATURES_append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.cfg","",d)}"
