@@ -15,6 +15,10 @@ PROVIDES += "linux"
 
 SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
 
+SRCBRANCH_rzg2 = "rz-5.10-cip1"
+SRCREV_rzg2 = "6598999af2323a9344d8513f56b509fec114ac6b"
+SRC_URI_rzg2 = "git://github.com/renesas-rz/rz_linux-cip.git;protocol=https;branch=${SRCBRANCH}"
+
 SRC_URI_append = " \
         file://${KBUILD_DEFCONFIG} \
         ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
@@ -28,6 +32,16 @@ SRC_URI_append = " \
         file://0017-spi-nand-dma-map-bugfix.patch \
         file://0019-fdt5x06-dma-bugfix.patch \
         file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
+"
+
+# dirty-pipe vulnerability already applied in renesas linux
+SRC_URI_remove_rzg2 = " \
+        file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
+"
+
+SRC_URI_append_rzg2 = " \
+	    file://dts/renesas/r9a07g044l2-txrz-g2l0.dts;subdir=git/arch/arm64/boot \
+	    file://dts/renesas/r9a07g044l2-txrz-g2l0-mb7.dts;subdir=git/arch/arm64/boot \
 "
 
 SRC_URI_append_tx6 = " \

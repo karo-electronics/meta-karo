@@ -1,0 +1,285 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Device Tree Source for the RZG2L based Ka-Ro TXRZ-G2L0 CoM on MB7
+ *
+ * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ */
+
+/dts-v1/;
+#include "r9a07g044l2-txrz-g2l0.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based TXRZ-G2L0 CoM on TX Mainboard 7";
+	compatible = "renesas,r9a07g044l2", "renesas,r9a07g044";
+
+	aliases {
+		panel = &lcd_panel;
+	};
+
+	audio_mclock: audio_mclock {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <26000000>;
+	};
+
+	// TODO: when pwm feature enabled
+	// backlight: pwm-backlight {
+	// 	compatible = "pwm-backlight";
+	// 	pwms = <&gpt3 0 50000>;
+	// 	brightness-levels = <100 99 98 97 96 95 94 93 92 91
+	// 			      90 89 88 87 86 85 84 83 82 81
+	// 			      80 79 78 77 76 75 74 73 72 71
+	// 			      70 69 68 67 66 65 64 63 62 61
+	// 			      60 59 58 57 56 55 54 53 52 51
+	// 			      50 49 48 47 46 45 44 43 42 41
+	// 			      40 39 38 37 36 35 34 33 32 31
+	// 			      30 29 28 27 26 25 24 23 22 21
+	// 			      20 19 18 17 16 15 14 13 12 11
+	// 			      10  9  8  7  6  5  4  3  2  1
+	// 			       0>;
+	// 	default-brightness-level = <50>;
+	// };
+
+	lcd_panel: lcd-panel {
+		compatible = "panel-dpi";
+		enable-gpios = <&pinctrl RZG2L_GPIO(19, 1) GPIO_ACTIVE_LOW>;
+		power-supply = <&reg_3v3>;
+		// backlight = <&backlight>;
+		data-mapping = "rgb24";
+		status = "okay";
+
+		panel-timing {
+			clock-frequency = <25200000>;
+			hactive = <640>;
+			vactive = <480>;
+			hback-porch = <114>;
+			hsync-len = <30>;
+			hfront-porch = <16>;
+			vback-porch = <32>;
+			vsync-len = <3>;
+			vfront-porch = <10>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <1>;
+			pixelclk-active = <1>;
+		};
+
+		port {
+			lcd_panel_in: endpoint {
+				remote-endpoint = <&du_out_rgb>;
+			};
+		};
+		
+		display-timings {
+			VGA: VGA {
+				clock-frequency = <25200000>;
+				hactive = <640>;
+				vactive = <480>;
+				hback-porch = <48>;
+				hsync-len = <96>;
+				hfront-porch = <16>;
+				vback-porch = <31>;
+				vsync-len = <2>;
+				vfront-porch = <12>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ETV570: ETV570 {
+				u-boot,panel-name = "edt,et057090dhu";
+				clock-frequency = <25200000>;
+				hactive = <640>;
+				vactive = <480>;
+				hback-porch = <114>;
+				hsync-len = <30>;
+				hfront-porch = <16>;
+				vback-porch = <32>;
+				vsync-len = <3>;
+				vfront-porch = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <1>;
+			};
+
+			ET0350: ET0350 {
+				u-boot,panel-name = "edt,et0350g0dh6";
+				clock-frequency = <6413760>;
+				hactive = <320>;
+				vactive = <240>;
+				hback-porch = <34>;
+				hsync-len = <34>;
+				hfront-porch = <20>;
+				vback-porch = <15>;
+				vsync-len = <3>;
+				vfront-porch = <4>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ET0430: ET0430 {
+				u-boot,panel-name = "edt,et0430g0dh6";
+				clock-frequency = <9009000>;
+				hactive = <480>;
+				vactive = <272>;
+				hback-porch = <2>;
+				hsync-len = <41>;
+				hfront-porch = <2>;
+				vback-porch = <2>;
+				vsync-len = <10>;
+				vfront-porch = <2>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <1>;
+			};
+
+			ET0500: ET0500 {
+				clock-frequency = <33264000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <88>;
+				hsync-len = <128>;
+				hfront-porch = <40>;
+				vback-porch = <33>;
+				vsync-len = <2>;
+				vfront-porch = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ET0700: ET0700 { /* same as ET0500 */
+				u-boot,panel-name = "edt,etm0700g0dh6";
+				clock-frequency = <33264000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <88>;
+				hsync-len = <128>;
+				hfront-porch = <40>;
+				vback-porch = <33>;
+				vsync-len = <2>;
+				vfront-porch = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ETQ570: ETQ570 {
+				clock-frequency = <6596040>;
+				hactive = <320>;
+				vactive = <240>;
+				hback-porch = <38>;
+				hsync-len = <30>;
+				hfront-porch = <30>;
+				vback-porch = <16>;
+				vsync-len = <3>;
+				vfront-porch = <4>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+
+	snd_rzg2l: sound {
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,bitclock-master = <&codec_dai>;
+		simple-audio-card,frame-master = <&codec_dai>;
+		simple-audio-card,mclk-fs = <256>;
+
+		simple-audio-card,widgets =
+			"Microphone", "Mic Jack",
+			"Line", "Line In",
+			"Line", "Line Out",
+			"Headphone", "Headphone Jack";
+		simple-audio-card,routing =
+			"MIC_IN", "Mic Jack",
+			"Mic Jack", "Mic Bias",
+			"Headphone Jack", "HP_OUT";
+
+		cpu_dai: simple-audio-card,cpu {
+			sound-dai = <&ssi0>;
+		};
+
+		codec_dai: simple-audio-card,codec {
+			sound-dai = <&sgtl5000>;
+		};
+	};
+};
+
+&audio_clk1 {
+	clock-frequency = <26000000>;
+};
+
+&audio_clk2 {
+	clock-frequency = <26000000>;
+};
+
+&du {
+	status = "okay";
+};
+
+&du_out_rgb {
+	remote-endpoint = <&lcd_panel_in>;
+};
+
+// TODO: Pwm feature currently missing
+// &gpt3 {
+// 	pinctrl-0 = <&gpt3_pins>;
+// 	pinctrl-names = "default";
+// 	channel="channel_B";
+// 	//conflict pin with SD1 WP
+// 	status = "okay";
+// };
+
+&i2c1 {
+	polytouch: edt-ft5x06@38 {
+		compatible = "edt,edt-ft5x06";
+		reg = <0x38>;
+		interrupt-parent = <&pinctrl>;
+		interrupts = <RZG2L_GPIO(42, 2) IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&pinctrl RZG2L_GPIO(42, 3) GPIO_ACTIVE_LOW>;
+		wake-gpios = <&pinctrl RZG2L_GPIO(47, 3) GPIO_ACTIVE_HIGH>;
+		wakeup-source;
+		status = "okay";
+	};
+	
+	sgtl5000: sgtl5000@a {
+		compatible = "fsl,sgtl5000";
+		#sound-dai-cells = <0>;
+		reg = <0x0a>;
+		VDDA-supply = <&reg_2v5>;
+		VDDIO-supply = <&reg_3v3>;
+		clocks = <&audio_mclock>;
+		status = "okay";
+	};
+};
+
+&ssi0 {
+	status = "okay";
+};
+
+&pinctrl {
+	pinctrl-0 = <&sound_clk_pins>;
+	pinctrl-names = "default";
+
+	// TODO: Pwm currently not supported
+	// gpt3_pins: gpt3 {
+	// 	groups = "gpt3_b_b";
+	// 	function = "gpt3";
+	// };
+
+	sound_clk_pins: sound_clk {
+		pins = "AUDIO_CLK1", "AUDIO_CLK2";
+		output-enable;
+	};
+};

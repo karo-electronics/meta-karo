@@ -1,0 +1,14 @@
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 8913bdea4b96..627a1b5edecb 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -598,7 +598,8 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 
+ 		ditr0 = (DU_DITR0_DEMD_HIGH
+ 		| ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
+-		| ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0));
++		| ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0)
++		| DU_DITR0_DPI_CLKMD);
+ 
+ 		ditr1 = DU_DITR1_VSA(mode->vsync_end - mode->vsync_start)
+ 		      | DU_DITR1_VACTIVE(mode->vdisplay);

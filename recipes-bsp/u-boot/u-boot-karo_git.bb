@@ -2,17 +2,22 @@ require recipes-bsp/u-boot/u-boot.inc
 
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPLv2+"
-LIC_FILES_CHKSUM = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
-LIC_FILES_CHKSUM_stm32mp1 = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
+LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
+LIC_FILES_CHKSUM_mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
 
 PROVIDES += "u-boot"
 
 DEPENDS_append = " bc-native"
 DEPENDS_append_stm32mp1 = " bison-native xxd-native"
+DEPENDS_append_rzg2 = " flex-native bison-native xxd-native"
 
+RDEPENDS_${PN}_append_rzg2 = " tf-a-rzg2"
 RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
 
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
+
+SRCBRANCH_rzg2 = "karo-txrz"
+SRCREV_rzg2 = "9bffc5aadaed5baccbb32544eed943b30e886342"
 
 SRCBRANCH_mx6 = "master"
 SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
@@ -79,6 +84,44 @@ do_deploy_append_stm32mp1 () {
     fi
 }
 
+# -----------------------------------------------------
+# rzg2
+# -----------------------------------------------------
+FILES_${PN}_rzg2 = "/boot "
+SYSROOT_DIRS_rzg2 += "/boot"
+
+UBOOT_SREC_SUFFIX_rzg2 = "srec"
+UBOOT_SREC_rzg2 ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
+UBOOT_SREC_IMAGE_rzg2 ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
+UBOOT_SREC_SYMLINK_rzg2 ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
+
+do_deploy_append_rzg2 () {
+    if [ -n "${UBOOT_CONFIG}" ]
+    then
+        for config in ${UBOOT_MACHINE}; do
+            i=$(expr $i + 1);
+            for type in ${UBOOT_CONFIG}; do
+                j=$(expr $j + 1);
+                if [ $j -eq $i ]
+                then
+                    install -m 644 ${B}/${config}/${UBOOT_SREC} ${DEPLOYDIR}/u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
+                    cd ${DEPLOYDIR}
+                    ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
+                fi
+            done
+            unset j
+        done
+        unset i
+    else
+        install -m 644 ${B}/${UBOOT_SREC} ${DEPLOYDIR}/${UBOOT_SREC_IMAGE}
+        cd ${DEPLOYDIR}
+        rm -f ${UBOOT_SREC} ${UBOOT_SREC_SYMLINK}
+        ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC_SYMLINK}
+        ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC}
+    fi
+
+}
+
 # ---------------------------------------------------------------------
 # Avoid QA Issue: No GNU_HASH in the elf binary
 INSANE_SKIP_${PN} += "ldflags"
@@ -89,6 +132,7 @@ INSANE_SKIP_${PN} += "textrel"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
+COMPATIBLE_MACHINE_rzg2 = "(txrz-.*|qsrz-.*)"
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"
 COMPATIBLE_MACHINE_stm32mp1 = "(txmp-.*|qsmp-.*)"

@@ -37,3 +37,8 @@ SRC_URI_append_stm32mp1 = " \
         file://patches/0011-usb-ohci-wakeup-source-suspend.patch \
         file://patches/0012-ltdc-pixclk-pol-bus-flags.patch \
 "
+
+SRC_URI_append_rzg2 = " \
+        file://patches/0001-renesas-du-change-fixed-clock-polarity.patch \
+        file://patches/0002-renesas-du-change-fixed-pixformat.patch \
+"
