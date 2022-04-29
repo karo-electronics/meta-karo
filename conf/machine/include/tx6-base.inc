@@ -1,5 +1,7 @@
 include conf/machine/include/karo.inc
 
+MACHINEOVERRIDES =. "mx6:"
+
 UBOOT_MAKE_TARGET ??= "u-boot.bin"
 UBOOT_SUFFIX ??= "bin"
 
