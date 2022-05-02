@@ -36,10 +36,15 @@ UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
 do_savedefconfig() {
-    for config in ${UBOOT_MACHINE}; do
-        bbplain "Saving ${config} defconfig to:\n${B}/${config}/defconfig"
-        oe_runmake -C ${B}/${config} savedefconfig
-    done
+    if [ -n "${UBOOT_CONFIG}" ];then
+        for config in ${UBOOT_MACHINE}; do
+            bbplain "Saving ${config} defconfig to:\n${B}/${config}/defconfig"
+            oe_runmake -C ${B}/${config} savedefconfig
+        done
+    else
+        bbplain "Saving ${config} defconfig to:\n${B}/defconfig"
+        oe_runmake -C ${B} savedefconfig
+    fi
 }
 do_savedefconfig[nostamp] = "1"
 addtask savedefconfig after do_configure
