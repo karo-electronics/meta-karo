@@ -19,6 +19,9 @@ SRCBRANCH_rzg2 = "rz-5.10-cip1"
 SRCREV_rzg2 = "6598999af2323a9344d8513f56b509fec114ac6b"
 SRC_URI_rzg2 = "git://github.com/renesas-rz/rz_linux-cip.git;protocol=https;branch=${SRCBRANCH}"
 
+# automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
+SRC_URI_append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/arch/arm/boot" % f.replace(".dtb", ".dts"), d.getVar('KERNEL_DEVICETREE').split()))}"
+
 SRC_URI_append = " \
         file://${KBUILD_DEFCONFIG} \
         ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
@@ -45,56 +48,16 @@ SRC_URI_append_rzg2 = " \
 "
 
 SRC_URI_append_tx6 = " \
-        file://dts/imx6dl-tx6dl-comtft.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8034-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8034.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8035-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8035.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8134-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8134.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8135-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6s-8135.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-801x.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-8033-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-8033.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-80xx-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-811x.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-8133-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-8133.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6dl-tx6u-81xx-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1010-comtft.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1010.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1020-comtft.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1020-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1020.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1036-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1036.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-10x0-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-1110.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6q-tx6q-11x0-mb7.dts;subdir=git/arch/arm/boot \
         file://dts/imx6qdl-tx6-lcd.dtsi;subdir=git/arch/arm/boot \
         file://dts/imx6qdl-tx6-lvds.dtsi;subdir=git/arch/arm/boot \
         file://dts/imx6qdl-tx6-mb7.dtsi;subdir=git/arch/arm/boot \
         file://dts/imx6qdl-tx6.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6qp-tx6q-8037-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6qp-tx6q-8037.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6qp-tx6q-8137-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6qp-tx6q-8137.dts;subdir=git/arch/arm/boot \
 "
 
 SRC_URI_append_txul = " \
-        file://dts/imx6ul-tx6ul-0010.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-tx6ul-0011.dts;subdir=git/arch/arm/boot \
         file://dts/imx6ul-tx6ul.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-txul-5010-mainboard.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-txul-5010-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-txul-5011-mainboard.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-txul-5011-mb7.dts;subdir=git/arch/arm/boot \
         file://dts/imx6ul-txul-mainboard.dtsi;subdir=git/arch/arm/boot \
         file://dts/imx6ul-txul-mb7.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6ull-txul-8013-mainboard.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6ull-txul-8013-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/imx6ull-txul-8013.dts;subdir=git/arch/arm/boot \
 "
 
 SRC_URI_append_stm32mp1 = " \
@@ -108,23 +71,12 @@ SRC_URI_append_stm32mp1 = " \
         file://dts/stm32mp15-qsmp.dtsi;subdir=git/arch/arm/boot \
         file://dts/stm32mp15-txmp-lcd-panel.dtsi;subdir=git/arch/arm/boot \
         file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp151a-qsmp-1510-qsbase1.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp151a-qsmp-1510.dts;subdir=git/arch/arm/boot \
         file://dts/stm32mp153-karo.dtsi;subdir=git/arch/arm/boot \
         file://dts/stm32mp153-qsmp.dtsi;subdir=git/arch/arm/boot \
         file://dts/stm32mp153-txmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp153a-qsmp-1530-qsbase1.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp153a-qsmp-1530-qsbase2.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp153a-qsmp-1530.dts;subdir=git/arch/arm/boot \
         file://dts/stm32mp157-karo.dtsi;subdir=git/arch/arm/boot \
         file://dts/stm32mp157-qsmp.dtsi;subdir=git/arch/arm/boot \
         file://dts/stm32mp157-txmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157c-qsmp-1570-qsbase1.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157c-qsmp-1570-qsbase2-raspi.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157c-qsmp-1570-qsbase2.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157c-qsmp-1570.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm/boot \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
