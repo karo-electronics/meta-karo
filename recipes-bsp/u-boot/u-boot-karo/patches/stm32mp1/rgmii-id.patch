@@ -1,0 +1,52 @@
+diff --git a/board/karo/txmp/txmp.c b/board/karo/txmp/txmp.c
+index 2ef24212618..d0e2cef6c9b 100644
+--- a/board/karo/txmp/txmp.c
++++ b/board/karo/txmp/txmp.c
+@@ -335,38 +348,30 @@ int board_interface_eth_init(struct udevice *dev,
+ 	print_mac_from_fuse();
+ 
+ 	switch (interface_type) {
+-	case PHY_INTERFACE_MODE_MII:
+-		value = SYSCFG_PMCSETR_ETH_SEL_GMII_MII |
+-			SYSCFG_PMCSETR_ETH_REF_CLK_SEL;
+-		debug("%s: PHY_INTERFACE_MODE_MII %08x\n", __func__, value);
+-		break;
+-	case PHY_INTERFACE_MODE_GMII:
+-		if (eth_clk_sel_reg)
+-			value = SYSCFG_PMCSETR_ETH_SEL_GMII_MII |
+-				SYSCFG_PMCSETR_ETH_CLK_SEL;
+-		else
+-			value = SYSCFG_PMCSETR_ETH_SEL_GMII_MII;
+-		debug("%s: PHY_INTERFACE_MODE_GMII %08x\n", __func__, value);
+-		break;
+ 	case PHY_INTERFACE_MODE_RMII:
+ 		if (eth_ref_clk_sel_reg)
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RMII |
+ 				SYSCFG_PMCSETR_ETH_REF_CLK_SEL;
+ 		else
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RMII;
+-		debug("%s: PHY_INTERFACE_MODE_RMII %08x\n", __func__, value);
++		debug("%s: %s %08x\n", __func__,
++		      phy_interface_strings[interface_type], value);
+ 		break;
+ 	case PHY_INTERFACE_MODE_RGMII:
++	case PHY_INTERFACE_MODE_RGMII_ID:
++	case PHY_INTERFACE_MODE_RGMII_RXID:
++	case PHY_INTERFACE_MODE_RGMII_TXID:
+ 		if (eth_clk_sel_reg)
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RGMII |
+ 				SYSCFG_PMCSETR_ETH_CLK_SEL;
+ 		else
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RGMII;
+-		debug("%s: PHY_INTERFACE_MODE_RGMII %08x\n", __func__, value);
++		debug("%s: %s %08x\n", __func__,
++		      phy_interface_strings[interface_type], value);
+ 		break;
+ 	default:
+-		pr_warn("%s: Unsupported interface type %d\n",
+-			__func__, interface_type);
++		printf("%s: Error: Unsupported interface type %d\n",
++		       __func__, interface_type);
+ 		/* Do not manage others interfaces */
+ 		return -EINVAL;
+ 	}

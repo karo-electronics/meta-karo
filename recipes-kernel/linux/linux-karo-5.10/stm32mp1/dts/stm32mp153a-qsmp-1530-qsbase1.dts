@@ -9,3 +9,18 @@
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1530 module on QSBASE1 baseboard";
 };
+
+&phy0 {
+	rxd0-skew-ps = <(420 + 6)>;
+	rxd1-skew-ps = <(420 + 5)>;
+	rxd2-skew-ps = <(420 - 1)>;
+	rxd3-skew-ps = <(420 - 22)>;
+	txd0-skew-ps = <(420 - 103)>;
+	txd1-skew-ps = <(420 - 104)>;
+	txd2-skew-ps = <(420 - 73)>;
+	txd3-skew-ps = <(420 - 25)>;
+	txen-skew-ps = <(420 + 15)>;
+	rxdv-skew-ps = <(420 - 12)>;
+	rxc-skew-ps = <(900 + 0)>;
+	txc-skew-ps = <(900 + 1000)>;
+};

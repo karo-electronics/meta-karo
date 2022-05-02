@@ -23,7 +23,7 @@ EXTRA_OEMAKE += 'ARM_ARCH_MAJOR=7'
 
 # Configure default mode (All supported device types)
 EXTRA_OEMAKE += 'STM32MP_SDMMC=1'
-EXTRA_OEMAKE += "${@bb.utils.contains('MACHINE','qsmp-1510','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
+EXTRA_OEMAKE += "${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
 
 TF_A_CONFIG_serialboot += 'DEBUG=1'
 TF_A_CONFIG_serialboot += 'LOG_LEVEL=40'
