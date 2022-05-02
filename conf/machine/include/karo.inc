@@ -34,6 +34,9 @@ MACHINE_FEATURES = " \
 "
 
 UBOOT_FEATURES ??= ""
+KARO_BASEBOARD ??= ""
+
+KERNEL_DEVICETREE_append = "${@ " %s%s.dtb" % (d.getVar('DTB_BASENAME'), ("-" + d.getVar('KARO_BASEBOARD') if d.getVar('KARO_BASEBOARD') != "" else ""))}"
 
 # Blacklist evbug kernel module
 KERNEL_MODULE_PROBECONF += "evbug"

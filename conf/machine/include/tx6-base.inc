@@ -18,6 +18,8 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS = " \
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttymxc0 115200;ttymxc1 115200;ttymxc2"
 
-# Default baseboard name
-DEFAULT_BASEBOARD_tx6 ?= "mb7"
-DEFAULT_BASEBOARD_txul ?= "evalkit"
+KARO_BASEBOARD_mx6 = ""
+
+DTB_BASENAME_mx6dl ?= "imx6dl-${MACHINE}"
+DTB_BASENAME_mx6q ?= "imx6q-${MACHINE}"
+DTB_BASENAME_mx6ul ?= "imx6ul-${MACHINE}"

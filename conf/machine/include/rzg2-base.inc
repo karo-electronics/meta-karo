@@ -14,3 +14,5 @@ MACHINE_FEATURES_append = " emmc"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySC0"
+
+DTB_BASENAME ?= "renesas/r9a07g044l2-${MACHINE}"

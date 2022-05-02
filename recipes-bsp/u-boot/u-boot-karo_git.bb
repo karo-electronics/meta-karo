@@ -35,6 +35,19 @@ LOCALVERSION ??= "+karo"
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
+UBOOT_ENV_FILE ?= "${@ "%s%s_env.txt" % (d.getVar('MACHINE'), "-" + d.getVar('KARO_BASEBOARD')) if d.getVar('KARO_BASEBOARD') != "" else ""}"
+UBOOT_ENV_FILE_mx6 = ""
+
+SRC_URI_append_stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI_append_mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI_append_txrz = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
+
+SRC_URI_append = "${@ " \
+    file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}.dts;subdir=git/arch/arm \
+    file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}-u-boot.dtsi;subdir=git/arch/arm" \
+    if "${KARO_BASEBOARD}" != "" else "" \
+}"
+
 SRC_URI_append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
 
 do_configure_append() {
@@ -50,6 +63,16 @@ do_configure_append() {
                 bbnote "Applying '$f' to '${c}/.config'"
                 cat "${WORKDIR}/${f}.cfg" >> ${c}/.config
             done
+            if [ "${KARO_BASEBOARD}" != "" ];then
+                cat <<EOF >> "${c}/.config"
+CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
+CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
+EOF
+                grep -q "${DTB_BASENAME}-${KARO_BASEBOARD}\.dtb" ${S}/arch/arm/dts/Makefile || \
+		     sed -i '/^targets /i\
+dtb-y += ${DTB_BASENAME}-${KARO_BASEBOARD}.dtb\
+' ${S}/arch/arm/dts/Makefile
+            fi
         done
     else
         for f in ${UBOOT_FEATURES};do

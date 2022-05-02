@@ -1,3 +1,5 @@
+DTB_BASENAME_mx6q ?= "imx6qp-${MACHINE}"
+
 require tx6-base.inc
 require conf/machine/include/tune-cortexa9.inc
 

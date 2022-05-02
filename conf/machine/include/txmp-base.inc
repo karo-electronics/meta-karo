@@ -36,3 +36,5 @@ TF_A_CONFIG_trusted     = "AARCH32_SP=sp_min"
 # Manage proper update for TF_A_CONFIG_* var
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'serialboot', 'TF_A_CONFIG_serialboot', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
+
+DTB_BASENAME ?= "${TF_A_DEVICETREE}"
