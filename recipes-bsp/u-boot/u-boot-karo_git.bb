@@ -35,6 +35,30 @@ LOCALVERSION ??= "+karo"
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
+SRC_URI_append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
+
+do_configure_append() {
+    for f in ${UBOOT_FEATURES};do
+        if ! [ -f "${WORKDIR}/${f}.cfg" ];then
+            bbfatal "UBOOT_FEATURE: '${WORKDIR}/${f}.cfg' not found"
+        fi
+    done
+    if [ -n "${UBOOT_CONFIG}" ];then
+        for config in ${UBOOT_MACHINE};do
+            c="${B}/${config}"
+            for f in ${UBOOT_FEATURES};do
+                bbnote "Applying '$f' to '${c}/.config'"
+                cat "${WORKDIR}/${f}.cfg" >> ${c}/.config
+            done
+        done
+    else
+        for f in ${UBOOT_FEATURES};do
+            bbnote "Applying '$f' to '${B}/.config'"
+            cat "${WORKDIR}/${f}.cfg" >> ${B}/.config
+        done
+    fi
+}
+
 do_savedefconfig() {
     if [ -n "${UBOOT_CONFIG}" ];then
         for config in ${UBOOT_MACHINE}; do

@@ -33,6 +33,8 @@ MACHINE_FEATURES = " \
                  vfat \
 "
 
+UBOOT_FEATURES ??= ""
+
 # Blacklist evbug kernel module
 KERNEL_MODULE_PROBECONF += "evbug"
 module_conf_evbug = "blacklist evbug"
