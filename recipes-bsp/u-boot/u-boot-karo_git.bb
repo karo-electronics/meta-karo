@@ -17,7 +17,7 @@ RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
 SRCBRANCH_rzg2 = "karo-txrz"
-SRCREV_rzg2 = "9bffc5aadaed5baccbb32544eed943b30e886342"
+SRCREV_rzg2 = "bce452e2301793c419d166f7831b4ec034d1d891"
 
 SRCBRANCH_mx6 = "master"
 SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
