@@ -30,3 +30,40 @@
 		bias-pull-up;
 	};
 };
+
+&sai2 {
+	pinctrl-0 = <&qsmp_sai2_pins>;
+	pinctrl-1 = <&qsmp_sai2_sleep_pins>;
+};
+
+&pinctrl {
+	qsmp_sai2_pins: txmp-sai2-pins {
+		pins1 {
+			pinmux = <
+				STM32_PINMUX('D', 11, AF10)	/* TXD */
+				STM32_PINMUX('I', 7, AF10)	/* FS */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <
+				STM32_PINMUX('A', 0, AF10)	/* RXD */
+				STM32_PINMUX('D', 13, AF10)	/* SCK */
+			>;
+		};
+	};
+
+	qsmp_sai2_sleep_pins: txmp-sai2-sleep-pins {
+		pins {
+			pinmux = <
+				STM32_PINMUX('A', 0, ANALOG)	/* RXD */
+				STM32_PINMUX('D', 11, ANALOG)	/* TXD */
+				STM32_PINMUX('D', 13, ANALOG)	/* SCK */
+				STM32_PINMUX('I', 7, ANALOG)	/* FS */
+			>;
+		};
+	};
+};
