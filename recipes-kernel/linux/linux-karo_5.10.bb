@@ -7,7 +7,7 @@ DEPENDS += "lzop-native bc-native"
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 SRCBRANCH = "linux-5.10.y"
-SRCREV = "v5.10.47"
+SRCREV = "v5.10.61"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
