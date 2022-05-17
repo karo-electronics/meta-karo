@@ -7,23 +7,21 @@ LIC_FILES_CHKSUM_mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84
 
 PROVIDES += "u-boot"
 
-DEPENDS_append = " bc-native"
-DEPENDS_append_stm32mp1 = " bison-native xxd-native"
-DEPENDS_append_rzg2 = " flex-native bison-native xxd-native"
+DEPENDS_append = " bc-native bison-native xxd-native"
 
-RDEPENDS_${PN}_append_rzg2 = " tf-a-rzg2"
 RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
+RDEPENDS_${PN}_append_rzg2 = " tf-a-rzg2"
 
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
-
-SRCBRANCH_rzg2 = "karo-txrz"
-SRCREV_rzg2 = "bce452e2301793c419d166f7831b4ec034d1d891"
 
 SRCBRANCH_mx6 = "master"
 SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
 
 SRCBRANCH_stm32mp1 = "karo-txmp"
 SRCREV_stm32mp1 = "69a0454b5bfeb566a400b7c9d3e11429970e3d43"
+
+SRCBRANCH_rzg2 = "karo-txrz"
+SRCREV_rzg2 = "bce452e2301793c419d166f7831b4ec034d1d891"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
@@ -38,8 +36,8 @@ UBOOT_INITIAL_ENV = ""
 UBOOT_ENV_FILE ?= "${@ "%s%s_env.txt" % (d.getVar('MACHINE'), "-" + d.getVar('KARO_BASEBOARD')) if d.getVar('KARO_BASEBOARD') != "" else ""}"
 UBOOT_ENV_FILE_mx6 = ""
 
-SRC_URI_append_stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
 SRC_URI_append_mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI_append_stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
 SRC_URI_append_txrz = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
 
 SRC_URI_append = "${@ " \
@@ -56,29 +54,27 @@ do_configure_append() {
             bbfatal "UBOOT_FEATURE: '${WORKDIR}/${f}.cfg' not found"
         fi
     done
-    if [ -n "${UBOOT_CONFIG}" ];then
-        for config in ${UBOOT_MACHINE};do
-            c="${B}/${config}"
-            for f in ${UBOOT_FEATURES};do
-                bbnote "Applying '$f' to '${c}/.config'"
-                cat "${WORKDIR}/${f}.cfg" >> ${c}/.config
-            done
-            if [ "${KARO_BASEBOARD}" != "" ];then
+    if [ -n "${KARO_BASEBOARD}" ];then
+        if [ -n "${UBOOT_CONFIG}" ];then
+            for config in ${UBOOT_MACHINE};do
+                c="${B}/${config}"
                 cat <<EOF >> "${c}/.config"
 CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
 CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
 EOF
-                grep -q "${DTB_BASENAME}-${KARO_BASEBOARD}\.dtb" ${S}/arch/arm/dts/Makefile || \
-		     sed -i '/^targets /i\
+            oe_runmake -C ${c} oldconfig
+            done
+        else
+            cat <<EOF >> "${B}/.config"
+CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
+CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
+EOF
+            oe_runmake -C ${B} oldconfig
+        fi
+        grep -q "${DTB_BASENAME}-${KARO_BASEBOARD}\.dtb" ${S}/arch/arm/dts/Makefile || \
+                sed -i '/^targets /i\
 dtb-y += ${DTB_BASENAME}-${KARO_BASEBOARD}.dtb\
 ' ${S}/arch/arm/dts/Makefile
-            fi
-        done
-    else
-        for f in ${UBOOT_FEATURES};do
-            bbnote "Applying '$f' to '${B}/.config'"
-            cat "${WORKDIR}/${f}.cfg" >> ${B}/.config
-        done
     fi
 }
 
@@ -97,15 +93,15 @@ do_savedefconfig[nostamp] = "1"
 addtask savedefconfig after do_configure
 
 do_compile_prepend() {
-	if [ "${SCMVERSION}" = "y" ]; then
-		# Add GIT revision to the local version
-		head=`cd ${S} ; git rev-parse --verify --short HEAD 2> /dev/null`
-		printf "%s%s%s" "${UBOOT_LOCALVERSION}" +g $head > ${S}/.scmversion
-		printf "%s%s%s" "${UBOOT_LOCALVERSION}" +g $head > ${B}/.scmversion
+    if [ "${SCMVERSION}" = "y" ]; then
+        # Add GIT revision to the local version
+        head=`cd ${S} ; git rev-parse --verify --short HEAD 2> /dev/null`
+        printf "%s%s%s" "${UBOOT_LOCALVERSION}" +g $head > ${S}/.scmversion
+        printf "%s%s%s" "${UBOOT_LOCALVERSION}" +g $head > ${B}/.scmversion
     else
-		printf "%s" "${UBOOT_LOCALVERSION}" > ${S}/.scmversion
-		printf "%s" "${UBOOT_LOCALVERSION}" > ${B}/.scmversion
-	fi
+        printf "%s" "${UBOOT_LOCALVERSION}" > ${S}/.scmversion
+        printf "%s" "${UBOOT_LOCALVERSION}" > ${B}/.scmversion
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -113,11 +109,12 @@ do_compile_prepend() {
 #
 do_deploy_append_stm32mp1 () {
     if [ -n "${UBOOT_CONFIG}" ]; then
-        unset i j k
+        i=0
         for config in ${UBOOT_MACHINE}; do
-            i=$(expr $i + 1);
+            i=$(expr $i + 1)
+            j=0
             for type in ${UBOOT_CONFIG}; do
-                j=$(expr $j + 1);
+                j=$(expr $j + 1)
                 if [ $j -eq $i ]; then
                     install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
 
@@ -148,17 +145,17 @@ UBOOT_SREC_IMAGE_rzg2 ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
 UBOOT_SREC_SYMLINK_rzg2 ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
 
 do_deploy_append_rzg2 () {
-    if [ -n "${UBOOT_CONFIG}" ]
-    then
+    if [ -n "${UBOOT_CONFIG}" ]; then
+        i=0
         for config in ${UBOOT_MACHINE}; do
-            i=$(expr $i + 1);
+            i=$(expr $i + 1)
+            j=0
             for type in ${UBOOT_CONFIG}; do
-                j=$(expr $j + 1);
-                if [ $j -eq $i ]
-                then
+                j=$(expr $j + 1)
+                if [ $j -eq $i ]; then
                     install -m 644 ${B}/${config}/${UBOOT_SREC} ${DEPLOYDIR}/u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
-                    cd ${DEPLOYDIR}
-                    ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
+
+                    ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} ${DEPLOYDIR}/u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
                 fi
             done
             unset j
@@ -166,12 +163,9 @@ do_deploy_append_rzg2 () {
         unset i
     else
         install -m 644 ${B}/${UBOOT_SREC} ${DEPLOYDIR}/${UBOOT_SREC_IMAGE}
-        cd ${DEPLOYDIR}
-        rm -f ${UBOOT_SREC} ${UBOOT_SREC_SYMLINK}
-        ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC_SYMLINK}
-        ln -sf ${UBOOT_SREC_IMAGE} ${UBOOT_SREC}
+        ln -sf ${UBOOT_SREC_IMAGE} ${DEPLOYDIR}/${UBOOT_SREC_SYMLINK}
+        ln -sf ${UBOOT_SREC_IMAGE} ${DEPLOYDIR}/${UBOOT_SREC}
     fi
-
 }
 
 # ---------------------------------------------------------------------
