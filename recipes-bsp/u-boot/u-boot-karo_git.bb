@@ -26,6 +26,8 @@ SRCREV_rzg2 = "bce452e2301793c419d166f7831b4ec034d1d891"
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
+EXTRA_OEMAKE_append = " V=0"
+
 # append git hash to u-boot name
 SCMVERSION ??= "y"
 LOCALVERSION ??= "+karo"
