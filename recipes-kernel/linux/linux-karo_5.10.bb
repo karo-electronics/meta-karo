@@ -20,7 +20,7 @@ SRCREV_rzg2 = "6598999af2323a9344d8513f56b509fec114ac6b"
 SRC_URI_rzg2 = "git://github.com/renesas-rz/rz_linux-cip.git;protocol=https;branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
-SRC_URI_append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/arch/arm/boot" % f.replace(".dtb", ".dts"), d.getVar('KERNEL_DEVICETREE').split()))}"
+SRC_URI_append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
 
 SRC_URI_append = " \
         file://${KBUILD_DEFCONFIG} \
@@ -42,41 +42,36 @@ SRC_URI_remove_rzg2 = " \
         file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
 "
 
-SRC_URI_append_rzg2 = " \
-	    file://dts/renesas/r9a07g044l2-txrz-g2l0.dts;subdir=git/arch/arm64/boot \
-	    file://dts/renesas/r9a07g044l2-txrz-g2l0-mb7.dts;subdir=git/arch/arm64/boot \
-"
-
 SRC_URI_append_tx6 = " \
-        file://dts/imx6qdl-tx6-lcd.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6qdl-tx6-lvds.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6qdl-tx6-mb7.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6qdl-tx6.dtsi;subdir=git/arch/arm/boot \
+        file://dts/imx6qdl-tx6-lcd.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/imx6qdl-tx6-lvds.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/imx6qdl-tx6-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/imx6qdl-tx6.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
 SRC_URI_append_txul = " \
-        file://dts/imx6ul-tx6ul.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-txul-mainboard.dtsi;subdir=git/arch/arm/boot \
-        file://dts/imx6ul-txul-mb7.dtsi;subdir=git/arch/arm/boot \
+        file://dts/imx6ul-tx6ul.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/imx6ul-txul-mainboard.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/imx6ul-txul-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
 SRC_URI_append_stm32mp1 = " \
-        file://dts/stm32mp15-karo-dsi-panel.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-karo-lcd-panel.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-qsmp-lcd-panel.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-qsmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-txmp-lcd-panel.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp15-txmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp153-karo.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp153-qsmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp153-txmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157-karo.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157-qsmp.dtsi;subdir=git/arch/arm/boot \
-        file://dts/stm32mp157-txmp.dtsi;subdir=git/arch/arm/boot \
+        file://dts/stm32mp15-karo-dsi-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-karo-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-qsmp-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-txmp-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp153-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp153-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp153-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp157-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp157-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp157-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
