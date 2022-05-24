@@ -43,4 +43,5 @@ SRC_URI_append_stm32mp1 = " \
 SRC_URI_append_rzg2 = " \
         file://patches/0001-renesas-du-change-fixed-clock-polarity.patch \
         file://patches/0002-renesas-du-change-fixed-pixformat.patch \
+        file://patches/0003-RZ-G2L-SSIF-slave-mode-trial.patch \
 "
