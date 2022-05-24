@@ -1,0 +1,131 @@
+From 568631d5f1f96dad7f6b57b24d830956a7f36b9d Mon Sep 17 00:00:00 2001
+From: micbis <michele.bisogno.ct@renesas.com>
+Date: Thu, 28 Apr 2022 18:52:25 +0200
+Subject: [PATCH 1/2] RZ/G2L SSIF slave mode trial
+
+---
+ sound/soc/sh/rz-ssi.c | 59 +++++++++++++++++++++++++++++--------------
+ 1 file changed, 40 insertions(+), 19 deletions(-)
+
+diff --git a/sound/soc/sh/rz-ssi.c b/sound/soc/sh/rz-ssi.c
+index 89c7e5e4cbf6..ed818cab8fdd 100644
+--- a/sound/soc/sh/rz-ssi.c
++++ b/sound/soc/sh/rz-ssi.c
+@@ -134,6 +134,7 @@ struct rz_ssi_priv {
+ 	bool lrckp_fsync_fall;	/* LR clock polarity (SSICR.LRCKP) */
+ 	bool bckp_rise;	/* Bit clock polarity (SSICR.BCKP) */
+ 	bool dma_rt;
++	bool mst;		/* Master enable (SSICR.MST) */
+ };
+ 
+ static void rz_ssi_dma_complete(void *data);
+@@ -256,7 +257,10 @@ static int rz_ssi_clk_setup(struct rz_ssi_priv *ssi, unsigned int rate,
+ 	rz_ssi_reg_writel(ssi, SSIFCR, 0);
+ 
+ 	/* Continue to output LRCK pin even when idle */
+-	rz_ssi_reg_writel(ssi, SSIOFR, SSIOFR_LRCONT);
++	if (ssi->mst)
++	{
++		rz_ssi_reg_writel(ssi, SSIOFR, SSIOFR_LRCONT);
++	}
+ 	if (ssi->audio_clk_1 && ssi->audio_clk_2) {
+ 		if (ssi->audio_clk_1 % bclk_rate)
+ 			ssi->audio_mck = ssi->audio_clk_2;
+@@ -265,7 +269,10 @@ static int rz_ssi_clk_setup(struct rz_ssi_priv *ssi, unsigned int rate,
+ 	}
+ 
+ 	/* Clock setting */
+-	ssicr |= SSICR_MST;
++	if (ssi->mst)
++	{
++		ssicr |= SSICR_MST;
++	}
+ 	if (ssi->audio_mck == ssi->audio_clk_1)
+ 		ssicr |= SSICR_CKS;
+ 	if (ssi->bckp_rise)
+@@ -275,30 +282,38 @@ static int rz_ssi_clk_setup(struct rz_ssi_priv *ssi, unsigned int rate,
+ 
+ 	/* Determine the clock divider */
+ 	clk_ckdv = 0;
+-	div = ssi->audio_mck / bclk_rate;
+-	/* try to find an match */
+-	for (i = 0; i < ARRAY_SIZE(ckdv); i++) {
+-		if (ckdv[i] == div) {
+-			clk_ckdv = i;
+-			break;
++	if (ssi->mst)
++	{
++		div = ssi->audio_mck / bclk_rate;
++		/* try to find an match */
++		for (i = 0; i < ARRAY_SIZE(ckdv); i++) {
++			if (ckdv[i] == div) {
++				clk_ckdv = i;
++				break;
++			}
++		}
++		if (i == ARRAY_SIZE(ckdv)) {
++			dev_err(ssi->dev, "Rate not divisible by audio clock source\n");
++			return -EINVAL;
+ 		}
+-	}
+-
+-	if (i == ARRAY_SIZE(ckdv)) {
+-		dev_err(ssi->dev, "Rate not divisible by audio clock source\n");
+-		return -EINVAL;
+ 	}
+ 
+ 	/*
+ 	 * DWL: Data Word Length = 16 bits
+ 	 * SWL: System Word Length = 32 bits
++	 * SWL/DWL may depend on the codec config in slave mode
++	 * as well as other frame settings (TBC)
+ 	 */
+ 	ssicr |= SSICR_CKDV(clk_ckdv);
+ 	ssicr |= SSICR_DWL(1) | SSICR_SWL(3);
+ 	rz_ssi_reg_writel(ssi, SSICR, ssicr);
+-	rz_ssi_reg_writel(ssi, SSIFCR,
+-			  (SSIFCR_AUCKE | SSIFCR_TFRST | SSIFCR_RFRST));
+-
++	if (ssi->mst)
++		rz_ssi_reg_writel(ssi, SSIFCR,
++				  (SSIFCR_AUCKE | SSIFCR_TFRST | SSIFCR_RFRST));
++	else
++		rz_ssi_reg_writel(ssi, SSIFCR,
++				  (SSIFCR_TFRST | SSIFCR_RFRST));
++		
+ 	return 0;
+ }
+ 
+@@ -771,7 +786,13 @@ static int rz_ssi_dai_set_fmt(struct snd_soc_dai *dai, unsigned int fmt)
+ 	struct rz_ssi_priv *ssi = snd_soc_dai_get_drvdata(dai);
+ 
+ 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
+-	case SND_SOC_DAIFMT_CBS_CFS:
++ 	case SND_SOC_DAIFMT_CBS_CFS:
++		ssi->mst = 1;
++ 		asm("nop");	/* codec is slave */
++ 		break;
++	case SND_SOC_DAIFMT_CBM_CFM:
++		ssi->mst = 0;
++		asm("nop");	/* codec is master */
+ 		break;
+ 	default:
+ 		dev_err(ssi->dev, "Codec should be clk and frame consumer\n");
+@@ -952,12 +973,12 @@ static int rz_ssi_probe(struct platform_device *pdev)
+ 	if (IS_ERR(audio_clk))
+ 		return dev_err_probe(&pdev->dev, PTR_ERR(audio_clk),
+ 				     "no audio clk2");
+-
+ 	ssi->audio_clk_2 = clk_get_rate(audio_clk);
++#if 0
+ 	if (!(ssi->audio_clk_1 || ssi->audio_clk_2))
+ 		return dev_err_probe(&pdev->dev, -EINVAL,
+ 				     "no audio clk1 or audio clk2");
+-
++#endif
+ 	ssi->audio_mck = ssi->audio_clk_1 ? ssi->audio_clk_1 : ssi->audio_clk_2;
+ 
+ 	/* Detect DMA support */
+-- 
+2.25.1
+
