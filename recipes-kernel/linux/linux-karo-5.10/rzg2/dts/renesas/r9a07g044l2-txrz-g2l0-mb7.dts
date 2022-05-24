@@ -22,29 +22,28 @@
 		clock-frequency = <26000000>;
 	};
 
-	// TODO: when pwm feature enabled
-	// backlight: pwm-backlight {
-	// 	compatible = "pwm-backlight";
-	// 	pwms = <&gpt3 0 50000>;
-	// 	brightness-levels = <100 99 98 97 96 95 94 93 92 91
-	// 			      90 89 88 87 86 85 84 83 82 81
-	// 			      80 79 78 77 76 75 74 73 72 71
-	// 			      70 69 68 67 66 65 64 63 62 61
-	// 			      60 59 58 57 56 55 54 53 52 51
-	// 			      50 49 48 47 46 45 44 43 42 41
-	// 			      40 39 38 37 36 35 34 33 32 31
-	// 			      30 29 28 27 26 25 24 23 22 21
-	// 			      20 19 18 17 16 15 14 13 12 11
-	// 			      10  9  8  7  6  5  4  3  2  1
-	// 			       0>;
-	// 	default-brightness-level = <50>;
-	// };
+	backlight: pwm-backlight {
+		compatible = "pwm-backlight";
+		pwms = <&gpt3 0 50000>;
+		brightness-levels = <100 99 98 97 96 95 94 93 92 91
+				      90 89 88 87 86 85 84 83 82 81
+				      80 79 78 77 76 75 74 73 72 71
+				      70 69 68 67 66 65 64 63 62 61
+				      60 59 58 57 56 55 54 53 52 51
+				      50 49 48 47 46 45 44 43 42 41
+				      40 39 38 37 36 35 34 33 32 31
+				      30 29 28 27 26 25 24 23 22 21
+				      20 19 18 17 16 15 14 13 12 11
+				      10  9  8  7  6  5  4  3  2  1
+				       0>;
+		default-brightness-level = <50>;
+	};
 
 	lcd_panel: lcd-panel {
 		compatible = "panel-dpi";
 		enable-gpios = <&pinctrl RZG2L_GPIO(19, 1) GPIO_ACTIVE_LOW>;
 		power-supply = <&reg_3v3>;
-		// backlight = <&backlight>;
+		backlight = <&backlight>;
 		data-mapping = "rgb24";
 		status = "okay";
 
@@ -189,6 +188,17 @@
 		};
 	};
 
+	leds {
+		compatible = "gpio-leds";
+
+		module_led: module-led {
+			gpios = <&pinctrl RZG2L_GPIO(48, 2) GPIO_ACTIVE_LOW>;
+			label = "Heartbeat";
+			default-state = "on";
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
 	snd_rzg2l: sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
@@ -216,14 +226,6 @@
 	};
 };
 
-&audio_clk1 {
-	clock-frequency = <26000000>;
-};
-
-&audio_clk2 {
-	clock-frequency = <26000000>;
-};
-
 &du {
 	status = "okay";
 };
@@ -232,14 +234,13 @@
 	remote-endpoint = <&lcd_panel_in>;
 };
 
-// TODO: Pwm feature currently missing
-// &gpt3 {
-// 	pinctrl-0 = <&gpt3_pins>;
-// 	pinctrl-names = "default";
-// 	channel="channel_B";
-// 	//conflict pin with SD1 WP
-// 	status = "okay";
-// };
+&gpt3 {
+	pinctrl-names = "default";
+	// has conflict with SD1 WP pin
+	pinctrl-0 = <&gpt3_pins>;
+	channel="channel_B";
+	status = "okay";
+};
 
 &i2c1 {
 	polytouch: edt-ft5x06@38 {
@@ -269,17 +270,8 @@
 };
 
 &pinctrl {
-	pinctrl-0 = <&sound_clk_pins>;
-	pinctrl-names = "default";
-
-	// TODO: Pwm currently not supported
-	// gpt3_pins: gpt3 {
-	// 	groups = "gpt3_b_b";
-	// 	function = "gpt3";
-	// };
-
-	sound_clk_pins: sound_clk {
-		pins = "AUDIO_CLK1", "AUDIO_CLK2";
-		output-enable;
+	gpt3_pins: gpt3-pins {
+		pinmux = <RZG2L_PORT_PINMUX(41, 0, 4)>, /* Channel A */
+			 <RZG2L_PORT_PINMUX(41, 1, 4)>; /* Channel B */
 	};
 };
