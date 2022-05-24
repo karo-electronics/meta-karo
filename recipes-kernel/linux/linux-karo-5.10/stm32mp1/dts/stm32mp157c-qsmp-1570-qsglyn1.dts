@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2022 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+#include "stm32mp157c-qsmp-1570.dts"
+#include "stm32mp15-karo-qsbase1.dtsi"
+#include "stm32mp15-qsmp-lcd-panel.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSGLYN1 baseboard";
+};
+
+&gpu {
+	status = "okay";
+};
+
+&i2c6 {
+	/delete-node/ touchpanel@38;
+
+	polytouch: touchpanel@41 {
+		compatible = "ilitek,ili2130";
+		reg = <0x41>;
+		interrupt-parent = <&gpiod>;
+		interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
+		wakeup-source;
+		status = "okay";
+	};
+};
+
+&phy0 {
+	rxd0-skew-ps = <(420 + 6)>;
+	rxd1-skew-ps = <(420 + 5)>;
+	rxd2-skew-ps = <(420 - 1)>;
+	rxd3-skew-ps = <(420 - 22)>;
+	txd0-skew-ps = <(420 - 103)>;
+	txd1-skew-ps = <(420 - 104)>;
+	txd2-skew-ps = <(420 - 73)>;
+	txd3-skew-ps = <(420 - 25)>;
+	txen-skew-ps = <(420 + 15)>;
+	rxdv-skew-ps = <(420 - 12)>;
+	rxc-skew-ps = <(900 + 0)>;
+	txc-skew-ps = <(900 + 1000)>;
+};
