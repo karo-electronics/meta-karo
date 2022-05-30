@@ -278,78 +278,83 @@
 };
 
 &pinctrl {
-	can1_pins: can1 {
-		pinmux = <RZG2L_PORT_PINMUX(46, 0, 3)>, /* TX */
-			 <RZG2L_PORT_PINMUX(46, 1, 3)>; /* RX */
+	can1_pins: can1grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(46, 0, 3)	/* TX */
+			  RZG2L_PORT_PINMUX(46, 1, 3)	/* RX */
+		>;
 	};
 
-	du_pins: du {
-		pinmux = <RZG2L_PORT_PINMUX(7, 2, 1)>, /* DISP_DATA0 */
-			 <RZG2L_PORT_PINMUX(8, 0, 1)>,  /* DISP_DATA1 */
-			 <RZG2L_PORT_PINMUX(8, 1, 1)>, /* DISP_DATA2 */
-			 <RZG2L_PORT_PINMUX(8, 2, 1)>, /* DISP_DATA3 */
-			 <RZG2L_PORT_PINMUX(9, 0, 1)>, /* DISP_DATA4 */
-			 <RZG2L_PORT_PINMUX(9, 1, 1)>, /* DISP_DATA5 */
-			 <RZG2L_PORT_PINMUX(10, 0, 1)>, /* DISP_DATA6 */
-			 <RZG2L_PORT_PINMUX(10, 1, 1)>, /* DISP_DATA7 */
-			 <RZG2L_PORT_PINMUX(11, 0, 1)>, /* DISP_DATA8 */
-			 <RZG2L_PORT_PINMUX(11, 1, 1)>, /* DISP_DATA9 */
-			 <RZG2L_PORT_PINMUX(12, 0, 1)>, /* DISP_DATA10 */
-			 <RZG2L_PORT_PINMUX(12, 1, 1)>, /* DISP_DATA11 */
-			 <RZG2L_PORT_PINMUX(13, 0, 1)>, /* DISP_DATA12 */
-			 <RZG2L_PORT_PINMUX(13, 1, 1)>, /* DISP_DATA13 */
-			 <RZG2L_PORT_PINMUX(13, 2, 1)>, /* DISP_DATA14 */
-			 <RZG2L_PORT_PINMUX(14, 0, 1)>, /* DISP_DATA15 */
-			 <RZG2L_PORT_PINMUX(14, 1, 1)>, /* DISP_DATA16 */
-			 <RZG2L_PORT_PINMUX(15, 0, 1)>, /* DISP_DATA17 */
-			 <RZG2L_PORT_PINMUX(15, 1, 1)>, /* DISP_DATA18 */
-			 <RZG2L_PORT_PINMUX(16, 0, 1)>, /* DISP_DATA19 */
-			 <RZG2L_PORT_PINMUX(16, 1, 1)>, /* DISP_DATA20 */
-			 <RZG2L_PORT_PINMUX(17, 0, 1)>, /* DISP_DATA21 */
-			 <RZG2L_PORT_PINMUX(17, 1, 1)>, /* DISP_DATA22 */
-			 <RZG2L_PORT_PINMUX(17, 2, 1)>, /* DISP_DATA23 */
-			 <RZG2L_PORT_PINMUX(6, 1, 1)>, /* DISP_HSYNC */
-			 <RZG2L_PORT_PINMUX(7, 0, 1)>, /* DISP_VSYNC */
-			 <RZG2L_PORT_PINMUX(7, 1, 1)>, /* DISP_DE */
-			 <RZG2L_PORT_PINMUX(6, 0, 1)>; /* DISP_CLK */
+	du_pins: dugrp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(7, 2, 1)	/* DISP_DATA0 */
+			  RZG2L_PORT_PINMUX(8, 0, 1)	/* DISP_DATA1 */
+			  RZG2L_PORT_PINMUX(8, 1, 1)	/* DISP_DATA2 */
+			  RZG2L_PORT_PINMUX(8, 2, 1)	/* DISP_DATA3 */
+			  RZG2L_PORT_PINMUX(9, 0, 1)	/* DISP_DATA4 */
+			  RZG2L_PORT_PINMUX(9, 1, 1)	/* DISP_DATA5 */
+			  RZG2L_PORT_PINMUX(10, 0, 1)	/* DISP_DATA6 */
+			  RZG2L_PORT_PINMUX(10, 1, 1)	/* DISP_DATA7 */
+			  RZG2L_PORT_PINMUX(11, 0, 1)	/* DISP_DATA8 */
+			  RZG2L_PORT_PINMUX(11, 1, 1)	/* DISP_DATA9 */
+			  RZG2L_PORT_PINMUX(12, 0, 1)	/* DISP_DATA10 */
+			  RZG2L_PORT_PINMUX(12, 1, 1)	/* DISP_DATA11 */
+			  RZG2L_PORT_PINMUX(13, 0, 1)	/* DISP_DATA12 */
+			  RZG2L_PORT_PINMUX(13, 1, 1)	/* DISP_DATA13 */
+			  RZG2L_PORT_PINMUX(13, 2, 1)	/* DISP_DATA14 */
+			  RZG2L_PORT_PINMUX(14, 0, 1)	/* DISP_DATA15 */
+			  RZG2L_PORT_PINMUX(14, 1, 1)	/* DISP_DATA16 */
+			  RZG2L_PORT_PINMUX(15, 0, 1)	/* DISP_DATA17 */
+			  RZG2L_PORT_PINMUX(15, 1, 1)	/* DISP_DATA18 */
+			  RZG2L_PORT_PINMUX(16, 0, 1)	/* DISP_DATA19 */
+			  RZG2L_PORT_PINMUX(16, 1, 1)	/* DISP_DATA20 */
+			  RZG2L_PORT_PINMUX(17, 0, 1)	/* DISP_DATA21 */
+			  RZG2L_PORT_PINMUX(17, 1, 1)	/* DISP_DATA22 */
+			  RZG2L_PORT_PINMUX(17, 2, 1)	/* DISP_DATA23 */
+			  RZG2L_PORT_PINMUX(6, 1, 1)	/* DISP_HSYNC */
+			  RZG2L_PORT_PINMUX(7, 0, 1)	/* DISP_VSYNC */
+			  RZG2L_PORT_PINMUX(7, 1, 1)	/* DISP_DE */
+			  RZG2L_PORT_PINMUX(6, 0, 1)	/* DISP_CLK */
+		>;
 	};
 
-	eth0_pins: eth0 {
-		pinmux = <RZG2L_PORT_PINMUX(28, 1, 1)>, /* ET0_LINKSTA */
-			 <RZG2L_PORT_PINMUX(27, 1, 1)>, /* ET0_MDC */
-			 <RZG2L_PORT_PINMUX(28, 0, 1)>, /* ET0_MDIO */
-			 <RZG2L_PORT_PINMUX(20, 0, 1)>, /* ET0_TXC */
-			 <RZG2L_PORT_PINMUX(20, 1, 1)>, /* ET0_TX_CTL */
-			 <RZG2L_PORT_PINMUX(20, 2, 1)>, /* ET0_TXD0 */
-			 <RZG2L_PORT_PINMUX(21, 0, 1)>, /* ET0_TXD1 */
-			 <RZG2L_PORT_PINMUX(21, 1, 1)>, /* ET0_TXD2 */
-			 <RZG2L_PORT_PINMUX(22, 0, 1)>, /* ET0_TXD3 */
-			 <RZG2L_PORT_PINMUX(24, 0, 1)>, /* ET0_RXC */
-			 <RZG2L_PORT_PINMUX(24, 1, 1)>, /* ET0_RX_CTL */
-			 <RZG2L_PORT_PINMUX(25, 0, 1)>, /* ET0_RXD0 */
-			 <RZG2L_PORT_PINMUX(25, 1, 1)>, /* ET0_RXD1 */
-			 <RZG2L_PORT_PINMUX(26, 0, 1)>, /* ET0_RXD2 */
-			 <RZG2L_PORT_PINMUX(26, 1, 1)>; /* ET0_RXD3 */
+	eth0_pins: eth0grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(28, 1, 1)	/* ET0_LINKSTA */
+			  RZG2L_PORT_PINMUX(27, 1, 1)	/* ET0_MDC */
+			  RZG2L_PORT_PINMUX(28, 0, 1)	/* ET0_MDIO */
+			  RZG2L_PORT_PINMUX(20, 0, 1)	/* ET0_TXC */
+			  RZG2L_PORT_PINMUX(20, 1, 1)	/* ET0_TX_CTL */
+			  RZG2L_PORT_PINMUX(20, 2, 1)	/* ET0_TXD0 */
+			  RZG2L_PORT_PINMUX(21, 0, 1)	/* ET0_TXD1 */
+			  RZG2L_PORT_PINMUX(21, 1, 1)	/* ET0_TXD2 */
+			  RZG2L_PORT_PINMUX(22, 0, 1)	/* ET0_TXD3 */
+			  RZG2L_PORT_PINMUX(24, 0, 1)	/* ET0_RXC */
+			  RZG2L_PORT_PINMUX(24, 1, 1)	/* ET0_RX_CTL */
+			  RZG2L_PORT_PINMUX(25, 0, 1)	/* ET0_RXD0 */
+			  RZG2L_PORT_PINMUX(25, 1, 1)	/* ET0_RXD1 */
+			  RZG2L_PORT_PINMUX(26, 0, 1)	/* ET0_RXD2 */
+			  RZG2L_PORT_PINMUX(26, 1, 1)	/* ET0_RXD3 */
+		>;
 	};
 
-	i2c0_pins: i2c0 {
+	i2c0_pins: i2c0grp {
 		pins = "RIIC0_SDA", "RIIC0_SCL";
 		input-enable;
 	};
 
-	i2c1_pins: i2c1 {
+	i2c1_pins: i2c1grp {
 		pins = "RIIC1_SDA", "RIIC1_SCL";
 		input-enable;
 	};
 
-	i2c3_pins: i2c3 {
-		pinmux = <RZG2L_PORT_PINMUX(18, 0, 3)>, /* SDA */
-			 <RZG2L_PORT_PINMUX(18, 1, 3)>; /* SCL */
-	};
-
-	scif0_pins: scif0 {
-		pinmux = <RZG2L_PORT_PINMUX(38, 0, 1)>,	/* TxD */
-			 <RZG2L_PORT_PINMUX(38, 1, 1)>;	/* RxD */
+	scif0_pins: scif0grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(38, 0, 1)	/* TxD */
+			  RZG2L_PORT_PINMUX(38, 1, 1)	/* RxD */
+			  RZG2L_PORT_PINMUX(39, 1, 1)	/* CTS# */
+			  RZG2L_PORT_PINMUX(39, 2, 1)	/* RTS# */
+ 		>;
 	};
 
 	scif1_pins: scif1grp {
@@ -361,84 +366,66 @@
 		>;
 	};
 
-	scif2_pins: scif2 {
-		pinmux = <RZG2L_PORT_PINMUX(48, 0, 1)>, /* TxD */
-			 <RZG2L_PORT_PINMUX(48, 1, 1)>, /* RxD */
-			 <RZG2L_PORT_PINMUX(48, 3, 1)>, /* CTS# */
-			 <RZG2L_PORT_PINMUX(48, 4, 1)>; /* RTS# */
+	scif2_pins: scif2grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(48, 0, 1)	/* TxD */
+			  RZG2L_PORT_PINMUX(48, 1, 1)	/* RxD */
+			  RZG2L_PORT_PINMUX(48, 3, 1)	/* CTS# */
+			  RZG2L_PORT_PINMUX(48, 4, 1)	/* RTS# */
+		>;
 	};
 
-	sd0_pwr_en {
-		gpio-hog;
-		gpios = <RZG2L_GPIO(4, 1) GPIO_ACTIVE_HIGH>;
-		output-high;
-		line-name = "sd0_pwr_en";
-	};
-
-	sdhi0_emmc_pins: sd0emmc {
-		sd0_emmc_data {
+	sdhi0_emmc_pins: sd0-emmcgrp {
+		sd0-emmc-data {
 			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3",
 			       "SD0_DATA4", "SD0_DATA5", "SD0_DATA6", "SD0_DATA7";
 			power-source = <1800>;
 		};
 
-		sd0_emmc_ctrl {
+		sd0-emmc-ctrl {
 			pins = "SD0_CLK", "SD0_CMD";
 			power-source = <1800>;
 		};
 
-		sd0_emmc_rst {
+		sd0-emmc-rst {
 			pins = "SD0_RST#";
 			power-source = <1800>;
 		};
 	};
 
-	sd1-pwr-en-hog {
-		gpio-hog;
-		gpios = <RZG2L_GPIO(39, 2) GPIO_ACTIVE_HIGH>;
-		output-high;
-		line-name = "sd1_pwr_en";
-	};
-
-	sdhi1_pins: sd1 {
-		sd1_data {
+	sdhi1_pins: sd1grp {
+		sd1-data {
 			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
 			power-source = <3300>;
 		};
 
-		sd1_ctrl {
+		sd1-ctrl {
 			pins = "SD1_CLK", "SD1_CMD";
 			power-source = <3300>;
 		};
 	};
 
-	sdhi1_pins_uhs: sd1_uhs {
-		sd1_data_uhs {
-			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
-			power-source = <1800>;
-		};
-
-		sd1_ctrl_uhs {
-			pins = "SD1_CLK", "SD1_CMD";
-			power-source = <1800>;
-		};
+	ssi0_pins: ssi0grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(45, 0, 1)	/* BCK */
+			  RZG2L_PORT_PINMUX(45, 1, 1)	/* RCK */
+			  RZG2L_PORT_PINMUX(45, 2, 1)	/* TXD */
+			  RZG2L_PORT_PINMUX(45, 3, 1)	/* RXD */
+		>;
 	};
 
-	ssi0_pins: ssi0 {
-		pinmux = <RZG2L_PORT_PINMUX(45, 0, 1)>, /* BCK */
-			 <RZG2L_PORT_PINMUX(45, 1, 1)>, /* RCK */
-			 <RZG2L_PORT_PINMUX(45, 2, 1)>, /* TXD */
-			 <RZG2L_PORT_PINMUX(45, 3, 1)>; /* RXD */
+	usb0_pins: usb0grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(4, 0, 1)	/* VBUS */
+			  RZG2L_PORT_PINMUX(5, 0, 1)	/* OVC */
+			  //RZG2L_PORT_PINMUX(5, 1, 1)	/* OTG_ID */
+		>;
 	};
 
-	usb0_pins: usb0 {
-		pinmux = <RZG2L_PORT_PINMUX(4, 0, 1)>, /* VBUS */
-			 <RZG2L_PORT_PINMUX(5, 0, 1)>; /* OVC */
-			//  <RZG2L_PORT_PINMUX(5, 1, 1)>; /* OTG_ID */
-	};
-
-	usb1_pins: usb1 {
-		pinmux = <RZG2L_PORT_PINMUX(42, 0, 1)>, /* VBUS */
-			 <RZG2L_PORT_PINMUX(42, 1, 1)>; /* OVC */
+	usb1_pins: usb1grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(42, 0, 1)	/* VBUS */
+			  RZG2L_PORT_PINMUX(42, 1, 1)	/* OVC */
+		>;
 	};
 };
