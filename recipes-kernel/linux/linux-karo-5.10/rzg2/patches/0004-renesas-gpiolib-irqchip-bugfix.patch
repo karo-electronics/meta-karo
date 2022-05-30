@@ -1,0 +1,12 @@
+diff --git a/drivers/pinctrl/renesas/Kconfig b/drivers/pinctrl/renesas/Kconfig
+index b13cc952067d..09c30a786f80 100644
+--- a/drivers/pinctrl/renesas/Kconfig
++++ b/drivers/pinctrl/renesas/Kconfig
+@@ -178,6 +178,7 @@ config PINCTRL_RZG2L
+ 	bool "pin control support for RZ/{G2L,V2L}" if COMPILE_TEST
+ 	depends on OF
+ 	select GPIOLIB
++	select GPIOLIB_IRQCHIP
+ 	select GENERIC_PINCTRL_GROUPS
+ 	select GENERIC_PINMUX_FUNCTIONS
+ 	select GENERIC_PINCONF
