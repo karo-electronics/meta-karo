@@ -23,3 +23,5 @@ KARO_BASEBOARD_mx6 = ""
 DTB_BASENAME_mx6dl ?= "imx6dl-${MACHINE}"
 DTB_BASENAME_mx6q ?= "imx6q-${MACHINE}"
 DTB_BASENAME_mx6ul ?= "imx6ul-${MACHINE}"
+
+KERNEL_DEVICETREE_append = "${@ " ${DTB_BASENAME}-${KARO_BASEBOARD}.dtb" if "${KARO_BASEBOARD}" != "" else ""}"

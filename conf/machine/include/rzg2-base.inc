@@ -15,4 +15,5 @@ MACHINE_FEATURES_append = " emmc"
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySC0"
 
-DTB_BASENAME ?= "renesas/r9a07g044l2-${MACHINE}"
+DTB_BASENAME ?= "r9a07g044l2-${MACHINE}"
+KERNEL_DEVICETREE_append = "${@ " renesas/${DTB_BASENAME}-${KARO_BASEBOARD}.dtb" if "${KARO_BASEBOARD}" != "" else ""}"
