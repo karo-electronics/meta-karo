@@ -12,6 +12,8 @@ DEPENDS_append = " bc-native bison-native xxd-native"
 RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
 RDEPENDS_${PN}_append_rzg2 = " tf-a-rzg2"
 
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/env:"
+
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
 SRCBRANCH_mx6 = "master"
@@ -35,7 +37,7 @@ LOCALVERSION ??= "+karo"
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
-UBOOT_ENV_FILE ?= "${@ "%s%s_env.txt" % (d.getVar('MACHINE'), "-" + d.getVar('KARO_BASEBOARD')) if d.getVar('KARO_BASEBOARD') != "" else ""}"
+UBOOT_ENV_FILE ?= "${@ "${MACHINE}-${KARO_BASEBOARD}_env.txt" if "${KARO_BASEBOARD}" != "" else "${MACHINE}_env.txt"}"
 UBOOT_ENV_FILE_mx6 = ""
 
 SRC_URI_append_mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
@@ -64,7 +66,7 @@ do_configure_append() {
 CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
 CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
 EOF
-            oe_runmake -C ${c} oldconfig
+                oe_runmake -C ${c} oldconfig
             done
         else
             cat <<EOF >> "${B}/.config"
