@@ -13,7 +13,7 @@ KERNEL_IMAGETYPE ?= "Image"
 MACHINE_FEATURES_append = " emmc"
 
 # Set Serial consoles
-SERIAL_CONSOLES ?= "115200;ttySC0"
+SERIAL_CONSOLES ?= "115200;ttySC0 115200;ttySC1 115200;ttySC2"
 
 DTB_BASENAME ?= "r9a07g044l2-${MACHINE}"
 KERNEL_DEVICETREE_append = "${@ " renesas/${DTB_BASENAME}-${KARO_BASEBOARD}.dtb" if "${KARO_BASEBOARD}" != "" else ""}"
