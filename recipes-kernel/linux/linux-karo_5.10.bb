@@ -9,15 +9,15 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 SRCBRANCH = "linux-5.10.y"
 SRCREV = "v5.10.61"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+KERNEL_SRC_rzg2 = "git://github.com/renesas-rz/rz_linux-cip.git"
 FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
 PROVIDES += "linux"
 
-SRC_URI = "${KERNEL_SRC};protocol=git;branch=${SRCBRANCH}"
+SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
 
 SRCBRANCH_rzg2 = "rz-5.10-cip1"
 SRCREV_rzg2 = "6598999af2323a9344d8513f56b509fec114ac6b"
-SRC_URI_rzg2 = "git://github.com/renesas-rz/rz_linux-cip.git;protocol=https;branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI_append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
