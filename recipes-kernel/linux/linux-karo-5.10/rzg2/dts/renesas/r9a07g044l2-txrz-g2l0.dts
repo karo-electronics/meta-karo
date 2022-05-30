@@ -17,11 +17,11 @@
 	aliases {
 		i2c0 = &i2c0;
 		i2c1 = &i2c1;
-		i2c3 = &i2c3;
 		emmc = &sdhi0;
 		sdcard = &sdhi1;
 		ethernet = &eth0;
 		serial0 = &scif0;
+		serial1 = &scif1;
 		serial2 = &scif2;
 		usb-otg = &usb2_phy0;
 		usb-host = &usb2_phy1;
@@ -109,28 +109,14 @@
 		regulator-max-microvolt = <5000000>;
 	};
 
-	vccq_sdhi1: regulator-vccq-sdhi1 {
-		compatible = "regulator-gpio";
-
-		regulator-name = "SDHI1 VccQ";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <3300000>;
-
-		gpios = <&pinctrl RZG2L_GPIO(39, 1) GPIO_ACTIVE_HIGH>;
-
-		gpios-states = <1>;
-		states = <3300000 1
-			  1800000 0>;
-	};
-
 	vspm_if {
 		compatible = "renesas,vspm_if";
 	};
 };
 
 &canfd {
-	pinctrl-0 = <&can1_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&can1_pins>;
 	status = "okay";
 
 	// channel 0 conflicts with LCD pins
@@ -140,8 +126,8 @@
 };
 
 &du {
-	pinctrl-0 = <&du_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&du_pins>;
 };
 
 &ehci1 {
@@ -149,8 +135,8 @@
 };
 
 &eth0 {
-	pinctrl-0 = <&eth0_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_pins>;
 	phy-handle = <&phy0>;
 	phy-mode = "mii";
 	status = "okay";
@@ -176,20 +162,19 @@
 };
 
 &i2c0 {
-	pinctrl-0 = <&i2c0_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
 	status = "okay";
+
+	rtc: rtc@6f {
+		compatible = "microchip,mcp7940x";
+		reg = <0x6f>;
+	};
 };
 
 &i2c1 {
+	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1_pins>;
-	pinctrl-names = "default";
-	status = "okay";
-};
-
-&i2c3 {
-	pinctrl-0 = <&i2c3_pins>;
-	pinctrl-names = "default";
 	status = "okay";
 };
 
@@ -211,22 +196,30 @@
 };
 
 &scif0 {
-	pinctrl-0 = <&scif0_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&scif0_pins>;
+	uart-has-rtscts;
+	status = "okay";
+};
+
+&scif1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&scif1_pins>;
+	uart-has-rtscts;
 	status = "okay";
 };
 
 &scif2 {
-	pinctrl-0 = <&scif2_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&scif2_pins>;
 	uart-has-rtscts;
 	status = "okay";
 };
 
 &sdhi0 {
+	pinctrl-names = "default", "state_uhs";
 	pinctrl-0 = <&sdhi0_emmc_pins>;
 	pinctrl-1 = <&sdhi0_emmc_pins>;
-	pinctrl-names = "default", "state_uhs";
 
 	vmmc-supply = <&reg_3v3>;
 	vqmmc-supply = <&reg_1v8>;
@@ -238,36 +231,34 @@
 };
 
 &sdhi1 {
-	pinctrl-0 = <&sdhi1_pins>;
-	pinctrl-1 = <&sdhi1_pins_uhs>;
 	pinctrl-names = "default", "state_uhs";
+	pinctrl-0 = <&sdhi1_pins>;
+	pinctrl-1 = <&sdhi1_pins>;
 
 	vmmc-supply = <&reg_3v3>;
-	vqmmc-supply = <&vccq_sdhi1>;
+	vqmmc-supply = <&reg_3v3>;
 	cd-gpios = <&pinctrl RZG2L_GPIO(19, 0) GPIO_ACTIVE_LOW>;
 	bus-width = <4>;
-	sd-uhs-sdr50;
-	sd-uhs-sdr104;
 	status = "okay";
 };
 
 &ssi0 {
-	pinctrl-0 = <&ssi0_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&ssi0_pins>;
 };
 
 // otg
 &usb2_phy0 {
-	pinctrl-0 = <&usb0_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&usb0_pins>;
 	vbus-supply = <&usb0_vbus_otg>;
 	status = "okay";
 };
 
 // host
 &usb2_phy1 {
-	pinctrl-0 = <&usb1_pins>;
 	pinctrl-names = "default";
+	pinctrl-0 = <&usb1_pins>;
 	status = "okay";
 };
 
@@ -359,6 +350,15 @@
 	scif0_pins: scif0 {
 		pinmux = <RZG2L_PORT_PINMUX(38, 0, 1)>,	/* TxD */
 			 <RZG2L_PORT_PINMUX(38, 1, 1)>;	/* RxD */
+	};
+
+	scif1_pins: scif1grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(40, 0, 1)	/* TxD */
+			  RZG2L_PORT_PINMUX(40, 1, 1)	/* RxD */
+			  RZG2L_PORT_PINMUX(41, 0, 1)	/* CTS# */
+			  RZG2L_PORT_PINMUX(41, 1, 1)	/* RTS# */
+		>;
 	};
 
 	scif2_pins: scif2 {

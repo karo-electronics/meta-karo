@@ -236,14 +236,13 @@
 
 &gpt3 {
 	pinctrl-names = "default";
-	// has conflict with SD1 WP pin
 	pinctrl-0 = <&gpt3_pins>;
-	channel="channel_B";
+	channel = "channel_B";
 	status = "okay";
 };
 
 &i2c1 {
-	polytouch: edt-ft5x06@38 {
+	polytouch: touch-controller@38 {
 		compatible = "edt,edt-ft5x06";
 		reg = <0x38>;
 		interrupt-parent = <&pinctrl>;
@@ -254,7 +253,7 @@
 		status = "okay";
 	};
 	
-	sgtl5000: sgtl5000@a {
+	sgtl5000: codec@a {
 		compatible = "fsl,sgtl5000";
 		#sound-dai-cells = <0>;
 		reg = <0x0a>;
