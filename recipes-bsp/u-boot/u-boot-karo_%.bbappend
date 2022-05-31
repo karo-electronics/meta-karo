@@ -24,3 +24,12 @@ SRC_URI_append_qsmp = " \
         file://qsmp-1510-qsbase2_env.txt;subdir=git/board/karo/txmp \
         file://qsmp-1510-qsbase4_env.txt;subdir=git/board/karo/txmp \
 "
+
+SRC_URI_append_rzg2l = " \
+        file://0001-dts-makefile.patch \
+"
+
+SRC_URI_append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
+        file://dts/${DTB_BASENAME}.dts;subdir=git/arch/arm \
+        file://dts/${DTB_BASENAME}-u-boot.dtsi;subdir=git/arch/arm \
+"}"
