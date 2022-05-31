@@ -12,7 +12,7 @@ DEPENDS_append = " bc-native bison-native xxd-native"
 RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
 RDEPENDS_${PN}_append_rzg2 = " tf-a-rzg2"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/env:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
@@ -51,6 +51,34 @@ SRC_URI_append = "${@ " \
 }"
 
 SRC_URI_append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
+
+SRC_URI_append = " file://${MACHINE}_defconfig.template"
+SRC_URI_append = "${@ "".join(map(lambda f: " file://u-boot-cfg.%s" % f, d.getVar('UBOOT_CONFIG').split()))}"
+
+do_configure_prepend() {
+    if [ -n "${UBOOT_CONFIG}" ];then
+        i=0
+        for config in ${UBOOT_MACHINE};do
+            i=$(expr $i + 1)
+            j=0
+            for type in ${UBOOT_CONFIG};do
+                j=$(expr $j + 1)
+                if [ $i -eq $j ];then
+                    c="$(echo "$config" | sed s/_config/_defconfig/)"
+                    cat "${WORKDIR}/${MACHINE}_defconfig.template" > "${S}/configs/${c}"
+                    if [ -s "${WORKDIR}/u-boot-cfg.${type}" ];then
+                        bbnote "Appending '$type' specific config to '${S}/configs/${c}'"
+                        cat "${WORKDIR}/u-boot-cfg.${type}" >> "${S}/configs/${c}"
+                    fi
+                fi
+            done
+            unset j
+        done
+        unset i
+    else
+        cat "${MACHINE}_defconfig.template" > "${S}/configs/${MACHINE}_defconfig"
+    fi
+}
 
 do_configure_append() {
     for f in ${UBOOT_FEATURES};do
