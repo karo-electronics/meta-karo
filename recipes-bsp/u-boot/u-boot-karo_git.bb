@@ -20,7 +20,7 @@ SRCBRANCH_mx6 = "master"
 SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
 
 SRCBRANCH_stm32mp1 = "karo-txmp"
-SRCREV_stm32mp1 = "69a0454b5bfeb566a400b7c9d3e11429970e3d43"
+SRCREV_stm32mp1 = "47bf7ab6e23a5bb7098ab25101f8e9bbdea17bdb"
 
 SRCBRANCH_rzg2 = "karo-txrz"
 SRCREV_rzg2 = "bce452e2301793c419d166f7831b4ec034d1d891"
