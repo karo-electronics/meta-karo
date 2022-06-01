@@ -4,12 +4,6 @@
  *
  */
 
-/ {
-	aliases {
-		display = &dsi_panel;
-	};
-};
-
 &dsi {
 	ports {
 		port@0 {
