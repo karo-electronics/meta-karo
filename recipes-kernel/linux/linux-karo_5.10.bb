@@ -61,6 +61,7 @@ SRC_URI_append_stm32mp1 = " \
         file://dts/stm32mp15-karo-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp15-karo-qsbase1.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp15-karo-qsbase2.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp15-karo-qsbase4.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp15-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp15-qsmp-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp15-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
