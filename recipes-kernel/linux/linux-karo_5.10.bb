@@ -27,6 +27,7 @@ SRC_URI_append = " \
         ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
         file://0001-display-support.patch \
         file://0002-panel-dpi-bus-format.patch \
+        file://0003-smsc-lan8741-support.patch \
         file://0007-stm32cryp-dependencies.patch \
         file://0010-attiny-regulator-i2c-retries.patch \
         file://0011-stm-drv-preferred-depth.patch \
