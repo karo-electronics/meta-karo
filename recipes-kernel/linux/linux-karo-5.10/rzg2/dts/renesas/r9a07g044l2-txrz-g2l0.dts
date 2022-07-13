@@ -19,7 +19,7 @@
 		i2c1 = &i2c1;
 		emmc = &sdhi0;
 		sdcard = &sdhi1;
-		ethernet = &eth0;
+		ethernet0 = &eth0;
 		serial0 = &scif0;
 		serial1 = &scif1;
 		serial2 = &scif2;
@@ -136,7 +136,7 @@
 
 &eth0 {
 	pinctrl-names = "default";
-	pinctrl-0 = <&eth0_pins>;
+	pinctrl-0 = <&eth0_mii_pins>;
 	phy-handle = <&phy0>;
 	phy-mode = "mii";
 	status = "okay";
@@ -144,7 +144,8 @@
 	phy0: phy@0 {
 		reg = <0>;
 		interrupt-parent = <&pinctrl>;
-		interrupts = <RZG2L_GPIO(1, 0) IRQ_TYPE_EDGE_FALLING>;
+		interrupts = <RZG2L_GPIO(22, 1) IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&pinctrl RZG2L_GPIO(28, 1) GPIO_ACTIVE_LOW>;
 	};
 };
 
@@ -318,9 +319,8 @@
 		>;
 	};
 
-	eth0_pins: eth0grp {
+	eth0_mii_pins: eth0grp {
 		pinmux = <
-		          RZG2L_PORT_PINMUX(28, 1, 1)	/* ET0_LINKSTA */
 			  RZG2L_PORT_PINMUX(27, 1, 1)	/* ET0_MDC */
 			  RZG2L_PORT_PINMUX(28, 0, 1)	/* ET0_MDIO */
 			  RZG2L_PORT_PINMUX(20, 0, 1)	/* ET0_TXC */
@@ -329,12 +329,14 @@
 			  RZG2L_PORT_PINMUX(21, 0, 1)	/* ET0_TXD1 */
 			  RZG2L_PORT_PINMUX(21, 1, 1)	/* ET0_TXD2 */
 			  RZG2L_PORT_PINMUX(22, 0, 1)	/* ET0_TXD3 */
-			  RZG2L_PORT_PINMUX(24, 0, 1)	/* ET0_RXC */
+			  RZG2L_PORT_PINMUX(24, 0, 1)	/* ET0_RXC/PHYAD1 (PD) */
 			  RZG2L_PORT_PINMUX(24, 1, 1)	/* ET0_RX_CTL */
-			  RZG2L_PORT_PINMUX(25, 0, 1)	/* ET0_RXD0 */
-			  RZG2L_PORT_PINMUX(25, 1, 1)	/* ET0_RXD1 */
-			  RZG2L_PORT_PINMUX(26, 0, 1)	/* ET0_RXD2 */
-			  RZG2L_PORT_PINMUX(26, 1, 1)	/* ET0_RXD3 */
+			  RZG2L_PORT_PINMUX(25, 0, 1)	/* ET0_RXD0/MODE0 (PU) */
+			  RZG2L_PORT_PINMUX(25, 1, 1)	/* ET0_RXD1/MODE1 (PU) */
+			  RZG2L_PORT_PINMUX(26, 0, 1)	/* ET0_RXD2/RMIISEL (PD) */
+			  RZG2L_PORT_PINMUX(26, 1, 1)	/* ET0_RXD3/PHYAD2 (PD) */
+			  RZG2L_PORT_PINMUX(27, 0, 1)	/* ET0_RX_ERR/PHYAD0 (PD) */
+			  RZG2L_PORT_PINMUX(23, 0, 1)	/* ET0_TX_COL/MODE2 (PU) */
 		>;
 	};
 

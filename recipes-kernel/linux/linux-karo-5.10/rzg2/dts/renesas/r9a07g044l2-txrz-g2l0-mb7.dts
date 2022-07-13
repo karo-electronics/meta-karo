@@ -41,7 +41,7 @@
 
 	lcd_panel: lcd-panel {
 		compatible = "panel-dpi";
-		enable-gpios = <&pinctrl RZG2L_GPIO(19, 1) GPIO_ACTIVE_LOW>;
+		enable-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
 		power-supply = <&reg_3v3>;
 		backlight = <&backlight>;
 		data-mapping = "rgb24";
@@ -270,7 +270,6 @@
 
 &pinctrl {
 	gpt3_pins: gpt3-pins {
-		pinmux = <RZG2L_PORT_PINMUX(41, 0, 4)>, /* Channel A */
-			 <RZG2L_PORT_PINMUX(41, 1, 4)>; /* Channel B */
+		pinmux = <RZG2L_PORT_PINMUX(19, 1, 1)>; /* Channel B */
 	};
 };
