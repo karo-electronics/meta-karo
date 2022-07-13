@@ -3,7 +3,7 @@ Index: linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15-pinctrl-z.dtsi
 --- /dev/null
 +++ linux-dunfell-5.10.10/arch/arm/boot/dts/stm32mp15-pinctrl-z.dtsi
 @@ -0,0 +1,87 @@
-+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
++// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
 +/*
 + * Copyright (C) 2021 Lothar Waßmann <LW@KARO-electronics.de>
 + */
