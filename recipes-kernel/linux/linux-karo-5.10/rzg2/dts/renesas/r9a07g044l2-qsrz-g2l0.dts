@@ -1,0 +1,366 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Device Tree Source for the RZG2L based Ka-Ro QSRZ-G2L0 CoM
+ *
+ * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ */
+
+/dts-v1/;
+#include "r9a07g044l2.dtsi"
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based QSRZ-G2L0 CoM";
+	compatible = "renesas,r9a07g044l2", "renesas,r9a07g044";
+
+	aliases {
+		i2c0 = &i2c0;
+		i2c1 = &i2c1;
+		emmc = &sdhi0;
+		serial0 = &scif0;
+		serial1 = &scif1;
+		serial2 = &scif2;
+		usb-otg = &usb2_phy0;
+		usb-host = &usb2_phy1;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x18000000>;
+	};
+
+	mmngr {
+		compatible = "renesas,mmngr";
+		memory-region = <&mmp_reserved>;
+	};
+
+	mmngrbuf {
+		compatible = "renesas,mmngrbuf";
+	};
+
+	reg_1v1: regulator-vdd-core {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-1.1V";
+		regulator-min-microvolt = <1100000>;
+		regulator-max-microvolt = <1100000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reg_1v8: regulator-1v8 {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-1.8V";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reg_2v5: regulator-2v5 {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-2.5V";
+		regulator-min-microvolt = <2500000>;
+		regulator-max-microvolt = <2500000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reg_3v3: regulator-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "fixed-3.3V";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		reserved: linux,cma@5c000000 {
+			compatible = "shared-dma-pool";
+			linux,cma-default;
+			reusable;
+			reg = <0x0 0x50000000 0x0 0x8000000>;
+		};
+
+		mmp_reserved: linux,multimedia {
+			compatible = "shared-dma-pool";
+			reusable;
+			reg = <0x00000000 0x58000000 0x0 0x8000000>;
+		};
+	};
+
+	usb0_vbus_otg: regulator-usb0-vbus-otg {
+		compatible = "regulator-fixed";
+
+		regulator-name = "USB0_VBUS_OTG";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+	};
+
+	vspm_if {
+		compatible = "renesas,vspm_if";
+	};
+};
+
+&canfd {
+	pinctrl-names = "default";
+	pinctrl-0 = <&can1_pins>;
+	status = "okay";
+
+	// channel 0 conflicts with LCD pins
+	channel1 {
+		status = "okay";
+	};
+};
+
+// &du {
+// 	pinctrl-names = "default";
+// 	pinctrl-0 = <&du_pins>;
+// };
+
+&ehci1 {
+	status = "okay";
+};
+
+&extal_clk {
+	clock-frequency = <24000000>;
+};
+
+&gpu {
+	mali-supply = <&reg_1v1>;
+};
+
+&hsusb {
+	dr_mode = "device";
+	status = "okay";
+};
+
+&i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
+	status = "okay";
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	status = "okay";
+};
+
+&mtu3 {
+	status = "okay";
+};
+
+&ohci0 {
+	dr_mode = "device";
+	status = "okay";
+};
+
+&ohci1 {
+	status = "okay";
+};
+
+&phyrst {
+	status = "okay";
+};
+
+&scif0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&scif0_pins>;
+	uart-has-rtscts;
+	status = "okay";
+};
+
+&scif1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&scif1_pins>;
+	uart-has-rtscts;
+	status = "okay";
+};
+
+&scif2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&scif2_pins>;
+	uart-has-rtscts;
+	status = "okay";
+};
+
+&sdhi0 {
+	pinctrl-names = "default", "state_uhs";
+	pinctrl-0 = <&sdhi0_emmc_pins>;
+	pinctrl-1 = <&sdhi0_emmc_pins>;
+
+	vmmc-supply = <&reg_3v3>;
+	vqmmc-supply = <&reg_1v8>;
+	bus-width = <8>;
+	mmc-hs200-1_8v;
+	non-removable;
+	fixed-emmc-driver-type = <1>;
+	status = "okay";
+};
+
+&ssi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ssi0_pins>;
+};
+
+// otg
+&usb2_phy0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb0_pins>;
+	vbus-supply = <&usb0_vbus_otg>;
+	status = "okay";
+};
+
+// host
+&usb2_phy1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&usb1_pins>;
+	status = "okay";
+};
+
+&wdt0 {
+	status = "okay";
+	timeout-sec = <60>;
+};
+
+&wdt1 {
+	status = "okay";
+	timeout-sec = <60>;
+};
+
+&wdt2 {
+	status = "okay";
+	timeout-sec = <60>;
+};
+
+&pinctrl {
+	can1_pins: can1grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(46, 0, 3)	/* TX */
+			  RZG2L_PORT_PINMUX(46, 1, 3)	/* RX */
+		>;
+	};
+
+	du_pins: dugrp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(7, 2, 1)	/* DISP_DATA0 */
+			  RZG2L_PORT_PINMUX(8, 0, 1)	/* DISP_DATA1 */
+			  RZG2L_PORT_PINMUX(8, 1, 1)	/* DISP_DATA2 */
+			  RZG2L_PORT_PINMUX(8, 2, 1)	/* DISP_DATA3 */
+			  RZG2L_PORT_PINMUX(9, 0, 1)	/* DISP_DATA4 */
+			  RZG2L_PORT_PINMUX(9, 1, 1)	/* DISP_DATA5 */
+			  RZG2L_PORT_PINMUX(10, 0, 1)	/* DISP_DATA6 */
+			  RZG2L_PORT_PINMUX(10, 1, 1)	/* DISP_DATA7 */
+			  RZG2L_PORT_PINMUX(11, 0, 1)	/* DISP_DATA8 */
+			  RZG2L_PORT_PINMUX(11, 1, 1)	/* DISP_DATA9 */
+			  RZG2L_PORT_PINMUX(12, 0, 1)	/* DISP_DATA10 */
+			  RZG2L_PORT_PINMUX(12, 1, 1)	/* DISP_DATA11 */
+			  RZG2L_PORT_PINMUX(13, 0, 1)	/* DISP_DATA12 */
+			  RZG2L_PORT_PINMUX(13, 1, 1)	/* DISP_DATA13 */
+			  RZG2L_PORT_PINMUX(13, 2, 1)	/* DISP_DATA14 */
+			  RZG2L_PORT_PINMUX(14, 0, 1)	/* DISP_DATA15 */
+			  RZG2L_PORT_PINMUX(14, 1, 1)	/* DISP_DATA16 */
+			  RZG2L_PORT_PINMUX(15, 0, 1)	/* DISP_DATA17 */
+			  RZG2L_PORT_PINMUX(15, 1, 1)	/* DISP_DATA18 */
+			  RZG2L_PORT_PINMUX(16, 0, 1)	/* DISP_DATA19 */
+			  RZG2L_PORT_PINMUX(16, 1, 1)	/* DISP_DATA20 */
+			  RZG2L_PORT_PINMUX(17, 0, 1)	/* DISP_DATA21 */
+			  RZG2L_PORT_PINMUX(17, 1, 1)	/* DISP_DATA22 */
+			  RZG2L_PORT_PINMUX(17, 2, 1)	/* DISP_DATA23 */
+			  RZG2L_PORT_PINMUX(6, 1, 1)	/* DISP_HSYNC */
+			  RZG2L_PORT_PINMUX(7, 0, 1)	/* DISP_VSYNC */
+			  RZG2L_PORT_PINMUX(7, 1, 1)	/* DISP_DE */
+			  RZG2L_PORT_PINMUX(6, 0, 1)	/* DISP_CLK */
+		>;
+	};
+
+	i2c0_pins: i2c0grp {
+		pins = "RIIC0_SDA", "RIIC0_SCL";
+		input-enable;
+	};
+
+	i2c1_pins: i2c1grp {
+		pins = "RIIC1_SDA", "RIIC1_SCL";
+		input-enable;
+	};
+
+	scif0_pins: scif0grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(38, 0, 1)	/* TxD */
+			  RZG2L_PORT_PINMUX(38, 1, 1)	/* RxD */
+			  RZG2L_PORT_PINMUX(39, 1, 1)	/* CTS# */
+			  RZG2L_PORT_PINMUX(39, 2, 1)	/* RTS# */
+ 		>;
+	};
+
+	scif1_pins: scif1grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(40, 0, 1)	/* TxD */
+			  RZG2L_PORT_PINMUX(40, 1, 1)	/* RxD */
+			  RZG2L_PORT_PINMUX(41, 0, 1)	/* CTS# */
+			  RZG2L_PORT_PINMUX(41, 1, 1)	/* RTS# */
+		>;
+	};
+
+	scif2_pins: scif2grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(48, 0, 1)	/* TxD */
+			  RZG2L_PORT_PINMUX(48, 1, 1)	/* RxD */
+			  RZG2L_PORT_PINMUX(48, 3, 1)	/* CTS# */
+			  RZG2L_PORT_PINMUX(48, 4, 1)	/* RTS# */
+		>;
+	};
+
+	sdhi0_emmc_pins: sd0-emmcgrp {
+		sd0-emmc-data {
+			pins = "SD0_DATA0", "SD0_DATA1", "SD0_DATA2", "SD0_DATA3",
+			       "SD0_DATA4", "SD0_DATA5", "SD0_DATA6", "SD0_DATA7";
+			power-source = <1800>;
+		};
+
+		sd0-emmc-ctrl {
+			pins = "SD0_CLK", "SD0_CMD";
+			power-source = <1800>;
+		};
+
+		sd0-emmc-rst {
+			pins = "SD0_RST#";
+			power-source = <1800>;
+		};
+	};
+
+	ssi0_pins: ssi0grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(45, 0, 1)	/* BCK */
+			  RZG2L_PORT_PINMUX(45, 1, 1)	/* RCK */
+			  RZG2L_PORT_PINMUX(45, 2, 1)	/* TXD */
+			  RZG2L_PORT_PINMUX(45, 3, 1)	/* RXD */
+		>;
+	};
+
+	usb0_pins: usb0grp {
+		pinmux = <
+		       	  RZG2L_PORT_PINMUX(4, 0, 1)	/* VBUS */
+			  RZG2L_PORT_PINMUX(5, 0, 1)	/* OVC */
+			  //RZG2L_PORT_PINMUX(5, 1, 1)	/* OTG_ID */
+		>;
+	};
+
+	usb1_pins: usb1grp {
+		pinmux = <
+		          RZG2L_PORT_PINMUX(42, 0, 1)	/* VBUS */
+			  RZG2L_PORT_PINMUX(42, 1, 1)	/* OVC */
+		>;
+	};
+};

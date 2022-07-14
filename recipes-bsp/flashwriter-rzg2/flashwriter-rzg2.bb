@@ -6,7 +6,7 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://github.com/karo-electronics/rzg2-flash-writer.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "karo-txrz"
-SRCREV = "61eeb2478d256da956fe1d9d383614b330978613"
+SRCREV = "4803e81f6c82b7b9fbf8fbc5ba2c1ebdc296098b"
 
 inherit deploy
 
@@ -15,6 +15,9 @@ S = "${WORKDIR}/git"
 do_compile() {
         if [ "${MACHINE}" = "txrz-g2l0" ]; then
                 BOARD="TXRZ";
+        fi
+        if [ "${MACHINE}" = "qsrz-g2l0" ]; then
+                BOARD="QSRZ";
         fi
         cd ${S}
 
@@ -25,7 +28,7 @@ do_install[noexec] = "1"
 
 do_deploy() {
         install -d ${DEPLOYDIR}
-        install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}
+        install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}/Flash_Writer_SCIF_${MACHINE}.mot
 }
 PARALLEL_MAKE = "-j 1"
 addtask deploy after do_compile

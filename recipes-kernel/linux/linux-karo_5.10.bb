@@ -16,8 +16,8 @@ PROVIDES += "linux"
 
 SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
 
-SRCBRANCH_rzg2 = "rz-5.10-cip1"
-SRCREV_rzg2 = "6598999af2323a9344d8513f56b509fec114ac6b"
+SRCBRANCH_rzg2 = "rz-5.10-cip3"
+SRCREV_rzg2 = "82f95c617eff879a0296e4b8d0160f38785b87ca"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI_append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
@@ -93,6 +93,8 @@ KERNEL_FEATURES_append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," ext
 KERNEL_FEATURES_append_mx6 = "${@bb.utils.contains('MACHINE_FEATURES',"nand"," nand.cfg","",d)}"
 KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," lvds.cfg"," lcd.cfg",d)}"
 KERNEL_FEATURES_append_tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"sata"," sata.cfg","",d)}"
+
+KERNEL_FEATURES_append_qsrz = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg"," dsi83.cfg",d)}"
 
 COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
 COMPATIBLE_MACHINE_txul = "(txul-.*)"

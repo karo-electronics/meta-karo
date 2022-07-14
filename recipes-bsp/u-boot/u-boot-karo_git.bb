@@ -23,7 +23,7 @@ SRCBRANCH_stm32mp1 = "karo-txmp"
 SRCREV_stm32mp1 = "47bf7ab6e23a5bb7098ab25101f8e9bbdea17bdb"
 
 SRCBRANCH_rzg2 = "karo-txrz"
-SRCREV_rzg2 = "bce452e2301793c419d166f7831b4ec034d1d891"
+SRCREV_rzg2 = "991fa4bcb3d8305ed24c0e9264a34623044c981e"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
@@ -42,7 +42,7 @@ UBOOT_ENV_FILE_mx6 = ""
 
 SRC_URI_append_mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
 SRC_URI_append_stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
-SRC_URI_append_txrz = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI_append_rzg2 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
 
 SRC_URI_append = "${@ " \
     file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}.dts;subdir=git/arch/arm \

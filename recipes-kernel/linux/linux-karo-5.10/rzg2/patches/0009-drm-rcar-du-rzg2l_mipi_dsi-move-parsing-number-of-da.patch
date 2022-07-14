@@ -1,0 +1,102 @@
+From 083565b4c5f63ad50408aa1e8fab335d092e9fc8 Mon Sep 17 00:00:00 2001
+From: hienhuynh <hien.huynh.px@renesas.com>
+Date: Thu, 9 Jun 2022 13:57:50 +0700
+Subject: [PATCH 3/4] drm: rcar-du: rzg2l_mipi_dsi: move parsing number of data
+ lanes to probing
+
+In some cases with MIPI DSI panel, number of data lanes are not parsed
+before calling "rzg2l_mipi_dsi_host_attach".
+So that it will return error and can not registered panel device.
+This commit is created to fix this issue by moving parsing number of
+data lanes part from "rzg2l_mipi_dsi_attach" to probing.
+
+Signed-off-by: hienhuynh <hien.huynh.px@renesas.com>
+---
+ drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c | 48 +++++++++++++++---------
+ 1 file changed, 30 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+index c745bc99ccbf..b5a4a13e2af9 100644
+--- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+@@ -978,10 +978,8 @@ static int rzg2l_mipi_dsi_parse_dt(struct rzg2l_mipi_dsi *mipi_dsi)
+ 	struct device_node *remote_input = NULL;
+ 	struct device_node *remote = NULL;
+ 	struct device_node *node;
+-	struct property *prop;
+ 	bool is_bridge = false;
+ 	int ret = 0;
+-	int len, num_lanes;
+ 
+ 	local_output = of_graph_get_endpoint_by_regs(mipi_dsi->dev->of_node,
+ 						     1, 0);
+@@ -1037,22 +1035,6 @@ static int rzg2l_mipi_dsi_parse_dt(struct rzg2l_mipi_dsi *mipi_dsi)
+ 		}
+ 	}
+ 
+-	prop = of_find_property(local_output, "data-lanes", &len);
+-	if (!prop) {
+-		mipi_dsi->num_data_lanes = 4;
+-		dev_dbg(mipi_dsi->dev, "Using default data lanes\n");
+-		goto done;
+-	}
+-
+-	num_lanes = len / sizeof(u32);
+-	if (num_lanes < 1 || num_lanes > 4) {
+-		dev_err(mipi_dsi->dev, "data lanes definition is not correct\n");
+-		ret = -EINVAL;
+-		goto done;
+-	}
+-
+-	mipi_dsi->num_data_lanes = num_lanes;
+-
+ done:
+ 	of_node_put(local_output);
+ 	of_node_put(remote_input);
+@@ -1137,6 +1119,9 @@ static int rzg2l_mipi_dsi_probe(struct platform_device *pdev)
+ 	struct rzg2l_mipi_dsi *mipi_dsi;
+ 	struct resource *mem;
+ 	int ret;
++	struct device_node *local_output = NULL;
++	struct property *prop;
++	int len, num_lanes;
+ 
+ 	mipi_dsi = devm_kzalloc(&pdev->dev, sizeof(*mipi_dsi), GFP_KERNEL);
+ 	if (mipi_dsi == NULL)
+@@ -1145,6 +1130,33 @@ static int rzg2l_mipi_dsi_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, mipi_dsi);
+ 	mipi_dsi->dev = dev;
+ 
++	local_output = of_graph_get_endpoint_by_regs(mipi_dsi->dev->of_node,
++						     1, 0);
++	if (!local_output) {
++		dev_dbg(mipi_dsi->dev, "unconnected port@1\n");
++		ret = -ENODEV;
++		of_node_put(local_output);
++		return ret;
++	}
++
++	prop = of_find_property(local_output, "data-lanes", &len);
++	if (!prop) {
++		mipi_dsi->num_data_lanes = 4;
++		dev_dbg(mipi_dsi->dev, "Using default data lanes\n");
++		of_node_put(local_output);
++		return ret;
++	}
++
++	num_lanes = len / sizeof(u32);
++	if (num_lanes < 1 || num_lanes > 4) {
++		dev_err(mipi_dsi->dev, "data lanes definition is not correct\n");
++		ret = -EINVAL;
++		of_node_put(local_output);
++		return ret;
++	}
++
++	mipi_dsi->num_data_lanes = num_lanes;
++
+ 	/* Init bridge */
+ 	mipi_dsi->bridge.driver_private = mipi_dsi;
+ 	mipi_dsi->bridge.funcs = &rzg2l_mipi_dsi_bridge_ops;
+-- 
+2.28.0
+

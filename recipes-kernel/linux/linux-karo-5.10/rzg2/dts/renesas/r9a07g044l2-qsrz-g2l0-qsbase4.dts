@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ */
+
+/dts-v1/;
+#include "r9a07g044l2-qsrz-g2l0.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based QSRZ-G2L0 CoM on QSBASE4 Baseboard";
+
+	aliases {
+		ethernet0 = &eth0;
+	};
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_pins>;
+	phy-handle = <&phy0>;
+	phy-mode = "rgmii-id";
+	status = "okay";
+
+	phy0: phy@7 {
+		reg = <7>;
+		interrupt-parent = <&pinctrl>;
+		interrupts = <RZG2L_GPIO(22, 1) IRQ_TYPE_EDGE_FALLING>;
+		micrel,force-master;
+	};
+};
+
+&pinctrl {
+	eth0_pins: eth0grp {
+		pinmux = <
+			  RZG2L_PORT_PINMUX(28, 0, 1)	/* ET0_MDIO */
+			  RZG2L_PORT_PINMUX(27, 1, 1)	/* ET0_MDC */
+			  RZG2L_PORT_PINMUX(24, 0, 1)	/* ET0_RXC */
+			  RZG2L_PORT_PINMUX(24, 1, 1)	/* ET0_RX_CTL */
+			  RZG2L_PORT_PINMUX(25, 0, 1)	/* ET0_RXD0 */
+			  RZG2L_PORT_PINMUX(25, 1, 1)	/* ET0_RXD1 */
+			  RZG2L_PORT_PINMUX(26, 0, 1)	/* ET0_RXD2 */
+			  RZG2L_PORT_PINMUX(26, 1, 1)	/* ET0_RXD3 */
+			  RZG2L_PORT_PINMUX(20, 1, 1)	/* ET0_TX_CTL */
+			  RZG2L_PORT_PINMUX(20, 0, 1)	/* ET0_TXC */
+			  RZG2L_PORT_PINMUX(22, 0, 1)	/* ET0_TXD3 */
+			  RZG2L_PORT_PINMUX(21, 1, 1)	/* ET0_TXD2 */
+			  RZG2L_PORT_PINMUX(21, 0, 1)	/* ET0_TXD1 */
+			  RZG2L_PORT_PINMUX(20, 2, 1)	/* ET0_TXD0 */
+		>;
+	};
+};

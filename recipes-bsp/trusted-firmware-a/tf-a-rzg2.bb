@@ -4,7 +4,7 @@ require tf-a-rzg2.inc
 
 SRC_URI = "git://github.com/karo-electronics/imx-atf.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "karo-txrz"
-SRCREV = "1ac68a9f6e21142d9a633a778c8eab875deff853"
+SRCREV = "0c0af498ae0b7658d306e86d74199f78d337b844"
 
 PV = "2.5-rzg"
 PR = "r1"

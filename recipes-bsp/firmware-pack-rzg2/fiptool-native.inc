@@ -19,6 +19,6 @@ do_compile () {
 }
 
 do_install () {
-    install -d ${D}${bindir}
-    install ${S}/tools/fiptool/fiptool ${D}${bindir}
+	install -d ${D}${bindir}
+	install ${S}/tools/fiptool/fiptool ${D}${bindir}
 }

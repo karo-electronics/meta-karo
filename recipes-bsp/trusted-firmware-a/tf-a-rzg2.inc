@@ -9,6 +9,7 @@ COMPATIBLE_MACHINE = "(txrz-.*|qsrz-.*)"
 
 PLATFORM = "g2l"
 EXTRA_FLAGS_txrz = "BOARD=txrz"
+EXTRA_FLAGS_qsrz = "BOARD=qsrz"
 FLASH_ADDRESS_BL2_BP = "00000"
 FLASH_ADDRESS_FIP = "1D200"
 
