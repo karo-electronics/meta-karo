@@ -16,8 +16,8 @@
 	pinctrl-0 = <&txmp_ltdc_pins>;
 	pinctrl-1 = <&txmp_ltdc_sleep_pins>;
 	backlight = <&lcd_backlight>;
-	enable-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
-	reset-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
+	enable-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
 	power-supply = <&reg_3v3>;
 	data-mapping = "rgb24";
 };
