@@ -41,7 +41,8 @@
 
 	lcd_panel: lcd-panel {
 		compatible = "panel-dpi";
-		enable-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
+		enable-gpios = <&pinctrl RZG2L_GPIO(47, 2) GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
 		power-supply = <&reg_3v3>;
 		backlight = <&backlight>;
 		data-mapping = "rgb24";
@@ -241,6 +242,13 @@
 	status = "okay";
 };
 
+&i2c0 {
+	rtc: rtc@6f {
+		compatible = "microchip,mcp7940x";
+		reg = <0x6f>;
+	};
+};
+
 &i2c1 {
 	polytouch: touch-controller@38 {
 		compatible = "edt,edt-ft5x06";
@@ -270,6 +278,6 @@
 
 &pinctrl {
 	gpt3_pins: gpt3-pins {
-		pinmux = <RZG2L_PORT_PINMUX(19, 1, 1)>; /* Channel B */
+		pinmux = <RZG2L_PORT_PINMUX(19, 1, 2)>; /* Channel B */
 	};
 };
