@@ -10,6 +10,10 @@ SRC_URI_append_mx6 = " \
 
 SRC_URI_append_stm32mp1 = " \
         file://dcache-off.patch \
+        file://spi2-clk.patch \
+"
+
+SRC_URI_append_stm32mp1 = " \
         file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm \
         file://dts/stm32mp15-qsbase4.dtsi;subdir=git/arch/arm \
         file://dts/stm32mp15-qsmp-u-boot.dtsi;subdir=git/arch/arm \
