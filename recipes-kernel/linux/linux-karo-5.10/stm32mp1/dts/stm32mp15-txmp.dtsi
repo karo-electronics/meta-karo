@@ -38,16 +38,6 @@
 	pinctrl-0 = <&txmp_ethernet0_rmii_pins>;
 	pinctrl-1 = <&txmp_ethernet0_rmii_sleep_pins>;
 	phy-mode = "rmii";
-	clock-names = "stmmaceth",
-		      "mac-clk-tx",
-		      "mac-clk-rx",
-		      "ethstp",
-		      "eth-ck";
-	clocks = <&rcc ETHMAC>,
-		 <&rcc ETHTX>,
-		 <&rcc ETHRX>,
-		 <&rcc ETHSTP>,
-		 <&rcc ETHCK_K>;
 	st,eth-ref-clk-sel;
 };
 
