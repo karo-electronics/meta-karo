@@ -11,6 +11,7 @@ SRC_URI_append_mx6 = " \
 SRC_URI_append_stm32mp1 = " \
         file://dcache-off.patch \
         file://spi2-clk.patch \
+        file://fdt-overlay-support.patch \
 "
 
 SRC_URI_append_stm32mp1 = " \
