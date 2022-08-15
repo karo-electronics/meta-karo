@@ -6,6 +6,3 @@ LICENSE = "BSD-3-Clause"
 
 PROVIDES += "virtual/trusted-firmware-a"
 PROVIDES += "tf-a-karo"
-
-# Enable the wrapper for debug
-TF_A_ENABLE_DEBUG_WRAPPER ?= "1"
