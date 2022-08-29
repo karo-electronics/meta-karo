@@ -3,7 +3,10 @@ MACHINEOVERRIDES =. "stm32mp1:"
 DEFAULTTUNE ?= "cortexa7thf-neon-vfpv4"
 
 include karo.inc
+include conf/machine/include/soc-family.inc
 include conf/machine/include/tune-cortexa7.inc
+
+SOC_PREFIX = "stm32mp15"
 
 MACHINE_FEATURES_append = " emmc"
 
