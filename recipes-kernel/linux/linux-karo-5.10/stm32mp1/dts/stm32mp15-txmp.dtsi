@@ -38,7 +38,9 @@
 	pinctrl-0 = <&txmp_ethernet0_rmii_pins>;
 	pinctrl-1 = <&txmp_ethernet0_rmii_sleep_pins>;
 	phy-mode = "rmii";
+	phy-handle = <&phy0>;
 	st,eth-ref-clk-sel;
+	status = "okay";
 };
 
 &mdio0 {

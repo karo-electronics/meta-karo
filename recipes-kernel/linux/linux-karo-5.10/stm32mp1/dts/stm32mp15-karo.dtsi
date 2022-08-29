@@ -116,8 +116,6 @@
 
 &ethernet0 {
 	pinctrl-names = "default", "sleep";
-	phy-handle = <&phy0>;
-	status = "okay";
 
 	mdio0: mdio0 {
 		#address-cells = <1>;
@@ -202,6 +200,12 @@
 		reg = <0x50000 0x10000>;
 		pool;
 	};
+};
+
+&timers1 {
+	/* spare dmas for other usage */
+	/delete-property/ dmas;
+	/delete-property/ dma-names;
 };
 
 &uart4 {

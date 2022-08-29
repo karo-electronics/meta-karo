@@ -41,18 +41,11 @@
 	status = "okay";
 };
 
-&ethernet0 {
-	pinctrl-0 = <&qsmp_ethernet0_rgmii_pins>;
-	pinctrl-1 = <&qsmp_ethernet0_rgmii_sleep_pins>;
-	phy-mode = "rgmii";
-};
-
 &i2c1 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_i2c1_pins>;
 	pinctrl-1 = <&qsmp_i2c1_sleep_pins>;
 	clock-frequency = <400000>;
-	status = "disabled";
 };
 
 &i2c2 {
@@ -61,28 +54,6 @@
 	pinctrl-1 = <&qsmp_i2c2_sleep_pins_z>;
 	clock-frequency = <400000>;
 	status = "okay";
-};
-
-&mdio0 {
-	phy0: ethernet-phy@3 {
-		compatible = "ethernet-phy-id0022.1622";
-		reg = <3>;
-		interrupt-parent = <&gpioa>;
-		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
-		micrel,force-master;
-		rxd0-skew-ps = <(420 + 6)>;
-		rxd1-skew-ps = <(420 + 5)>;
-		rxd2-skew-ps = <(420 - 1)>;
-		rxd3-skew-ps = <(420 - 22)>;
-		txd0-skew-ps = <(420 - 103)>;
-		txd1-skew-ps = <(420 - 104)>;
-		txd2-skew-ps = <(420 - 73)>;
-		txd3-skew-ps = <(420 - 25)>;
-		txen-skew-ps = <(420 + 15)>;
-		rxdv-skew-ps = <(420 - 12)>;
-		rxc-skew-ps = <(900 + 0)>;
-		txc-skew-ps = <(900 + 1000)>;
-	};
 };
 
 &module_led {
@@ -126,6 +97,12 @@
 	status = "okay";
 };
 
+&timers2 {
+	/* spare dmas for other usage */
+	/delete-property/dmas;
+	/delete-property/dma-names;
+};
+
 &usart2 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_usart2_pins>;
@@ -154,80 +131,6 @@
 };
 
 &pinctrl {
-	qsmp_ethernet0_rgmii_pins: qsmp-ethernet0-rgmii-pins {
-		pins1 {
-			pinmux = <
-				  STM32_PINMUX('G', 4, AF11) /* ETH_RGMII_GTX_CLK */
-				  STM32_PINMUX('G', 13, AF11) /* ETH_RGMII_TXD0 */
-				  STM32_PINMUX('G', 14, AF11) /* ETH_RGMII_TXD1 */
-				  STM32_PINMUX('C', 2, AF11) /* ETH_RGMII_TXD2 */
-				  STM32_PINMUX('B', 8, AF11) /* ETH_RGMII_TXD3 */
-			>;
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <3>;
-		};
-
-		pins2 {
-			pinmux = <
-				  STM32_PINMUX('B', 11, AF11) /* ETH_RGMII_TX_CTL */
-				  STM32_PINMUX('A', 2, AF11) /* ETH_MDIO */
-				  STM32_PINMUX('C', 1, AF11) /* ETH_MDC */
-			>;
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <1>;
-		};
-
-		pins3 {
-			/* Micrel KSZ9031 strap pins */
-			pinmux = <
-				  STM32_PINMUX('A', 7, AF11) /* RX_CTL | CLK125_EN */
-				  STM32_PINMUX('C', 4, AF11) /* RXD0 | MODE0 */
-				  STM32_PINMUX('C', 5, AF11) /* RXD1 | MODE1 */
-				  STM32_PINMUX('B', 0, AF11) /* RXD2 | MODE2 */
-				  STM32_PINMUX('H', 7, AF11) /* RXD3 | MODE3 */
-			>;
-			bias-pull-up;
-		};
-
-		pins4 {
-			pinmux = <
-				  STM32_PINMUX('A', 1, AF11) /* RX_CLK | PHYAD2 */
-			>;
-			bias-pull-down;
-		};
-
-		pins5 {
-			pinmux = <
-				  STM32_PINMUX('G', 5, AF11) /* CLK125 | LED_MODE */
-			>;
-			bias-pull-up;
-		};
-	};
-
-	qsmp_ethernet0_rgmii_sleep_pins: qsmp-rgmii-sleep-pins {
-		pins1 {
-			pinmux = <
-				  STM32_PINMUX('G', 5, ANALOG) /* ETH_RGMII_CLK125 */
-				  STM32_PINMUX('G', 4, ANALOG) /* ETH_RGMII_GTX_CLK */
-				  STM32_PINMUX('G', 13, ANALOG) /* ETH_RGMII_TXD0 */
-				  STM32_PINMUX('G', 14, ANALOG) /* ETH_RGMII_TXD1 */
-				  STM32_PINMUX('C', 2, ANALOG) /* ETH_RGMII_TXD2 */
-				  STM32_PINMUX('B', 8, ANALOG) /* ETH_RGMII_TXD3 */
-				  STM32_PINMUX('B', 11, ANALOG) /* ETH_RGMII_TX_CTL */
-				  STM32_PINMUX('A', 2, ANALOG) /* ETH_MDIO */
-				  STM32_PINMUX('C', 1, ANALOG) /* ETH_MDC */
-				  STM32_PINMUX('C', 4, ANALOG) /* ETH_RGMII_RXD0 */
-				  STM32_PINMUX('C', 5, ANALOG) /* ETH_RGMII_RXD1 */
-				  STM32_PINMUX('B', 0, ANALOG) /* ETH_RGMII_RXD2 */
-				  STM32_PINMUX('H', 7, ANALOG) /* ETH_RGMII_RXD3 */
-				  STM32_PINMUX('A', 1, ANALOG) /* ETH_RGMII_RX_CLK */
-				  STM32_PINMUX('A', 7, ANALOG) /* ETH_RGMII_RX_CTL */
-			>;
-		};
-	};
-
 	qsmp_i2c1_pins: qsmp_i2c1-pins {
 		pins {
 			pinmux = <

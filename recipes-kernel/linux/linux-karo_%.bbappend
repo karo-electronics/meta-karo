@@ -1,4 +1,4 @@
-FILESEXTRAPATHS_prepend_stm32mp1 := "${THISDIR}/${BP}:"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/dts/overlays:"
 
 SRC_URI_append_stm32mp1 = " \
         file://STM-patches/0001-ARM-5.10.61-stm32mp1-r2-MACHINE.patch \
@@ -54,3 +54,130 @@ SRC_URI_append_rzg2 = " \
         file://patches/0011-drm-rzg2l-mipi-dsi-comment-out-lane-check-that-prevents-from-working.patch \
         file://patches/0012-drm-sn65dsi83-bridge-support.patch \
 "
+
+SRC_URI_append_stm32mp1 = " \
+	file://dts/overlays/stm32mp15-karo-ft5x06.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+	file://dts/overlays/stm32mp15-karo-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+	file://dts/overlays/stm32mp15-karo-sound.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+"
+
+EXTRA_OEMAKE_append = " V=0"
+
+# DTB overlays
+DTB_OVERLAYS ??= ""
+
+# STM32
+DTB_OVERLAYS_append_stm32mp1 = " \
+        karo-gpu \
+        karo-rtc \
+"
+DTB_OVERLAYS_append_txmp = " \
+        txmp-ft5x06 \
+        txmp-mb7 \
+        txmp-lcd-panel \
+        txmp-sound \
+"
+DTB_OVERLAYS_append_qsmp = " \
+        qsmp-dsi-panel \
+        qsmp-ft5x06 \
+        qsmp-ksz9031 \
+        qsmp-ksz9131 \
+        qsmp-lcd-panel \
+        qsmp-qsbase1 \
+        qsmp-qsbase2 \
+        qsmp-qsbase4 \
+        qsmp-qsglyn1 \
+        qsmp-raspi-display \
+        qsmp-smsc-phy \
+        qsmp-sound \
+"
+
+KERNEL_DEVICETREE_append_stm32mp1 = "${@ "".join(map(lambda f: " stm32mp15-%s.dtb" % f, "${DTB_OVERLAYS}".split()))}"
+
+KERNEL_DTC_FLAGS += "-@"
+
+KARO_BASEBOARDS_txmp ?= "\
+	mb7 \
+"
+
+KARO_BASEBOARDS_qsmp ?= "\
+	qsbase1 \
+	qsbase2 \
+	qsbase4 \
+        qsglyn1 \
+"
+
+# baseboard DTB specific overlays
+KARO_DTB_OVERLAYS[mb7] = " \
+        txmp-mb7 \
+        txmp-lcd-panel \
+        txmp-ft5x06 \
+        txmp-sound \
+        karo-rtc \
+"
+
+KARO_DTB_OVERLAYS[qsbase1] = " \
+        qsmp-qsbase1 \
+        qsmp-ksz9031 \
+        qsmp-lcd-panel \
+"
+
+KARO_DTB_OVERLAYS[qsbase2] = " \
+        qsmp-qsbase2 \
+        qsmp-ksz9031 \
+        ${@ "qsmp-dsi-panel" if d.getVar('SOC_FAMILY') == "stm32mp157c" else ""} \
+        ${@ "qsmp-raspi-display" if "raspi-display" in d.getVar('DISTRO_FEATURES') else ""} \
+"
+
+KARO_DTB_OVERLAYS[qsbase4] = " \
+        qsmp-qsbase4 \
+        qsmp-ksz9131 \
+        ${@ "qsmp-dsi-panel" if d.getVar('SOC_FAMILY') == "stm32mp157c" else ""} \
+        ${@ "qsmp-raspi-display" if "raspi-display" in d.getVar('DISTRO_FEATURES') else ""} \
+"
+
+KARO_DTB_OVERLAYS[qsglyn1] = " \
+        qsmp-qsglyn1 \
+        qsmp-ksz9031 \
+        qsmp-lcd-panel \
+"
+
+inherit deploy
+DEPENDS += "dtc-native"
+
+python do_check_dtbs () {
+    import os
+
+    def apply_overlays(infile, outfile, overlays):
+        pfx = d.getVar('SOC_PREFIX')
+        ovlist = map(lambda f: "%s-%s.dtb" % (pfx ,f), overlays.split())
+        ovfiles = "".join(map(lambda f: " '%s'" % f, ovlist))
+        cmd = ("fdtoverlay -i '%s.dtb' -o '%s.dtb' %s" % (infile, outfile, ovfiles))
+        bb.debug(2, "%s" % cmd)
+        if os.system("%s" % cmd):
+            bb.fatal("Failed to apply overlays '%s' for '%s' to '%s'" %
+                (ovfiles, baseboard, infile))
+        bb.note("FDT overlays %s for '%s' successfully applied to '%s.dtb'" %
+            (ovfiles, baseboard, infile))
+        d.appendVar('IMAGE_INSTALL', " " + outfile + ".dtb")
+
+    here = os.getcwd()
+    os.chdir(d.getVar('DEPLOYDIR'))
+    baseboards = d.getVar('KARO_BASEBOARDS').split()
+    for baseboard in baseboards:
+        basename = d.getVar('DTB_BASENAME')
+        bb.debug(2, "creating %s-%s.dtb from %s.dtb" % (basename, baseboard, basename))
+        outfile = "%s-%s" % (basename, baseboard)
+        overlays = d.getVarFlags('KARO_DTB_OVERLAYS', baseboard)
+        bb.note("overlays='%s'" % overlays)
+        bb.debug(2, "overlays for %s-%s = '%s'" % (basename, baseboard,
+            "','".join(overlays[baseboard].split())))
+        if overlays == None or len(overlays[baseboard].split()) == 0:
+            bb.warn("%s: No overlays specified for %s" % (d.getVar('MACHINE'), baseboard))
+            continue
+        apply_overlays(basename, outfile, overlays[baseboard])
+
+    os.chdir(here)
+}
+
+addtask do_check_dtbs after do_deploy

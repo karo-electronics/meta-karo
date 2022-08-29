@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2022 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/clock/stm32mp1-clks.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+/dts-v1/;
+
+/plugin/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	fragment@0 {
+		reg = <0>;
+		target = <&sdmmc3>;
+
+		__overlay__ {
+			/* not usable due to pinswap of SDMMC3_CMD and SDMMC3_D0 */
+			status = "disabled";
+		};
+
+	};
+};

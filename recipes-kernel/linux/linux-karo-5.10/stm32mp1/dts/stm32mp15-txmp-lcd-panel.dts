@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2022 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include <dt-bindings/pwm/pwm.h>
+#include "overlays/stm32mp15-karo-lcd-panel.dtsi"
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	fragment@0 {
+		reg = <0>;
+		target = <&lcd_backlight>;
+
+		__overlay__ {
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&backlight_pwm_pins>;
+			pinctrl-1 = <&backlight_pwm_sleep_pins>;
+			pwms = <&backlight_pwm 2 500000 PWM_POLARITY_INVERTED>;
+		};
+	};
+
+	fragment@1 {
+		reg = <1>;
+		target = <&timers1>;
+
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			backlight_pwm: pwm {
+				#pwm-cells = <3>;
+				status = "okay";
+			};
+
+			timer@0 {
+				reg = <0>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@2 {
+		reg = <2>;
+		target = <&lcd_panel>;
+
+		__overlay__ {
+			pinctrl-names = "default", "sleep";
+			pinctrl-0 = <&txmp_ltdc_pins>;
+			pinctrl-1 = <&txmp_ltdc_sleep_pins>;
+			enable-gpios = <&gpioe 1 GPIO_ACTIVE_HIGH>;
+			reset-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	fragment@3 {
+		reg = <3>;
+		target = <&pinctrl>;
+
+		__overlay__ {
+			txmp_ltdc_pins: txmp-ltdc-pins {
+				pins1 {
+					pinmux = <
+						  /* LCD_R0 is not connected! */
+						  STM32_PINMUX('G',  9, AF14) /* LCD_R1 */
+						  STM32_PINMUX('C', 10, AF14) /* LCD_R2 */
+						  STM32_PINMUX('B',  0,  AF9) /* LCD_R3 */
+						  STM32_PINMUX('A',  5, AF14) /* LCD_R4 */
+						  STM32_PINMUX('C',  0, AF14) /* LCD_R5 */
+						  STM32_PINMUX('B',  1,  AF9) /* LCD_R6 */
+						  STM32_PINMUX('E', 15, AF14) /* LCD_R7 */
+						  STM32_PINMUX('E', 14, AF13) /* LCD_G0 */
+						  STM32_PINMUX('E',  6, AF14) /* LCD_G1 */
+						  STM32_PINMUX('A',  6, AF14) /* LCD_G2 */
+						  STM32_PINMUX('E', 11, AF14) /* LCD_G3 */
+						  STM32_PINMUX('B', 10, AF14) /* LCD_G4 */
+						  STM32_PINMUX('F', 11, AF14) /* LCD_G5 */
+						  STM32_PINMUX('C',  7, AF14) /* LCD_G6 */
+						  STM32_PINMUX('D',  3, AF14) /* LCD_G7 */
+						  STM32_PINMUX('D',  9, AF14) /* LCD_B0 */
+						  STM32_PINMUX('G', 12, AF14) /* LCD_B1 */
+						  STM32_PINMUX('G', 10, AF14) /* LCD_B2 */
+						  STM32_PINMUX('D', 10, AF14) /* LCD_B3 */
+						  STM32_PINMUX('E', 12, AF14) /* LCD_B4 */
+						  STM32_PINMUX('A',  3, AF14) /* LCD_B5 */
+						  STM32_PINMUX('B',  8, AF14) /* LCD_B6 */
+						  STM32_PINMUX('D',  8, AF14) /* LCD_B7 */
+					>;
+					bias-disable;
+					drive-push-pull;
+					slew-rate = <0>;
+				};
+
+				pins2 {
+					pinmux = <STM32_PINMUX('G',  7, AF14) /* LCD_CLK */
+						  STM32_PINMUX('C',  6, AF14) /* LCD_HSYNC */
+						  STM32_PINMUX('A',  4, AF14) /* LCD_VSYNC */
+					>;
+					bias-disable;
+					drive-push-pull;
+					slew-rate = <1>;
+				};
+
+				pins3 {
+					pinmux = <
+						  STM32_PINMUX('E', 13, AF14) /* LCD_DE */
+					>;
+					bias-disable;
+					drive-push-pull;
+					slew-rate = <3>;
+				};
+			};
+
+			txmp_ltdc_sleep_pins: txmp-ltdc-sleep-pins {
+				pins {
+					pinmux = <
+						  STM32_PINMUX('G',  7, ANALOG) /* LCD_CLK */
+						  STM32_PINMUX('C',  6, ANALOG) /* LCD_HSYNC */
+						  STM32_PINMUX('A',  4, ANALOG) /* LCD_VSYNC */
+						  STM32_PINMUX('E', 13, ANALOG) /* LCD_DE */
+						  /* LCD_R0 is not connected! */
+						  STM32_PINMUX('G',  9, ANALOG) /* LCD_R1 */
+						  STM32_PINMUX('C', 10, ANALOG) /* LCD_R2 */
+						  STM32_PINMUX('B',  0, ANALOG) /* LCD_R3 */
+						  STM32_PINMUX('A',  5, ANALOG) /* LCD_R4 */
+						  STM32_PINMUX('C',  0, ANALOG) /* LCD_R5 */
+						  STM32_PINMUX('B',  1, ANALOG) /* LCD_R6 */
+						  STM32_PINMUX('E', 15, ANALOG) /* LCD_R7 */
+						  STM32_PINMUX('E', 14, ANALOG) /* LCD_G0 */
+						  STM32_PINMUX('E',  6, ANALOG) /* LCD_G1 */
+						  STM32_PINMUX('A',  6, ANALOG) /* LCD_G2 */
+						  STM32_PINMUX('E', 11, ANALOG) /* LCD_G3 */
+						  STM32_PINMUX('B', 10, ANALOG) /* LCD_G4 */
+						  STM32_PINMUX('F', 11, ANALOG) /* LCD_G5 */
+						  STM32_PINMUX('C',  7, ANALOG) /* LCD_G6 */
+						  STM32_PINMUX('D',  3, ANALOG) /* LCD_G7 */
+						  STM32_PINMUX('D',  9, ANALOG) /* LCD_B0 */
+						  STM32_PINMUX('G', 12, ANALOG) /* LCD_B1 */
+						  STM32_PINMUX('G', 10, ANALOG) /* LCD_B2 */
+						  STM32_PINMUX('D', 10, ANALOG) /* LCD_B3 */
+						  STM32_PINMUX('E', 12, ANALOG) /* LCD_B4 */
+						  STM32_PINMUX('A',  3, ANALOG) /* LCD_B5 */
+						  STM32_PINMUX('B',  8, ANALOG) /* LCD_B6 */
+						  STM32_PINMUX('D',  8, ANALOG) /* LCD_B7 */
+					>;
+				};
+			};
+
+			backlight_pwm_pins: backlight-pwm-pins {
+				pins {
+					pinmux = <STM32_PINMUX('A', 10, AF1)>; /* TIM1_CH3 */
+					bias-disable;
+					drive-push-pull;
+					slew-rate = <0>;
+				};
+			};
+
+			backlight_pwm_sleep_pins: backlight-pwm-sleep-pins {
+				pins {
+					pinmux = <STM32_PINMUX('A', 10, ANALOG)>; /* TIM1_CH3 */
+				};
+			};
+		};
+	};
+};
