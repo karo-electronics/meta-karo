@@ -1,4 +1,3 @@
-.callbacks=baseboard:baseboard
 append_bootargs=quiet
 autoload=no
 autostart=no
