@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: (GPL-2.0 or MIT)
+/*
+ * Device Tree Source for the Ka-Ro G2L based TXRZ CoM
+ *
+ * Copyright (C) 2022 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "r9a07g044l2-txrz-g2l1.dts"
+
+/ {
+	model = "Ka-Ro rzg2l based TXRZ-G2L1 on MB7 baseboard";
+};

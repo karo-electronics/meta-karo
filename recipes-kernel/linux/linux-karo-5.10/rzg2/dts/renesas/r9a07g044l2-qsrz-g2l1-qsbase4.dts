@@ -4,9 +4,9 @@
  */
 
 /dts-v1/;
-#include "r9a07g044l2-qsrz-g2l0.dts"
+#include "r9a07g044l2-qsrz-g2l1.dts"
 #include "r9a07g044l2-qsrz-qsbase4.dtsi"
 
 / {
-	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based QSRZ-G2L0 CoM on QSBASE4 Baseboard";
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based QSRZ-G2L1 CoM on QSBASE4 Baseboard";
 };

@@ -68,6 +68,14 @@ SRC_URI_append_stm32mp1 = " \
         file://dts/stm32mp157-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
+SRC_URI_append_rzg2 = " \
+        file://dts/renesas/r9a07g044l2-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/renesas/r9a07g044l2-qsrz-qsbase4.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/renesas/r9a07g044l2-qsrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/renesas/r9a07g044l2-txrz-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/renesas/r9a07g044l2-txrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+"
+
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
 KERNEL_IMAGETYPE_mx6 = "uImage"
 KERNEL_IMAGETYPE_stm32mp1 = "uImage"

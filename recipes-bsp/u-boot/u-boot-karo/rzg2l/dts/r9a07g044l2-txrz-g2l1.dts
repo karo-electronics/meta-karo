@@ -1,0 +1,147 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Device Tree Source for the Ka-Ro G2L based TXRZ-G2L1 CoM
+ *
+ * Copyright (C) 2022 Markus Bauer <mb@karo-electronics.com>
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+#include "r9a07g044l.dtsi"
+
+/ {
+	model = "Ka-Ro rzg2l based TXRZ-G2L1";
+	compatible = "renesas,r9a07g044l", "renesas,rzg2l";
+
+	aliases {
+		serial0 = &scif0;
+		usb-host = &ehci1;
+		usbotg = &ehci0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x18000000>;
+	};
+};
+
+&ehci0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ehci0_pins>;
+	status = "okay";
+};
+
+&ehci1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ehci1_pins>;
+	status = "okay";
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_pins>;
+	status = "okay";
+
+	phy-handle = <&phy0>;
+	phy-mode = "mii";
+	phy0: ethernet-phy@0 {
+		reg = <0>;
+	};
+};
+
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	status = "okay";
+};
+
+&ohci0 {
+	status = "okay";
+};
+
+&ohci1 {
+	status = "okay";
+};
+
+&scif0 {
+	status = "okay";
+	clock = <100000000>;
+};
+
+&sdhi0 {
+	bus-width = <8>;
+	non-removable;
+	status = "okay";
+};
+
+&sdhi1 {
+	bus-width = <4>;
+	status = "okay";
+};
+
+&usb2_phy0 {
+	status = "okay";
+};
+
+&usb2_phy1 {
+	status = "okay";
+};
+
+&xinclk {
+        clock-frequency = <24000000>;
+};
+
+&pinctrl {
+	ehci0_pins: ehci0grp {
+		pinmux = <
+			  RZG2L_PINMUX(4, 0, 1)
+			  RZG2L_PINMUX(5, 0, 1)
+			  RZG2L_PINMUX(5, 1, 1)
+		>;
+	};
+
+	ehci1_pins: ehci1grp {
+		pinmux = <
+			  RZG2L_PINMUX(42, 0, 1)
+			  RZG2L_PINMUX(42, 1, 1)
+		>;
+	};
+
+	eth0_pins: eth0grp {
+		pinmux = <
+			  RZG2L_PINMUX(20, 0, 1)
+			  RZG2L_PINMUX(20, 1, 1)
+			  RZG2L_PINMUX(20, 2, 1)
+			  RZG2L_PINMUX(21, 0, 1)
+			  RZG2L_PINMUX(21, 1, 1)
+			  RZG2L_PINMUX(22, 0, 1)
+			  RZG2L_PINMUX(22, 1, 1)
+			  RZG2L_PINMUX(23, 0, 1)
+			  RZG2L_PINMUX(23, 1, 1)
+			  RZG2L_PINMUX(24, 0, 1)
+			  RZG2L_PINMUX(24, 1, 1)
+			  RZG2L_PINMUX(25, 0, 1)
+			  RZG2L_PINMUX(25, 1, 1)
+			  RZG2L_PINMUX(26, 0, 1)
+			  RZG2L_PINMUX(26, 1, 1)
+			  RZG2L_PINMUX(27, 0, 1)
+			  RZG2L_PINMUX(27, 1, 1)
+			  RZG2L_PINMUX(28, 0, 1)
+			  RZG2L_PINMUX(28, 1, 1)
+		>;
+	};
+
+	i2c1_pins: i2c1grp {
+		pinmux = <
+			  RZG2L_PINMUX(14, 2, 1)
+			  RZG2L_PINMUX(14, 3, 1)
+		>;
+	};
+};

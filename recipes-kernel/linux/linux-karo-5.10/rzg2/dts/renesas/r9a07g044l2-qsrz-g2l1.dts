@@ -9,12 +9,12 @@
 #include "r9a07g044l2-qsrz.dtsi"
 
 / {
-	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based QSRZ-G2L0 CoM";
-	compatible = "karo,qsrz-g2l0", "renesas,r9a07g044l2", "renesas,r9a07g044";
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based QSRZ-G2L1 CoM";
+	compatible = "karo,qsrz-g2l1", "renesas,r9a07g044l2", "renesas,r9a07g044";
 
 	memory@48000000 {
 		device_type = "memory";
 		/* first 128MB is reserved for secure area. */
-		reg = <0 0x48000000 0 0x38000000>;
+		reg = <0 0x48000000 0 0x18000000>;
 	};
 };

@@ -14,7 +14,7 @@ bootdev=mmc
 bootm_cmd=booti ${loadaddr} - ${fdt_addr}
 bootpart=0:1
 default_bootargs=setenv bootargs console=ttySC0,115200 ro debug panic=-1
-fdt_file=r9a07g044l2-qsrz-g2l0-qsbase4.dtb
+fdt_file=r9a07g044l2-qsrz-g2l1-qsbase4.dtb
 emmc_boot_ack=0
 emmc_boot_part=1
 fdtaddr=48000000

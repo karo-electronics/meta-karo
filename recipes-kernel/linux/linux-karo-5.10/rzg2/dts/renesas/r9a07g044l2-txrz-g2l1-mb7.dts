@@ -6,9 +6,9 @@
  */
 
 /dts-v1/;
-#include "r9a07g044l2-txrz-g2l0.dts"
+#include "r9a07g044l2-txrz-g2l1.dts"
 #include "r9a07g044l2-txrz-mb7.dtsi"
 
 / {
-	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based TXRZ-G2L0 CoM on TX Mainboard 7";
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based TXRZ-G2L1 CoM on TX Mainboard 7";
 };

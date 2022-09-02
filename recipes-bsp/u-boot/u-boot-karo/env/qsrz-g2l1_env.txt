@@ -2,7 +2,7 @@
 append_bootargs=quiet
 autoload=no
 autostart=no
-baseboard=qsbase4
+baseboard=
 baudrate=115200
 boot_mode=mmc
 bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs}
@@ -14,7 +14,7 @@ bootdev=mmc
 bootm_cmd=booti ${loadaddr} - ${fdt_addr}
 bootpart=0:1
 default_bootargs=setenv bootargs console=ttySC0,115200 ro debug panic=-1
-fdt_file=r9a07g044l2-qsrz-g2l0-qsbase4.dtb
+fdt_file=r9a07g044l2-qsrz-g2l1.dtb
 emmc_boot_ack=0
 emmc_boot_part=1
 fdtaddr=48000000
@@ -28,4 +28,3 @@ load_dtb_nfs=run load_dtb_net
 load_kernel_mmc=load ${bootdev} ${bootpart} ${loadaddr} ${linux_kernel}
 load_kernel_net=setenv autoload y;bootp ${loadaddr} ${linux_kernel}
 load_kernel_nfs=run load_kernel_net
-preboot=gpio clear P28_1; gpio set P25_1; gpio set P26_0; gpio set P26_1; gpio set P24_0; gpio clear P24_1; gpio clear P25_0; gpio set P28_1; gpio in P25_0; gpio in P25_1; gpio in P26_0; gpio in P26_1

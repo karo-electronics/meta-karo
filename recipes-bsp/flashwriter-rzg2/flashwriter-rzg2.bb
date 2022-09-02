@@ -6,18 +6,25 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 SRC_URI = "git://github.com/karo-electronics/rzg2-flash-writer.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "karo-txrz"
-SRCREV = "4803e81f6c82b7b9fbf8fbc5ba2c1ebdc296098b"
+SRCREV = "a762698b52729ab7a4680bca2efee857cf7b845d"
 
 inherit deploy
 
 S = "${WORKDIR}/git"
 
 do_compile() {
+        # uppercasing $MACHINE would be enough, but how?
         if [ "${MACHINE}" = "txrz-g2l0" ]; then
-                BOARD="TXRZ";
+                BOARD="TXRZ-G2L0";
+        fi
+        if [ "${MACHINE}" = "txrz-g2l1" ]; then
+                BOARD="TXRZ-G2L1";
         fi
         if [ "${MACHINE}" = "qsrz-g2l0" ]; then
-                BOARD="QSRZ";
+                BOARD="QSRZ-G2L0";
+        fi
+        if [ "${MACHINE}" = "qsrz-g2l1" ]; then
+                BOARD="QSRZ-G2L1";
         fi
         cd ${S}
 
