@@ -36,6 +36,10 @@ SRC_URI_append_stm32mp1 = " \
         file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm \
         file://dts/stm32mp157c-txmp-1570-u-boot.dtsi;subdir=git/arch/arm \
         file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm \
+        file://dts/stm32mp157c-txmp-1571-mb7-u-boot.dtsi;subdir=git/arch/arm \
+        file://dts/stm32mp157c-txmp-1571-mb7.dts;subdir=git/arch/arm \
+        file://dts/stm32mp157c-txmp-1571-u-boot.dtsi;subdir=git/arch/arm \
+        file://dts/stm32mp157c-txmp-1571.dts;subdir=git/arch/arm \
 "
 
 SRC_URI_append_qsmp = " \

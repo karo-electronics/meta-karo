@@ -7,10 +7,10 @@ SRC_URI_append = " \
 		file://fdts/stm32mp151a-qsmp-1510.dts;subdir=git \
 		file://fdts/stm32mp151a-qsmp.h;subdir=git \
 		file://fdts/stm32mp153a-qsmp-1530.dts;subdir=git \
-		file://fdts/stm32mp153a-txmp.h;subdir=git \
 		file://fdts/stm32mp157c-qsmp-1570.dts;subdir=git \
 		file://fdts/stm32mp157c-qsmp.h;subdir=git \
 		file://fdts/stm32mp157c-txmp-1570.dts;subdir=git \
+		file://fdts/stm32mp157c-txmp-1571.dts;subdir=git \
 		file://fdts/stm32mp157c-txmp.h;subdir=git \
 "
 
