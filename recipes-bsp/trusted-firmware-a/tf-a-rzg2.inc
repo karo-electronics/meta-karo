@@ -24,7 +24,7 @@ LD[unexport] = "1"
 # No configure
 do_configure[noexec] = "1"
 
-FILES_${PN} = "/boot "
+FILES:${PN} = "/boot "
 SYSROOT_DIRS += "/boot"
 
 do_compile () {

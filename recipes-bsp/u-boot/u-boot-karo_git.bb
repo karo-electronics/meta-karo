@@ -1,34 +1,34 @@
 require recipes-bsp/u-boot/u-boot.inc
 
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
-LICENSE = "GPLv2+"
+LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
-LIC_FILES_CHKSUM_mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
+LIC_FILES_CHKSUM:mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
 
 PROVIDES += "u-boot"
 
-DEPENDS_append = " bc-native bison-native xxd-native"
+DEPENDS:append = " bc-native bison-native xxd-native"
 
-RDEPENDS_${PN}_append_stm32mp1 = " tf-a-stm32mp"
-RDEPENDS_${PN}_append_rzg2 = " tf-a-rzg2"
+RDEPENDS:${PN}:append:stm32mp1 = " tf-a-stm32mp"
+RDEPENDS:${PN}:append:rzg2 = " tf-a-rzg2"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
-SRCBRANCH_mx6 = "master"
-SRCREV_mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
+SRCBRANCH:mx6 = "master"
+SRCREV:mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
 
-SRCBRANCH_stm32mp1 = "karo-txmp"
-SRCREV_stm32mp1 = "2bc17aeb86bd4a0020d523fcb4bbc0e055879233"
+SRCBRANCH:stm32mp1 = "karo-txmp"
+SRCREV:stm32mp1 = "0b7c14883c6aeb08ee8101e28d72880e7a22fe81"
 
-SRCBRANCH_rzg2 = "karo-txrz"
-SRCREV_rzg2 = "b8086c606936af8ea1a77adaef6abb969ca08ccf"
+SRCBRANCH:rzg2 = "karo-txrz"
+SRCREV:rzg2 = "b8086c606936af8ea1a77adaef6abb969ca08ccf"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
-EXTRA_OEMAKE_append = " V=0"
+EXTRA_OEMAKE:append = " V=0"
 
 # append git hash to u-boot name
 SCMVERSION ??= "y"
@@ -38,24 +38,24 @@ UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
 UBOOT_ENV_FILE ?= "${@ "${MACHINE}-${KARO_BASEBOARD}_env.txt" if "${KARO_BASEBOARD}" != "" else "${MACHINE}_env.txt"}"
-UBOOT_ENV_FILE_mx6 = ""
+UBOOT_ENV_FILE:mx6 = ""
 
-SRC_URI_append_mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
-SRC_URI_append_stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
-SRC_URI_append_rzg2 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI:append:mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI:append:stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI:append:rzg2 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
 
-SRC_URI_append = "${@ " \
+SRC_URI:append = "${@ " \
     file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}.dts;subdir=git/arch/arm \
     file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}-u-boot.dtsi;subdir=git/arch/arm" \
     if "${KARO_BASEBOARD}" != "" else "" \
 }"
 
-SRC_URI_append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
+SRC_URI:append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
 
-SRC_URI_append = " file://${MACHINE}_defconfig.template"
-SRC_URI_append = "${@ "".join(map(lambda f: " file://u-boot-cfg.%s" % f, d.getVar('UBOOT_CONFIG').split()))}"
+SRC_URI:append = " file://${MACHINE}_defconfig.template"
+SRC_URI:append = "${@ "".join(map(lambda f: " file://u-boot-cfg.%s" % f, d.getVar('UBOOT_CONFIG').split()))}"
 
-do_configure_prepend() {
+do_configure:prepend() {
     if [ -n "${UBOOT_CONFIG}" ];then
         i=0
         for config in ${UBOOT_MACHINE};do
@@ -80,7 +80,7 @@ do_configure_prepend() {
     fi
 }
 
-do_configure_append() {
+do_configure:append() {
     for f in ${UBOOT_FEATURES};do
         if ! [ -f "${WORKDIR}/${f}.cfg" ];then
             bbfatal "UBOOT_FEATURE: '${WORKDIR}/${f}.cfg' not found"
@@ -124,7 +124,7 @@ do_savedefconfig() {
 do_savedefconfig[nostamp] = "1"
 addtask savedefconfig after do_configure
 
-do_compile_prepend() {
+do_compile:prepend() {
     if [ "${SCMVERSION}" = "y" ]; then
         # Add GIT revision to the local version
         head=`cd ${S} ; git rev-parse --verify --short HEAD 2> /dev/null`
@@ -139,7 +139,7 @@ do_compile_prepend() {
 # -----------------------------------------------------------------------------
 # Append deploy to handle specific device tree binary deployement
 #
-do_deploy_append_stm32mp1 () {
+do_deploy:append:stm32mp1 () {
     if [ -n "${UBOOT_CONFIG}" ]; then
         i=0
         for config in ${UBOOT_MACHINE}; do
@@ -168,15 +168,15 @@ do_deploy_append_stm32mp1 () {
 # -----------------------------------------------------
 # rzg2
 # -----------------------------------------------------
-FILES_${PN}_rzg2 = "/boot "
-SYSROOT_DIRS_rzg2 += "/boot"
+FILES:${PN}:rzg2 = "/boot "
+SYSROOT_DIRS:rzg2 += "/boot"
 
-UBOOT_SREC_SUFFIX_rzg2 = "srec"
-UBOOT_SREC_rzg2 ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
-UBOOT_SREC_IMAGE_rzg2 ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
-UBOOT_SREC_SYMLINK_rzg2 ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
+UBOOT_SREC_SUFFIX:rzg2 = "srec"
+UBOOT_SREC:rzg2 ?= "u-boot-elf.${UBOOT_SREC_SUFFIX}"
+UBOOT_SREC_IMAGE:rzg2 ?= "u-boot-elf-${MACHINE}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}"
+UBOOT_SREC_SYMLINK:rzg2 ?= "u-boot-elf-${MACHINE}.${UBOOT_SREC_SUFFIX}"
 
-do_deploy_append_rzg2 () {
+do_deploy:append:rzg2 () {
     if [ -n "${UBOOT_CONFIG}" ]; then
         i=0
         for config in ${UBOOT_MACHINE}; do
@@ -202,17 +202,17 @@ do_deploy_append_rzg2 () {
 
 # ---------------------------------------------------------------------
 # Avoid QA Issue: No GNU_HASH in the elf binary
-INSANE_SKIP_${PN} += "ldflags"
+INSANE_SKIP:${PN} += "ldflags"
 # ---------------------------------------------------------------------
 # Avoid QA Issue: ELF binary has relocations in .text
 # (uboot no need -fPIC option : remove check)
-INSANE_SKIP_${PN} += "textrel"
+INSANE_SKIP:${PN} += "textrel"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-COMPATIBLE_MACHINE_rzg2 = "(txrz-.*|qsrz-.*)"
-COMPATIBLE_MACHINE_tx6 = "(tx6[qsu]-.*)"
-COMPATIBLE_MACHINE_txul = "(txul-.*)"
-COMPATIBLE_MACHINE_stm32mp1 = "(txmp-.*|qsmp-.*)"
+COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"
+COMPATIBLE_MACHINE:tx6 = "(tx6[qsu]-.*)"
+COMPATIBLE_MACHINE:txul = "(txul-.*)"
+COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
 
 UBOOT_NAME = "u-boot-${MACHINE}.bin"

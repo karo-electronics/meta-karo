@@ -1,6 +1,6 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/tf-a-karo:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/tf-a-karo:"
 
-SRC_URI_append = " \
+SRC_URI:append = " \
 		file://fdts/stm32mp15-karo.dtsi;subdir=git \
 		file://fdts/stm32mp15-qsmp.dtsi;subdir=git \
 		file://fdts/stm32mp15-txmp.dtsi;subdir=git \

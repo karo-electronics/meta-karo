@@ -2,13 +2,13 @@ COMPATIBLE_MACHINE = "(stm32mp1)"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/tf-a-stm32mp:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/tf-a-stm32mp:"
 
 inherit deploy
 
 B = "${WORKDIR}/build"
 # Configure build dir for externalsrc class usage through devtool
-EXTERNALSRC_BUILD_pn-${PN} = "${WORKDIR}/build"
+EXTERNALSRC_BUILD:pn-${PN} = "${WORKDIR}/build"
 
 DEPENDS += "dtc-native"
 
@@ -47,7 +47,7 @@ STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
 do_unpack[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
 do_clean[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
 
-base_do_unpack_append () {
+base_do_unpack:append () {
     # Specific part to update devtool-source class
     if bb.data.inherits_class('devtool-source', d):
         # We don't want to move the source to STAGING_TFA_DIR here

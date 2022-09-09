@@ -1,6 +1,6 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${BP}/dts/overlays:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/dts/overlays:"
 
-SRC_URI_append_stm32mp1 = " \
+SRC_URI:append:stm32mp1 = " \
         file://STM-patches/0001-ARM-5.10.61-stm32mp1-r2-MACHINE.patch \
         file://STM-patches/0002-ARM-5.10.61-stm32mp1-r2-CLOCK.patch \
         file://STM-patches/0003-ARM-5.10.61-stm32mp1-r2-CPUFREQ.patch \
@@ -26,7 +26,7 @@ SRC_URI_append_stm32mp1 = " \
         file://STM-patches/0024-5.10.61-stm32mp1-r2-TestSupportWakeupFromTouchscreen.patch \
 "
 
-SRC_URI_append_stm32mp1 = " \
+SRC_URI:append:stm32mp1 = " \
         file://patches/0001-stm32mp151-bugfix.patch \
         file://patches/0002-pinctrl-z.patch \
         file://patches/0003-smsc-suspend-bugfix.patch \
@@ -40,7 +40,7 @@ SRC_URI_append_stm32mp1 = " \
         file://patches/0012-ltdc-pixclk-pol-bus-flags.patch \
 "
 
-SRC_URI_append_rzg2 = " \
+SRC_URI:append:rzg2 = " \
         file://patches/0001-renesas-du-change-fixed-clock-polarity.patch \
         file://patches/0002-renesas-du-change-fixed-pixformat.patch \
         file://patches/0003-RZ-G2L-SSIF-slave-mode-trial.patch \
@@ -55,29 +55,29 @@ SRC_URI_append_rzg2 = " \
         file://patches/0012-drm-sn65dsi83-bridge-support.patch \
 "
 
-SRC_URI_append_stm32mp1 = " \
+SRC_URI:append:stm32mp1 = " \
 	file://dts/overlays/stm32mp15-karo-ft5x06.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 	file://dts/overlays/stm32mp15-karo-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 	file://dts/overlays/stm32mp15-karo-sound.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
-EXTRA_OEMAKE_append = " V=0"
+EXTRA_OEMAKE:append = " V=0"
 
 # DTB overlays
 DTB_OVERLAYS ??= ""
 
 # STM32
-DTB_OVERLAYS_append_stm32mp1 = " \
+DTB_OVERLAYS:append:stm32mp1 = " \
         karo-gpu \
         karo-rtc \
 "
-DTB_OVERLAYS_append_txmp = " \
+DTB_OVERLAYS:append:txmp = " \
         txmp-ft5x06 \
         txmp-mb7 \
         txmp-lcd-panel \
         txmp-sound \
 "
-DTB_OVERLAYS_append_qsmp = " \
+DTB_OVERLAYS:append:qsmp = " \
         qsmp-dsi-panel \
         qsmp-ft5x06 \
         qsmp-ksz9031 \
@@ -92,15 +92,15 @@ DTB_OVERLAYS_append_qsmp = " \
         qsmp-sound \
 "
 
-KERNEL_DEVICETREE_append_stm32mp1 = "${@ "".join(map(lambda f: " stm32mp15-%s.dtb" % f, "${DTB_OVERLAYS}".split()))}"
+KERNEL_DEVICETREE:append:stm32mp1 = "${@ "".join(map(lambda f: " stm32mp15-%s.dtb" % f, "${DTB_OVERLAYS}".split()))}"
 
 KERNEL_DTC_FLAGS += "-@"
 
-KARO_BASEBOARDS_txmp ?= "\
+KARO_BASEBOARDS:txmp ?= "\
 	mb7 \
 "
 
-KARO_BASEBOARDS_qsmp ?= "\
+KARO_BASEBOARDS:qsmp ?= "\
 	qsbase1 \
 	qsbase2 \
 	qsbase4 \

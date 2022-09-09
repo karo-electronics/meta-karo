@@ -1,7 +1,7 @@
 MACHINEOVERRIDES =. "r9a07g044l:rzg2:rzg2l:"
 
 include conf/machine/include/karo.inc
-include conf/machine/include/tune-cortexa55.inc
+require conf/machine/include/arm/armv8-2a/tune-cortexa55.inc
 
 DEFAULTTUNE = "cortexa55"
 
@@ -10,10 +10,10 @@ EXTRA_IMAGEDEPENDS += "firmware-pack-rzg2 flashwriter-rzg2"
 
 KERNEL_IMAGETYPE ?= "Image"
 
-MACHINE_FEATURES_append = " emmc"
+MACHINE_FEATURES:append = " emmc"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySC0 115200;ttySC1 115200;ttySC2"
 
 DTB_BASENAME ?= "r9a07g044l2-${MACHINE}"
-KERNEL_DEVICETREE_append = "${@ " renesas/${DTB_BASENAME}-${KARO_BASEBOARD}.dtb" if "${KARO_BASEBOARD}" != "" else ""}"
+KERNEL_DEVICETREE:append = "${@ " renesas/${DTB_BASENAME}-${KARO_BASEBOARD}.dtb" if "${KARO_BASEBOARD}" != "" else ""}"

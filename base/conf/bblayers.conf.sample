@@ -13,7 +13,7 @@ BBLAYERS = " \
   ${BSPDIR}/layers/poky/meta-poky \
   ${BSPDIR}/layers/poky/meta-yocto-bsp \
   \
-  ${BSPDIR}/layers/meta-qt5 \
+  ${BSPDIR}/layers/meta-qt6 \
   \
   ${BSPDIR}/layers/meta-karo \
   ${BSPDIR}/layers/meta-karo-distro \

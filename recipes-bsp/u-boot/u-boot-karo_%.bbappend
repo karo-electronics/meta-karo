@@ -1,20 +1,20 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:${THISDIR}/${PN}/patches:${THISDIR}/${PN}/cfg:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:${THISDIR}/${PN}/patches:${THISDIR}/${PN}/cfg:"
 
-SRC_URI_append = " \
+SRC_URI:append = " \
         file://karo.bmp;subdir=git/tools/logos \
 "
 
-SRC_URI_append_mx6 = " \
+SRC_URI:append:mx6 = " \
         file://0001-dont-use-soft-float.patch \
 "
 
-SRC_URI_append_stm32mp1 = " \
+SRC_URI:append:stm32mp1 = " \
         file://dcache-off.patch \
         file://spi2-clk.patch \
         file://fdt-overlay-support.patch \
 "
 
-SRC_URI_append_stm32mp1 = " \
+SRC_URI:append:stm32mp1 = " \
         file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm \
         file://dts/stm32mp15-qsbase4.dtsi;subdir=git/arch/arm \
         file://dts/stm32mp15-qsmp-u-boot.dtsi;subdir=git/arch/arm \
@@ -43,12 +43,12 @@ SRC_URI_append_stm32mp1 = " \
         file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm \
 "
 
-SRC_URI_append_qsmp = " \
+SRC_URI:append:qsmp = " \
         file://qsbase-dts.patch \
         file://rgmii-id.patch \
 "
 
-SRC_URI_append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
+SRC_URI:append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
         file://dts/${DTB_BASENAME}.dts;subdir=git/arch/arm \
         file://dts/${DTB_BASENAME}-u-boot.dtsi;subdir=git/arch/arm \
 "}"
