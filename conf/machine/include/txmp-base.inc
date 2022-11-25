@@ -39,3 +39,6 @@ tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'serialboot', 'TF
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 
 DTB_BASENAME ?= "${TF_A_DEVICETREE}"
+
+# coprocessor stuff
+M4_BOARDS ?= "STM32MP157C-DK2"
