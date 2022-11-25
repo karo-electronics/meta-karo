@@ -20,6 +20,9 @@ do_compile() {
         if [ "${MACHINE}" = "txrz-g2l1" ]; then
                 BOARD="TXRZ-G2L1";
         fi
+        if [ "${MACHINE}" = "txrz-g2l2" ]; then
+                BOARD="TXRZ-G2L0";
+        fi
         if [ "${MACHINE}" = "qsrz-g2l0" ]; then
                 BOARD="QSRZ-G2L0";
         fi

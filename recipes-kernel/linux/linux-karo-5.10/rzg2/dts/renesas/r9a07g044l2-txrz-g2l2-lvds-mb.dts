@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Device Tree Source for the RZG2L based Ka-Ro TXRZ-G2L0 CoM on MB7
+ *
+ * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ */
+
+/dts-v1/;
+#include "r9a07g044l2-txrz-g2l2.dts"
+#include "r9a07g044l2-txrz-mb7.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based TXRZ-G2L2 CoM on TX LVDS-MB";
+};
+
+&lcd_panel {
+	enable-gpios = <&pinctrl RZG2L_GPIO(4, 1) GPIO_ACTIVE_HIGH>;
+
+	panel-timing {
+		clock-frequency = <62500000>;
+		hactive = <1280>;
+		vactive = <800>;
+		hback-porch = <80>;
+		hfront-porch = <80>;
+		vback-porch = <12>;
+		vfront-porch = <11>;
+		hsync-len = <2>;
+		vsync-len = <1>;
+		hsync-active = <0>;
+		vsync-active = <0>;
+		de-active = <0>;
+		pixelclk-active = <0>;
+	};
+};
+
+&i2c1 {
+	/delete-node/ touch-controller@38;
+};

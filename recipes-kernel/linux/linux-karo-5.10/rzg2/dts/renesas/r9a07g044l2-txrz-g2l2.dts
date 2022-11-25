@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Device Tree Source for the RZG2L based Ka-Ro TXRZ-G2L0 CoM
+ *
+ * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ */
+
+/dts-v1/;
+#include "r9a07g044l2-txrz.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH RZ/G2L(r9a07g044l2) based TXRZ-G2L2 CoM";
+	compatible = "karo,txrz-g2l2", "renesas,r9a07g044l2", "renesas,r9a07g044";
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x38000000>;
+	};
+};
