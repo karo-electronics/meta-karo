@@ -1,4 +1,4 @@
-SUMMARY = "Linux Kernel for Ka-Ro electronics Computer-On-Modules"
+SUMMARY = "5.10 Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
 require recipes-kernel/linux/linux-karo.inc
 
@@ -35,6 +35,7 @@ SRC_URI:append = " \
         file://0016-parallel-display-bus-flags-from-display-info.patch \
         file://0017-spi-nand-dma-map-bugfix.patch \
         file://0019-fdt5x06-dma-bugfix.patch \
+        file://0020-ilitek-ts-i2c-driver.patch \
         file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
 "
 
@@ -76,6 +77,7 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.c
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 
+KERNEL_FEATURES:append:qsrz = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg"," dsi83.cfg",d)}"
 
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
 
