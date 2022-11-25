@@ -43,19 +43,6 @@ SRC_URI:remove:rzg2 = " \
         file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
 "
 
-SRC_URI:append:tx6 = " \
-        file://dts/imx6qdl-tx6-lcd.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/imx6qdl-tx6-lvds.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/imx6qdl-tx6-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/imx6qdl-tx6.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
-SRC_URI:append:txul = " \
-        file://dts/imx6ul-tx6ul.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/imx6ul-txul-mainboard.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/imx6ul-txul-mb7.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
 SRC_URI:append:stm32mp1 = " \
         file://dts/stm32mp15-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp15-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
@@ -77,7 +64,6 @@ SRC_URI:append:rzg2 = " \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
-KERNEL_IMAGETYPE:mx6 = "uImage"
 KERNEL_IMAGETYPE:stm32mp1 = "uImage"
 
 KBUILD_DEFCONFIG = "defconfig"
@@ -90,14 +76,7 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.c
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 
-KERNEL_FEATURES:append:mx6 = "${@bb.utils.contains('MACHINE_FEATURES',"nand"," nand.cfg","",d)}"
-KERNEL_FEATURES:append:tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," lvds.cfg"," lcd.cfg",d)}"
-KERNEL_FEATURES:append:tx6 = "${@bb.utils.contains('MACHINE_FEATURES',"sata"," sata.cfg","",d)}"
 
-KERNEL_FEATURES:append_qsrz = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg"," dsi83.cfg",d)}"
-
-COMPATIBLE_MACHINE:tx6 = "(tx6[qsu]-.*)"
-COMPATIBLE_MACHINE:txul = "(txul-.*)"
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
 
 # returns all the elements from the src uri that are .cfg files

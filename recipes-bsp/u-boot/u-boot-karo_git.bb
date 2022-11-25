@@ -3,7 +3,6 @@ require recipes-bsp/u-boot/u-boot.inc
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
-LIC_FILES_CHKSUM:mx6 = "file://Licenses/README;md5=0507cd7da8e7ad6d6701926ec9b84c95"
 
 PROVIDES += "u-boot"
 
@@ -15,9 +14,6 @@ RDEPENDS:${PN}:append:rzg2 = " tf-a-rzg2"
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
-
-SRCBRANCH:mx6 = "master"
-SRCREV:mx6 = "c0b7b18e33d4fc17af2544de50816d539412d6e0"
 
 SRCBRANCH:stm32mp1 = "karo-txmp"
 SRCREV:stm32mp1 = "0b7c14883c6aeb08ee8101e28d72880e7a22fe81"
@@ -38,9 +34,7 @@ UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
 UBOOT_ENV_FILE ?= "${@ "${MACHINE}-${KARO_BASEBOARD}_env.txt" if "${KARO_BASEBOARD}" != "" else "${MACHINE}_env.txt"}"
-UBOOT_ENV_FILE:mx6 = ""
 
-SRC_URI:append:mx6 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/tx6" if "${UBOOT_ENV_FILE}" != "" else ""}"
 SRC_URI:append:stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
 SRC_URI:append:rzg2 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
 
@@ -211,8 +205,6 @@ INSANE_SKIP:${PN} += "textrel"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"
-COMPATIBLE_MACHINE:tx6 = "(tx6[qsu]-.*)"
-COMPATIBLE_MACHINE:txul = "(txul-.*)"
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
 
 UBOOT_NAME = "u-boot-${MACHINE}.bin"

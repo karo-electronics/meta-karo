@@ -4,10 +4,6 @@ SRC_URI:append = " \
         file://karo.bmp;subdir=git/tools/logos \
 "
 
-SRC_URI:append:mx6 = " \
-        file://0001-dont-use-soft-float.patch \
-"
-
 SRC_URI:append:stm32mp1 = " \
         file://dcache-off.patch \
         file://spi2-clk.patch \
