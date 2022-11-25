@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2020 Markus Bauer <mb@karo-electronics.de>
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+/ {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	fragment@0 {
+		reg = <0>;
+		target = <&dsi>;
+
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			ports {
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				port@0 {
+					reg = <0>;
+
+					dsi_from_ltdc_ep0: endpoint {
+						remote-endpoint = <&ltdc_ep0_to_dsi>;
+					};
+				};
+
+				port@1 {
+					reg = <1>;
+
+					dsi_to_dsi_panel: endpoint {
+						remote-endpoint = <&dsi_panel_from_dsi>;
+					};
+				};
+			};
+
+			panel@0 {
+				reg = <0>;
+				compatible = "raspberrypi,tc358762";
+				dsi-lanes = <1>;
+				video-mode = <2>;
+				panel-width-mm = <154>;
+				panel-height-mm = <86>;
+				power-supply = <&reg_rpi_display>;
+				status = "okay";
+
+				port {
+					dsi_panel_from_dsi: endpoint {
+						remote-endpoint = <&dsi_to_dsi_panel>;
+					};
+				};
+			};
+		};
+
+	};
+
+	fragment@1 {
+		reg = <1>;
+		target = <&ltdc>;
+
+		__overlay__ {
+			status = "okay";
+
+			port {
+				ltdc_ep0_to_dsi: endpoint@1 {
+					reg = <1>;
+					remote-endpoint = <&dsi_from_ltdc_ep0>;
+				};
+			};
+		};
+	};
+
+	fragment@2 {
+		reg = <2>;
+		target = <&i2c6>;
+
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			reg_rpi_display: regulator-rpi-display@45 {
+				compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
+				reg = <0x45>;
+				regulator-min-microvolt = <3300000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			rpi-ft5406@38 {
+				compatible = "rpi_ft5406";
+				reg = <0x38>;
+				power-supply = <&reg_rpi_display>;
+			};
+		};
+	};
+};

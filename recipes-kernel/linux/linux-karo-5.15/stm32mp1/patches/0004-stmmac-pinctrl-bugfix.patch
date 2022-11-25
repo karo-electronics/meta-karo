@@ -1,0 +1,29 @@
+diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+index e6af26b2dcb8..2ddd1995f724 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
++++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_main.c
+@@ -7167,8 +7167,10 @@ int stmmac_suspend(struct device *dev)
+ 	struct stmmac_priv *priv = netdev_priv(ndev);
+ 	u32 chan;
+ 
+-	if (!ndev || !netif_running(ndev))
++	if (!netif_running(ndev)) {
++		pinctrl_pm_select_sleep_state(priv->device);
+ 		return 0;
++	}
+ 
+ 	mutex_lock(&priv->lock);
+ 
+@@ -7266,8 +7268,10 @@ int stmmac_resume(struct device *dev)
+ 	struct stmmac_priv *priv = netdev_priv(ndev);
+ 	int ret;
+ 
+-	if (!netif_running(ndev))
+-		return 0;
++	if (!netif_running(ndev)) {
++		pinctrl_pm_select_default_state(priv->device);
++ 		return 0;
++	}
+ 
+ 	/* Power Down bit, into the PM register, is cleared
+ 	 * automatically as soon as a magic packet or a Wake-up frame

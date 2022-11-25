@@ -1,0 +1,13 @@
+diff --git a/drivers/gpu/drm/stm/drv.c b/drivers/gpu/drm/stm/drv.c
+index 9f441aadf2d5..451a99aeb7d9 100644
+--- a/drivers/gpu/drm/stm/drv.c
++++ b/drivers/gpu/drm/stm/drv.c
+@@ -202,7 +202,7 @@ static int stm_drm_platform_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto err_put;
+ 
+-	drm_fbdev_generic_setup(ddev, 16);
++	drm_fbdev_generic_setup(ddev, 0);
+ 
+ 	return 0;
+ 

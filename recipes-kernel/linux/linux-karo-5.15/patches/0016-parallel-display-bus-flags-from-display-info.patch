@@ -1,0 +1,27 @@
+diff --git a/drivers/gpu/drm/imx/parallel-display.c b/drivers/gpu/drm/imx/parallel-display.c
+index a8aba0141ce7..31e412f16b46 100644
+--- a/drivers/gpu/drm/imx/parallel-display.c
++++ b/drivers/gpu/drm/imx/parallel-display.c
+@@ -218,9 +218,20 @@ static int imx_pd_bridge_atomic_check(struct drm_bridge *bridge,
+ 		return -EINVAL;
+ 
+ 	if (bus_flags &
+-	    ~(DRM_BUS_FLAG_DE_LOW | DRM_BUS_FLAG_DE_HIGH |
++	    ~(DRM_BUS_FLAG_DE_LOW |
++	      DRM_BUS_FLAG_DE_HIGH |
+ 	      DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE |
+-	      DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE)) {
++	      DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE |
++	      DRM_BUS_FLAG_PIXDATA_SAMPLE_POSEDGE |
++	      DRM_BUS_FLAG_PIXDATA_SAMPLE_NEGEDGE |
++	      DRM_BUS_FLAG_DATA_MSB_TO_LSB |
++	      DRM_BUS_FLAG_DATA_LSB_TO_MSB |
++	      DRM_BUS_FLAG_SYNC_DRIVE_POSEDGE |
++	      DRM_BUS_FLAG_SYNC_DRIVE_NEGEDGE |
++	      DRM_BUS_FLAG_SYNC_SAMPLE_POSEDGE |
++	      DRM_BUS_FLAG_SYNC_SAMPLE_NEGEDGE |
++	      DRM_BUS_FLAG_SHARP_SIGNALS)
++	) {
+ 		dev_warn(imxpd->dev, "invalid bus_flags (%x)\n", bus_flags);
+ 		return -EINVAL;
+ 	}
