@@ -1,0 +1,564 @@
+diff --git a/arch/arm/mach-stm32mp/Kconfig b/arch/arm/mach-stm32mp/Kconfig
+index c83a151b7f..688c57d4e0 100644
+--- a/arch/arm/mach-stm32mp/Kconfig
++++ b/arch/arm/mach-stm32mp/Kconfig
+@@ -76,6 +76,15 @@ config STM32MP15x
+ 		dual core A7 for STM32MP157/3, monocore for STM32MP151
+ endchoice
+ 
++config TARGET_KARO_TXMP
++	bool "Support Ka-Ro TXMP modules"
++	select STM32MP15x
++	help
++		Ka-Ro electronics TXMP/QSMP board support
++
++config SYS_TEXT_BASE
++	default 0xC0100000
++
+ config NR_DRAM_BANKS
+ 	default 1
+ 
+diff --git a/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c b/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
+index ce568b44dc..0116150cf4 100644
+--- a/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
++++ b/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
+@@ -781,11 +781,13 @@ static int init_device(struct stm32prog_data *data,
+ 			last_addr = (u64)(block_dev->lba - GPT_HEADER_SZ - 1) *
+ 				    block_dev->blksz;
+ 		}
++#if 0
+ 		log_debug("MMC %d: lba=%ld blksz=%ld\n", dev->dev_id,
+ 			  block_dev->lba, block_dev->blksz);
+ 		log_debug(" available address = 0x%llx..0x%llx\n",
+ 			  first_addr, last_addr);
+ 		log_debug(" full_update = %d\n", dev->full_update);
++#endif
+ 		break;
+ 	case STM32PROG_NOR:
+ 	case STM32PROG_NAND:
+diff --git a/board/karo/common/env.c b/board/karo/common/env.c
+index 8cd0c2cca7..26e0719a90 100644
+--- a/board/karo/common/env.c
++++ b/board/karo/common/env.c
+@@ -23,6 +23,7 @@
+ #include <malloc.h>
+ #include <part.h>
+ #include "karo.h"
++#include <asm/global_data.h>
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+ 
+diff --git a/board/karo/txmp/Kconfig b/board/karo/txmp/Kconfig
+index 44ca4d2182..799369c843 100644
+--- a/board/karo/txmp/Kconfig
++++ b/board/karo/txmp/Kconfig
+@@ -18,6 +18,8 @@ config KARO_STM32
+ 	imply DM_USB_GADGET
+ 	imply RNG_STM32MP1
+ 
++source "board/st/common/Kconfig"
++
+ choice
+ 	prompt "Ka-Ro STM32 module variant"
+ 
+diff --git a/board/karo/txmp/dfu.c b/board/karo/txmp/dfu.c
+index aab7d741ac..9c3d115dce 100644
+--- a/board/karo/txmp/dfu.c
++++ b/board/karo/txmp/dfu.c
+@@ -163,7 +163,7 @@ static int dfu_otp_read(u64 offset, u8 *buffer, long *size)
+ 	int ret;
+ 
+ 	ret = uclass_get_device_by_driver(UCLASS_MISC,
+-					  DM_GET_DRIVER(stm32mp_bsec),
++					  DM_DRIVER_GET(stm32mp_bsec),
+ 					  &dev);
+ 	if (ret)
+ 		return ret;
+@@ -184,7 +184,7 @@ static int dfu_pmic_read(u64 offset, u8 *buffer, long *size)
+ 	struct udevice *dev;
+ 
+ 	ret = uclass_get_device_by_driver(UCLASS_MISC,
+-					  DM_GET_DRIVER(stpmic1_nvm),
++					  DM_DRIVER_GET(stpmic1_nvm),
+ 					  &dev);
+ 	if (ret)
+ 		return ret;
+diff --git a/board/karo/txmp/txmp.c b/board/karo/txmp/txmp.c
+index be466e2aa4..92f1d1d1df 100644
+--- a/board/karo/txmp/txmp.c
++++ b/board/karo/txmp/txmp.c
+@@ -33,6 +33,7 @@
+ #include <asm/gpio.h>
+ #include <asm/arch/stm32.h>
+ #include <asm/arch/stm32mp1_smc.h>
++#include <asm/arch/sys_proto.h>
+ #include <jffs2/load_kernel.h>
+ #include <linux/delay.h>
+ #include <linux/if_ether.h>
+@@ -53,7 +54,7 @@
+ #define SYSCFG_ICNR				0x1C
+ #define SYSCFG_CMPCR				0x20
+ #define SYSCFG_CMPENSETR			0x24
+-#define SYSCFG_PMCCLRR				0x44
++#define SYSCFG_PMCCLRR				0x08
+ 
+ #define SYSCFG_BOOTR_BOOT_MASK			GENMASK(2, 0)
+ #define SYSCFG_BOOTR_BOOTPD_SHIFT		4
+@@ -145,53 +146,51 @@ int checkboard(void)
+ 
+ static void board_key_check(void)
+ {
+-#if defined(CONFIG_FASTBOOT) || defined(CONFIG_CMD_STM32PROG)
+ 	ofnode node;
+ 	struct gpio_desc gpio;
+ 	enum forced_boot_mode boot_mode = BOOT_NORMAL;
+ 
+-	debug("%s@%d:\n", __func__, __LINE__);
++	if (!IS_ENABLED(CONFIG_FASTBOOT) && !IS_ENABLED(CONFIG_CMD_STM32PROG))
++		return;
+ 
+ 	node = ofnode_path("/config");
+ 	if (!ofnode_valid(node)) {
+-		pr_debug("%s: no /config node?\n", __func__);
++		log_debug("no /config node?\n");
+ 		return;
+ 	}
+-#ifdef CONFIG_FASTBOOT
+-	if (gpio_request_by_name_nodev(node, "st,fastboot-gpios", 0,
+-				       &gpio, GPIOD_IS_IN)) {
+-		pr_debug("%s: could not find /config/st,fastboot-gpios\n",
+-			 __func__);
+-	} else {
+-		if (dm_gpio_get_value(&gpio)) {
+-			puts("Fastboot key pressed, ");
+-			boot_mode = BOOT_FASTBOOT;
+-		}
++	if (IS_ENABLED(CONFIG_FASTBOOT)) {
++		if (gpio_request_by_name_nodev(node, "st,fastboot-gpios", 0,
++					       &gpio, GPIOD_IS_IN)) {
++			log_debug("could not find a /config/st,fastboot-gpios\n");
++		} else {
++			udelay(20);
++			if (dm_gpio_get_value(&gpio)) {
++				log_notice("Fastboot key pressed, ");
++				boot_mode = BOOT_FASTBOOT;
++			}
+ 
+-		dm_gpio_free(NULL, &gpio);
++			dm_gpio_free(NULL, &gpio);
++		}
+ 	}
+-#endif
+-#ifdef CONFIG_CMD_STM32PROG
+-	if (gpio_request_by_name_nodev(node, "st,stm32prog-gpios", 0,
+-				       &gpio, GPIOD_IS_IN)) {
+-		pr_debug("%s: could not find /config/st,stm32prog-gpios\n",
+-			 __func__);
+-	} else {
+-		if (dm_gpio_get_value(&gpio)) {
+-			puts("STM32Programmer key pressed, ");
+-			boot_mode = BOOT_STM32PROG;
++	if (IS_ENABLED(CONFIG_CMD_STM32PROG)) {
++		if (gpio_request_by_name_nodev(node, "st,stm32prog-gpios", 0,
++					       &gpio, GPIOD_IS_IN)) {
++			log_debug("could not find a /config/st,stm32prog-gpios\n");
++		} else {
++			udelay(20);
++			if (dm_gpio_get_value(&gpio)) {
++				log_notice("STM32Programmer key pressed, ");
++				boot_mode = BOOT_STM32PROG;
++			}
++			dm_gpio_free(NULL, &gpio);
+ 		}
+-		dm_gpio_free(NULL, &gpio);
+ 	}
+-#endif
+-
+ 	if (boot_mode != BOOT_NORMAL) {
+-		puts("entering download mode...\n");
++		log_notice("entering download mode...\n");
+ 		clrsetbits_le32(TAMP_BOOT_CONTEXT,
+ 				TAMP_BOOT_FORCED_MASK,
+ 				boot_mode);
+ 	}
+-#endif
+ }
+ 
+ static void sysconf_init(void)
+@@ -242,11 +241,11 @@ static void sysconf_init(void)
+ 	 *      but this value need to be consistent with board design
+ 	 */
+ 	ret = uclass_get_device_by_driver(UCLASS_PMIC,
+-					  DM_GET_DRIVER(stm32mp_pwr_pmic),
++					  DM_DRIVER_GET(stm32mp_pwr_pmic),
+ 					  &pwr_dev);
+ 	if (!ret) {
+ 		ret = uclass_get_device_by_driver(UCLASS_MISC,
+-						  DM_GET_DRIVER(stm32mp_bsec),
++						  DM_DRIVER_GET(stm32mp_bsec),
+ 						  &dev);
+ 		if (ret) {
+ 			pr_err("Can't find stm32mp_bsec driver\n");
+@@ -337,38 +336,30 @@ int board_interface_eth_init(struct udevice *dev,
+ 	print_mac_from_fuse();
+ 
+ 	switch (interface_type) {
+-	case PHY_INTERFACE_MODE_MII:
+-		value = SYSCFG_PMCSETR_ETH_SEL_GMII_MII |
+-			SYSCFG_PMCSETR_ETH_REF_CLK_SEL;
+-		debug("%s: PHY_INTERFACE_MODE_MII %08x\n", __func__, value);
+-		break;
+-	case PHY_INTERFACE_MODE_GMII:
+-		if (eth_clk_sel_reg)
+-			value = SYSCFG_PMCSETR_ETH_SEL_GMII_MII |
+-				SYSCFG_PMCSETR_ETH_CLK_SEL;
+-		else
+-			value = SYSCFG_PMCSETR_ETH_SEL_GMII_MII;
+-		debug("%s: PHY_INTERFACE_MODE_GMII %08x\n", __func__, value);
+-		break;
+ 	case PHY_INTERFACE_MODE_RMII:
+ 		if (eth_ref_clk_sel_reg)
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RMII |
+ 				SYSCFG_PMCSETR_ETH_REF_CLK_SEL;
+ 		else
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RMII;
+-		debug("%s: PHY_INTERFACE_MODE_RMII %08x\n", __func__, value);
++		debug("%s: %s %08x\n", __func__,
++		      phy_interface_strings[interface_type], value);
+ 		break;
+ 	case PHY_INTERFACE_MODE_RGMII:
++	case PHY_INTERFACE_MODE_RGMII_ID:
++	case PHY_INTERFACE_MODE_RGMII_RXID:
++	case PHY_INTERFACE_MODE_RGMII_TXID:
+ 		if (eth_clk_sel_reg)
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RGMII |
+ 				SYSCFG_PMCSETR_ETH_CLK_SEL;
+ 		else
+ 			value = SYSCFG_PMCSETR_ETH_SEL_RGMII;
+-		debug("%s: PHY_INTERFACE_MODE_RGMII %08x\n", __func__, value);
++		debug("%s: %s %08x\n", __func__,
++		      phy_interface_strings[interface_type], value);
+ 		break;
+ 	default:
+-		pr_warn("%s: Unsupported interface type %d\n",
+-			__func__, interface_type);
++		printf("%s: Error: Unsupported interface type %d\n",
++		       __func__, interface_type);
+ 		/* Do not manage others interfaces */
+ 		return -EINVAL;
+ 	}
+@@ -472,175 +463,51 @@ static inline void txmp_setup_led(void)
+ }
+ #endif /* CONFIG_LED */
+ 
+-#ifdef CONFIG_USB_GADGET_DWC2_OTG
+-
+-#define DWC2_GGPIO_OFFSET		0x38
+-#define DWC2_GGPIO_VBUS_SENSING		BIT(21)
+-
+-#define STM32MP_GUSBCFG			0x40002407
+-
+-static struct dwc2_plat_otg_data stm32mp_otg_data = {
+-	.regs_otg = FDT_ADDR_T_NONE,
+-	.usb_gusbcfg = STM32MP_GUSBCFG,
+-};
+-
+-static struct reset_ctl usbotg_reset;
+-
+-static void board_usbotg_init(void)
+-{
+-	ofnode node;
+-	struct ofnode_phandle_args args;
+-	struct udevice *dev;
+-	struct clk clk;
+-
+-	debug("%s@%d:\n", __func__, __LINE__);
+-
+-	/* find the usb otg node */
+-	node = ofnode_by_compatible(ofnode_null(), "snps,dwc2");
+-	if (!ofnode_valid(node)) {
+-		pr_err("usb_otg device not found\n");
+-		return;
+-	}
+-
+-	if (!ofnode_is_available(node)) {
+-		pr_err("stm32 usbotg is disabled in the device tree\n");
+-		return;
+-	}
+-
+-	/* Enable clock */
+-	if (ofnode_parse_phandle_with_args(node, "clocks",
+-					   "#clock-cells", 0, 0, &args)) {
+-		pr_err("usbotg has no clocks defined in the device tree\n");
+-		return;
+-	}
+-
+-	if (uclass_get_device_by_ofnode(UCLASS_CLK, args.node, &dev)) {
+-		pr_err("Can't get clk device\n");
+-		return;
+-	}
+-
+-	if (args.args_count != 1) {
+-		printf("Bad args count %d for usb-otg clk\n", args.args_count);
+-		return;
+-	}
+-
+-	clk.dev = dev;
+-	clk.id = args.args[0];
+-
+-	if (clk_enable(&clk)) {
+-		pr_err("Failed to enable usbotg clock\n");
+-		return;
+-	}
+-
+-	/* Reset */
+-	if (ofnode_parse_phandle_with_args(node, "resets",
+-					   "#reset-cells", 0, 0, &args)) {
+-		pr_err("usbotg has no resets defined in the device tree\n");
+-		goto clk_err;
+-	}
+-
+-	if ((uclass_get_device_by_ofnode(UCLASS_RESET, args.node, &dev)) ||
+-	    args.args_count != 1)
+-		goto clk_err;
+-
+-	usbotg_reset.dev = dev;
+-	usbotg_reset.id = args.args[0];
+-
+-	/* Phy */
+-	if (!(ofnode_parse_phandle_with_args(node, "phys",
+-					     "#phy-cells", 0, 0, &args))) {
+-		int __maybe_unused ret;
+-
+-		stm32mp_otg_data.phy_of_node = ofnode_get_parent(args.node);
+-		if (!ofnode_valid(stm32mp_otg_data.phy_of_node)) {
+-			pr_err("USB0 PHY device not found\n");
+-			goto clk_err;
+-		}
+-		if (of_live_active()) {
+-			stm32mp_otg_data.regs_phy = ofnode_get_addr(args.node);
+-			if (stm32mp_otg_data.regs_phy == FDT_ADDR_T_NONE) {
+-				printf("Failed to get addr of usbotg phy from %s\n",
+-				       ofnode_get_name(args.node));
+-				goto clk_err;
+-			}
+-		} else {
+-			stm32mp_otg_data.regs_phy = ofnode_get_addr(args.node);
+-			if (stm32mp_otg_data.regs_phy == FDT_ADDR_T_NONE) {
+-				printf("Failed to get addr of usbotg phy from %s\n",
+-				       ofnode_get_name(args.node));
+-				goto clk_err;
+-			}
+-		}
+-		debug("usbotg PHY addr=%08lx\n", stm32mp_otg_data.regs_phy);
+-	}
+-
+-	/* Parse and store data needed for gadget */
+-	stm32mp_otg_data.regs_otg = ofnode_get_addr(node);
+-	if (stm32mp_otg_data.regs_otg == FDT_ADDR_T_NONE) {
+-		printf("usbotg: can't get base address\n");
+-		goto clk_err;
+-	}
+-
+-	stm32mp_otg_data.rx_fifo_sz = ofnode_read_u32_default(node,
+-							      "g-rx-fifo-size",
+-							      0);
+-	stm32mp_otg_data.np_tx_fifo_sz = ofnode_read_u32_default(node,
+-								 "g-np-tx-fifo-size", 0);
+-	stm32mp_otg_data.tx_fifo_sz = ofnode_read_u32_default(node,
+-							      "g-tx-fifo-size", 0);
+-
+-	/* Enable voltage level detector */
+-	if (!(ofnode_parse_phandle_with_args(node, "usb33d-supply",
+-					     NULL, 0, 0, &args)))
+-		if (!uclass_get_device_by_ofnode(UCLASS_REGULATOR,
+-						 args.node, &dev)) {
+-			int ret = regulator_set_enable(dev, true);
+-
+-			if (ret) {
+-				pr_err("Failed to enable usb33d: %d\n", ret);
+-				goto clk_err;
+-			}
+-		}
+-
+-	return;
+-
+-clk_err:
+-	clk_disable(&clk);
+-}
+-
+ int g_dnl_board_usb_cable_connected(void)
+ {
+-	int ret;
+ 	struct udevice *dwc2_udc_otg;
++	int ret;
++
++	if (!IS_ENABLED(CONFIG_USB_GADGET_DWC2_OTG))
++		return -ENODEV;
++
++	/*
++	 * In case of USB boot device is detected, consider USB cable is
++	 * connected
++	 */
++	if ((get_bootmode() & TAMP_BOOT_DEVICE_MASK) == BOOT_SERIAL_USB)
++		return true;
+ 
+ 	ret = uclass_get_device_by_driver(UCLASS_USB_GADGET_GENERIC,
+-					  DM_GET_DRIVER(dwc2_udc_otg),
++					  DM_DRIVER_GET(dwc2_udc_otg),
+ 					  &dwc2_udc_otg);
+ 	if (ret) {
+-		printf("failed to get UDC device: %d\n", ret);
+-		return 0;
++		log_debug("dwc2_udc_otg init failed\n");
++		return ret;
+ 	}
+ 
+-	return !!dwc2_udc_B_session_valid(dwc2_udc_otg);
++	return dwc2_udc_B_session_valid(dwc2_udc_otg);
+ }
+ 
++#ifdef CONFIG_USB_GADGET_DOWNLOAD
+ #define STM32MP1_G_DNL_DFU_PRODUCT_NUM 0xdf11
++#define STM32MP1_G_DNL_FASTBOOT_PRODUCT_NUM 0x0afb
++
+ int g_dnl_bind_fixup(struct usb_device_descriptor *dev, const char *name)
+ {
+-	debug("%s@%d:\n", __func__, __LINE__);
+-
+-	if (!strcmp(name, "usb_dnl_dfu"))
++	if (IS_ENABLED(CONFIG_DFU_OVER_USB) &&
++	    !strcmp(name, "usb_dnl_dfu"))
+ 		put_unaligned(STM32MP1_G_DNL_DFU_PRODUCT_NUM, &dev->idProduct);
++	else if (IS_ENABLED(CONFIG_FASTBOOT) &&
++		 !strcmp(name, "usb_dnl_fastboot"))
++		put_unaligned(STM32MP1_G_DNL_FASTBOOT_PRODUCT_NUM,
++			      &dev->idProduct);
+ 	else
+ 		put_unaligned(CONFIG_USB_GADGET_PRODUCT_NUM, &dev->idProduct);
+ 
+ 	return 0;
+ }
+-#else
+-static inline void board_usbotg_init(void)
+-{
+-}
+-#endif /* CONFIG_USB_GADGET_DWC2_OTG */
++#endif /* CONFIG_USB_GADGET_DOWNLOAD */
+ 
+ #include <linux/mtd/mtd.h>
+ 
+@@ -673,8 +540,6 @@ int board_init(void)
+ 	board_key_check();
+ 	txmp_setup_led();
+ 
+-	board_usbotg_init();
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/fastboot/fb_command.c b/drivers/fastboot/fb_command.c
+index a045845e69..1236b9e09d 100644
+--- a/drivers/fastboot/fb_command.c
++++ b/drivers/fastboot/fb_command.c
+@@ -44,6 +44,7 @@ static void oem_format(char *, char *);
+ #endif
+ #if CONFIG_IS_ENABLED(FASTBOOT_CMD_OEM_UCMD)
+ static void oem_ucmd(char *, char *);
++#endif
+ #if CONFIG_IS_ENABLED(FASTBOOT_CMD_OEM_PARTCONF)
+ static void oem_partconf(char *, char *);
+ #endif
+diff --git a/drivers/fastboot/fb_mmc.c b/drivers/fastboot/fb_mmc.c
+index cbb3f7b1de..01c2c4d7f8 100644
+--- a/drivers/fastboot/fb_mmc.c
++++ b/drivers/fastboot/fb_mmc.c
+@@ -220,7 +220,7 @@ static int fb_mmc_erase_mmc_hwpart(struct blk_desc *dev_desc)
+ 		return 1;
+ 	}
+ 
+-	printf("........ erased %lu bytes from mmc hwpart[%u]\n",
++	printf("........ erased %llu bytes from mmc hwpart[%u]\n",
+ 	       dev_desc->lba * dev_desc->blksz, dev_desc->hwpart);
+ 
+ 	return 0;
+@@ -266,7 +266,7 @@ static void fb_mmc_boot_ops(struct blk_desc *dev_desc, void *buffer,
+ 			return;
+ 		}
+ 
+-		printf("........ wrote %lu bytes to EMMC_BOOT%d\n",
++		printf("........ wrote %llu bytes to EMMC_BOOT%d\n",
+ 		       blkcnt * blksz, hwpart);
+ 	} else { /* erase */
+ 		if (fb_mmc_erase_mmc_hwpart(dev_desc)) {
+diff --git a/drivers/usb/gadget/f_fastboot.c b/drivers/usb/gadget/f_fastboot.c
+index 8ba55aab9f..1fcffaf9dd 100644
+--- a/drivers/usb/gadget/f_fastboot.c
++++ b/drivers/usb/gadget/f_fastboot.c
+@@ -427,7 +427,7 @@ static unsigned int rx_bytes_expected(struct usb_ep *ep)
+ {
+ 	int rx_remain = fastboot_data_remaining();
+ 	unsigned int rem;
+-	unsigned int maxpacket = usb_endpoint_maxp(ep->desc);
++	unsigned int maxpacket = ep->maxpacket;
+ 
+ 	if (rx_remain <= 0)
+ 		return 0;
+diff --git a/env/callback.c b/env/callback.c
+index 29be94f9ad..638a02b28f 100644
+--- a/env/callback.c
++++ b/env/callback.c
+@@ -37,7 +37,7 @@ static struct env_clbk_tbl *find_env_callback(const char *name)
+ }
+ 
+ static int first_call = 1;
+-static char *callback_list;
++static const char *callback_list;
+ 
+ /*
+  * Look for a possible callback for a newly added variable
+@@ -52,7 +52,7 @@ void env_callback_init(struct env_entry *var_entry)
+ 	int ret = 1;
+ 
+ 	if (first_call) {
+-		callback_list = strdup(env_get(ENV_CALLBACK_VAR));
++		callback_list = env_get(ENV_CALLBACK_VAR);
+ 		first_call = 0;
+ 	}
+ 
+@@ -105,10 +105,10 @@ static int set_callback(const char *name, const char *value, void *priv)
+ 
+ 	/* does the env variable actually exist? */
+ 	if (ep != NULL) {
+-		/* the association declares no callback, so remove the pointer */
+-		if (!value || strlen(value) == 0) {
++		/* the assocaition delares no callback, so remove the pointer */
++		if (value == NULL || strlen(value) == 0)
+ 			ep->callback = NULL;
+-		} else {
++		else {
+ 			/* assign the requested callback */
+ 			clbkp = find_env_callback(value);
+ 			if (clbkp != NULL)
+@@ -134,9 +134,6 @@ static int on_callbacks(const char *name, const char *value, enum env_op op,
+ 	/* configure any dynamic callback bindings */
+ 	env_attr_walk(value, set_callback, NULL);
+ 
+-	free(callback_list);
+-	callback_list = strdup(value);
+-
+ 	return 0;
+ }
+ U_BOOT_ENV_CALLBACK(callbacks, on_callbacks);
+diff --git a/lib/display_options.c b/lib/display_options.c
+index 4da1f5244f..369260e367 100644
+--- a/lib/display_options.c
++++ b/lib/display_options.c
+@@ -218,7 +218,6 @@ int print_buffer(ulong addr, const void *data, uint width, uint count,
+ 
+ 		thislinelen = hexdump_line(addr, data, width, count, linelen,
+ 					   buf, sizeof(buf));
+-		assert(thislinelen >= 0);
+ 		puts(buf);
+ 		putc('\n');
+ 

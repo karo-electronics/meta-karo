@@ -5,9 +5,13 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:stm32mp1 = " \
-        file://dcache-off.patch \
-        file://spi2-clk.patch \
+        file://v2021-fittings.patch \
         file://fdt-overlay-support.patch \
+        file://fdt-size.patch \
+"
+
+SRC_URI:remove:qsmp-1510 = " \
+       file://fdt-overlay-support.patch \ 
 "
 
 SRC_URI:append:stm32mp1 = " \
@@ -37,11 +41,6 @@ SRC_URI:append:stm32mp1 = " \
         file://dts/stm32mp157c-txmp-1570-mb7.dts;subdir=git/arch/arm \
         file://dts/stm32mp157c-txmp-1570-u-boot.dtsi;subdir=git/arch/arm \
         file://dts/stm32mp157c-txmp-1570.dts;subdir=git/arch/arm \
-"
-
-SRC_URI:append:qsmp = " \
-        file://qsbase-dts.patch \
-        file://rgmii-id.patch \
 "
 
 SRC_URI:append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\

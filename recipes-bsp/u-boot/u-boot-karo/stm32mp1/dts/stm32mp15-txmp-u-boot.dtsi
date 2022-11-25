@@ -15,7 +15,7 @@
 		CLK_PLL12_HSE
 		CLK_PLL3_HSE
 		CLK_PLL4_HSE
-		CLK_RTC_LSE
+		CLK_RTC_LSI
 		CLK_MCO1_DISABLED
 		CLK_MCO2_DISABLED
 	>;
@@ -37,7 +37,7 @@
 		CLK_QSPI_ACLK
 		CLK_ETH_PLL4P
 		CLK_SDMMC12_HCLK6
-		CLK_STGEN_HSE
+		CLK_STGEN_HSI
 		CLK_USBPHY_HSE
 		CLK_SPI2S1_DISABLED
 		CLK_SPI2S23_PLL4P
@@ -80,7 +80,7 @@
 	st,pll@1 {
 		u-boot,dm-pre-reloc;
 		reg = <1>;
-		cfg = <2 65 1 0 0 5>;
+		cfg = <2 65 1 1 0 5>;
 		frac = <5120>;
 	};
 

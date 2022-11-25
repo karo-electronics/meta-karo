@@ -49,6 +49,8 @@
 &mdio0 {
 	phy0: ethernet-phy@3 {
 		reg = <3>;
+		interrupt-parent = <&gpioa>;
+		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
 		micrel,force-master;
 		rxd0-skew-ps = <(420 + 6)>;
 		rxd1-skew-ps = <(420 + 5)>;

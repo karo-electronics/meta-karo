@@ -8,7 +8,7 @@
  #include <dm/of_access.h>
  #include <linux/libfdt.h>
  #include "karo.h"
-@@ -101,6 +102,154 @@ static void *karo_fdt_load_dtb(unsigned
+@@ -101,6 +102,156 @@ static void *karo_fdt_load_dtb(unsigned
  	return fdt;
  }
  
@@ -117,8 +117,10 @@
 +		}
 +		*overlays = env_get(overlay_var);
 +		free(overlay_var);
-+		if (strstr(*overlays, "setenv overlays"))
-+			*overlays += strlen("setenv overlays ");
++		if (*overlays) {
++			if (strstr(*overlays, "setenv overlays"))
++				*overlays += strlen("setenv overlays ");
++		}
 +	} else {
 +		*overlays = env_get("overlays");
 +	}

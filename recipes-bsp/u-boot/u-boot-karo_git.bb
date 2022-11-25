@@ -6,7 +6,7 @@ LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
 PROVIDES += "u-boot"
 
-DEPENDS:append = " bc-native bison-native xxd-native"
+DEPENDS:append = " bc-native bison-native xxd-native python3-setuptools-native"
 
 RDEPENDS:${PN}:append:stm32mp1 = " tf-a-stm32mp"
 RDEPENDS:${PN}:append:rzg2 = " tf-a-rzg2"
@@ -15,8 +15,8 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
 SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
-SRCBRANCH:stm32mp1 = "karo-txmp"
-SRCREV:stm32mp1 = "0b7c14883c6aeb08ee8101e28d72880e7a22fe81"
+SRCBRANCH:stm32mp1 = "karo-stm32mp1-v2021.10"
+SRCREV:stm32mp1 = "7c7c70f71f34d2cd4c77dd6d1e14e5022178c6c2"
 
 SRCBRANCH:rzg2 = "karo-txrz"
 SRCREV:rzg2 = "b8086c606936af8ea1a77adaef6abb969ca08ccf"
@@ -143,12 +143,6 @@ do_deploy:append:stm32mp1 () {
                 j=$(expr $j + 1)
                 if [ $j -eq $i ]; then
                     install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
-
-                    # As soon as SPL binary exists, install it
-                    # This allow to mix u-boot configuration, with and without SPL
-                    if [ -f ${B}/${config}/u-boot-spl.stm32 ]; then
-                        install -m 644 ${B}/${config}/u-boot-spl.stm32 ${DEPLOYDIR}
-                    fi
                 fi
             done
             unset j
@@ -156,6 +150,30 @@ do_deploy:append:stm32mp1 () {
         unset i
     else
         bbfatal "Wrong u-boot-karo configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
+    fi
+}
+
+BIN_DIR:stm32mp1 = "/binaries"
+FILES:${PN}:stm32mp1 = "${BIN_DIR}"
+SYSROOT_DIRS:stm32mp1 += "${BIN_DIR}"
+
+do_install:stm32mp1 () {
+    if [ -n "${UBOOT_CONFIG}" ]; then
+        i=0
+        for config in ${UBOOT_MACHINE}; do
+            i=$(expr $i + 1)
+            j=0
+            for type in ${UBOOT_CONFIG}; do
+                j=$(expr $j + 1)
+                if [ $j -eq $i ]; then
+                    install -d ${D}/${BIN_DIR}
+                    install -m 644 ${B}/${config}/u-boot-nodtb.bin ${D}/${BIN_DIR}/u-boot-nodtb-${type}.bin
+                    install -m 644 ${B}/${config}/u-boot.dtb ${D}/${BIN_DIR}/u-boot-${type}.dtb
+                fi
+            done
+            unset j
+        done
+        unset i
     fi
 }
 
