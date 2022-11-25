@@ -10,12 +10,6 @@
 #include "stm32mp15-karo.dtsi"
 #include <dt-bindings/clock/stm32mp1-clksrc.h>
 
-/ {
-	aliases {
-		mmc1 = &sdmmc3;
-	};
-};
-
 &rcc {
 	st,csi-cal;
 	st,hsi-cal;
@@ -118,15 +112,6 @@
 	status = "okay";
 };
 
-&sdmmc3 {
-	/* SD card slot */
-	pinctrl-names = "default";
-	pinctrl-0 = <&sdmmc3_pins_mx>;
-	bus-width = <4>;
-	st,neg-edge;
-	status = "okay";
-};
-
 &pinctrl {
 	sdmmc2_pins_mx: sdmmc2-pins-mx {
 		pins1 {
@@ -144,28 +129,6 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('E', 3, AF9)>; /* SDMMC2_CK */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <3>;
-		};
-	};
-
-	sdmmc3_pins_mx: sdmmc3-pins-mx {
-		pins1 {
-			pinmux = <
-				  STM32_PINMUX('D', 1, AF10)	/* SDMMC3_D0 */
-				  STM32_PINMUX('D', 4, AF10)	/* SDMMC3_D1 */
-				  STM32_PINMUX('D', 5, AF10)	/* SDMMC3_D2 */
-				  STM32_PINMUX('D', 7, AF10)	/* SDMMC3_D3 */
-				  STM32_PINMUX('D', 0, AF10)	/* SDMMC3_CMD */
-			>;
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <1>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('G', 15, AF10)>; /* SDMMC3_CK */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <3>;

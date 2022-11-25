@@ -1,0 +1,29 @@
+diff --git a/plat/st/stm32mp1/stm32mp1_boot_device.c b/plat/st/stm32mp1/stm32mp1_boot_device.c
+index 12aa1c2da..376854e77 100644
+--- a/plat/st/stm32mp1/stm32mp1_boot_device.c
++++ b/plat/st/stm32mp1/stm32mp1_boot_device.c
+@@ -178,13 +178,13 @@ int plat_get_raw_nand_data(struct rawnand_device *device)
+ int plat_get_spi_nand_data(struct spinand_device *device)
+ {
+ 	zeromem(&device->spi_read_cache_op, sizeof(struct spi_mem_op));
+-	device->spi_read_cache_op.cmd.opcode = SPI_NAND_OP_READ_FROM_CACHE_4X;
++	device->spi_read_cache_op.cmd.opcode = SPI_NAND_OP_READ_FROM_CACHE_2X;
+ 	device->spi_read_cache_op.cmd.buswidth = SPI_MEM_BUSWIDTH_1_LINE;
+ 	device->spi_read_cache_op.addr.nbytes = 2U;
+ 	device->spi_read_cache_op.addr.buswidth = SPI_MEM_BUSWIDTH_1_LINE;
+ 	device->spi_read_cache_op.dummy.nbytes = 1U;
+ 	device->spi_read_cache_op.dummy.buswidth = SPI_MEM_BUSWIDTH_1_LINE;
+-	device->spi_read_cache_op.data.buswidth = SPI_MEM_BUSWIDTH_4_LINE;
++	device->spi_read_cache_op.data.buswidth = SPI_MEM_BUSWIDTH_2_LINE;
+ 	device->spi_read_cache_op.data.dir = SPI_MEM_DATA_IN;
+ 
+ 	return get_data_from_otp(device->nand_dev, false);
+@@ -203,7 +203,7 @@ int plat_get_nor_data(struct nor_device *device)
+ 	device->read_op.addr.buswidth = SPI_MEM_BUSWIDTH_1_LINE;
+ 	device->read_op.dummy.nbytes = 1U;
+ 	device->read_op.dummy.buswidth = SPI_MEM_BUSWIDTH_1_LINE;
+-	device->read_op.data.buswidth = SPI_MEM_BUSWIDTH_4_LINE;
++	device->read_op.data.buswidth = SPI_MEM_BUSWIDTH_2_LINE;
+ 	device->read_op.data.dir = SPI_MEM_DATA_IN;
+ 
+ 	return 0;

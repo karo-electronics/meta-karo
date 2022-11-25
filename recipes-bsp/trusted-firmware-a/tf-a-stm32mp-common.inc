@@ -38,6 +38,10 @@ EXTRA_OEMAKE += 'PLAT=stm32mp1'
 EXTRA_OEMAKE += 'ARCH=aarch32'
 EXTRA_OEMAKE += 'ARM_ARCH_MAJOR=7'
 
+BIN_DIR = "/binaries"
+FILES:${PN} = "${BIN_DIR}"
+SYSROOT_DIRS += "${BIN_DIR}"
+
 # -----------------------------------------------
 # Enable use of work-shared folder
 STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
@@ -103,6 +107,20 @@ do_compile() {
             done
         else
             oe_runmake -C ${S} BUILD_PLAT=${B}/${config} ${add_extraoemake}
+        fi
+    done
+}
+
+do_install() {
+    for config in ${TF_A_CONFIG}; do
+        if [ -n "${TF_A_DEVICETREE}" ]; then
+            for dt in ${TF_A_DEVICETREE}; do
+	            install -d ${D}/${BIN_DIR}/${config}
+                install -m 644 ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX} ${D}/${BIN_DIR}/${config}
+                install -m 644 ${B}/${config}/bl32.bin ${D}/${BIN_DIR}/${config}
+                install -m 644 ${B}/${config}/fdts/${dt}-fw-config.dtb ${D}/${BIN_DIR}/${config}
+                install -m 644 ${B}/${config}/fdts/${dt}-bl32.dtb ${D}/${BIN_DIR}/${config}
+            done
         fi
     done
 }

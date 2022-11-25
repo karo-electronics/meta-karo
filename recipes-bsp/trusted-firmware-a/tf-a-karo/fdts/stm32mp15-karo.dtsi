@@ -4,6 +4,7 @@
  */
 
 #include "stm32mp15-ddr.dtsi"
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
 #include <dt-bindings/clock/stm32mp1-clksrc.h>
 #include <dt-bindings/power/stm32mp1-power.h>
 #include <dt-bindings/soc/st,stm32-etzpc.h>
@@ -30,6 +31,17 @@
 };
 
 &bsec {
+	board_id: board_id@ec {
+		reg = <0xec 0x4>;
+		st,non-secure-otp;
+	};
+};
+
+&cryp1 {
+	status = "okay";
+};
+
+&hash1 {
 	status = "okay";
 };
 
