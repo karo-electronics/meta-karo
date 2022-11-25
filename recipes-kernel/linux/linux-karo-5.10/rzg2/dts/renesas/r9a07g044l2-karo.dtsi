@@ -118,6 +118,10 @@
 	pinctrl-0 = <&du_pins>;
 };
 
+&ehci0 {
+	status = "okay";
+};
+
 &ehci1 {
 	status = "okay";
 };
