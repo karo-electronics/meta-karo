@@ -1,7 +1,7 @@
 append_bootargs=quiet
 autoload=no
 autostart=no
-baseboard=
+baseboard=qsbase2
 baudrate=115200
 boot_mode=mmc
 bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs}
