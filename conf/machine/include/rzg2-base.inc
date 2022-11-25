@@ -8,7 +8,7 @@ DEFAULTTUNE = "cortexa55"
 PREFERRED_VERSION_linux-karo = "5.10"
 
 # build u-boot with image
-EXTRA_IMAGEDEPENDS += "firmware-pack-rzg2 flashwriter-rzg2"
+EXTRA_IMAGEDEPENDS += "firmware-pack flashwriter-rzg2"
 
 KERNEL_IMAGETYPE ?= "Image"
 

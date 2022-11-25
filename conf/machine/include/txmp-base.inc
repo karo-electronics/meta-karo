@@ -27,18 +27,15 @@ BOOTSCHEME_LABELS ??= "trusted"
 # tf-a
 # =========================================================================
 # Finally we must compile tf-a in all cases as we need trusted binary to boot
-EXTRA_IMAGEDEPENDS += "tf-a-stm32mp"
+EXTRA_IMAGEDEPENDS += "firmware-pack tf-a-stm32mp"
 
 # Define default TF-A config
+# Set default TF-A config
+TF_A_CONFIG = "serialboot"
 TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', ' trusted', '', d)}"
-
-# Define SECURE_PAYLOAD config to set for each TF_A_CONFIG
-TF_A_CONFIG_serialboot  = "AARCH32_SP=sp_min"
-TF_A_CONFIG_trusted     = "AARCH32_SP=sp_min"
 
 # Manage proper update for TF_A_CONFIG_* var
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'serialboot', 'TF_A_CONFIG_serialboot', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 
 DTB_BASENAME ?= "${TF_A_DEVICETREE}"
-KERNEL_DEVICETREE:append = "${@ " ${DTB_BASENAME}-${KARO_BASEBOARD}.dtb" if "${KARO_BASEBOARD}" != "" else ""}"
