@@ -19,14 +19,15 @@
 	pinctrl-0 = <&eth0_mii_pins>;
 	phy-handle = <&phy0>;
 	phy-mode = "mii";
+	renesas,no-ether-link;
+	reset-gpios = <&pinctrl RZG2L_GPIO(28, 1) GPIO_ACTIVE_LOW>;
+	reset-delay-us = <25000>;
 	status = "okay";
 
 	phy0: phy@0 {
 		reg = <0>;
 		interrupt-parent = <&pinctrl>;
 		interrupts = <RZG2L_GPIO(22, 1) IRQ_TYPE_EDGE_FALLING>;
-		reset-gpios = <&pinctrl RZG2L_GPIO(28, 1) GPIO_ACTIVE_LOW>;
-		reset-assert-us = <25000>;
 	};
 };
 
