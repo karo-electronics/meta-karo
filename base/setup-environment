@@ -197,9 +197,8 @@ fi
 # Ensure all files in layers/base are kept in sync with project root
 updated=false
 for f in "$CWD/layers/meta-karo/base/"*; do
-    [ -f "$f" ] || continue
     file="$(basename $f)"
-    if echo "$file" | grep -q '~$'; then
+    if [ "$file" = "conf" ] || echo "$file" | grep -q '~$'; then
         continue
     fi
 
