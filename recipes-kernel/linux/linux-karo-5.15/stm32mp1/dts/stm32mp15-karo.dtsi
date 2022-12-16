@@ -125,6 +125,10 @@
 	sram = <&dma_pool>;
 };
 
+&dts {
+	status = "okay";
+};
+
 &ethernet0 {
 	pinctrl-names = "default", "sleep";
 

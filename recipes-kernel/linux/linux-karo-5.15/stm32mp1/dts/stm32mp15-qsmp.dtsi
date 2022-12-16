@@ -37,10 +37,6 @@
 	status = "okay";
 };
 
-&dts {
-	status = "okay";
-};
-
 &i2c1 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_i2c1_pins>;
