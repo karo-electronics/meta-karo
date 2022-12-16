@@ -115,12 +115,14 @@ KARO_DTB_OVERLAYS[mb7] = " \
 "
 
 KARO_DTB_OVERLAYS[qsbase1] = " \
+        karo-copro \
         qsmp-qsbase1 \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
 "
 
 KARO_DTB_OVERLAYS[qsbase2] = " \
+        karo-copro \
         qsmp-qsbase2 \
         qsmp-ksz9031 \
         ${@ "qsmp-dsi-panel" if d.getVar('SOC_FAMILY') == "stm32mp157c" else ""} \
@@ -128,6 +130,7 @@ KARO_DTB_OVERLAYS[qsbase2] = " \
 "
 
 KARO_DTB_OVERLAYS[qsbase4] = " \
+        karo-copro \
         qsmp-qsbase4 \
         qsmp-ksz9131 \
         ${@ "qsmp-dsi-panel" if d.getVar('SOC_FAMILY') == "stm32mp157c" else ""} \
@@ -135,6 +138,7 @@ KARO_DTB_OVERLAYS[qsbase4] = " \
 "
 
 KARO_DTB_OVERLAYS[qsglyn1] = " \
+        karo-copro \
         qsmp-qsglyn1 \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
