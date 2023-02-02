@@ -103,15 +103,15 @@
 
 					ET0350: ET0350 {
 						u-boot,panel-name = "edt,et0350g0dh6";
-						clock-frequency = <6413760>;
+						clock-frequency = <6000000>;
 						hactive = <320>;
 						vactive = <240>;
-						hback-porch = <34>;
-						hsync-len = <34>;
-						hfront-porch = <20>;
-						vback-porch = <15>;
-						vsync-len = <3>;
-						vfront-porch = <4>;
+						hback-porch = <43>;
+						hsync-len = <4>;
+						hfront-porch = <8>;
+						vback-porch = <12>;
+						vsync-len = <4>;
+						vfront-porch = <8>;
 						hsync-active = <0>;
 						vsync-active = <0>;
 						de-active = <1>;
