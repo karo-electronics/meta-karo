@@ -1,18 +1,9 @@
 // SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
 /*
- * Device Tree Include for the RZG2L based Ka-Ro TXRZ CoMs
- *
  * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
  */
 
 #include "r9a07g044l2-karo.dtsi"
-
-/ {
-	aliases {
-		sdcard = &sdhi1;
-		ethernet0 = &eth0;
-	};
-};
 
 &eth0 {
 	pinctrl-names = "default";
@@ -29,18 +20,6 @@
 		interrupt-parent = <&pinctrl>;
 		interrupts = <RZG2L_GPIO(22, 1) IRQ_TYPE_EDGE_FALLING>;
 	};
-};
-
-&sdhi1 {
-	pinctrl-names = "default", "state_uhs";
-	pinctrl-0 = <&sdhi1_pins>;
-	pinctrl-1 = <&sdhi1_pins>;
-
-	vmmc-supply = <&reg_3v3>;
-	vqmmc-supply = <&reg_3v3>;
-	cd-gpios = <&pinctrl RZG2L_GPIO(19, 0) GPIO_ACTIVE_LOW>;
-	bus-width = <4>;
-	status = "okay";
 };
 
 &pinctrl {
@@ -64,17 +43,5 @@
 			  RZG2L_PORT_PINMUX(23, 0, 1)	/* ET0_TX_COL/MODE2 (PU) */
 			  RZG2L_PORT_PINMUX(23, 1, 1)	/* ET0_TX_CRS */
 		>;
-	};
-
-	sdhi1_pins: sd1grp {
-		sd1-data {
-			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
-			power-source = <3300>;
-		};
-
-		sd1-ctrl {
-			pins = "SD1_CLK", "SD1_CMD";
-			power-source = <3300>;
-		};
 	};
 };

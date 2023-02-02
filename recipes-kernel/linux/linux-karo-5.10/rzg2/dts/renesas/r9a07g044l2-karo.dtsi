@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
 /*
  * Device Tree Include for the RZG2L based Ka-Ro CoMs
  *
@@ -11,9 +11,11 @@
 
 / {
 	aliases {
+		ethernet0 = &eth0;
 		i2c0 = &i2c0;
 		i2c1 = &i2c1;
-		emmc = &sdhi0;
+		mmc0 = &sdhi0;
+		mmc1 = &sdhi1;
 		serial0 = &scif0;
 		serial1 = &scif1;
 		serial2 = &scif2;
@@ -119,10 +121,12 @@
 };
 
 &ehci0 {
+	dr_mode = "device";
 	status = "okay";
 };
 
 &ehci1 {
+	dr_mode = "host";
 	status = "okay";
 };
 
@@ -161,6 +165,7 @@
 };
 
 &ohci1 {
+	dr_mode = "host";
 	status = "okay";
 };
 
@@ -203,6 +208,15 @@
 	status = "okay";
 };
 
+&sdhi1 {
+	pinctrl-names = "default", "state_uhs";
+	pinctrl-0 = <&sdhi1_sdcard_pins>;
+	pinctrl-1 = <&sdhi1_sdcard_pins>;
+	vmmc-supply = <&reg_3v3>;
+	vqmmc-supply = <&reg_3v3>;
+	bus-width = <4>;
+};
+
 &ssi0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&ssi0_pins>;
@@ -213,6 +227,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&usb0_pins>;
 	vbus-supply = <&usb0_vbus_otg>;
+	renesas,no-otg-pins;
 	status = "okay";
 };
 
@@ -334,6 +349,18 @@
 		};
 	};
 
+	sdhi1_sdcard_pins: sd1-sdgrp {
+		sd1-data {
+			pins = "SD1_DATA0", "SD1_DATA1", "SD1_DATA2", "SD1_DATA3";
+			power-source = <3300>;
+		};
+
+		sd1-ctrl {
+			pins = "SD1_CLK", "SD1_CMD";
+			power-source = <3300>;
+		};
+	};
+
 	ssi0_pins: ssi0grp {
 		pinmux = <
 		       	  RZG2L_PORT_PINMUX(45, 0, 1)	/* BCK */
@@ -347,7 +374,6 @@
 		pinmux = <
 		       	  RZG2L_PORT_PINMUX(4, 0, 1)	/* VBUS */
 			  RZG2L_PORT_PINMUX(5, 0, 1)	/* OVC */
-			  //RZG2L_PORT_PINMUX(5, 1, 1)	/* OTG_ID */
 		>;
 	};
 

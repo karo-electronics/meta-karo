@@ -1,7 +1,7 @@
 append_bootargs=quiet
 autoload=no
 autostart=no
-baseboard=
+baseboard=qsglyn1
 baudrate=115200
 boot_mode=mmc
 bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs}
@@ -34,3 +34,4 @@ overlays_qsglyn1=setenv overlays karo-led karo-sdcard qsrz-lcd-panel qsrz-ili213
 overlays_qsbase4=setenv overlays karo-led qsrz-ksz9131
 ramdisk_addr_r=-
 set_overlays=run overlays_${baseboard}
+preboot=gpio clear P28_1; gpio set P25_1; gpio set P26_0; gpio set P26_1; gpio set P24_0; gpio clear P24_1; gpio clear P25_0; gpio set P28_1; gpio in P25_0; gpio in P25_1; gpio in P26_0; gpio in P26_1

@@ -1,7 +1,7 @@
 append_bootargs=quiet
 autoload=no
 autostart=no
-baseboard=
+baseboard=lvds-mb
 baudrate=115200
 boot_mode=mmc
 bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs}
@@ -13,7 +13,7 @@ bootdev=mmc
 bootm_cmd=booti ${loadaddr} ${ramdisk_addr_r} ${fdt_addr}
 bootpart=0:1
 default_bootargs=setenv bootargs console=ttySC0,115200 ro panic=-1
-fdt_file=r9a07g044l2-qsrz-g2l0.dtb
+fdt_file=r9a07g044l2-txrz-g2l2.dtb
 emmc_boot_ack=0
 emmc_boot_part=1
 fdtaddr=48000000
@@ -29,8 +29,6 @@ load_kernel_net=setenv autoload y;bootp ${loadaddr} ${linux_kernel}
 load_kernel_nfs=run load_kernel_net
 load_overlays=for f in ${overlays};do fdt addr ${fdt_addr_r};setenv ov ${f};run ov_load || exit;echo "Applying $f";fdt apply ${fdto_addr} || exit;done
 ov_load=echo Loading ${ov};load mmc ${bootpart} ${fdto_addr} r9a07g044l2-${ov}.dtbo;fdt resize ${filesize}
-overlays_qsbase1=setenv overlays karo-led karo-sdcard qsrz-lcd-panel qsrz-ft5x06 qsrz-ksz9131
-overlays_qsglyn1=setenv overlays karo-led karo-sdcard qsrz-lcd-panel qsrz-ili2130 qsrz-ksz9131
-overlays_qsbase4=setenv overlays karo-led qsrz-ksz9131
+overlays_lvds-mb=setenv overlays karo-led karo-sdcard txrz-rtc txrz-lvds-panel txrz-sound
 ramdisk_addr_r=-
 set_overlays=run overlays_${baseboard}

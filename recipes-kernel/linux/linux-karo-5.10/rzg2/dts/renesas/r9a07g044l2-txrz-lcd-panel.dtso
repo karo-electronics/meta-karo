@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
+ */
+/dts-v1/;
+/plugin/;
+
+#include "r9a07g044l2-karo-lcd-panel.dtsi"
+
+&lcd_panel {
+	enable-gpios = <&pinctrl RZG2L_GPIO(47, 2) GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
+};

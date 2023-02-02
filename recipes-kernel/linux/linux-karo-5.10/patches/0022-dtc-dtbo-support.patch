@@ -1,0 +1,13 @@
+diff --git a/scripts/dtc/dtc.c b/scripts/dtc/dtc.c
+index bdb3f5945699..40fa7128b3d6 100644
+--- a/scripts/dtc/dtc.c
++++ b/scripts/dtc/dtc.c
+@@ -357,6 +357,8 @@ int main(int argc, char *argv[])
+ #endif
+ 	} else if (streq(outform, "dtb")) {
+ 		dt_to_blob(outf, dti, outversion);
++	} else if (streq(outform, "dtbo")) {
++		dt_to_blob(outf, dti, outversion);
+ 	} else if (streq(outform, "asm")) {
+ 		dt_to_asm(outf, dti, outversion);
+ 	} else if (streq(outform, "null")) {

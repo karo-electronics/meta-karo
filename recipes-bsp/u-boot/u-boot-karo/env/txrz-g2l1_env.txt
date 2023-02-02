@@ -1,4 +1,3 @@
-.callbacks=baseboard:baseboard
 append_bootargs=quiet
 autoload=no
 autostart=no
@@ -28,4 +27,8 @@ load_dtb_nfs=run load_dtb_net
 load_kernel_mmc=load ${bootdev} ${bootpart} ${loadaddr} ${linux_kernel}
 load_kernel_net=setenv autoload y;bootp ${loadaddr} ${linux_kernel}
 load_kernel_nfs=run load_kernel_net
+load_overlays=for f in ${overlays};do fdt addr ${fdt_addr_r};setenv ov ${f};run ov_load || exit;echo "Applying $f";fdt apply ${fdto_addr} || exit;done
+ov_load=echo Loading ${ov};load mmc ${bootpart} ${fdto_addr} r9a07g044l2-${ov}.dtbo;fdt resize ${filesize}
+overlays_mb7=setenv overlays karo-led karo-sdcard-cd txrz-rtc txrz-lcd-panel txrz-ft5x06 txrz-sound
 ramdisk_addr_r=-
+set_overlays=run overlays_${baseboard}

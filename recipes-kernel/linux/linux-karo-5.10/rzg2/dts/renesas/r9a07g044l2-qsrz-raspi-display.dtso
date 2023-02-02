@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
+ */
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+
+&dsi0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	panel@0 {
+		reg = <0>;
+		compatible = "raspberrypi,tc358762";
+		dsi-lanes = <1>;
+		video-mode = <2>;
+		panel-width-mm = <154>;
+		panel-height-mm = <86>;
+		power-supply = <&reg_rpi_display>;
+		status = "okay";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi0_out>;
+			};
+		};
+	};
+};
+
+&dsi0_out {
+	remote-endpoint = <&panel_in>;
+	data-lanes = <1>;
+};
+
+&du {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+
+	reg_rpi_display: regulator-rpi-display@45 {
+		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
+		reg = <0x45>;
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	rpi-ft5406@38 {
+		compatible = "rpi_ft5406";
+		reg = <0x38>;
+		power-supply = <&reg_rpi_display>;
+	};
+};

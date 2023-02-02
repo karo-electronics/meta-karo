@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
+ */
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+
+&{/} {
+	leds {
+		compatible = "gpio-leds";
+
+		module_led: module-led {
+			gpios = <&pinctrl RZG2L_GPIO(48, 2) GPIO_ACTIVE_LOW>;
+			label = "Heartbeat";
+			default-state = "on";
+			linux,default-trigger = "heartbeat";
+		};
+	};
+};

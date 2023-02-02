@@ -1,0 +1,68 @@
+commit 7a0fce90029b3b7bace9b9a59ab3ed7320177778
+Author: Markus Bauer <mb@karo-electronics.de>
+Date:   Tue Jan 24 13:55:20 2023 +0000
+
+    The drm_display_mode_to_videomode() does not populate DISPLAY_FLAGS_DE_LOW
+    or DISPLAY_FLAGS_PIXDATA_NEGEDGE flags in struct videomode. By extracting
+    bus-flags from the connector we can set this bit according to the desired
+    value, adjustable from within devicetree panel timings.
+    
+    The fix for this problem was taken almost 1by1 from MXSFB driver.
+
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index 3870041c93e1..b70853ba194d 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -297,11 +297,39 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ {
+ 	const struct drm_display_mode *mode = &rcrtc->crtc.state->adjusted_mode;
+ 	struct rcar_du_device *rcdu = rcrtc->dev;
++	struct drm_crtc *crtc = &rcrtc->crtc;
++	struct drm_device *ddev = rcrtc->crtc.dev;
++	struct drm_connector_list_iter iter;
++	struct drm_connector *connector = NULL;
++	struct drm_encoder *encoder = NULL;
++	struct drm_bridge *bridge = NULL;
+ 	unsigned long mode_clock = mode->clock * 1000;
+ 	unsigned int hdse_offset;
++	u32 bus_flags = 0;
+ 	u32 dsmr;
+ 	u32 escr;
+ 
++	/* get encoder from crtc and figure out bus-flags */
++	drm_for_each_encoder(encoder, ddev)
++		if (encoder->crtc == crtc)
++			break;
++	if (encoder) {
++		/* get bridge from encoder */
++		list_for_each_entry(bridge, &encoder->bridge_chain, chain_node)
++			if (bridge->encoder == encoder)
++				break;
++		/* Get the connector from encoder */
++		drm_connector_list_iter_begin(ddev, &iter);
++		drm_for_each_connector_iter(connector, &iter)
++			if (connector->encoder == encoder)
++				break;
++		drm_connector_list_iter_end(&iter);
++	}
++	if (bridge && bridge->timings)
++		bus_flags = bridge->timings->input_bus_flags;
++	else if (connector)
++		bus_flags = connector->display_info.bus_flags;
++ 
+ 	if (rcar_du_has(rcdu, RCAR_DU_FEATURE_RZG2L)) {
+ 		u32 ditr0, ditr1, ditr2, ditr3, ditr4, ditr5, pbcr0;
+ 		void __iomem *cpg_base = ioremap(0x11010000, 0x1000);
+@@ -394,8 +422,10 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 		clk_prepare_enable(rcrtc->rzg2l_clocks.dclk);
+ 
+ 		ditr0 = (DU_DITR0_DEMD_HIGH
+-		| ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
+-		| ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0));
++			| ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
++			| ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0)
++			| ((bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE) ? DU_DITR0_DPI_CLKMD : 0)
++		);
+ 
+ 		ditr1 = DU_DITR1_VSA(mode->vsync_end - mode->vsync_start)
+ 		      | DU_DITR1_VACTIVE(mode->vdisplay);

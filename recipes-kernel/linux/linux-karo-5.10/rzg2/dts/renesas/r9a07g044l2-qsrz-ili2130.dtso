@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
+ */
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+&i2c1 {
+	polytouch: touchpanel@41 {
+		compatible = "ilitek,ili2130";
+		reg = <0x41>;
+		interrupt-parent = <&pinctrl>;
+		interrupts = <RZG2L_GPIO(46, 3) IRQ_TYPE_EDGE_FALLING>;
+		reset-gpios = <&pinctrl RZG2L_GPIO(46, 2) GPIO_ACTIVE_LOW>;
+		wakeup-source;
+		status = "okay";
+	};
+};

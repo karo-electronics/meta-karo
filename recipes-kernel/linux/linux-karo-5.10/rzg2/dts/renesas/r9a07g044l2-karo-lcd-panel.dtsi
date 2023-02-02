@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
 /*
- * Device Tree Source for the RZG2L based Ka-Ro TXRZ-G2L0 CoM on MB7
- *
- * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
  */
 
-/ {
-	aliases {
-		panel = &lcd_panel;
-	};
+#include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
+#include <dt-bindings/gpio/gpio.h>
 
-	audio_mclock: audio_mclock {
-		compatible = "fixed-clock";
-		#clock-cells = <0>;
-		clock-frequency = <26000000>;
+&{/} {
+	aliases {
+		display = "/lcd-panel";
 	};
 
 	backlight: pwm-backlight {
@@ -35,8 +30,6 @@
 
 	lcd_panel: lcd-panel {
 		compatible = "panel-dpi";
-		enable-gpios = <&pinctrl RZG2L_GPIO(47, 2) GPIO_ACTIVE_HIGH>;
-		reset-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
 		power-supply = <&reg_3v3>;
 		backlight = <&backlight>;
 		data-mapping = "rgb24";
@@ -55,7 +48,7 @@
 			hsync-active = <0>;
 			vsync-active = <0>;
 			de-active = <1>;
-			pixelclk-active = <1>;
+			pixelclk-active = <0>;
 		};
 
 		port {
@@ -95,7 +88,7 @@
 				hsync-active = <0>;
 				vsync-active = <0>;
 				de-active = <1>;
-				pixelclk-active = <1>;
+				pixelclk-active = <0>;
 			};
 
 			ET0350: ET0350 {
@@ -112,7 +105,7 @@
 				hsync-active = <0>;
 				vsync-active = <0>;
 				de-active = <1>;
-				pixelclk-active = <0>;
+				pixelclk-active = <1>;
 			};
 
 			ET0430: ET0430 {
@@ -180,43 +173,22 @@
 				de-active = <1>;
 				pixelclk-active = <0>;
 			};
-		};
-	};
 
-	leds {
-		compatible = "gpio-leds";
-
-		module_led: module-led {
-			gpios = <&pinctrl RZG2L_GPIO(48, 2) GPIO_ACTIVE_LOW>;
-			label = "Heartbeat";
-			default-state = "on";
-			linux,default-trigger = "heartbeat";
-		};
-	};
-
-	snd_rzg2l: sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,bitclock-master = <&codec_dai>;
-		simple-audio-card,frame-master = <&codec_dai>;
-		simple-audio-card,mclk-fs = <256>;
-
-		simple-audio-card,widgets =
-			"Microphone", "Mic Jack",
-			"Line", "Line In",
-			"Line", "Line Out",
-			"Headphone", "Headphone Jack";
-		simple-audio-card,routing =
-			"MIC_IN", "Mic Jack",
-			"Mic Jack", "Mic Bias",
-			"Headphone Jack", "HP_OUT";
-
-		cpu_dai: simple-audio-card,cpu {
-			sound-dai = <&ssi0>;
-		};
-
-		codec_dai: simple-audio-card,codec {
-			sound-dai = <&sgtl5000>;
+			TM101: TM101 {
+				clock-frequency = <62500000>;
+				hactive = <1280>;
+				vactive = <800>;
+				hback-porch = <80>;
+				hfront-porch = <80>;
+				vback-porch = <12>;
+				vfront-porch = <11>;
+				hsync-len = <2>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
 		};
 	};
 };
@@ -233,40 +205,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&gpt3_pins>;
 	channel = "channel_B";
-	status = "okay";
-};
-
-&i2c0 {
-	rtc: rtc@6f {
-		compatible = "microchip,mcp7940x";
-		reg = <0x6f>;
-	};
-};
-
-&i2c1 {
-	polytouch: touch-controller@38 {
-		compatible = "edt,edt-ft5x06";
-		reg = <0x38>;
-		interrupt-parent = <&pinctrl>;
-		interrupts = <RZG2L_GPIO(42, 2) IRQ_TYPE_EDGE_FALLING>;
-		reset-gpios = <&pinctrl RZG2L_GPIO(42, 3) GPIO_ACTIVE_LOW>;
-		wake-gpios = <&pinctrl RZG2L_GPIO(47, 3) GPIO_ACTIVE_HIGH>;
-		wakeup-source;
-		status = "okay";
-	};
-	
-	sgtl5000: codec@a {
-		compatible = "fsl,sgtl5000";
-		#sound-dai-cells = <0>;
-		reg = <0x0a>;
-		VDDA-supply = <&reg_2v5>;
-		VDDIO-supply = <&reg_3v3>;
-		clocks = <&audio_mclock>;
-		status = "okay";
-	};
-};
-
-&ssi0 {
 	status = "okay";
 };
 

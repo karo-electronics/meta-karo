@@ -1,14 +1,14 @@
-commit 7cd2d7070817220a7985b775c1866d1f68a7eaa2
+commit 4f90a4700d80294f0788cf540754726e13e1c1af
 Author: Markus Bauer <mb@karo-electronics.de>
-Date:   Fri Mar 26 13:47:42 2021 +0000
+Date:   Thu Feb 2 10:45:17 2023 +0000
 
-    drm: panel: Official RaspberryPi 7inch touchscreen Ka-Ro version
+    Raspberrypi 7 inch display support for Ka-Ro RZ/G2L based QSRZ module
 
 diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
-index beee3c06994f..95d0256446ba 100644
+index 6153972e0127..25964028a5a8 100644
 --- a/drivers/gpu/drm/panel/Kconfig
 +++ b/drivers/gpu/drm/panel/Kconfig
-@@ -507,4 +507,15 @@ config DRM_PANEL_XINPENG_XPP055C272
+@@ -500,4 +500,15 @@ config DRM_PANEL_XINPENG_XPP055C272
  	  Say Y here if you want to enable support for the Xinpeng
  	  XPP055C272 controller for 720x1280 LCD panels with MIPI/RGB/SPI
  	  system interfaces.
@@ -25,20 +25,20 @@ index beee3c06994f..95d0256446ba 100644
 +
  endmenu
 diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
-index 1ae1c4b49a28..661792b3cd62 100644
+index 2ba560bca61d..6f399325daa7 100644
 --- a/drivers/gpu/drm/panel/Makefile
 +++ b/drivers/gpu/drm/panel/Makefile
-@@ -54,3 +54,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += panel-tpo-tpg110.o
+@@ -53,3 +53,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += panel-tpo-tpg110.o
  obj-$(CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA) += panel-truly-nt35597.o
  obj-$(CONFIG_DRM_PANEL_VISIONOX_RM69299) += panel-visionox-rm69299.o
  obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
 +obj-$(CONFIG_DRM_PANEL_RPI_7INCH) += panel-rpi-7inch.o
 diff --git a/drivers/gpu/drm/panel/panel-rpi-7inch.c b/drivers/gpu/drm/panel/panel-rpi-7inch.c
 new file mode 100644
-index 000000000000..0b93f81245c3
+index 000000000000..22e2d365f086
 --- /dev/null
 +++ b/drivers/gpu/drm/panel/panel-rpi-7inch.c
-@@ -0,0 +1,432 @@
+@@ -0,0 +1,408 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021, Markus Bauer <mb@karo-electronics.de>
@@ -77,7 +77,6 @@ index 000000000000..0b93f81245c3
 +#include <drm/drm_crtc.h>
 +#include <drm/drm_mipi_dsi.h>
 +#include <drm/drm_panel.h>
-+#include <drm/rpi_display.h>
 +
 +#include <video/display_timing.h>
 +#include <video/of_display_timing.h>
@@ -142,30 +141,17 @@ index 000000000000..0b93f81245c3
 +	struct regulator *power_supply;
 +};
 +
-+#define HDISPLAY	800
-+#define HFRONT_PORCH	47
-+#define HSYNC_LEN	8
-+#define HBACK_PORCH	38
-+
-+#define VDISPLAY	480
-+#define VFRONT_PORCH	7
-+#define VSYNC_LEN	1
-+#define VBACK_PORCH	23
-+
-+#define VREFRESH	60
-+
 +static const struct drm_display_mode tc358762_mode = {
-+	.clock = ((HDISPLAY + HFRONT_PORCH + HSYNC_LEN + HBACK_PORCH) *
-+		  (VDISPLAY + VFRONT_PORCH + VSYNC_LEN + VBACK_PORCH) *
-+		  VREFRESH) / 1000,
-+	.hdisplay = HDISPLAY,
-+	.hsync_start = HDISPLAY + HFRONT_PORCH,
-+	.hsync_end = HDISPLAY + HFRONT_PORCH + HSYNC_LEN,
-+	.htotal = HDISPLAY + HFRONT_PORCH + HSYNC_LEN + HBACK_PORCH,
-+	.vdisplay = VDISPLAY,
-+	.vsync_start = VDISPLAY + VFRONT_PORCH,
-+	.vsync_end = VDISPLAY + VFRONT_PORCH + VSYNC_LEN,
-+	.vtotal = VDISPLAY + VFRONT_PORCH + VSYNC_LEN + VBACK_PORCH,
++	.clock = 27448,
++	.hdisplay = 800,
++	.hsync_start = 800 + 68,
++	.hsync_end = 800 + 68 + 20,
++	.htotal = 800 + 68 + 20 + 26,
++	.vdisplay = 480,
++	.vsync_start = 480 + 7,
++	.vsync_end = 480 + 7 + 2,
++	.vtotal = 480 + 7 + 2 + 21,
++	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
 +};
 +
 +static inline struct tc358762 *to_tc358762(struct drm_panel *panel)
@@ -201,7 +187,6 @@ index 000000000000..0b93f81245c3
 +
 +static int rpi_touchscreen_write(struct mipi_dsi_device *dsi, u16 reg, u32 val)
 +{
-+	int ret;
 +	u8 msg[] = {
 +		reg,
 +		reg >> 8,
@@ -211,14 +196,7 @@ index 000000000000..0b93f81245c3
 +		val >> 24,
 +	};
 +
-+	ret = mipi_dsi_generic_write(dsi, msg, sizeof(msg));
-+	if (ret == sizeof(msg) + 4)
-+		DRM_DEBUG("%s wrote 0x%08x to 0x%03x\n", __func__,
-+			  val, reg);
-+	else
-+		DRM_ERROR("%s failed to write 0x%08x to 0x%03x: %d\n", __func__,
-+			  val, reg, ret);
-+	return ret;
++	return mipi_dsi_generic_write(dsi, msg, sizeof(msg));
 +}
 +
 +static struct {
@@ -278,8 +256,6 @@ index 000000000000..0b93f81245c3
 +			return ret;
 +		}
 +		trigger_bridge = 0;
-+		msleep(100);
-+		rpi_ft5406_start_polling();
 +	}
 +
 +	ret = tc358762_dsi_init(p);
@@ -471,11 +447,37 @@ index 000000000000..0b93f81245c3
 +MODULE_AUTHOR("Jerry <xbl@rock-chips.com>");
 +MODULE_DESCRIPTION("DRM Driver for toshiba tc358762 Bridge");
 +MODULE_LICENSE("GPL and additional rights");
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index b70853ba194d..d422add17d83 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -229,6 +229,10 @@ struct cpg_param {
+ #define reg_write(x, a)		iowrite32(a, x)
+ #define CPG_LPCLK_DIV		0
+ 
++struct cpg_param resolution_1_lanes_param[1] = {
++	{ 27448, 1,  54, 15032385, 1, 1, 0, 0x16, 1, 11}, /* 23.09 MHz */
++};
++
+ struct cpg_param resolution_2_lanes_param[TABLE_MAX - 1] = {
+ 	{ 25175, 2,  50,  5872025, 1, 1, 0, 0x16, 1, 5}, /* VGA 25.175MHz */
+ 	{ 25200, 2,  50,  6710886, 1, 1, 0, 0x16, 1, 5}, /* VGA 25.200MHz */
+@@ -351,6 +355,10 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
+ 
+ 			parallelOut = 0;
+ 			switch (lanes) {
++			case 1:
++				paramPtr = resolution_1_lanes_param;
++				tableMax = 1;
++				break;
+ 			case 2:
+ 				paramPtr = resolution_2_lanes_param;
+ 				tableMax = TABLE_MAX - 1;
 diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index cc18f54ea887..fb4ae0cb26e6 100644
+index 2fa40e1e9b8a..f0f9baa3112e 100644
 --- a/drivers/input/touchscreen/Kconfig
 +++ b/drivers/input/touchscreen/Kconfig
-@@ -1335,4 +1335,10 @@ config TOUCHSCREEN_ZINITIX
+@@ -1347,4 +1347,10 @@ config TOUCHSCREEN_ZINITIX
  	  To compile this driver as a module, choose M here: the
  	  module will be called zinitix.
  
@@ -487,10 +489,10 @@ index cc18f54ea887..fb4ae0cb26e6 100644
 +
  endif
 diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
-index 6233541e9173..2fe9ee95fa75 100644
+index 35f0e321e779..26100feefb0b 100644
 --- a/drivers/input/touchscreen/Makefile
 +++ b/drivers/input/touchscreen/Makefile
-@@ -111,4 +111,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
+@@ -112,4 +112,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
  obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
  obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
  obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
@@ -498,10 +500,10 @@ index 6233541e9173..2fe9ee95fa75 100644
  obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
 diff --git a/drivers/input/touchscreen/rpi_ft5406.c b/drivers/input/touchscreen/rpi_ft5406.c
 new file mode 100644
-index 000000000000..80323f60c197
+index 000000000000..c17e3ec5d254
 --- /dev/null
 +++ b/drivers/input/touchscreen/rpi_ft5406.c
-@@ -0,0 +1,326 @@
+@@ -0,0 +1,303 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + *
@@ -521,7 +523,6 @@ index 000000000000..80323f60c197
 + *
 + */
 +
-+#include <drm/rpi_display.h>
 +#include <linux/module.h>
 +#include <linux/slab.h>
 +#include <linux/delay.h>
@@ -532,8 +533,6 @@ index 000000000000..80323f60c197
 +#include <linux/regulator/consumer.h>
 +#include <linux/workqueue.h>
 +#include "rpi_ft5406.h"
-+
-+static struct rpi_ft5406_data *g_ts_data;
 +
 +static int fts_check_fw_ver(struct i2c_client *client)
 +{
@@ -718,23 +717,6 @@ index 000000000000..80323f60c197
 +	regulator_disable(ts_data->power_supply);
 +}
 +
-+void rpi_ft5406_start_polling(void)
-+{
-+	struct rpi_ft5406_data *ts_data = g_ts_data;
-+
-+	if (!ts_data)
-+		return;
-+
-+	pr_info("%s\n", __func__);
-+	if (ts_data->polling_enabled && ts_data->is_polling != 1) {
-+		ts_data->is_polling = 1;
-+		schedule_work(&ts_data->ft5406_work);
-+	} else {
-+		ts_data->is_polling = 1;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(rpi_ft5406_start_polling);
-+
 +static int rpi_ft5406_probe(struct i2c_client *client,
 +			const struct i2c_device_id *id)
 +{
@@ -747,7 +729,6 @@ index 000000000000..80323f60c197
 +	ts_data = devm_kzalloc(&client->dev, sizeof(*ts_data), GFP_KERNEL);
 +	if (!ts_data)
 +		return -ENOMEM;
-+	g_ts_data = ts_data;
 +	ts_data->client = client;
 +	i2c_set_clientdata(client, ts_data);
 +
@@ -786,10 +767,8 @@ index 000000000000..80323f60c197
 +	}
 +
 +	INIT_WORK(&ts_data->ft5406_work, rpi_ft5406_work);
-+	ts_data->polling_enabled = 1;
 +
-+	if (ts_data->is_polling)
-+		schedule_work(&ts_data->ft5406_work);
++	schedule_work(&ts_data->ft5406_work);
 +
 +	return 0;
 +
@@ -830,7 +809,7 @@ index 000000000000..80323f60c197
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/input/touchscreen/rpi_ft5406.h b/drivers/input/touchscreen/rpi_ft5406.h
 new file mode 100644
-index 000000000000..e9e80dae43a0
+index 000000000000..55754a6bdd91
 --- /dev/null
 +++ b/drivers/input/touchscreen/rpi_ft5406.h
 @@ -0,0 +1,71 @@
@@ -905,12 +884,3 @@ index 000000000000..e9e80dae43a0
 +};
 +
 +#endif
-diff --git a/include/drm/rpi_display.h b/include/drm/rpi_display.h
-new file mode 100644
-index 000000000000..e9e80dae43a0
---- /dev/null
-+++ b/drivers/misc/rpi_display.h
-@@ -0,0 +1,3 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+
-+void rpi_ft5406_start_polling(void);

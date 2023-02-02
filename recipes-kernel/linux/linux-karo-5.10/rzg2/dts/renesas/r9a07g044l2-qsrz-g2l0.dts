@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: GPL-2.0
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
 /*
- * Device Tree Source for the RZG2L based Ka-Ro QSRZ-G2L0 CoM
- *
  * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
  */
 
