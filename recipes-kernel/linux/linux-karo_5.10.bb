@@ -44,18 +44,6 @@ SRC_URI:remove:rzg2 = " \
         file://0001-lib-iov_iter-initialize-flags-in-new-pipe_buffer.patch \
 "
 
-SRC_URI:append:stm32mp1 = " \
-        file://dts/stm32mp15-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp15-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp15-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp153-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp153-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp153-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp157-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp157-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/stm32mp157-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
 SRC_URI:append:rzg2 = " \
         file://dts/renesas/r9a07g044l2-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-qsrz-qsbase4.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
@@ -65,21 +53,16 @@ SRC_URI:append:rzg2 = " \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
-KERNEL_IMAGETYPE:stm32mp1 = "uImage"
 
 KBUILD_DEFCONFIG = "defconfig"
-KBUILD_DEFCONFIG:qsmp-1510 = "qsmp-1510_defconfig"
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"bluetooth"," bluetooth.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.cfg","",d)}"
-
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 
 KERNEL_FEATURES:append:qsrz = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg"," dsi83.cfg",d)}"
-
-COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
 
 # returns all the elements from the src uri that are .cfg files
 def find_cfgs(d):
