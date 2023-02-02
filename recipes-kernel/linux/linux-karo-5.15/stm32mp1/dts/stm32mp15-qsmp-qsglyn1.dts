@@ -4,7 +4,6 @@
  */
 
 /dts-v1/;
-
 /plugin/;
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
@@ -38,6 +37,29 @@
 				wakeup-source;
 				status = "okay";
 			};
+		};
+	};
+
+	fragment@2 {
+		reg = <2>;
+		target = <&gpioa>;
+
+		__overlay__ {
+			lcd-dispctrl-hog {
+				gpio-hog;
+				gpios = <6 0>;
+				output-high;
+				line-name = "lcd-dispctrl";
+			};
+		};
+	};
+
+	fragment@3 {
+		reg = <3>;
+		target = <&spi6>;
+
+		__overlay__ {
+			status = "disabled";
 		};
 	};
 };
