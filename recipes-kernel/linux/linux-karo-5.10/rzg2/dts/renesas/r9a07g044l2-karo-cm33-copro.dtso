@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Uwe Steinkohl <US@karo-electronics.com>
+ */
+
+
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+ 
+
+
+/dts-v1/;
+/plugin/;
+
+&{/chosen} {
+	overlays {
+		rzg2-copro;
+	};
+};
+
+
+
+
+&{/} {
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x18000000>;
+	};
+
+
+    vring-ctl0@43000000 {
+		compatible = "vring_uio";
+		reg = <0x0 0x43000000 0x0 0x100000>;
+		no-map;
+	};
+
+	vring-ctl1@43100000 {
+		compatible = "vring_uio";
+		reg = <0x0 0x43100000 0x0 0x100000>;
+		no-map;
+	};
+
+	vring-shm0@43200000 {
+		compatible = "shm_uio";
+		reg = <0x0 0x43200000 0x0 0x300000>;
+		no-map;
+	};
+
+	vring-shm1@43500000 {
+		compatible = "shm_uio";
+		reg = <0x0 0x43500000 0x0 0x300000>;
+		no-map;
+	};
+
+	rsctbl@42f00000 {
+		compatible = "shm_uio";
+		reg = <0x0 0x42f00000 0x0 0x1000>;
+		no-map;
+	};
+
+	mhu-shm@42f01000 {
+		compatible = "shm_uio";
+		reg = <0x0 0x42f01000 0x0 0x1000>;
+		no-map;
+	};
+
+	mbox-uio@10400000 {
+		compatible = "mbox_uio";
+		reg = <0x0 0x10400000 0x0 0x1000>;
+		interrupt-parent = <&gic>;
+		interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>;
+		status = "okay";
+	};
+
+
+};
+
+&ostm2 {
+	status = "disabled";
+};
+
+/* do not block UART2 by Linux */
+&scif2 {
+	status = "disabled";
+};

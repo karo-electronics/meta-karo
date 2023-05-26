@@ -35,6 +35,7 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:rzg2 = " \
+		file://0001-clock-support-for-CM33.patch \
         file://dts/renesas/r9a07g044l2-karo-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-qsrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
@@ -51,6 +52,7 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," sys
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg","",d)}"
+KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"copro"," copro.cfg","",d)}"
 
 
 COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"

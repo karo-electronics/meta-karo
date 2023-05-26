@@ -1,0 +1,26 @@
+From f187497c8e3418730ed54a505022956748c6c8ab Mon Sep 17 00:00:00 2001
+From: Shinji Hirai <shinji.hirai.zn@renesas.com>
+Date: Wed, 26 May 2021 12:04:26 +0900
+Subject: [PATCH 1/5] disable reserved area check
+
+---
+ fs/fs.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/fs/fs.c b/fs/fs.c
+index 29ad4d1a69..04d4e0c452 100644
+--- a/fs/fs.c
++++ b/fs/fs.c
+@@ -510,8 +510,7 @@ static int fs_read_lmb_check(const char *filename, ulong addr, loff_t offset,
+ 	if (lmb_alloc_addr(&lmb, addr, read_len) == addr)
+ 		return 0;
+ 
+-	log_err("** Reading file would overwrite reserved memory **\n");
+-	return -ENOSPC;
++	return 0;
+ }
+ #endif
+ 
+-- 
+2.17.1
+

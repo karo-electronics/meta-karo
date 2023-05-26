@@ -4,6 +4,11 @@ SRC_URI:append = " \
         file://karo.bmp;subdir=git/tools/logos \
 "
 
+SRC_URI:append:rzg2l = " \
+        file://add-u-boot-command-for-cm33-support.patch \
+        file://disable-reserved-area-check.patch \
+"
+
 SRC_URI:append:stm32mp1 = " \
         file://v2021-fittings.patch \
         file://fdt-overlay-support.patch \
@@ -15,7 +20,7 @@ SRC_URI:append:rzg2l = " \
 "
 
 SRC_URI:remove:qsmp-1510 = " \
-       file://fdt-overlay-support.patch \ 
+       file://fdt-overlay-support.patch \
 "
 
 SRC_URI:append:stm32mp1 = " \

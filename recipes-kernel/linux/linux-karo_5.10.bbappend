@@ -17,6 +17,7 @@ SRC_URI:remove:qsrz = " \
 DTB_OVERLAYS ??= ""
 
 DTB_OVERLAYS:append:rzg2 = " \
+	karo-cm33-copro \
     karo-otg-host \
     karo-led \
     karo-sdcard \
