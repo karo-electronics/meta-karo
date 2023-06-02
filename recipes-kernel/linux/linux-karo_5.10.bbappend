@@ -5,6 +5,8 @@ SRC_URI:append:rzg2 = " \
     file://patches/0004-drm-sn65dsi83-bridge-support.patch \
     file://patches/0005-raspberrypi-7inch-touchscreen-support.patch \
     file://patches/0006-rzg2l-dsi-fix-hsclock-before-panel-setup.patch \
+    file://patches/0007-dsi83-10inch-clock.patch \
+    file://patches/0008-10inch-parallel-clock.patch \
 "
 
 SRC_URI:remove:qsrz = " \

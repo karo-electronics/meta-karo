@@ -7,7 +7,10 @@
 
 #include "r9a07g044l2-karo-lcd-panel.dtsi"
 
+&backlight {
+	enable-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
+};
+
 &lcd_panel {
 	enable-gpios = <&pinctrl RZG2L_GPIO(47, 2) GPIO_ACTIVE_HIGH>;
-	reset-gpios = <&pinctrl RZG2L_GPIO(42, 4) GPIO_ACTIVE_HIGH>;
 };

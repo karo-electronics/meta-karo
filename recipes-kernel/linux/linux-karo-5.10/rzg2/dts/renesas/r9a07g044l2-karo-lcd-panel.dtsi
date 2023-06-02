@@ -138,7 +138,7 @@
 				hsync-active = <0>;
 				vsync-active = <0>;
 				de-active = <1>;
-				pixelclk-active = <0>;
+				pixelclk-active = <1>;
 			};
 
 			ET0700: ET0700 { /* same as ET0500 */
@@ -175,14 +175,14 @@
 			};
 
 			TM101: TM101 {
-				clock-frequency = <62500000>;
+				clock-frequency = <68200000>;
 				hactive = <1280>;
 				vactive = <800>;
-				hback-porch = <80>;
-				hfront-porch = <80>;
-				vback-porch = <12>;
-				vfront-porch = <11>;
-				hsync-len = <2>;
+				hback-porch = <5>;
+				hfront-porch = <64>;
+				vback-porch = <2>;
+				vfront-porch = <40>;
+				hsync-len = <1>;
 				vsync-len = <1>;
 				hsync-active = <0>;
 				vsync-active = <0>;

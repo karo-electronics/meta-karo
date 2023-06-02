@@ -183,6 +183,22 @@
 						de-active = <1>;
 						pixelclk-active = <0>;
 					};
+
+					TM101: TM101 {
+						clock-frequency = <68200000>;
+						hactive = <1280>;
+						vactive = <800>;
+						hback-porch = <5>;
+						hsync-len = <1>;
+						hfront-porch = <64>;
+						vback-porch = <2>;
+						vsync-len = <1>;
+						vfront-porch = <40>;
+						hsync-active = <0>;
+						vsync-active = <0>;
+						de-active = <1>;
+						pixelclk-active = <0>;
+					};
 				};
 			};
 		};

@@ -1,0 +1,12 @@
+diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+index d422add17d83..5f18c4b85067 100644
+--- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
++++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
+@@ -241,6 +241,7 @@ struct cpg_param resolution_2_lanes_param[TABLE_MAX - 1] = {
+ 	{ 29605, 2,  59,  3523215, 1, 1, 0, 0x16, 1, 5}, /* WVGA 29.605MHz */
+ 	{ 40000, 2,  80,        0, 1, 1, 0, 0x16, 1, 5}, /* SVGA 40.00MHz */
+ 	{ 65000, 2, 130,        0, 1, 1, 0, 0x16, 1, 5}, /* XGA 65.00MHz */
++	{ 68200, 2, 136,  6710886, 1, 1, 0, 0x16, 1, 5}, /* 68.2 MHz */
+ 	{ 71000, 2, 142,        0, 1, 1, 0, 0x16, 1, 5}, /* WXGA 1280x800 71.0MHz */
+ 	{ 74176, 2, 148,  5905580, 1, 1, 0, 0x16, 1, 5}, /* 720p 74.176MHz */
+ 	{ 74250, 2, 148,  8388608, 1, 1, 0, 0x16, 1, 5}, /* 720p 74.25MHz */
