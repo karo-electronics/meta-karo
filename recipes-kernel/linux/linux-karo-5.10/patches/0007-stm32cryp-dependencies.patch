@@ -1,8 +1,8 @@
-Index: karo-tx-linux/drivers/crypto/stm32/Kconfig
+Index: git/drivers/crypto/stm32/Kconfig
 ===================================================================
---- karo-tx-linux.orig/drivers/crypto/stm32/Kconfig
-+++ karo-tx-linux/drivers/crypto/stm32/Kconfig
-@@ -23,9 +23,11 @@ config CRYPTO_DEV_STM32_HASH
+--- git.orig/drivers/crypto/stm32/Kconfig
++++ git/drivers/crypto/stm32/Kconfig
+@@ -24,9 +24,11 @@ config CRYPTO_DEV_STM32_HASH
  config CRYPTO_DEV_STM32_CRYP
  	tristate "Support for STM32 cryp accelerators"
  	depends on ARCH_STM32

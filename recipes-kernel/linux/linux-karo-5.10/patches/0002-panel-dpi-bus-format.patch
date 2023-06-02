@@ -4,11 +4,11 @@ Date:   Wed Apr 22 10:09:25 2020 +0000
 
     Panel-simple: Add data-mapping property to panel-dpi
 
-diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
-index 856bfab..e9e79c3 100644
---- a/drivers/gpu/drm/panel/panel-simple.c
-+++ b/drivers/gpu/drm/panel/panel-simple.c
-@@ -381,6 +381,7 @@ static int panel_dpi_probe(struct device *dev,
+Index: git/drivers/gpu/drm/panel/panel-simple.c
+===================================================================
+--- git.orig/drivers/gpu/drm/panel/panel-simple.c
++++ git/drivers/gpu/drm/panel/panel-simple.c
+@@ -415,6 +415,7 @@ static int panel_dpi_probe(struct device
  	struct panel_desc *desc;
  	unsigned int bus_flags;
  	struct videomode vm;
@@ -16,7 +16,7 @@ index 856bfab..e9e79c3 100644
  	int ret;
  
  	np = dev->of_node;
-@@ -405,6 +406,21 @@ static int panel_dpi_probe(struct device *dev,
+@@ -439,6 +440,21 @@ static int panel_dpi_probe(struct device
  	of_property_read_u32(np, "width-mm", &desc->size.width);
  	of_property_read_u32(np, "height-mm", &desc->size.height);
  

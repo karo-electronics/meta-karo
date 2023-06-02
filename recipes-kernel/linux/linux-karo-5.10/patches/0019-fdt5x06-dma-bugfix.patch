@@ -1,8 +1,8 @@
-Index: linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
+Index: git/drivers/input/touchscreen/edt-ft5x06.c
 ===================================================================
---- linux-dunfell-5.10.10.orig/drivers/input/touchscreen/edt-ft5x06.c
-+++ linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
-@@ -821,20 +821,18 @@ static int edt_ft5x06_ts_identify(struct
+--- git.orig/drivers/input/touchscreen/edt-ft5x06.c
++++ git/drivers/input/touchscreen/edt-ft5x06.c
+@@ -819,20 +819,18 @@ static int edt_ft5x06_ts_identify(struct
  					struct edt_ft5x06_ts_data *tsdata,
  					char *fw_version)
  {
@@ -28,7 +28,7 @@ Index: linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
  
  	/* Probe content for something consistent.
  	 * M06 starts with a response byte, M12 gives the data directly.
-@@ -883,14 +881,14 @@ static int edt_ft5x06_ts_identify(struct
+@@ -881,14 +879,14 @@ static int edt_ft5x06_ts_identify(struct
  		error = edt_ft5x06_ts_readwrite(client, 1, "\xA6",
  						2, rdbuf);
  		if (error)
@@ -45,7 +45,7 @@ Index: linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
  
  		/* This "model identification" is not exact. Unfortunately
  		 * not all firmwares for the ft5x06 put useful values in
-@@ -919,7 +917,7 @@ static int edt_ft5x06_ts_identify(struct
+@@ -917,7 +915,7 @@ static int edt_ft5x06_ts_identify(struct
  			error = edt_ft5x06_ts_readwrite(client, 1, "\x53",
  							1, rdbuf);
  			if (error)
@@ -54,7 +54,7 @@ Index: linux-dunfell-5.10.10/drivers/input/touchscreen/edt-ft5x06.c
  			strlcpy(fw_version, rdbuf, 1);
  			snprintf(model_name, EDT_NAME_LEN,
  				 "EVERVISION-FT5726NEi");
-@@ -931,8 +929,9 @@ static int edt_ft5x06_ts_identify(struct
+@@ -929,8 +927,9 @@ static int edt_ft5x06_ts_identify(struct
  			break;
  		}
  	}

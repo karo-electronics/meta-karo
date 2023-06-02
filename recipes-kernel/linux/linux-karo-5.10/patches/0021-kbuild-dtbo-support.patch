@@ -18,10 +18,10 @@ Link: https://lore.kernel.org/r/434ba2467dd0cd011565625aeb3450650afe0aae.1611904
  scripts/Makefile.lib     | 5 +++++
  4 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/.gitignore b/.gitignore
-index d01cda8e11779..bb65fa253e58f 100644
---- a/.gitignore
-+++ b/.gitignore
+Index: git/.gitignore
+===================================================================
+--- git.orig/.gitignore
++++ git/.gitignore
 @@ -18,6 +18,7 @@
  *.c.[012]*.*
  *.dt.yaml
@@ -30,11 +30,11 @@ index d01cda8e11779..bb65fa253e58f 100644
  *.dtb.S
  *.dwo
  *.elf
-diff --git a/Makefile b/Makefile
-index 3d328b7ab2003..5681e16fe3f26 100644
---- a/Makefile
-+++ b/Makefile
-@@ -1337,6 +1337,9 @@ ifneq ($(dtstree),)
+Index: git/Makefile
+===================================================================
+--- git.orig/Makefile
++++ git/Makefile
+@@ -1364,6 +1364,9 @@ ifneq ($(dtstree),)
  %.dtb: include/config/kernel.release scripts_dtc
  	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
  
@@ -44,7 +44,7 @@ index 3d328b7ab2003..5681e16fe3f26 100644
  PHONY += dtbs dtbs_install dtbs_check
  dtbs: include/config/kernel.release scripts_dtc
  	$(Q)$(MAKE) $(build)=$(dtstree)
-@@ -1816,7 +1819,7 @@ clean: $(clean-dirs)
+@@ -1843,7 +1846,7 @@ clean: $(clean-dirs)
  	@find $(if $(KBUILD_EXTMOD), $(KBUILD_EXTMOD), .) $(RCS_FIND_IGNORE) \
  		\( -name '*.[aios]' -o -name '*.ko' -o -name '.*.cmd' \
  		-o -name '*.ko.*' \
@@ -53,10 +53,10 @@ index 3d328b7ab2003..5681e16fe3f26 100644
  		-o -name '*.dwo' -o -name '*.lst' \
  		-o -name '*.su' -o -name '*.mod' \
  		-o -name '.*.d' -o -name '.*.tmp' -o -name '*.mod.c' \
-diff --git a/scripts/Makefile.dtbinst b/scripts/Makefile.dtbinst
-index 50d580d77ae92..ba01f5ba25172 100644
---- a/scripts/Makefile.dtbinst
-+++ b/scripts/Makefile.dtbinst
+Index: git/scripts/Makefile.dtbinst
+===================================================================
+--- git.orig/scripts/Makefile.dtbinst
++++ git/scripts/Makefile.dtbinst
 @@ -29,6 +29,9 @@ quiet_cmd_dtb_install = INSTALL $@
  $(dst)/%.dtb: $(obj)/%.dtb
  	$(call cmd,dtb_install)
@@ -67,10 +67,10 @@ index 50d580d77ae92..ba01f5ba25172 100644
  PHONY += $(subdirs)
  $(subdirs):
  	$(Q)$(MAKE) $(dtbinst)=$@ dst=$(patsubst $(obj)/%,$(dst)/%,$@)
-diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
-index 213677a5ed33e..b00855b247e09 100644
---- a/scripts/Makefile.lib
-+++ b/scripts/Makefile.lib
+Index: git/scripts/Makefile.lib
+===================================================================
+--- git.orig/scripts/Makefile.lib
++++ git/scripts/Makefile.lib
 @@ -86,7 +86,9 @@ extra-$(CONFIG_OF_ALL_DTBS)	+= $(dtb-)
  
  ifneq ($(CHECK_DTBS),)
@@ -81,7 +81,7 @@ index 213677a5ed33e..b00855b247e09 100644
  endif
  
  # Add subdir path
-@@ -327,6 +329,9 @@ cmd_dtc = $(HOSTCC) -E $(dtc_cpp_flags) -x assembler-with-cpp -o $(dtc-tmp) $< ;
+@@ -325,6 +327,9 @@ cmd_dtc = $(HOSTCC) -E $(dtc_cpp_flags)
  $(obj)/%.dtb: $(src)/%.dts $(DTC) FORCE
  	$(call if_changed_dep,dtc)
  
@@ -91,6 +91,3 @@ index 213677a5ed33e..b00855b247e09 100644
  DT_CHECKER ?= dt-validate
  DT_BINDING_DIR := Documentation/devicetree/bindings
  # DT_TMP_SCHEMA may be overridden from Documentation/devicetree/bindings/Makefile
--- 
-cgit 
-
