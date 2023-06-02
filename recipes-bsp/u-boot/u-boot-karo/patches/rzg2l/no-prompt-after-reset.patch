@@ -1,0 +1,15 @@
+diff --git a/arch/arm/mach-rmobile/cpu_info-rcar.c b/arch/arm/mach-rmobile/cpu_info-rcar.c
+index 77712be2f6..fc3d9982b8 100644
+--- a/arch/arm/mach-rmobile/cpu_info-rcar.c
++++ b/arch/arm/mach-rmobile/cpu_info-rcar.c
+@@ -92,4 +92,10 @@ void reset_cpu(ulong addr)
+ 	wdt_delay();
+ 	// enable wdt timer
+ 	writel(BIT(0), WDT_CH0_BASE + WDTCNT);
++
++	while (1) {
++		/*
++		 * spin to prevent returning from here
++		 */
++	}
+ }

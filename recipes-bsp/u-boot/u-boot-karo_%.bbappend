@@ -10,6 +10,10 @@ SRC_URI:append:stm32mp1 = " \
         file://fdt-size.patch \
 "
 
+SRC_URI:append:rzg2l = " \
+        file://no-prompt-after-reset.patch \
+"
+
 SRC_URI:remove:qsmp-1510 = " \
        file://fdt-overlay-support.patch \ 
 "
