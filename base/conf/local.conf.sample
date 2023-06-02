@@ -254,6 +254,8 @@ CONF_VERSION = "2"
 #
 # A shared hash equivalent server can be set with "<HOSTNAME>:<PORT>" format
 #
+#BB_HASHSERVE = "auto"
+#BB_SIGNATURE_HANDLER = "OEEquivHash"
 BB_HASHSERVE = ""
 BB_SIGNATURE_HANDLER = "OEBasicHash"
 
@@ -264,4 +266,9 @@ VIRTUAL-RUNTIME_dev_manager ??= "udev"
 #
 ROOT_HOME = "/root"
 
-SANITY_TESTED_DISTROS:append = " devuan"
+SANITY_TESTED_DISTROS:append = " devuan-4"
+
+# don't use a bogus build timestamp
+unset SOURCE_DATE_EPOCH
+REPRODUCIBLE_TIMESTAMP_ROOTFS = ""
+KERNEL_DEBUG_TIMESTAMPS = "1"
