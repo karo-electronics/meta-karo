@@ -121,7 +121,7 @@
 };
 
 &ehci0 {
-	dr_mode = "device";
+	dr_mode = "peripheral";
 	status = "okay";
 };
 
@@ -139,7 +139,7 @@
 };
 
 &hsusb {
-	dr_mode = "device";
+	dr_mode = "peripheral";
 	status = "okay";
 };
 
@@ -160,7 +160,7 @@
 };
 
 &ohci0 {
-	dr_mode = "device";
+	dr_mode = "peripheral";
 	status = "okay";
 };
 
