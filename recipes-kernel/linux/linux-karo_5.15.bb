@@ -1,21 +1,14 @@
 SUMMARY = "5.15 Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
-require recipes-kernel/linux/linux-karo.inc
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:"
 
-PROVIDES += "linux"
-DEPENDS += "lzop-native bc-native dtc-native"
+require recipes-kernel/linux/linux-karo.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 SRCBRANCH = "linux-5.15.y"
 SRCREV = "a0ebea480bb319a3ad408c99db91262dbc696b76"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
-
-SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
-
-# automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
-SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
@@ -58,19 +51,3 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.c
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
-
-do_configure:prepend() {
-    # Add GIT revision to the local version
-    head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
-    if ! [ -s "${S}/.scmversion" ] || ! grep -q "$head" ${S}/.scmversion;then
-        echo "+g$head" > "${S}/.scmversion"
-    fi
-    install -v "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/.config"
-    sed -i '/CONFIG_LOCALVERSION/d' "${B}/.config"
-    echo 'CONFIG_LOCALVERSION="${KERNEL_LOCALVERSION}"' >> "${B}/.config"
-
-    for f in ${KERNEL_FEATURES};do
-        cat ${WORKDIR}/cfg/$f >> ${B}/.config
-    done
-}
-addtask do_configure before do_devshell

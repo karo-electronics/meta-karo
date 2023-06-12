@@ -43,8 +43,6 @@ SRC_URI:append:stm32mp1 = " \
 	file://dts/overlays/stm32mp15-karo-sound.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
-EXTRA_OEMAKE:append = " V=0"
-
 # DTB overlays
 DTB_OVERLAYS ??= ""
 
@@ -76,8 +74,6 @@ DTB_OVERLAYS:append:qsmp = " \
 "
 
 KERNEL_DEVICETREE:append:stm32mp1 = "${@ "".join(map(lambda f: " stm32mp15-%s.dtb" % f, "${DTB_OVERLAYS}".split()))}"
-
-KERNEL_DTC_FLAGS += "-@"
 
 KARO_BASEBOARDS:txmp ?= "\
 	mb7 \
@@ -128,43 +124,3 @@ KARO_DTB_OVERLAYS[qsglyn1] = " \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
 "
-
-inherit deploy
-DEPENDS += "dtc-native"
-
-python do_check_dtbs () {
-    import os
-
-    def apply_overlays(infile, outfile, overlays):
-        pfx = d.getVar('SOC_PREFIX')
-        ovlist = map(lambda f: "%s-%s.dtb" % (pfx ,f), overlays.split())
-        ovfiles = "".join(map(lambda f: " '%s'" % f, ovlist))
-        cmd = ("fdtoverlay -i '%s.dtb' -o '%s.dtb' %s" % (infile, outfile, ovfiles))
-        bb.debug(2, "%s" % cmd)
-        if os.system("%s" % cmd):
-            bb.fatal("Failed to apply overlays '%s' for '%s' to '%s'" %
-                (ovfiles, baseboard, infile))
-        bb.note("FDT overlays %s for '%s' successfully applied to '%s.dtb'" %
-            (ovfiles, baseboard, infile))
-        d.appendVar('IMAGE_INSTALL', " " + outfile + ".dtb")
-
-    here = os.getcwd()
-    os.chdir(d.getVar('DEPLOYDIR'))
-    baseboards = d.getVar('KARO_BASEBOARDS').split()
-    for baseboard in baseboards:
-        basename = d.getVar('DTB_BASENAME')
-        bb.debug(2, "creating %s-%s.dtb from %s.dtb" % (basename, baseboard, basename))
-        outfile = "%s-%s" % (basename, baseboard)
-        overlays = d.getVarFlags('KARO_DTB_OVERLAYS', baseboard)
-        bb.note("overlays='%s'" % overlays)
-        bb.debug(2, "overlays for %s-%s = '%s'" % (basename, baseboard,
-            "','".join(overlays[baseboard].split())))
-        if overlays == None or len(overlays[baseboard].split()) == 0:
-            bb.warn("%s: No overlays specified for %s" % (d.getVar('MACHINE'), baseboard))
-            continue
-        apply_overlays(basename, outfile, overlays[baseboard])
-
-    os.chdir(here)
-}
-
-addtask do_check_dtbs after do_deploy

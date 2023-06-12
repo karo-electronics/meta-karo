@@ -51,8 +51,6 @@ DTB_OVERLAYS:append:qsrz = " \
 
 KERNEL_DEVICETREE:append:rzg2 = "${@ "".join(map(lambda f: " renesas/r9a07g044l2-%s.dtbo" % f, "${DTB_OVERLAYS}".split()))}"
 
-KERNEL_DTC_FLAGS += "-@"
-
 KARO_BASEBOARDS:txrz ?= "\
     mb7 \
 "
@@ -114,42 +112,3 @@ KARO_DTB_OVERLAYS[qsglyn1] = " \
     qsrz-raspi-display \
     qsrz-ksz9131 \
 "
-
-DEPENDS += "dtc-native"
-
-python do_check_dtbs () {
-    import os
-
-    def apply_overlays(infile, outfile, overlays):
-        pfx = d.getVar('SOC_PREFIX')
-        ovlist = map(lambda f: "%s-%s.dtb" % (pfx ,f), overlays.split())
-        ovfiles = "".join(map(lambda f: " '%s'" % f, ovlist))
-        cmd = ("fdtoverlay -i '%s.dtb' -o '%s.dtb' %s" % (infile, outfile, ovfiles))
-        bb.debug(2, "%s" % cmd)
-        if os.system("%s" % cmd):
-            bb.fatal("Failed to apply overlays '%s' for '%s' to '%s'" %
-                (ovfiles, baseboard, infile))
-        bb.note("FDT overlays %s for '%s' successfully applied to '%s.dtb'" %
-            (ovfiles, baseboard, infile))
-        d.appendVar('IMAGE_INSTALL', " " + outfile + ".dtb")
-
-    here = os.getcwd()
-    os.chdir(d.getVar('DEPLOYDIR'))
-    baseboards = d.getVar('KARO_BASEBOARDS').split()
-    for baseboard in baseboards:
-        basename = d.getVar('DTB_BASENAME')
-        bb.debug(2, "creating %s-%s.dtb from %s.dtb" % (basename, baseboard, basename))
-        outfile = "%s-%s" % (basename, baseboard)
-        overlays = d.getVarFlags('KARO_DTB_OVERLAYS', baseboard)
-        bb.note("overlays='%s'" % overlays)
-        bb.debug(2, "overlays for %s-%s = '%s'" % (basename, baseboard,
-            "','".join(overlays[baseboard].split())))
-        if overlays == None or len(overlays[baseboard].split()) == 0:
-            bb.warn("%s: No overlays specified for %s" % (d.getVar('MACHINE'), baseboard))
-            continue
-        apply_overlays(basename, outfile, overlays[baseboard])
-
-    os.chdir(here)
-}
-
-addtask do_check_dtbs after do_deploy
