@@ -1,5 +1,9 @@
 require recipes-bsp/u-boot/u-boot.inc
 
+OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
+OVERLAY_INC_FILE:rzg2 = "rzg2-overlays.inc"
+require conf/machine/include/${OVERLAY_INC_FILE}
+
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"

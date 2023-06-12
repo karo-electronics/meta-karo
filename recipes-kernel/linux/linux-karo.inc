@@ -17,12 +17,50 @@ KERNEL_EXTRA_ARGS:stm32mp1 += "LOADADDR=${UBOOT_ENTRYPOINT}"
 
 EXTRA_OEMAKE:append = " V=0"
 
+OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
+OVERLAY_INC_FILE:rzg2 = "rzg2-overlays.inc"
+require conf/machine/include/${OVERLAY_INC_FILE}
+
+
 SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
 
+SRC_URI:append:rzg2 = "${@ "".join(map(lambda f: " file://dts/renesas/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
+SRC_URI:append:stm32mp1 = "${@ "".join(map(lambda f: " file://dts/overlays/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
+
 KERNEL_DTC_FLAGS += "-@"
+
+def get_overlays(d, vendor="", ext="dtb"):
+    ovlist = []
+    g = d.getVar('DTB_OVERLAYS_generic') or ""
+    o = d.getVar('DTB_OVERLAYS') or ""
+    for ov in g.split():
+        for fn in ov.split(","):
+            fn = " %s%s-%s.%s" % (vendor + "/" if vendor != "" else "", d.getVar('SOC_PREFIX'), fn, ext)
+            if fn in ovlist:
+                bb.debug(2, "'%s' is already in overlays" % fn)
+            else:
+                bb.debug(2, "Adding '%s' to overlays" % fn)
+                ovlist += [fn]
+
+    for ov in o.split():
+        for fn in ov.split(","):
+            fn = " %s%s-%s.%s" % (vendor + "/" if vendor != "" else "", d.getVar('SOC_FAMILY'), fn, ext)
+            if fn in ovlist:
+                bb.debug(2, "'%s' is already in overlays" % fn)
+            else:
+                bb.debug(2, "Adding '%s' to overlays" % fn)
+                ovlist += [fn]
+
+    if len(ovlist) == 0:
+        return ""
+    bb.debug(2, "ovlist='%s'" % ovlist)
+    return " ".join(ovlist)
+
+KERNEL_DEVICETREE:append:rzg2l = "${@ get_overlays(d, "renesas", "dtbo") }"
+KERNEL_DEVICETREE:append:stm32mp1 = "${@ get_overlays(d) }"
 
 do_configure:prepend() {
     # Add GIT revision to the local version
