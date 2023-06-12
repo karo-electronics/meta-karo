@@ -54,18 +54,7 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," ext
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"copro"," copro.cfg","",d)}"
 
-
 COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"
-
-# returns all the elements from the src uri that are .cfg files
-def find_cfgs(d):
-    sources=src_patches(d, True)
-    sources_list=[]
-    for s in sources:
-        if s.endswith('.cfg'):
-            sources_list.append(s)
-
-    return sources_list
 
 do_configure:prepend() {
     # Add GIT revision to the local version

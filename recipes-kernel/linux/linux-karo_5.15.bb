@@ -2,16 +2,15 @@ SUMMARY = "5.15 Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
 require recipes-kernel/linux/linux-karo.inc
 
-DEPENDS += "lzop-native bc-native"
+PROVIDES += "linux"
+DEPENDS += "lzop-native bc-native dtc-native"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 SRCBRANCH = "linux-5.15.y"
 SRCREV = "a0ebea480bb319a3ad408c99db91262dbc696b76"
 KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${PN}:"
-
-PROVIDES += "linux"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:${THISDIR}/${BP}:"
 
 SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
 
@@ -60,16 +59,6 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," ext
 
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
 
-# returns all the elements from the src uri that are .cfg files
-def find_cfgs(d):
-    sources=src_patches(d, True)
-    sources_list=[]
-    for s in sources:
-        if s.endswith('.cfg'):
-            sources_list.append(s)
-
-    return sources_list
-
 do_configure:prepend() {
     # Add GIT revision to the local version
     head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
@@ -84,3 +73,4 @@ do_configure:prepend() {
         cat ${WORKDIR}/cfg/$f >> ${B}/.config
     done
 }
+addtask do_configure before do_devshell

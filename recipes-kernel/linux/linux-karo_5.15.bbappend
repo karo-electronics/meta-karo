@@ -1,4 +1,4 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/dts/overlays:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}:"
 
 SRC_URI:append:stm32mp1 = " \
         file://STM-patches/0001-ARM-5.15.24-stm32mp1-r1-MACHINE.patch \
@@ -35,21 +35,6 @@ SRC_URI:append:stm32mp1 = " \
         file://patches/0007-usb-phy-bugfix.patch \
         file://patches/0009-dwc2-usbotg-bugfix.patch \
         file://patches/0012-ltdc-pixclk-pol-bus-flags.patch \
-"
-
-SRC_URI:append:rzg2 = " \
-        file://patches/0001-renesas-du-change-fixed-clock-polarity.patch \
-        file://patches/0002-renesas-du-change-fixed-pixformat.patch \
-        file://patches/0003-RZ-G2L-SSIF-slave-mode-trial.patch \
-        file://patches/0004-renesas-gpiolib-irqchip-bugfix.patch \
-        file://patches/0005-renesas-arch-rcar-gen3-bugfix.patch \
-        file://patches/0006-drm-rzg2l_mipi_dsi-add-host-transfer-function-for-RZ.patch \
-        file://patches/0007-Fixed-an-issue-that-caused-flicker-when-outputting-t.patch \
-        file://patches/0008-drm-rzg2l_mipi_dsi-initialize-panel-after-high-speed.patch \
-        file://patches/0009-drm-rcar-du-rzg2l_mipi_dsi-move-parsing-number-of-da.patch \
-        file://patches/0010-drm-rcar-du-Modify-clk-div-to-support-2-lane-MIPI-DS.patch \
-        file://patches/0011-drm-rzg2l-mipi-dsi-comment-out-lane-check-that-prevents-from-working.patch \
-        file://patches/0012-drm-sn65dsi83-bridge-support.patch \
 "
 
 SRC_URI:append:stm32mp1 = " \
