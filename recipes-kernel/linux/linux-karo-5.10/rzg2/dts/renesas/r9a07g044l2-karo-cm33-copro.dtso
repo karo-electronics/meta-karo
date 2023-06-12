@@ -3,33 +3,25 @@
  * Copyright (C) 2023 Uwe Steinkohl <US@karo-electronics.com>
  */
 
-
- #include <dt-bindings/interrupt-controller/arm-gic.h>
- 
-
+#include <dt-bindings/interrupt-controller/arm-gic.h>
 
 /dts-v1/;
 /plugin/;
 
 &{/chosen} {
 	overlays {
-		rzg2-copro;
+		karo-cm33-copro;
 	};
 };
 
-
-
-
 &{/} {
-
 	memory@48000000 {
 		device_type = "memory";
 		/* first 128MB is reserved for secure area. */
 		reg = <0 0x48000000 0 0x18000000>;
 	};
 
-
-    vring-ctl0@43000000 {
+	vring-ctl0@43000000 {
 		compatible = "vring_uio";
 		reg = <0x0 0x43000000 0x0 0x100000>;
 		no-map;
@@ -72,8 +64,6 @@
 		interrupts = <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>;
 		status = "okay";
 	};
-
-
 };
 
 &ostm2 {
