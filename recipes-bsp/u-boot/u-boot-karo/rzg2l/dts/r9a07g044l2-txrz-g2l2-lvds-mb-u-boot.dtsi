@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /*
- * Copyright (C) 2022 Markus Bauer <MB@Karo-electronics.de>
+ * Copyright (C) 2023 Markus Bauer <MB@Karo-electronics.de>
  */
 
 #include "r9a07g044l-u-boot.dtsi"

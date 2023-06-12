@@ -1,0 +1,45 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Device Tree Source for the Ka-Ro G2L based QSRZ CoM
+ *
+ * Copyright (C) 2023 Markus Bauer <mb@karo-electronics.com>
+ */
+
+/ {
+	aliases {
+		ethernet0 = &eth0;
+	};
+};
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_pins>;
+	phy-handle = <&phy0>;
+	phy-mode = "rgmii";
+	status = "okay";
+
+	phy0: ethernet-phy@3 {
+		reg = <3>;
+	};
+};
+
+&pinctrl {
+	eth0_pins: eth0grp {
+		pinmux = <
+			  RZG2L_PINMUX(28, 0, 1)
+			  RZG2L_PINMUX(27, 1, 1)
+			  RZG2L_PINMUX(24, 0, 1)
+			  RZG2L_PINMUX(24, 1, 1)
+			  RZG2L_PINMUX(25, 0, 1)
+			  RZG2L_PINMUX(25, 1, 1)
+			  RZG2L_PINMUX(26, 0, 1)
+			  RZG2L_PINMUX(26, 1, 1)
+			  RZG2L_PINMUX(20, 1, 1)
+			  RZG2L_PINMUX(20, 0, 1)
+			  RZG2L_PINMUX(22, 0, 1)
+			  RZG2L_PINMUX(21, 1, 1)
+			  RZG2L_PINMUX(21, 0, 1)
+			  RZG2L_PINMUX(20, 2, 1)
+		>;
+	};
+};

@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright (C) 2023 Markus Bauer <mb@karo-electronics.com>
+ */
+
+/dts-v1/;
+
+#include "r9a07g044l2-txrz-g2l2.dts"
+
+/ {
+	model = "Ka-Ro rzg2l based TXRZ-G2L2 on LVDS-MB baseboard";
+};

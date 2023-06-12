@@ -7,6 +7,7 @@ SRC_URI:append = " \
 SRC_URI:append:rzg2l = " \
         file://add-u-boot-command-for-cm33-support.patch \
         file://disable-reserved-area-check.patch \
+        file://no-prompt-after-reset.patch \
 "
 
 SRC_URI:append:stm32mp1 = " \
@@ -15,12 +16,15 @@ SRC_URI:append:stm32mp1 = " \
         file://fdt-size.patch \
 "
 
-SRC_URI:append:rzg2l = " \
-        file://no-prompt-after-reset.patch \
-"
-
 SRC_URI:remove:qsmp-1510 = " \
        file://fdt-overlay-support.patch \
+"
+
+SRC_URI:append:rzg2l = " \
+        file://dts/r9a07g044l2-qsrz.dtsi;subdir=git/arch/arm \
+        file://dts/r9a07g044l2-qsrz-qsbase1.dtsi;subdir=git/arch/arm \
+        file://dts/r9a07g044l2-qsrz-qsbase4.dtsi;subdir=git/arch/arm \
+        file://dts/r9a07g044l2-txrz.dtsi;subdir=git/arch/arm \
 "
 
 SRC_URI:append:stm32mp1 = " \

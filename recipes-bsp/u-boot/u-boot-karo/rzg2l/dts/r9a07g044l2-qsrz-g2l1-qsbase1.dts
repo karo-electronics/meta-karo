@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
+ * Device Tree Source for the Ka-Ro G2L based QSRZ CoM
+ *
  * Copyright (C) 2023 Markus Bauer <mb@karo-electronics.com>
  */
 
 /dts-v1/;
 
-#include "r9a07g044l2-qsrz-g2l0.dts"
+#include "r9a07g044l2-qsrz-g2l1.dts"
 #include "r9a07g044l2-qsrz-qsbase1.dtsi"
 
 / {
-	model = "Ka-Ro rzg2l based QSRZ-G2L0 on QSBASE1 baseboard";
+	model = "Ka-Ro rzg2l based QSRZ-G2L1 on QSBASE1 baseboard";
 };
