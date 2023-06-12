@@ -7,6 +7,7 @@ SRC_URI:append:rzg2 = " \
     file://patches/0006-rzg2l-dsi-fix-hsclock-before-panel-setup.patch \
     file://patches/0007-dsi83-10inch-clock.patch \
     file://patches/0008-10inch-parallel-clock.patch \
+    file://patches/0009-gpio-int-trigger-bothedge.patch \
 "
 
 SRC_URI:remove:qsrz = " \

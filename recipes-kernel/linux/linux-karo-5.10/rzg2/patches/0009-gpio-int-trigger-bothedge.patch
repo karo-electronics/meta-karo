@@ -1,0 +1,63 @@
+diff --git a/drivers/pinctrl/renesas/pinctrl-rzg2l.c b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+index 4b7d569b3464..5b37c7b7a9d8 100644
+--- a/drivers/pinctrl/renesas/pinctrl-rzg2l.c
++++ b/drivers/pinctrl/renesas/pinctrl-rzg2l.c
+@@ -136,6 +136,7 @@
+ #define HIGH_LEVEL	2
+ #define LOW_LEVEL	3
+ #define IRQ_MASK	0x3
++#define BOTH_EDGE	8
+ 
+ #define TINT_MAX       32	/* Maximum 32 Interrupts can be supported */
+ 
+@@ -271,6 +272,7 @@ struct rzg2l_pinctrl {
+ 	struct irq_chip			irq_chip;
+ 	unsigned int			irq_start;
+ 	atomic_t			wakeup_path;
++	unsigned int			irq_type;
+ 
+ 	/* This array will store GPIO IDs for TINT[0-32] with value:
+ 	 * - [15-0] bits: store GPIO IDs (ID = port * 8 + bit).
+@@ -1099,7 +1101,11 @@ static void rzg2l_gpio_irq_unmask(struct irq_data *d)
+ 	} else {
+ 		u32 irq_type;
+ 
+-		if (tint_slot > 15) {
++		if (pctrl->irq_type == BOTH_EDGE) {
++			u8 reg8 = readb(pctrl->base + PIN(port));
++
++			irq_type = (reg8 & BIT(bit)) ? FALLING_EDGE : RISING_EDGE;
++		} else if (tint_slot > 15) {
+ 			reg32 = readl(pctrl->base_tint + TITSR1);
+ 			reg32 = reg32 >> ((tint_slot - 16) * 2);
+ 			irq_type = reg32 & IRQ_MASK;
+@@ -1155,6 +1167,9 @@ static int rzg2l_gpio_irq_set_type(struct irq_data *d, unsigned int type)
+ 	 * About level type, we do not support because we can not clear
+ 	 * after triggering.
+ 	 */
++	case IRQ_TYPE_EDGE_BOTH:
++		irq_type = BOTH_EDGE;
++		break;
+ 	case IRQ_TYPE_EDGE_RISING:
+ 		irq_type = RISING_EDGE;
+ 		break;
+@@ -1170,6 +1185,7 @@ static int rzg2l_gpio_irq_set_type(struct irq_data *d, unsigned int type)
+ 	default:
+ 		return -EINVAL;
+ 	}
++	pctrl->irq_type = irq_type;
+ 
+ 	spin_lock_irqsave(&pctrl->lock, flags);
+ 
+@@ -1185,6 +1202,11 @@ static int rzg2l_gpio_irq_set_type(struct irq_data *d, unsigned int type)
+ 
+ 	pctrl->tint[tint_slot] = BIT(16) | hw_irq;
+ 
++	if (irq_type == BOTH_EDGE) {
++		u8 reg8 = readb(pctrl->base + PIN(port));
++
++		irq_type = (reg8 & BIT(bit)) ? FALLING_EDGE : RISING_EDGE;
++	}
+ 	if (tint_slot > 15) {
+ 		reg32 = readl(pctrl->base_tint + TITSR1);
+ 		reg32 &= ~(IRQ_MASK << ((tint_slot - 16) * 2));
