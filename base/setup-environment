@@ -250,6 +250,11 @@ if $build_dir_setup_enabled; then
 DEFAULT_TIMEZONE = "$DEFAULT_TIMEZONE"
 EOF
     fi
+    if [ -n "${KARO_BASEBOARD}" ];then
+        cat <<EOF >> conf/local.conf
+KARO_BASEBOARD = "${KARO_BASEBOARD}"
+EOF
+    fi
     cp $TEMPLATECONF/* conf/
 
     for s in $HOME/.oe $HOME/.yocto; do
