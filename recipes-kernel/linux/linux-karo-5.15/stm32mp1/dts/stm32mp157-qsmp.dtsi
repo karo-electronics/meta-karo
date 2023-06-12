@@ -4,7 +4,6 @@
  */
 
 #include "stm32mp153-qsmp.dtsi"
-#include "stm32mp157-karo.dtsi"
 
 &cryp1 {
 	status = "okay";

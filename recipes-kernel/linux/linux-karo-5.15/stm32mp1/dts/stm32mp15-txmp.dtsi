@@ -3,10 +3,6 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include <dt-bindings/pinctrl/stm32-pinfunc.h>
-#include "stm32mp15xxab-pinctrl.dtsi"
-#include "stm32mp15-karo.dtsi"
-
 / {
 	aliases {
 		mmc1 = &sdmmc3;

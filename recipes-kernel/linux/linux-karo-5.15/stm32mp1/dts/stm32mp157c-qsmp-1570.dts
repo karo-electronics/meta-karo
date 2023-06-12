@@ -5,8 +5,11 @@
 
 /dts-v1/;
 
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
 #include "stm32mp157.dtsi"
 #include "stm32mp15xc.dtsi"
+#include "stm32mp15xxac-pinctrl.dtsi"
+#include "stm32mp157-karo.dtsi"
 #include "stm32mp157-qsmp.dtsi"
 
 / {

@@ -4,4 +4,3 @@
  */
 
 #include "stm32mp153-txmp.dtsi"
-#include "stm32mp157-karo.dtsi"

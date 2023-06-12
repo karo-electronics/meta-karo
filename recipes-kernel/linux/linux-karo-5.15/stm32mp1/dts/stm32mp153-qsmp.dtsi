@@ -4,7 +4,6 @@
  */
 
 #include "stm32mp15-qsmp.dtsi"
-#include "stm32mp153-karo.dtsi"
 
 / {
 	aliases {
