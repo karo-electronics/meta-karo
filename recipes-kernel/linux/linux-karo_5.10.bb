@@ -16,9 +16,7 @@ SRC_URI:append = " \
         file://0001-display-support.patch \
         file://0002-panel-dpi-bus-format.patch \
         file://0003-smsc-lan8741-support.patch \
-        file://0007-stm32cryp-dependencies.patch \
         file://0010-attiny-regulator-i2c-retries.patch \
-        file://0011-stm-drv-preferred-depth.patch \
         file://0017-spi-nand-dma-map-bugfix.patch \
         file://0019-fdt5x06-dma-bugfix.patch \
         file://0020-ilitek-ts-i2c-driver.patch \
@@ -27,7 +25,7 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:rzg2 = " \
-		file://0001-clock-support-for-CM33.patch \
+        file://0001-clock-support-for-CM33.patch \
         file://dts/renesas/r9a07g044l2-karo-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-qsrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
