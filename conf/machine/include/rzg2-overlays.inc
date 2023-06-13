@@ -4,7 +4,7 @@ require karo-dtb-overlays.inc
 DTB_OVERLAYS ??= ""
 
 DTB_OVERLAYS:append:rzg2 = " \
-    karo-cm33-copro \
+    karo-copro \
     karo-otg-host \
     karo-led \
     karo-sdcard \
@@ -47,6 +47,7 @@ KARO_BASEBOARDS:qsrz ?= "\
 
 # baseboard DTB specific overlays
 KARO_DTB_OVERLAYS[mb7] = " \
+    ${@ mach_overlay(d, "karo-copro", dist="copro")} \
     karo-led \
     karo-sdcard-cd \
     txrz-rtc \
@@ -56,6 +57,7 @@ KARO_DTB_OVERLAYS[mb7] = " \
 "
 
 KARO_DTB_OVERLAYS[lvds-mb] = " \
+    ${@ mach_overlay(d, "karo-copro", dist="copro")} \
     karo-led \
     karo-sdcard \
     txrz-rtc \
@@ -64,6 +66,7 @@ KARO_DTB_OVERLAYS[lvds-mb] = " \
 "
 
 KARO_DTB_OVERLAYS[qsbase1] = " \
+    ${@ mach_overlay(d, "karo-copro", dist="copro")} \
     karo-led \
     karo-sdcard \
     qsrz-lcd-panel \
@@ -72,6 +75,7 @@ KARO_DTB_OVERLAYS[qsbase1] = " \
 "
 
 KARO_DTB_OVERLAYS[qsbase4] = " \
+    ${@ mach_overlay(d, "karo-copro", dist="copro")} \
     karo-led \
     karo-sdcard \
     qsrz-dsi83 \
@@ -80,6 +84,7 @@ KARO_DTB_OVERLAYS[qsbase4] = " \
 "
 
 KARO_DTB_OVERLAYS[qsglyn1] = " \
+    ${@ mach_overlay(d, "karo-copro", dist="copro")} \
     karo-led \
     karo-sdcard \
     qsrz-lcd-panel \

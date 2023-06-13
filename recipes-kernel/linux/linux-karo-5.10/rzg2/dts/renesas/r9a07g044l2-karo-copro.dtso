@@ -10,7 +10,7 @@
 
 &{/chosen} {
 	overlays {
-		karo-cm33-copro;
+		karo-copro;
 	};
 };
 
