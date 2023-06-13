@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
 /*
- * Copyright (C) 2022: Markus Bauer <MBKARO-electronics.de>
+ * Copyright (C) 2022: Markus Bauer <MB@KARO-electronics.de>
  */
 
 #include "stm32mp157c-qsmp-1570-u-boot.dtsi"
