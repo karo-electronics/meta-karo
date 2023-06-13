@@ -5,10 +5,14 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:rzg2l = " \
-        file://add-u-boot-command-for-cm33-support.patch \
-        file://disable-reserved-area-check.patch \
         file://no-prompt-after-reset.patch \
 "
+
+SRC_URI:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', \
+      " file://add-u-boot-command-for-cm33-support.patch \
+        file://disable-reserved-area-check.patch", "", d) }"
+
+UBOOT_FEATURES:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', "copro", " copro", "", d)}"
 
 SRC_URI:append:stm32mp1 = " \
         file://v2021-fittings.patch \
