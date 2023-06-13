@@ -62,6 +62,45 @@ def get_overlays(d, vendor="", ext="dtb"):
 KERNEL_DEVICETREE:append:rzg2l = "${@ get_overlays(d, "renesas", "dtbo") }"
 KERNEL_DEVICETREE:append:stm32mp1 = "${@ get_overlays(d) }"
 
+do_check_config() {
+    applied=$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" ${B}/.config | wc -l)
+    configured=$(cat "${WORKDIR}/${KBUILD_DEFCONFIG}" | wc -l)
+    if [ $applied != $configured ];then
+        bbwarn "The following items of ${KBUILD_DEFCONFIG} have not been accepted by Kconfig"
+        bbwarn "$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" ${B}/.config | \
+                fgrep -vf - "${WORKDIR}/${KBUILD_DEFCONFIG}")"
+    fi
+    applied="$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/defconfig" | wc -l)"
+    if [ $applied != $configured ];then
+        p="$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/defconfig" | \
+                fgrep -vf - "${WORKDIR}/${KBUILD_DEFCONFIG}" | \
+                    sed 's/^# //;s/[= ].*$//')"
+        for pat in $p;do
+            bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/${KBUILD_DEFCONFIG}")' is obsolete in '${KBUILD_DEFCONFIG}')'"
+        done
+    fi
+
+    for f in ${KERNEL_FEATURES};do
+        applied=$(fgrep -f ${WORKDIR}/cfg/$f ${B}/.config | wc -l)
+        configured=$(cat ${WORKDIR}/cfg/$f | wc -l)
+        if [ $applied != $configured ];then
+            bbwarn "The following items of config fragment $f have not been accepted by Kconfig:"
+            bbwarn "$(fgrep -f ${WORKDIR}/cfg/$f ${B}/.config | fgrep -vf - ${WORKDIR}/cfg/${f})"
+        fi
+        applied="$(fgrep -f "${WORKDIR}/cfg/${f}" "${B}/defconfig" | wc -l)"
+        if [ $applied != $configured ];then
+            p="$(fgrep -f "${WORKDIR}/cfg/${f}" "${B}/defconfig" | \
+                    fgrep -vf - "${WORKDIR}/cfg/${f}" | \
+                    sed 's/^# //;s/[= ].*$//')"
+            for pat in $p;do
+                bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/cfg/${f}")' is obsolete in '$f')'"
+            done
+        fi
+    done
+}
+addtask do_check_config after do_savedefconfig
+do_check_config[nostamp] = "1"
+
 do_configure:prepend() {
     # Add GIT revision to the local version
     head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
