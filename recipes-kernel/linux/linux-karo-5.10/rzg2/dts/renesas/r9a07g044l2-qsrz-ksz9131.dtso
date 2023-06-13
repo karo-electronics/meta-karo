@@ -9,6 +9,12 @@
 #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
+&{/chosen} {
+	overlays {
+		qsrz-ksz9131;
+	};
+};
+
 &eth0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&eth0_pins>;

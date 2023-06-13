@@ -5,6 +5,12 @@
 /dts-v1/;
 /plugin/;
 
+&{/chosen} {
+	overlays {
+		karo-otg-host;
+	};
+};
+
 &ohci0 {
 	dr_mode = "host";
 };

@@ -8,11 +8,17 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
 
+&{/chosen} {
+	overlays {
+		karo-led;
+	};
+};
+
 &{/} {
 	leds {
 		compatible = "gpio-leds";
 
-		module_led: module-led {
+		module-led {
 			gpios = <&pinctrl RZG2L_GPIO(48, 2) GPIO_ACTIVE_LOW>;
 			label = "Heartbeat";
 			default-state = "on";

@@ -8,6 +8,12 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
 
+&{/chosen} {
+	overlays {
+		karo-sdcard;
+	};
+};
+
 &sdhi1 {
 	status = "okay";
 };

@@ -8,6 +8,12 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
 
+&{/chosen} {
+	overlays {
+		karo-sdcard-cd;
+	};
+};
+
 &sdhi1 {
 	cd-gpios = <&pinctrl RZG2L_GPIO(19, 0) GPIO_ACTIVE_LOW>;
 	status = "okay";

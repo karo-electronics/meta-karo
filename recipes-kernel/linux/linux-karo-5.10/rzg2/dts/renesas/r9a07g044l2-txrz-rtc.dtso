@@ -5,6 +5,12 @@
 /dts-v1/;
 /plugin/;
 
+&{/chosen} {
+	overlays {
+		karo-rtc;
+	};
+};
+
 &i2c1 {
 	rtc: rtc@6f {
 		compatible = "microchip,mcp7940x";

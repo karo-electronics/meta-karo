@@ -5,6 +5,12 @@
 /dts-v1/;
 /plugin/;
 
+&{/chosen} {
+	overlays {
+		txrz-sound;
+	};
+};
+
 &{/} {
 	audio_mclock: audio_mclock {
 		compatible = "fixed-clock";
@@ -12,7 +18,7 @@
 		clock-frequency = <26000000>;
 	};
 
-	snd_rzg2l: sound {
+	sound {
 		compatible = "simple-audio-card";
 		simple-audio-card,format = "i2s";
 		simple-audio-card,bitclock-master = <&codec_dai>;

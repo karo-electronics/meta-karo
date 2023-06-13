@@ -9,6 +9,12 @@
 #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
+&{/chosen} {
+	overlays {
+		qsrz-ft5x06;
+	};
+};
+
 &i2c1 {
 	polytouch: touchpanel@38 {
 		compatible = "edt,edt-ft5x06";

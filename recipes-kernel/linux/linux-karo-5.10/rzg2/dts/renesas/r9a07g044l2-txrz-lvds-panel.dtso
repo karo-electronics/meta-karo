@@ -7,6 +7,12 @@
 
 #include "r9a07g044l2-karo-lcd-panel.dtsi"
 
+&{/chosen} {
+	overlays {
+		txrz-lvds-panel;
+	};
+};
+
 &lcd_panel {
 	enable-gpios = <&pinctrl RZG2L_GPIO(4, 1) GPIO_ACTIVE_HIGH>;
 };

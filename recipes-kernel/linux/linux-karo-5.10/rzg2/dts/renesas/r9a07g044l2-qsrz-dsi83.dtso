@@ -8,6 +8,12 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pinctrl/rzg2l-pinctrl.h>
 
+&{/chosen} {
+	overlays {
+		qsrz-dtsi83;
+	};
+};
+
 &dsi0 {
 	#address-cells = <1>;
 	#size-cells = <0>;
