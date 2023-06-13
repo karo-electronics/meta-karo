@@ -34,13 +34,15 @@ EXTRA_OEMAKE:append = " V=0"
 SCMVERSION ??= "y"
 LOCALVERSION ??= "+karo"
 
+UBOOT_BOARD_DIR:stm32mp1 = "board/karo/txmp"
+UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
+
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
 
 UBOOT_ENV_FILE ?= "${@ "${MACHINE}-${KARO_BASEBOARD}_env.txt" if "${KARO_BASEBOARD}" != "" else "${MACHINE}_env.txt"}"
 
-SRC_URI:append:stm32mp1 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txmp" if "${UBOOT_ENV_FILE}" != "" else ""}"
-SRC_URI:append:rzg2 = "${@ " file://${UBOOT_ENV_FILE};subdir=git/board/karo/txrz" if "${UBOOT_ENV_FILE}" != "" else ""}"
+SRC_URI:append = "${@ " file://${UBOOT_ENV_FILE};subdir=git/${UBOOT_BOARD_DIR}" if "${UBOOT_ENV_FILE}" != "" else ""}"
 
 SRC_URI:append = "${@ " \
     file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}.dts;subdir=git/arch/arm \
@@ -216,6 +218,33 @@ do_deploy:append:rzg2 () {
         ln -sf ${UBOOT_SREC_IMAGE} ${DEPLOYDIR}/${UBOOT_SREC}
     fi
 }
+
+python do_env_overlays () {
+    import os
+    import shutil
+
+    if d.getVar('KARO_BASEBOARDS') == None:
+        bb.warn("KARO_BASEBOARDS is undefined")
+        return 1
+    src_file = "%s/%s/%s" % (d.getVar('S'), d.getVar('UBOOT_BOARD_DIR'), d.getVar('UBOOT_ENV_FILE'))
+    dst_dir = "%s/%s_defconfig/%s" % (d.getVar('B'), d.getVar('MACHINE'), d.getVar('UBOOT_BOARD_DIR'))
+    bb.utils.mkdirhier(dst_dir)
+    env_file = os.path.join(dst_dir, os.path.basename(src_file))
+    shutil.copyfile(src_file, env_file)
+    f = open(env_file, 'a')
+    for baseboard in d.getVar('KARO_BASEBOARDS').split():
+        ovlist = d.getVarFlag('KARO_DTB_OVERLAYS', baseboard, True)
+        if ovlist == None:
+            bb.note("No overlays defined for '%s' on baseboard '%s'" % (d.getVar('MACHINE'), baseboard))
+            continue
+        overlays = " ".join(map(lambda f: f, ovlist.split()))
+        bb.note("Adding overlays_%s='%s' to %s" % (baseboard, overlays, env_file))
+        f.write("overlays_%s=%s\n" %(baseboard, overlays))
+    f.write("soc_prefix=%s\n" % (d.getVar('SOC_PREFIX') or ""))
+    f.write("soc_family=%s\n" % (d.getVar('SOC_FAMILY') or ""))
+    f.close()
+}
+addtask do_env_overlays before do_compile after do_configure
 
 # ---------------------------------------------------------------------
 # Avoid QA Issue: No GNU_HASH in the elf binary
