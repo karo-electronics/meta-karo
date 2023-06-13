@@ -61,14 +61,14 @@ do_configure:prepend() {
             j=0
             for type in ${UBOOT_CONFIG};do
                 j=$(expr $j + 1)
-                if [ $i -eq $j ];then
-                    c="$(echo "$config" | sed s/_config/_defconfig/)"
-                    cat "${WORKDIR}/${MACHINE}_defconfig.template" > "${S}/configs/${c}"
-                    if [ -s "${WORKDIR}/u-boot-cfg.${type}" ];then
-                        bbnote "Appending '$type' specific config to '${S}/configs/${c}'"
-                        cat "${WORKDIR}/u-boot-cfg.${type}" >> "${S}/configs/${c}"
-                    fi
+                [ $j -lt $i ] && continue
+                c="$(echo "$config" | sed s/_config/_defconfig/)"
+                cat "${WORKDIR}/${MACHINE}_defconfig.template" > "${S}/configs/${c}"
+                if [ -s "${WORKDIR}/u-boot-cfg.${type}" ];then
+                    bbnote "Appending '$type' specific config to '${S}/configs/${c}'"
+                    cat "${WORKDIR}/u-boot-cfg.${type}" >> "${S}/configs/${c}"
                 fi
+                break
             done
             unset j
         done
@@ -79,33 +79,34 @@ do_configure:prepend() {
 }
 
 do_configure:append() {
-    for f in ${UBOOT_FEATURES};do
-        if ! [ -f "${WORKDIR}/${f}.cfg" ];then
-            bbfatal "UBOOT_FEATURE: '${WORKDIR}/${f}.cfg' not found"
+    tmpfile="`mktemp cfg-XXXXXX.tmp`"
+    if [ "${KARO_BASEBOARD}" != "" ];then
+        if [ -z "$tmpfile" ];then
+            bbfatal "Failed to create tmpfile"
         fi
-    done
-    if [ -n "${KARO_BASEBOARD}" ];then
-        if [ -n "${UBOOT_CONFIG}" ];then
-            for config in ${UBOOT_MACHINE};do
-                c="${B}/${config}"
-                cat <<EOF >> "${c}/.config"
+        cat <<EOF >> "$tmpfile"
 CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
-CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
 EOF
-                oe_runmake -C ${c} oldconfig
-            done
-        else
-            cat <<EOF >> "${B}/.config"
-CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
-CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
-EOF
-            oe_runmake -C ${B} oldconfig
-        fi
         grep -q "${DTB_BASENAME}-${KARO_BASEBOARD}\.dtb" ${S}/arch/arm/dts/Makefile || \
                 sed -i '/^targets /i\
 dtb-y += ${DTB_BASENAME}-${KARO_BASEBOARD}.dtb\
 ' ${S}/arch/arm/dts/Makefile
     fi
+    bbnote "UBOOT_ENV_FILE='${UBOOT_ENV_FILE}'"
+    cat <<EOF >> "$tmpfile"
+CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
+EOF
+    if [ -n "${UBOOT_CONFIG}" ];then
+        for config in ${UBOOT_MACHINE};do
+            c="$(echo "$config" | sed s/_config/_defconfig/)"
+            merge_config.sh -m -r -O "${c}" "${c}/.config" "$tmpfile"
+            oe_runmake -C ${c} oldconfig
+        done
+    else
+        merge_config.sh -m -r -O "${B}" "${B}/.config" "$tmpfile"
+        oe_runmake -C "${B}" oldconfig
+    fi
+    rm -vf "$tmpfile"
 }
 
 do_savedefconfig() {
@@ -145,9 +146,9 @@ do_deploy:append:stm32mp1 () {
             j=0
             for type in ${UBOOT_CONFIG}; do
                 j=$(expr $j + 1)
-                if [ $j -eq $i ]; then
-                    install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
-                fi
+                [ $j -lt $i ] && continue
+                install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
+                break
             done
             unset j
         done
@@ -169,11 +170,11 @@ do_install:stm32mp1 () {
             j=0
             for type in ${UBOOT_CONFIG}; do
                 j=$(expr $j + 1)
-                if [ $j -eq $i ]; then
-                    install -d ${D}/${BIN_DIR}
-                    install -m 644 ${B}/${config}/u-boot-nodtb.bin ${D}/${BIN_DIR}/u-boot-nodtb-${type}.bin
-                    install -m 644 ${B}/${config}/u-boot.dtb ${D}/${BIN_DIR}/u-boot-${type}.dtb
-                fi
+                [ $j -lt $i ] && continue
+                install -d ${D}/${BIN_DIR}
+                install -m 644 ${B}/${config}/u-boot-nodtb.bin ${D}/${BIN_DIR}/u-boot-nodtb-${type}.bin
+                install -m 644 ${B}/${config}/u-boot.dtb ${D}/${BIN_DIR}/u-boot-${type}.dtb
+                break
             done
             unset j
         done
@@ -200,11 +201,11 @@ do_deploy:append:rzg2 () {
             j=0
             for type in ${UBOOT_CONFIG}; do
                 j=$(expr $j + 1)
-                if [ $j -eq $i ]; then
-                    install -m 644 ${B}/${config}/${UBOOT_SREC} ${DEPLOYDIR}/u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
+                [ $j -lt $i ] && continue
+                install -m 644 ${B}/${config}/${UBOOT_SREC} ${DEPLOYDIR}/u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX}
 
-                    ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} ${DEPLOYDIR}/u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
-                fi
+                ln -sf u-boot-elf-${type}-${PV}-${PR}.${UBOOT_SREC_SUFFIX} ${DEPLOYDIR}/u-boot-elf-${type}.${UBOOT_SREC_SUFFIX}
+                break
             done
             unset j
         done
