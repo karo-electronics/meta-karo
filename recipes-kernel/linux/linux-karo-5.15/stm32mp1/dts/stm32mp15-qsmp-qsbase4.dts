@@ -7,16 +7,12 @@
 
 /plugin/;
 
-/{
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	fragment@0 {
-		reg = <0>;
-		target = <&sdmmc1>;
-
-		__overlay__ {
-			status = "disabled";
-		};
+&{/chosen} {
+	overlays {
+		qsmp-qsbase4;
 	};
+};
+
+&sdmmc1 {
+	status = "disabled";
 };

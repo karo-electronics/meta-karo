@@ -8,58 +8,36 @@
 
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	fragment@0 {
-		reg = <0>;
-		target-path = "/";
-
-		__overlay__ {
-			model = "Ka-Ro electronics GmbH QSMP-1570 module on QSGLYN1 baseboard";
-		};
+&{/chosen} {
+	overlays {
+		qsmp-qsglyn1;
 	};
+};
 
-	fragment@1 {
-		reg = <1>;
-		target = <&i2c6>;
+&{/} {
+	model = "Ka-Ro electronics GmbH QSMP-1570 module on QSGLYN1 baseboard";
+};
 
-		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <0>;
-
-			touchpanel@41 {
-				compatible = "ilitek,ili2130";
-				reg = <0x41>;
-				interrupt-parent = <&gpiod>;
-				interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
-				wakeup-source;
-				status = "okay";
-			};
-		};
+&i2c6 {
+	touchpanel@41 {
+		compatible = "ilitek,ili2130";
+		reg = <0x41>;
+		interrupt-parent = <&gpiod>;
+		interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
+		wakeup-source;
+		status = "okay";
 	};
+};
 
-	fragment@2 {
-		reg = <2>;
-		target = <&gpioa>;
-
-		__overlay__ {
-			lcd-dispctrl-hog {
-				gpio-hog;
-				gpios = <6 0>;
-				output-high;
-				line-name = "lcd-dispctrl";
-			};
-		};
+&gpioa {
+	lcd-dispctrl-hog {
+		gpio-hog;
+		gpios = <6 0>;
+		output-high;
+		line-name = "lcd-dispctrl";
 	};
+};
 
-	fragment@3 {
-		reg = <3>;
-		target = <&spi6>;
-
-		__overlay__ {
-			status = "disabled";
-		};
-	};
+&spi6 {
+	status = "disabled";
 };

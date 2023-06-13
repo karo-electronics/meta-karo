@@ -7,16 +7,12 @@
 
 /plugin/;
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	fragment@0 {
-		reg = <0>;
-		target = <&gpu>;
-
-		__overlay__ {
-			status = "okay";
-		};
+&{/chosen} {
+	overlays {
+		karo-gpu;
 	};
+};
+
+&gpu {
+	status = "okay";
 };

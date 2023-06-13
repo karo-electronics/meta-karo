@@ -5,53 +5,42 @@
  */
 
 /dts-v1/;
+
 /plugin/;
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
+&{/chosen} {
+	overlays {
+		qsmp-dsi-panel;
+	};
+};
 
-	fragment@0 {
-		reg = <0>;
-		target = <&dsi>;
+&dsi {
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
 
-		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <0>;
+		port@0 {
+			reg = <0>;
 
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-
-				port@0 {
-					reg = <0>;
-
-					dsi_from_ltdc_ep0: endpoint {
-						remote-endpoint = <&ltdc_ep0_to_dsi>;
-					};
-				};
-			};
-
-			panel@0 {
-				reg = <0>;
-				power-supply = <&reg_3v3>;
-				status = "okay";
+			dsi_from_ltdc_ep0: endpoint {
+				remote-endpoint = <&ltdc_ep0_to_dsi>;
 			};
 		};
 	};
 
-	fragment@1 {
-		reg = <1>;
-		target = <&ltdc>;
+	panel@0 {
+		reg = <0>;
+		power-supply = <&reg_3v3>;
+		status = "okay";
+	};
+};
 
-		__overlay__ {
-			status = "okay";
+&ltdc {
+	status = "okay";
 
-			port {
-				ltdc_ep0_to_dsi: endpoint {
-					remote-endpoint = <&dsi_from_ltdc_ep0>;
-				};
-			};
+	port {
+		ltdc_ep0_to_dsi: endpoint {
+			remote-endpoint = <&dsi_from_ltdc_ep0>;
 		};
 	};
 };

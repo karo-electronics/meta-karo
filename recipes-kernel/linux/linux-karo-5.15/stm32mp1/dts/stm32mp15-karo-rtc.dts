@@ -11,24 +11,18 @@
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
+&{/chosen} {
+	overlays {
+		karo-rtc;
+	};
+};
 
-	fragment@0 {
-		reg = <0>;
-		target = <&i2c6>;
+&i2c6 {
+	status = "okay";
 
-		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			status = "okay";
-
-			rtc_i2c: rtc@6f {
-				compatible = "microchip,mcp7940x";
-				reg = <0x6f>;
-				status = "okay";
-			};
-		};
+	rtc_i2c: rtc@6f {
+		compatible = "microchip,mcp7940x";
+		reg = <0x6f>;
+		status = "okay";
 	};
 };

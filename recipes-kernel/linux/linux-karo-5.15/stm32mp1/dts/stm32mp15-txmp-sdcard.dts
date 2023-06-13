@@ -11,18 +11,13 @@
 
 /plugin/;
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	fragment@0 {
-		reg = <0>;
-		target = <&sdmmc3>;
-
-		__overlay__ {
-			/* not usable due to pinswap of SDMMC3_CMD and SDMMC3_D0 */
-			status = "okay";
-		};
-
+&{/chosen} {
+	overlays {
+		txmp-sdcard;
 	};
+};
+
+&sdmmc3 {
+	/* not usable on TXMP-1570 due to pinswap of SDMMC3_CMD and SDMMC3_D0 */
+	status = "okay";
 };

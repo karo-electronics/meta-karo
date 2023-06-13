@@ -11,27 +11,21 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include "overlays/stm32mp15-karo-ft5x06.dtsi"
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
+&{/chosen} {
+	overlays {
+		qsmp-ft5x06;
+	};
+};
 
-	fragment@0 {
-		reg = <0>;
-		target = <&i2c6>;
+&i2c6 {
+	status = "okay";
 
-		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			status = "okay";
-
-			touchpanel@38 {
-				compatible = "edt,edt-ft5x06";
-				reg = <0x38>;
-				interrupt-parent = <&gpiod>;
-				interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
-				wakeup-source;
-				status = "okay";
-			};
-		};
+	touchpanel@38 {
+		compatible = "edt,edt-ft5x06";
+		reg = <0x38>;
+		interrupt-parent = <&gpiod>;
+		interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
+		wakeup-source;
+		status = "okay";
 	};
 };

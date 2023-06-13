@@ -9,6 +9,12 @@
 
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 
+&{/chosen} {
+	overlays {
+		karo-copro;
+	};
+};
+
 &{/} {
 	reserved-memory {
 		#address-cells = <1>;
