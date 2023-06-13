@@ -21,11 +21,13 @@ OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
 OVERLAY_INC_FILE:rzg2 = "rzg2-overlays.inc"
 require conf/machine/include/${OVERLAY_INC_FILE}
 
+#OVERLAY_SRC_FILES ?= ""
 
 SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
+#SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f, "${OVERLAY_SRC_FILES}".split()))}"
 
 SRC_URI:append:rzg2 = "${@ "".join(map(lambda f: " file://dts/renesas/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 SRC_URI:append:stm32mp1 = "${@ "".join(map(lambda f: " file://dts/overlays/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
@@ -100,6 +102,11 @@ do_check_config() {
 }
 addtask do_check_config after do_savedefconfig
 do_check_config[nostamp] = "1"
+
+do_compile_dtbs() {
+    oe_runmake -C ${B} DTC_FLAGS="${KERNEL_DTC_FLAGS}" ${KERNEL_DEVICETREE}
+}
+addtask do_compile_dtbs after do_configure before do_check_dtbs
 
 do_configure:prepend() {
     # Add GIT revision to the local version
@@ -184,4 +191,4 @@ python do_check_dtbs () {
         apply_overlays(basename, outfile, overlays)
     os.chdir(here)
 }
-addtask do_check_dtbs after do_deploy
+addtask do_check_dtbs after do_compile_dtbs before do_compile
