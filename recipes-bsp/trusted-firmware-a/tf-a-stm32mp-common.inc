@@ -38,10 +38,6 @@ EXTRA_OEMAKE += 'PLAT=stm32mp1'
 EXTRA_OEMAKE += 'ARCH=aarch32'
 EXTRA_OEMAKE += 'ARM_ARCH_MAJOR=7'
 
-BIN_DIR = "/binaries"
-FILES:${PN} = "${BIN_DIR}"
-SYSROOT_DIRS += "${BIN_DIR}"
-
 # -----------------------------------------------
 # Enable use of work-shared folder
 STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
@@ -111,45 +107,35 @@ do_compile() {
     done
 }
 
-do_install() {
-    for config in ${TF_A_CONFIG}; do
-        if [ -n "${TF_A_DEVICETREE}" ]; then
-            for dt in ${TF_A_DEVICETREE}; do
-	            install -d ${D}/${BIN_DIR}/${config}
-                install -m 644 ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX} ${D}/${BIN_DIR}/${config}
-                install -m 644 ${B}/${config}/bl32.bin ${D}/${BIN_DIR}/${config}
-                install -m 644 ${B}/${config}/fdts/${dt}-fw-config.dtb ${D}/${BIN_DIR}/${config}
-                install -m 644 ${B}/${config}/fdts/${dt}-bl32.dtb ${D}/${BIN_DIR}/${config}
-            done
-        fi
-    done
-}
-
 do_deploy() {
-    install -d ${DEPLOYDIR}
+    install -d ${DEPLOYDIR}/${FIPTOOL_DIR}
 
     for config in ${TF_A_CONFIG}; do
+        install -d ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
         if [ -n "${TF_A_DEVICETREE}" ]; then
             for dt in ${TF_A_DEVICETREE}; do
                 install -m 644 ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX} ${DEPLOYDIR}
+                install -m 644 ${B}/${config}/bl32.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
+                install -m 644 ${B}/${config}/fdts/${dt}-fw-config.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
+                install -m 644 ${B}/${config}/fdts/${dt}-bl32.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
             done
         else
             # Get tf-a binary basename to copy
             tf_a_binary_basename=$(find ${B}/${config} -name "${TF_A_BASENAME}-*.${TF_A_SUFFIX}" -exec basename {} \; | sed 's|\.'"${TF_A_SUFFIX}"'||g')
-            install -m 644 ${B}/${config}/${tf_a_binary_basename}.${TF_A_SUFFIX} ${DEPLOYDIR}/${tf_a_binary_basename}-${config}.${TF_A_SUFFIX}
+            install -m 644 ${B}/${config}/${tf_a_binary_basename}.${TF_A_SUFFIX} ${DEPLOYDIR}/${FIPTOOL_DIR}/${tf_a_binary_basename}-${config}.${TF_A_SUFFIX}
         fi
     done
 
     if [ -n "${ELF_DEBUG_ENABLE}" ]; then
         for config in ${TF_A_CONFIG}; do
             if [ -f ${B}/${config}/${BL1_ELF} ]; then
-                install -m 644 ${B}/${config}/${BL1_ELF} ${DEPLOYDIR}/${TF_A_BASENAME}-${BL1_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
+                install -m 644 ${B}/${config}/${BL1_ELF} ${DEPLOYDIR}/${FIPTOOL_DIR}/${TF_A_BASENAME}-${BL1_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
             fi
             if [ -f ${B}/${config}/${BL2_ELF} ]; then
-                install -m 644 ${B}/${config}/${BL2_ELF} ${DEPLOYDIR}/${TF_A_BASENAME}-${BL2_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
+                install -m 644 ${B}/${config}/${BL2_ELF} ${DEPLOYDIR}/${FIPTOOL_DIR}/${TF_A_BASENAME}-${BL2_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
             fi
             if [ -f ${B}/${config}/${BL32_ELF} ]; then
-                install -m 644 ${B}/${config}/${BL32_ELF} ${DEPLOYDIR}/${TF_A_BASENAME}-${BL32_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
+                install -m 644 ${B}/${config}/${BL32_ELF} ${DEPLOYDIR}/${FIPTOOL_DIR}/${TF_A_BASENAME}-${BL32_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
             fi
         done
     fi

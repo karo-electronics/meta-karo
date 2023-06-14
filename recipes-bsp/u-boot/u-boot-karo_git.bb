@@ -143,44 +143,28 @@ do_compile:prepend() {
 do_deploy:append:stm32mp1 () {
     if [ -n "${UBOOT_CONFIG}" ]; then
         i=0
-        for config in ${UBOOT_MACHINE}; do
+        for cfg in ${TF_A_CONFIG}; do
             i=$(expr $i + 1)
+            install -d ${DEPLOYDIR}/${FIPTOOL_DIR}/${cfg}
             j=0
-            for type in ${UBOOT_CONFIG}; do
+            for config in ${UBOOT_MACHINE}; do
                 j=$(expr $j + 1)
                 [ $j -lt $i ] && continue
-                install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
-                break
+                k=0
+                for type in ${UBOOT_CONFIG}; do
+                    k=$(expr $k + 1)
+                    [ $k -lt $j ] && continue
+                    install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${cfg}/u-boot.bin
+                    install -m 644 ${B}/${config}/u-boot-nodtb.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${cfg}/u-boot-nodtb.bin
+                    install -m 644 ${B}/${config}/u-boot.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/u-boot.dtb
+                    break
+                done
             done
             unset j
         done
         unset i
     else
         bbfatal "Wrong u-boot-karo configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
-    fi
-}
-
-BIN_DIR:stm32mp1 = "/binaries"
-FILES:${PN}:stm32mp1 = "${BIN_DIR}"
-SYSROOT_DIRS:stm32mp1 += "${BIN_DIR}"
-
-do_install:stm32mp1 () {
-    if [ -n "${UBOOT_CONFIG}" ]; then
-        i=0
-        for config in ${UBOOT_MACHINE}; do
-            i=$(expr $i + 1)
-            j=0
-            for type in ${UBOOT_CONFIG}; do
-                j=$(expr $j + 1)
-                [ $j -lt $i ] && continue
-                install -d ${D}/${BIN_DIR}
-                install -m 644 ${B}/${config}/u-boot-nodtb.bin ${D}/${BIN_DIR}/u-boot-nodtb-${type}.bin
-                install -m 644 ${B}/${config}/u-boot.dtb ${D}/${BIN_DIR}/u-boot-${type}.dtb
-                break
-            done
-            unset j
-        done
-        unset i
     fi
 }
 

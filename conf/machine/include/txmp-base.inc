@@ -40,5 +40,7 @@ tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_
 
 DTB_BASENAME ?= "${TF_A_DEVICETREE}"
 
+FIPTOOL_DIR = "fiptool"
+
 # coprocessor stuff
 M4_BOARDS ?= "STM32MP157C-DK2"
