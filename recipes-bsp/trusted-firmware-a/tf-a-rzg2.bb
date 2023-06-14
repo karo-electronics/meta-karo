@@ -6,5 +6,8 @@ SRC_URI = "git://github.com/karo-electronics/imx-atf.git;protocol=https;branch=$
 SRCBRANCH = "karo-txrz"
 SRCREV = "d7368bdd49dae1555b876498747b833e72abcc81"
 
+PROVIDES += "virtual/trusted-firmware-a"
+PROVIDES += "tf-a-karo"
+
 PV = "2.7-rz"
 PR = "r1"

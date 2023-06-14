@@ -5,9 +5,8 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause;md5=550794465ba0ec
 
 inherit deploy staging
 
-DEPENDS = "u-boot-karo fiptool-native"
-DEPENDS:append:rzg2 = " bootparameter-native tf-a-rzg2"
-DEPENDS:append:stm32mp1 = " tf-a-stm32mp"
+DEPENDS = "u-boot-karo fiptool-native tf-a-karo"
+DEPENDS:append:rzg2 = " bootparameter-native"
 
 S = "${WORKDIR}"
 
