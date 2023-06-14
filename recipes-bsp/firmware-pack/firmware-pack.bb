@@ -14,17 +14,13 @@ S = "${WORKDIR}"
 do_configure[noexec] = "1"
 
 do_compile:rzg2() {
+    # Create bl2_bp.bin
+    bootparameter ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin bl2_bp.bin
+    cat ${RECIPE_SYSROOT}/boot/bl2-${MACHINE}.bin >> bl2_bp.bin
 
-	# Create bl2_bp.bin
-	bootparameter ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}.bin bl2_bp.bin
-	cat ${WORKDIR}/recipe-sysroot/boot/bl2-${MACHINE}.bin >> bl2_bp.bin
-
-	# Create fip.bin
-	fiptool create --align 16 --soc-fw ${WORKDIR}/recipe-sysroot/boot/bl31-${MACHINE}.bin --nt-fw ${WORKDIR}/recipe-sysroot/boot/u-boot.bin fip.bin
-
-	# Convert to srec
-	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
-	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip.bin fip.srec
+    # Create fip.bin
+    fiptool create --align 16 --soc-fw ${WORKDIR}/recipe-sysroot/boot/bl31-${MACHINE}.bin \
+        --nt-fw ${RECIPE_SYSROOT}/boot/u-boot.bin fip.bin
 }
 
 # idk why it has to be defined before it can be overwritten
@@ -33,14 +29,12 @@ do_deploy() {
 }
 
 do_deploy:rzg2() {
-	# Create deploy folder
-	install -d ${DEPLOYDIR}
+    # Create deploy folder
+    install -d ${DEPLOYDIR}
 
-	# Copy fip images
-	install -m 0644 ${S}/bl2_bp.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}.bin
-	install -m 0644 ${S}/bl2_bp.srec ${DEPLOYDIR}/bl2_bp-${MACHINE}.srec
-	install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
-	install -m 0644 ${S}/fip.srec ${DEPLOYDIR}/fip-${MACHINE}.srec
+    # Copy fip images
+    install -m 0644 -D ${S}/bl2_bp.bin ${DEPLOYDIR}/bl2_bp-${MACHINE}.bin
+    install -m 0644 ${S}/fip.bin ${DEPLOYDIR}/fip-${MACHINE}.bin
 }
 
 do_deploy:stm32mp1() {
