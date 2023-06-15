@@ -23,7 +23,7 @@ SRCBRANCH:stm32mp1 = "karo-stm32mp1-v2021.10"
 SRCREV:stm32mp1 = "7c7c70f71f34d2cd4c77dd6d1e14e5022178c6c2"
 
 SRCBRANCH:rzg2 = "karo-txrz"
-SRCREV:rzg2 = "34dad2fabb84257080b4f7dde92382bd8ab9c132"
+SRCREV:rzg2 = "66fed3c1ba38bf7229e10bfd9923b89bd7e98064"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"

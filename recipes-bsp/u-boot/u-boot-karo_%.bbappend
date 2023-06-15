@@ -4,10 +4,6 @@ SRC_URI:append = " \
         file://karo.bmp;subdir=git/tools/logos \
 "
 
-SRC_URI:append:rzg2l = " \
-        file://no-prompt-after-reset.patch \
-"
-
 SRC_URI:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', \
       " file://add-u-boot-command-for-cm33-support.patch \
         file://disable-reserved-area-check.patch", "", d) }"
