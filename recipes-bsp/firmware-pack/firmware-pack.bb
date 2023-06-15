@@ -53,3 +53,4 @@ do_deploy:stm32mp1() {
 }
 
 addtask deploy after do_compile
+do_deploy[depends] += "virtual/bootloader:do_deploy virtual/trusted-firmware-a:do_deploy"
