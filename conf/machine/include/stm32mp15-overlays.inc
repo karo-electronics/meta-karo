@@ -57,6 +57,7 @@ KARO_BASEBOARDS:qsmp-1510 ?= "\
 
 # baseboard DTB specific overlays
 KARO_DTB_OVERLAYS[mb7] = " \
+        ${@ mach_overlay(d, "karo-copro", dist="copro")} \
         txmp-sdcard \
         txmp-lcd-panel \
         txmp-ft5x06 \
