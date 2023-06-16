@@ -40,7 +40,12 @@ diff --git a/board/karo/common/env.c b/board/karo/common/env.c
 index 8cd0c2cca7..26e0719a90 100644
 --- a/board/karo/common/env.c
 +++ b/board/karo/common/env.c
-@@ -23,6 +23,7 @@
+@@ -18,11 +18,11 @@
+ 
+ #include <common.h>
+ #include <env.h>
+-#include <env_callback.h>
+ #include <log.h>
  #include <malloc.h>
  #include <part.h>
  #include "karo.h"
@@ -48,6 +53,107 @@ index 8cd0c2cca7..26e0719a90 100644
  
  DECLARE_GLOBAL_DATA_PTR;
  
+@@ -112,99 +112,7 @@ void env_cleanup(void)
+ 		debug("Clearing '%s'\n", cleanup_vars[i]);
+ 		env_set(cleanup_vars[i], NULL);
+ 	}
+-#ifdef CONFIG_ENV_CALLBACK_LIST_DEFAULT
+-	if (!env_get(ENV_CALLBACK_VAR))
+-		env_set(ENV_CALLBACK_VAR, CONFIG_ENV_CALLBACK_LIST_DEFAULT);
+-#endif
++
+ 	karo_set_part_uuids();
+ }
+ #endif
+-
+-/*
+- * Callback function to insert/remove the 'baseboard' name into/from
+- * the 'dtbfile' variable whenever the 'baseboard' variable is changed.
+- */
+-static int karo_env_baseboard(const char *name, const char *value,
+-			      enum env_op op, int flags)
+-{
+-	const char *dtbfile;
+-	char *dlm;
+-	int len;
+-	char *new_dtbfile;
+-	size_t alloc_len;
+-	const char *ext = ".dtb";
+-	size_t ext_len = strlen(ext);
+-
+-	debug("%s@%d:\n", __func__, __LINE__);
+-	if (!(flags & H_INTERACTIVE))
+-		return 0;
+-
+-	dtbfile = env_get("dtbfile");
+-	if (!dtbfile)
+-		return 0;
+-
+-	if (strcmp(dtbfile + strlen(dtbfile) - ext_len, ext) != 0)
+-		ext_len = 0;
+-
+-	/*
+-	 * Skip over the first two dashes in dtbfile name:
+-	 * "<soc>-<module>-<version>[-<baseboard>][.dtb]"
+-	 *                           ^
+-	 * If the dtbfile name does not match the above
+-	 * pattern it won't be changed.
+-	 */
+-	dlm = strchr(dtbfile, '-');
+-	if (!dlm)
+-		return 0;
+-	dlm = strchr(dlm + 1, '-');
+-	if (!dlm)
+-		return 0;
+-	dlm = strchr(dlm + 1, '-');
+-	if (dlm)
+-		len = dlm - dtbfile;
+-	else
+-		len = strlen(dtbfile) - ext_len;
+-
+-	if (op == env_op_delete) {
+-		char *olddtb;
+-
+-		if (!dlm)
+-			return 0;
+-
+-		olddtb = strdup(dtbfile);
+-		if (ext_len)
+-			strcpy(dlm, ext);
+-		else
+-			*dlm = '\0';
+-
+-		pr_notice("Notice: 'dtbfile' changed from '%s' to '%s'\n",
+-			  olddtb, dtbfile);
+-		env_set("dtbfile", dtbfile);
+-		free(olddtb);
+-		return 0;
+-	}
+-
+-	alloc_len = len + strlen(value) + ext_len + 2;
+-	new_dtbfile = malloc(alloc_len);
+-	if (!new_dtbfile)
+-		return 0;
+-
+-	strncpy(new_dtbfile, dtbfile, len);
+-	new_dtbfile[len] = '-';
+-	/* append new 'baseboard' value */
+-	strncpy(new_dtbfile + len + 1, value, strlen(value));
+-	if (ext_len)
+-		strcpy(new_dtbfile + alloc_len - 1 - ext_len, ext);
+-	else
+-		new_dtbfile[alloc_len - 1 - ext_len] = '\0';
+-
+-	if (strcmp(dtbfile, new_dtbfile) != 0) {
+-		printf("Notice: 'dtbfile' changed from '%s' to '%s'\n",
+-		       dtbfile, new_dtbfile);
+-		env_set("dtbfile", new_dtbfile);
+-	}
+-	free(new_dtbfile);
+-	return 0;
+-}
+-
+-U_BOOT_ENV_CALLBACK(baseboard, karo_env_baseboard);
 diff --git a/board/karo/txmp/Kconfig b/board/karo/txmp/Kconfig
 index 44ca4d2182..799369c843 100644
 --- a/board/karo/txmp/Kconfig
@@ -562,3 +668,81 @@ index 4da1f5244f..369260e367 100644
  		puts(buf);
  		putc('\n');
  
+diff --git a/include/configs/txmp.h b/include/configs/txmp.h
+index 3c20f7f9c2..068e81d1cf 100644
+--- a/include/configs/txmp.h
++++ b/include/configs/txmp.h
+@@ -40,13 +40,6 @@
+  */
+ #define CONFIG_SYS_LOAD_ADDR		STM32_DDR_BASE
+ 
+-/*
+- * Env parameters
+- */
+-#ifndef CONFIG_UBOOT_IGNORE_ENV
+-#define CONFIG_ENV_CALLBACK_LIST_DEFAULT "baseboard:baseboard"
+-#endif
+-
+ /* ATAGs */
+ #define CONFIG_CMDLINE_TAG
+ #define CONFIG_SETUP_MEMORY_TAGS
+@@ -127,59 +120,6 @@
+ #define TXMP_BASEBOARD			""
+ #endif
+ 
+-#ifndef CONFIG_USE_DEFAULT_ENV_FILE
+-#ifdef CONFIG_UBOOT_IGNORE_ENV
+-#define CONFIG_EXTRA_ENV_SETTINGS					\
+-	"autoload=no\0"							\
+-	"autostart=no\0"						\
+-	"bootdelay=-1\0"						\
+-	"boot_mode=mmc\0"						\
+-	"fdtaddr=" FDT_ADDR_STR "\0"					\
+-	"fdt_addr_r=" FDT_ADDR_STR "\0"					\
+-	"fdt_high=ffffffff\0"						\
+-	TXMP_NAND_MTDPARTS						\
+-	TXMP_NOR_MTDPARTS
+-#else
+-#define CONFIG_EXTRA_ENV_SETTINGS					\
+-	"autoload=no\0"							\
+-	"autostart=no\0"						\
+-	"baseboard=" TXMP_BASEBOARD "\0"				\
+-	"bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs}"	\
+-	" root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs}\0"	\
+-	"bootargs_nfs=run default_bootargs;setenv bootargs ${bootargs}"	\
+-	" root=/dev/nfs nfsroot=${nfs_server}:${nfsroot},nolock"	\
+-	" ip=dhcp ${append_bootargs}\0"					\
+-	"bootcmd_mmc=setenv autostart no;run bootargs_mmc"		\
+-	";load ${bootdev} ${bootpart} ${loadaddr} uImage"		\
+-	";load ${bootdev} ${bootpart} ${fdt_addr_r} ${dtbfile}\0"	\
+-	"bootcmd_net=setenv autoload y;setenv autostart n"		\
+-	";run bootargs_nfs;dhcp\0"					\
+-	"bootdev=mmc\0"							\
+-	"bootlimit=0\0"							\
+-	"bootm_cmd=bootm ${loadaddr} ${ramdisk_addr_r} ${fdt_addr_r}\0"	\
+-	"bootpart=0:2\0"						\
+-	"boot_mode=mmc\0"						\
+-	"boot_net_usb_start=true\0"					\
+-	"default_bootargs=setenv bootargs init=/linuxrc"		\
+-	" console=ttySTM0,115200 ro debug panic=0\0"			\
+-	"dtbfile=/" CONFIG_DEFAULT_DEVICE_TREE ".dtb\0"			\
+-	"emmc_boot_ack=1\0"						\
+-	"emmc_boot_part=" BOOT_PART_STR "\0"				\
+-	"fdtaddr=" FDT_ADDR_STR "\0"					\
+-	"fdtsave=save ${bootdev} ${bootpart}"				\
+-	" ${fdt_addr_r} ${dtbfile} ${fdtsize}\0"			\
+-	"fdt_addr_r=" FDT_ADDR_STR "\0"					\
+-	"fdt_high=ffffffff\0"						\
+-	"initrd_high=ffffffff\0"					\
+-	"loadaddr=c0000000\0"						\
+-	"kernel_addr_r=c2000000\0"					\
+-	"ramdisk_addr_r=-\0"						\
+-	"usb_pgood_delay=2000\0"					\
+-	VIDEOMODE_DEFAULT						\
+-	TXMP_NAND_MTDPARTS						\
+-	TXMP_NOR_MTDPARTS
+-#endif /* CONFIG_UBOOT_IGNORE_ENV */
+-#endif /* CONFIG_USE_DEFAULT_ENV_FILE */
+ #endif /* CONFIG_SPL_BUILD */
+ 
+ #endif /* __CONFIG_H */
