@@ -213,6 +213,7 @@ python do_env_overlays () {
         f.close()
 }
 addtask do_env_overlays before do_compile after do_configure
+do_env_overlays[vardeps] += "KARO_BASEBOARDS KARO_DTB_OVERLAYS"
 
 # ---------------------------------------------------------------------
 # Avoid QA Issue: No GNU_HASH in the elf binary
