@@ -154,11 +154,13 @@ do_deploy:append:stm32mp1 () {
                 for type in ${UBOOT_CONFIG}; do
                     k=$(expr $k + 1)
                     [ $k -lt $j ] && continue
+                    install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
                     install -m 644 ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${cfg}/u-boot.bin
                     install -m 644 ${B}/${config}/u-boot-nodtb.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${cfg}/u-boot-nodtb.bin
                     install -m 644 ${B}/${config}/u-boot.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/u-boot.dtb
                     break
                 done
+                break
             done
             unset j
         done
