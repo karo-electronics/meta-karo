@@ -183,23 +183,34 @@ python do_env_overlays () {
     if d.getVar('KARO_BASEBOARDS') == None:
         bb.warn("KARO_BASEBOARDS is undefined")
         return 1
-    src_file = "%s/%s/%s" % (d.getVar('S'), d.getVar('UBOOT_BOARD_DIR'), d.getVar('UBOOT_ENV_FILE'))
-    dst_dir = "%s/%s_defconfig/%s" % (d.getVar('B'), d.getVar('MACHINE'), d.getVar('UBOOT_BOARD_DIR'))
-    bb.utils.mkdirhier(dst_dir)
-    env_file = os.path.join(dst_dir, os.path.basename(src_file))
-    shutil.copyfile(src_file, env_file)
-    f = open(env_file, 'a')
+
+    overlays = []
     for baseboard in d.getVar('KARO_BASEBOARDS').split():
         ovlist = d.getVarFlag('KARO_DTB_OVERLAYS', baseboard, True)
         if ovlist == None:
             bb.note("No overlays defined for '%s' on baseboard '%s'" % (d.getVar('MACHINE'), baseboard))
             continue
-        overlays = " ".join(map(lambda f: f, ovlist.split()))
-        bb.note("Adding overlays_%s='%s' to %s" % (baseboard, overlays, env_file))
-        f.write("overlays_%s=%s\n" %(baseboard, overlays))
-    f.write("soc_prefix=%s\n" % (d.getVar('SOC_PREFIX') or ""))
-    f.write("soc_family=%s\n" % (d.getVar('SOC_FAMILY') or ""))
-    f.close()
+        ov = " ".join(map(lambda f: f, ovlist.split()))
+        overlays += ["overlays_%s=%s" % (baseboard, ov)]
+
+    src_file = "%s/%s/%s" % (d.getVar('S'), d.getVar('UBOOT_BOARD_DIR'), d.getVar('UBOOT_ENV_FILE'))
+    if d.getVar('UBOOT_CONFIG') != None:
+        configs = d.getVar('UBOOT_MACHINE').split()
+    else:
+        configs = (d.getVar('MACHINE'))
+
+    for config in configs:
+        dst_dir = "%s/%s/%s" % (d.getVar('B'), config, d.getVar('UBOOT_BOARD_DIR'))
+        bb.utils.mkdirhier(dst_dir)
+        env_file = os.path.join(dst_dir, os.path.basename(src_file))
+        shutil.copyfile(src_file, env_file)
+        f = open(env_file, 'a')
+        for ov in overlays:
+            bb.note("Adding '%s' to '%s'" % (ov, env_file))
+            f.write("%s\n" % ov)
+        f.write("soc_prefix=%s\n" % (d.getVar('SOC_PREFIX') or ""))
+        f.write("soc_family=%s\n" % (d.getVar('SOC_FAMILY') or ""))
+        f.close()
 }
 addtask do_env_overlays before do_compile after do_configure
 
