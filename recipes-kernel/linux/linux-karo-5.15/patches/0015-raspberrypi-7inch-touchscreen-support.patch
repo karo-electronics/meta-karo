@@ -142,11 +142,11 @@ index 000000000000..d1048837ce99
 +};
 +
 +static const struct drm_display_mode tc358762_mode = {
-+	.clock = 27448,
++	.clock = 27937,
 +	.hdisplay = 800,
-+	.hsync_start = 800 + 70,
-+	.hsync_end = 800 + 70 + 20,
-+	.htotal = 800 + 70 + 20 + 23,
++	.hsync_start = 800 + 68,
++	.hsync_end = 800 + 68 + 20,
++	.htotal = 800 + 68 + 20 + 26,
 +	.vdisplay = 480,
 +	.vsync_start = 480 + 7,
 +	.vsync_end = 480 + 7 + 2,

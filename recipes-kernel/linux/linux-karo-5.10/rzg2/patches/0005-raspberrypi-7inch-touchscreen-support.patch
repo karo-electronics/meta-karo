@@ -142,7 +142,7 @@ index 000000000000..22e2d365f086
 +};
 +
 +static const struct drm_display_mode tc358762_mode = {
-+	.clock = 27448,
++	.clock = 27968,
 +	.hdisplay = 800,
 +	.hsync_start = 800 + 68,
 +	.hsync_end = 800 + 68 + 20,
@@ -447,32 +447,6 @@ index 000000000000..22e2d365f086
 +MODULE_AUTHOR("Jerry <xbl@rock-chips.com>");
 +MODULE_DESCRIPTION("DRM Driver for toshiba tc358762 Bridge");
 +MODULE_LICENSE("GPL and additional rights");
-diff --git a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
-index b70853ba194d..d422add17d83 100644
---- a/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
-+++ b/drivers/gpu/drm/rcar-du/rcar_du_crtc.c
-@@ -229,6 +229,10 @@ struct cpg_param {
- #define reg_write(x, a)		iowrite32(a, x)
- #define CPG_LPCLK_DIV		0
- 
-+struct cpg_param resolution_1_lanes_param[1] = {
-+	{ 27448, 1,  54, 15032385, 1, 1, 0, 0x16, 1, 11}, /* 23.09 MHz */
-+};
-+
- struct cpg_param resolution_2_lanes_param[TABLE_MAX - 1] = {
- 	{ 25175, 2,  50,  5872025, 1, 1, 0, 0x16, 1, 5}, /* VGA 25.175MHz */
- 	{ 25200, 2,  50,  6710886, 1, 1, 0, 0x16, 1, 5}, /* VGA 25.200MHz */
-@@ -351,6 +355,10 @@ static void rcar_du_crtc_set_display_timing(struct rcar_du_crtc *rcrtc)
- 
- 			parallelOut = 0;
- 			switch (lanes) {
-+			case 1:
-+				paramPtr = resolution_1_lanes_param;
-+				tableMax = 1;
-+				break;
- 			case 2:
- 				paramPtr = resolution_2_lanes_param;
- 				tableMax = TABLE_MAX - 1;
 diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
 index 2fa40e1e9b8a..f0f9baa3112e 100644
 --- a/drivers/input/touchscreen/Kconfig
