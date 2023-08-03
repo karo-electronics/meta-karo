@@ -6,8 +6,8 @@ require recipes-kernel/linux/linux-karo.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
-SRCBRANCH = "rz-5.10-cip17"
-SRCREV = "13dea4598e61893e75eae1c1887fa51ea6b22a07"
+SRCBRANCH = "rz-5.10-cip29"
+SRCREV = "909c54bf68141ef6f54297c7d70b1ade141697bd"
 KERNEL_SRC = "git://github.com/renesas-rz/rz_linux-cip.git"
 
 SRC_URI:append = " \
@@ -25,7 +25,6 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:rzg2 = " \
-        file://0001-clock-support-for-CM33.patch \
         file://dts/renesas/r9a07g044l2-karo-lcd-panel.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/renesas/r9a07g044l2-qsrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
