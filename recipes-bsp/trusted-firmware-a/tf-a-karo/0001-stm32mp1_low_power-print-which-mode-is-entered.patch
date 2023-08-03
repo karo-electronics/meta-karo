@@ -1,0 +1,20 @@
+diff --git a/plat/st/stm32mp1/stm32mp1_low_power.c b/plat/st/stm32mp1/stm32mp1_low_power.c
+index a4b473515..ac0c5e1ac 100644
+--- a/plat/st/stm32mp1/stm32mp1_low_power.c
++++ b/plat/st/stm32mp1/stm32mp1_low_power.c
+@@ -155,6 +155,7 @@ static void enter_cstop(uint32_t mode, uint32_t nsec_addr)
+ 	stm32_clean_context();
+ 
+ 	if (mode == STM32_PM_CSTOP_ALLOW_STANDBY_DDR_SR) {
++		NOTICE("Entering CStandby Mode.\n");
+ 		/*
+ 		 * The first 64 bytes of DDR need to be saved for DDR DQS
+ 		 * training
+@@ -166,6 +167,7 @@ static void enter_cstop(uint32_t mode, uint32_t nsec_addr)
+ 		stm32_apply_pmic_suspend_config(mode);
+ 
+ 		if (mode == STM32_PM_CSTOP_ALLOW_LP_STOP) {
++			NOTICE("Entering CStop Mode.\n");
+ 			pwr_cr1 |= PWR_CR1_LPCFG;
+ 		}
+ 	}

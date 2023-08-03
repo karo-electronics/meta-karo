@@ -23,6 +23,7 @@ SRC_URI:append = " \
 
 SRC_URI:append = " \
 	file://0001-v2.6-stm32mp-r1.patch \
+	file://0001-stm32mp1_low_power-print-which-mode-is-entered.patch \
 "
 
 SRC_URI:append:qsmp-1510 = " \
