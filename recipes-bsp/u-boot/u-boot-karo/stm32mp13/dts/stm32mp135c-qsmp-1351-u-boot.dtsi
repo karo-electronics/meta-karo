@@ -1,0 +1,33 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Based on STM32CubeMX tool generated source.
+ *
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+#include "stm32mp13-u-boot.dtsi"
+
+/ {
+	aliases {
+		mmc0 = &sdmmc2;
+		mmc1 = &sdmmc1;
+		usb0 = &usbotg_hs;
+	};
+
+	config {
+		u-boot,mmc-env-partition = "u-boot-env";
+	};
+};
+
+&uart4 {
+	u-boot,dm-pre-reloc;
+};
+
+&uart4_pins {
+	u-boot,dm-pre-reloc;
+};
+
+&usbotg_hs {
+	u-boot,force-b-session-valid;
+	dr_mode = "peripheral";
+};

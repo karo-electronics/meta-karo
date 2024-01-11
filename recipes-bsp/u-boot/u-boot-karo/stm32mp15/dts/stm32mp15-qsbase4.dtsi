@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright 2022 (C) Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+&ethernet0 {
+	phy-mode = "rgmii-id";
+	phy-handle = <&phy1>;
+};
+
+&mdio0 {
+	phy1: ethernet-phy@7 {
+		reg = <7>;
+		micrel,force-master;
+	};
+};
+
+&phy0 {
+	status = "disabled";
+};
+
+&qsmp_ethernet0_rgmii_pins_b {
+	pins3 {
+		/* Micrel KSZ9131 strap pins */
+		pinmux = <
+			  STM32_PINMUX('A', 7, AF11) /* RX_CTL | CLK125_EN */
+			  STM32_PINMUX('C', 5, AF11) /* RXD1 | MODE1 */
+			  STM32_PINMUX('B', 0, AF11) /* RXD2 | MODE2 */
+			  STM32_PINMUX('H', 7, AF11) /* RXD3 | MODE3 */
+			  STM32_PINMUX('A', 1, AF11) /* RX_CLK | PHYAD2 */
+		>;
+		bias-pull-up;
+	};
+
+	pins4 {
+		pinmux = <
+			  STM32_PINMUX('G', 5, AF11) /* CLK125 | LED_MODE */
+			  STM32_PINMUX('C', 4, AF11) /* RXD0 | MODE0 */
+		>;
+		bias-pull-down;
+	};
+};

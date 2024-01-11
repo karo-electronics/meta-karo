@@ -669,13 +669,29 @@ index 4da1f5244f..369260e367 100644
  		putc('\n');
  
 diff --git a/include/configs/txmp.h b/include/configs/txmp.h
-index 3c20f7f9c2..068e81d1cf 100644
+index 3c20f7f9c2d..52cf120cb84 100644
 --- a/include/configs/txmp.h
 +++ b/include/configs/txmp.h
-@@ -40,13 +40,6 @@
+@@ -24,37 +24,15 @@
+  * Configuration of the external SRAM memory used by U-Boot
   */
- #define CONFIG_SYS_LOAD_ADDR		STM32_DDR_BASE
+ #define CONFIG_SYS_SDRAM_BASE		STM32_DDR_BASE
+-#define CONFIG_SYS_INIT_SP_ADDR		CONFIG_SYS_TEXT_BASE
+ /* required for exception handlers to work */
+ #define IRAM_BASE_ADDR			(STM32_SYSRAM_BASE + \
+ 					 STM32_SYSRAM_SIZE)
  
+-/*
+- * Console I/O buffer size
+- */
+-#define CONFIG_SYS_CBSIZE		SZ_2K
+-#define CONFIG_SYS_MAXARGS		256
+-
+-/*
+- * Needed by "loadb"
+- */
+-#define CONFIG_SYS_LOAD_ADDR		STM32_DDR_BASE
+-
 -/*
 - * Env parameters
 - */
@@ -686,7 +702,23 @@ index 3c20f7f9c2..068e81d1cf 100644
  /* ATAGs */
  #define CONFIG_CMDLINE_TAG
  #define CONFIG_SETUP_MEMORY_TAGS
-@@ -127,59 +120,6 @@
+ #define CONFIG_INITRD_TAG
+ 
+-/* Extend size of kernel image for uncompression */
+-#define CONFIG_SYS_BOOTM_LEN		SZ_32M
+-
+ /* SPL support */
+ #ifdef CONFIG_SPL
+ /* SPL use DDR */
+@@ -78,7 +56,6 @@
+ #ifdef CONFIG_DWC_ETH_QOS
+ #define CONFIG_SYS_NONCACHED_MEMORY	(1 * SZ_1M)	/* 1M */
+ #endif
+-#define CONFIG_SYS_AUTOLOAD		"no"
+ 
+ #ifdef CONFIG_DM_VIDEO
+ #define CONFIG_VIDEO_LOGO
+@@ -127,59 +104,6 @@
  #define TXMP_BASEBOARD			""
  #endif
  

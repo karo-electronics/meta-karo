@@ -1,0 +1,22 @@
+diff --git a/board/karo/common/fdt.c b/board/karo/common/fdt.c
+index 50638ca3773..df43e48f9a5 100644
+--- a/board/karo/common/fdt.c
++++ b/board/karo/common/fdt.c
+@@ -389,7 +389,7 @@ void karo_fixup_lcd_panel(const char *videomode)
+ 		debug("Disabling LCD panel\n");
+ 		debug("%s@%d: Disabling '%s' node\n", __func__, __LINE__,
+ 		      fdt_get_name(fdt, panel_node, NULL));
+-		fdt_set_node_status(fdt, panel_node, FDT_STATUS_DISABLED, 0);
++		fdt_set_node_status(fdt, panel_node, FDT_STATUS_DISABLED);
+ 		parent = fdt_subnode_offset(fdt, panel_node, "port");
+ 		if (parent <= 0) {
+ 			debug("%s@%d: No 'port' node found in '%s'\n",
+@@ -425,7 +425,7 @@ void karo_fixup_lcd_panel(const char *videomode)
+ 		}
+ 		debug("%s@%d: Disabling '%s' node\n", __func__, __LINE__,
+ 		      fdt_get_name(fdt, pparent, NULL));
+-		fdt_set_node_status(fdt, panel_node, FDT_STATUS_DISABLED, 0);
++		fdt_set_node_status(fdt, panel_node, FDT_STATUS_DISABLED);
+ 		return;
+ 	}
+ 	dt_node = fdt_subnode_offset(fdt, panel_node, "display-timings");

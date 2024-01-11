@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
+/*
+ * Copyright (C) 2019: Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/clock/stm32mp1-clksrc.h>
+#include "stm32mp15-u-boot.dtsi"
+#include "stm32mp15-ddr.dtsi"
+#include "stm32mp15-txmp-u-boot.dtsi"
+
+/ {
+	config {
+		u-boot,boot-led = "Heartbeat";
+	};
+};
+
+&ddr {
+	u-boot,dm-pre-reloc;
+};
+
+&pinctrl {
+	u-boot,dm-pre-reloc;
+};
+
+&sdmmc2 {
+	u-boot,dm-spl;
+};
+
+&txmp_sdmmc2_pins {
+	u-boot,dm-spl;
+
+	pins1 {
+		u-boot,dm-spl;
+	};
+
+	pins2 {
+		u-boot,dm-spl;
+	};
+};
+
+&sdmmc3 {
+	u-boot,dm-spl;
+};
+
+&sdmmc3_pins {
+	u-boot,dm-spl;
+
+	pins1 {
+		u-boot,dm-spl;
+	};
+
+	pins2 {
+		u-boot,dm-spl;
+	};
+};
+
+&uart4 {
+	u-boot,dm-pre-reloc;
+};
+
+&uart4_pins {
+	u-boot,dm-pre-reloc;
+
+	pins1 {
+		u-boot,dm-pre-reloc;
+	};
+
+	pins2 {
+		u-boot,dm-pre-reloc;
+		/* pull-up on rx to avoid floating level */
+		bias-pull-up;
+	};
+};

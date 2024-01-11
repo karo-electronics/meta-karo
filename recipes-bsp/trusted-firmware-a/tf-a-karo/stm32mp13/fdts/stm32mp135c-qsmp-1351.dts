@@ -1,0 +1,241 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Based on STM32CubeMX tool generated source.
+ *
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include <dt-bindings/clock/stm32mp13-clksrc.h>
+#include "stm32mp13-mx.h"
+
+#include "stm32mp135.dtsi"
+#include "stm32mp13xc.dtsi"
+#include "stm32mp13-pinctrl.dtsi"
+#include "stm32mp13-ddr.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1351 solder-in module";
+	compatible = "st,stm32mp135c-qsmp-1351", "st,stm32mp135";
+
+	memory@c0000000 {
+		device_type = "memory";
+		reg = <0xc0000000 0x10000000>;
+	};
+
+	aliases {
+		serial0 = &uart4;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	clocks {
+		clk_hsi: clk-hsi {
+			clock-frequency = <64000000>;
+		};
+		
+		clk_lse: clk-lse {
+			clock-frequency = <32768>;
+			st,drive = < LSEDRV_MEDIUM_HIGH >;
+		};
+
+		clk_hse: clk-hse {
+			clock-frequency = <24000000>;
+		};
+
+		clk_i2sin: clk-i2sin {
+			status = "disabled";
+		};
+	};
+
+	vdd: regulator-3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vdd";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		regulator-always-on;
+	};
+};
+
+&bsec {
+	status = "okay";
+
+	board_id: board_id@f0 {
+		reg = <0xf0 0x4>;
+		st,non-secure-otp;
+	};
+};
+
+&hash {
+	status = "okay";
+};
+
+&pwr_regulators {
+	vdd-supply = <&vdd>;
+};
+
+&rcc {
+	status = "okay";
+
+	st,clksrc = <
+		CLK_MPU_PLL1P
+		CLK_AXI_PLL2P
+		CLK_MLAHBS_PLL3
+		CLK_CKPER_DISABLED
+		CLK_SDMMC2_PLL4P
+		CLK_STGEN_HSI
+		CLK_UART4_PCLK1
+		CLK_RNG1_CSI
+	>;
+	st,clkdiv = <
+		DIV(DIV_MPU, 1)
+		DIV(DIV_AXI, 0)
+		DIV(DIV_MLAHB, 0)
+		DIV(DIV_APB1, 1)
+		DIV(DIV_APB2, 1)
+		DIV(DIV_APB3, 1)
+		DIV(DIV_APB4, 1)
+		DIV(DIV_APB5, 2)
+		DIV(DIV_APB6, 1)
+	>;
+
+	st,pll_vco {
+		pll1_vco_1300Mhz: pll1-vco-1300Mhz {
+			src = <CLK_PLL12_HSE>;
+			divmn = <2 80>;
+			frac = <0x800>;
+		};
+
+		pll2_vco_1066Mhz: pll2-vco-1066Mhz {
+			src = <CLK_PLL12_HSE>;
+			divmn = <2 65>;
+			frac = <0x1400>;
+		};
+
+		pll3_vco_417Mhz: pll3-vco-417Mhz {
+			src = <CLK_PLL3_HSE>;
+			divmn = <1 33>;
+			frac = <0x1a04>;
+		};
+
+		pll4_vco_600Mhz: pll4-vco-600Mhz {
+			src = <CLK_PLL4_HSE>;
+			divmn = <1 49>;
+		};
+	};
+
+	pll1:st,pll@0 {
+		reg = <0>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = <&pll1_cfg1>;
+
+		pll1_cfg1: pll1_cfg1 {
+			st,pll_vco = <&pll1_vco_1300Mhz >;
+			st,pll_div_pqr = <0 1 1>;
+		};
+	};
+
+	pll2:st,pll@1 {
+		reg = <1>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = < &pll2_cfg1 >;
+
+		pll2_cfg1: pll2_cfg1 {
+			st,pll_vco = <&pll2_vco_1066Mhz>;
+			st,pll_div_pqr = <1 1 0>;
+		};
+	};
+
+	pll3:st,pll@2 {
+		reg = <2>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = < &pll3_cfg1 >;
+
+		pll3_cfg1: pll3_cfg1 {
+			st,pll_vco = <&pll3_vco_417Mhz>;
+			st,pll_div_pqr = <1 16 36>;
+		};
+	};
+
+	pll4:st,pll@3 {
+		reg = <3>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = <&pll4_cfg1>;
+
+		pll4_cfg1: pll4_cfg1 {
+			st,pll_vco = <&pll4_vco_600Mhz>;
+			st,pll_div_pqr = <11 6 7>;
+		};
+	};
+
+};
+
+&rng {
+	status = "okay";
+};
+
+&sdmmc2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&sdmmc2_pins>;
+	non-removable;
+	no-sd;
+	no-sdio;
+	st,neg-edge;
+	bus-width = <8>;
+	vmmc-supply = <&vdd>;
+	vqmmc-supply = <&vdd>;
+	mmc-ddr-3_3v;
+	status = "okay";
+};
+
+&uart4 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart4_pins>;
+	status = "okay";
+};
+
+&pinctrl {
+	sdmmc2_pins: sdmmc2-0 {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('B', 3, AF10) /* SDMMC2_D2 */
+				  STM32_PINMUX('B', 4, AF10) /* SDMMC2_D3 */
+				  STM32_PINMUX('B', 9, AF10) /* SDMMC2_D5 */
+				  STM32_PINMUX('B', 14, AF10) /* SDMMC2_D0 */
+				  STM32_PINMUX('B', 15, AF10) /* SDMMC2_D1 */
+				  STM32_PINMUX('C', 6, AF10) /* SDMMC2_D6 */
+				  STM32_PINMUX('C', 7, AF10) /* SDMMC2_D7 */
+				  STM32_PINMUX('F', 0, AF10) /* SDMMC2_D4 */
+				  STM32_PINMUX('G', 6, AF10) /* SDMMC2_CMD */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('E', 3, AF10)>; /* SDMMC2_CK */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+	};
+
+	uart4_pins: uart4-0 {
+		pins1 {
+			pinmux = <STM32_PINMUX('D', 6, AF8)>; /* UART4_TX */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('D', 8, AF8)>; /* UART4_RX */
+			bias-disable;
+		};
+	};
+};

@@ -1,0 +1,37 @@
+diff --git a/arch/arm/mach-stm32mp/Kconfig b/arch/arm/mach-stm32mp/Kconfig
+index 15685581bed..df61484633a 100644
+--- a/arch/arm/mach-stm32mp/Kconfig
++++ b/arch/arm/mach-stm32mp/Kconfig
+@@ -80,12 +80,12 @@ endchoice
+ 
+ config TARGET_KARO_TXMP
+ 	bool "Support Ka-Ro TXMP modules"
+-	select STM32MP15x
++	select STM32MP13x
+ 	help
+ 		Ka-Ro electronics TXMP/QSMP board support
+ 
+ config SYS_TEXT_BASE
+-	default 0xC0100000
++	default 0xC0000000
+ 
+ config NR_DRAM_BANKS
+ 	default 1
+diff --git a/board/karo/txmp/Kconfig b/board/karo/txmp/Kconfig
+index 799369c843d..d9392cec346 100644
+--- a/board/karo/txmp/Kconfig
++++ b/board/karo/txmp/Kconfig
+@@ -39,6 +39,13 @@ config KARO_TXMP_1571
+ 	  TXMP-1570 with corrected pinout compatible with the rest of the
+ 	  TX module family
+ 
++config KARO_QSMP_1351
++	bool "Ka-Ro QSMP-1351 solder-in module"
++	select KARO_STM32
++	select TXMP_EMMC
++	help
++	  Enable support for the Ka-Ro electronics QSMP-1351 module.
++
+ config KARO_QSMP_1510
+ 	bool "Ka-Ro QSMP-1510 solder-in module"
+ 	select KARO_STM32

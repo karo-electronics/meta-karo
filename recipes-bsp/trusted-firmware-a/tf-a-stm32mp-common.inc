@@ -32,12 +32,6 @@ BL32_NAME ?= "bl32/bl32"
 BL32_ELF = "${BL32_NAME}.${TF_A_ELF_SUFFIX}"
 BL32_BASENAME = "${@os.path.basename(d.getVar("BL32_NAME"))}"
 
-# Extra make settings
-EXTRA_OEMAKE = 'CROSS_COMPILE=${TARGET_PREFIX}'
-EXTRA_OEMAKE += 'PLAT=stm32mp1'
-EXTRA_OEMAKE += 'ARCH=aarch32'
-EXTRA_OEMAKE += 'ARM_ARCH_MAJOR=7'
-
 # -----------------------------------------------
 # Enable use of work-shared folder
 STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
@@ -115,9 +109,13 @@ do_deploy() {
         if [ -n "${TF_A_DEVICETREE}" ]; then
             for dt in ${TF_A_DEVICETREE}; do
                 install -m 644 ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX} ${DEPLOYDIR}
-                install -m 644 ${B}/${config}/bl32.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
                 install -m 644 ${B}/${config}/fdts/${dt}-fw-config.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
-                install -m 644 ${B}/${config}/fdts/${dt}-bl32.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
+                if [ -f ${B}/${config}/bl32.bin ]; then
+                    install -m 644 ${B}/${config}/bl32.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
+                fi
+                if [ -f ${B}/${config}/fdts/${dt}-bl32.dtb ]; then
+                    install -m 644 ${B}/${config}/fdts/${dt}-bl32.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
+                fi
             done
         else
             # Get tf-a binary basename to copy

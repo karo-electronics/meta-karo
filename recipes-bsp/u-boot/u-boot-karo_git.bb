@@ -7,6 +7,7 @@ require conf/machine/include/${OVERLAY_INC_FILE}
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
+LIC_FILES_CHKSUM:stm32mp1 = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 
 PROVIDES += "u-boot"
 
@@ -17,10 +18,10 @@ RDEPENDS:${PN}:append:rzg2 = " tf-a-rzg2"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
-SRC_URI = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
+SRC_URI = "git:///net/karonas/repos/git/u-boot;branch=${SRCBRANCH}"
 
-SRCBRANCH:stm32mp1 = "karo-stm32mp1-v2021.10"
-SRCREV:stm32mp1 = "7c7c70f71f34d2cd4c77dd6d1e14e5022178c6c2"
+SRCBRANCH:stm32mp1 = "karo-stm32mp1-v2022.10"
+SRCREV:stm32mp1 = "d8115c0ae597a780bf48a274aabd3b4212e6a8b6"
 
 SRCBRANCH:rzg2 = "karo-txrz"
 SRCREV:rzg2 = "66fed3c1ba38bf7229e10bfd9923b89bd7e98064"
