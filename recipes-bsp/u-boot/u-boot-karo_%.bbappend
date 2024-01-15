@@ -10,7 +10,7 @@ SRC_URI:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', \
 
 UBOOT_FEATURES:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', "copro", " copro", "", d)}"
 
-SRC_URI:append:stm32mp15 = " \
+SRC_URI:append:stm32mp1 = " \
         file://v2021-fittings.patch \
         file://fdt-overlay-support.patch \
         file://fdt-size.patch \
@@ -21,6 +21,12 @@ SRC_URI:append:stm32mp15 = " \
         file://makefile-non-existent-dtb.patch \
         file://config-video-as-defconfig.patch \
         file://karo-fdt-common-fixes.patch \
+        file://stm32mp13-introduction.patch \
+        file://stm32mp13-introduction2.patch \
+        file://stm32mp13-introduction3.patch \
+        file://stm32mp13-introduction4.patch \
+        file://stm32mp13-introduction5.patch \
+        file://stm32mp13-define-sysram.patch \
 "
 
 SRC_URI:remove:qsmp-1510 = " \

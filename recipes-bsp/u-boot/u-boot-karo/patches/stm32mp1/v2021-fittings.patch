@@ -1,23 +1,17 @@
-diff --git a/arch/arm/mach-stm32mp/Kconfig b/arch/arm/mach-stm32mp/Kconfig
-index c83a151b7f..688c57d4e0 100644
---- a/arch/arm/mach-stm32mp/Kconfig
-+++ b/arch/arm/mach-stm32mp/Kconfig
-@@ -76,6 +76,15 @@ config STM32MP15x
- 		dual core A7 for STM32MP157/3, monocore for STM32MP151
- endchoice
- 
+diff --git a/board/karo/common/Kconfig b/board/karo/common/Kconfig
+index 658ec999fae..4a080329555 100644
+--- a/board/karo/common/Kconfig
++++ b/board/karo/common/Kconfig
+@@ -10,3 +10,9 @@ config SYS_FDT_ADDR
+ 	default 0xc4000000
+ 	help
+ 	  The address the FDT file should be loaded to.
++
 +config TARGET_KARO_TXMP
 +	bool "Support Ka-Ro TXMP modules"
 +	select STM32MP15x
 +	help
 +		Ka-Ro electronics TXMP/QSMP board support
-+
-+config SYS_TEXT_BASE
-+	default 0xC0100000
-+
- config NR_DRAM_BANKS
- 	default 1
- 
 diff --git a/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c b/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
 index ce568b44dc..0116150cf4 100644
 --- a/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c

@@ -35,7 +35,7 @@ EXTRA_OEMAKE:append = " V=0"
 SCMVERSION ??= "y"
 LOCALVERSION ??= "+karo"
 
-UBOOT_BOARD_DIR:stm32mp1 = "board/karo/txmp"
+UBOOT_BOARD_DIR:stm32mp1 = "board/karo/stm32mp1"
 UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
 
 UBOOT_LOCALVERSION = "${LOCALVERSION}"

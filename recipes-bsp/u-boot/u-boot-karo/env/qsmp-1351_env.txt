@@ -13,7 +13,7 @@ bootdev=mmc
 bootm_cmd=bootm ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}
 bootpart=0:2
 default_bootargs=setenv bootargs console=ttySTM0,115200 ro panic=-1
-dtbfile=stm32mp157c-qsmp-1570.dtb
+dtbfile=stm32mp135c-qsmp-1351.dtb
 emmc_boot_ack=1
 emmc_boot_part=1
 fdt_addr_r=c4000000
