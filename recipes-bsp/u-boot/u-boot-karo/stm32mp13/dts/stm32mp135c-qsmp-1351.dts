@@ -64,13 +64,6 @@
 	status = "okay";
 };
 
-&eth1 {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&eth1_pins>;
-	pinctrl-1 = <&eth1_sleep_pins>;
-	status = "okay";
-};
-
 &i2c1 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&i2c1_pins>;
@@ -226,71 +219,6 @@
 };
 
 &pinctrl {
-	eth1_pins: eth1-0 {
-		pins1 {
-			pinmux = <STM32_PINMUX('A', 2, AF11)>; /* ETH1_MDIO */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <
-				  STM32_PINMUX('A', 7, AF11) /* ETH1_RX_CTL */
-				  STM32_PINMUX('B', 0, AF11) /* ETH1_RXD2 */
-				  STM32_PINMUX('B', 1, AF11) /* ETH1_RXD3 */
-				  STM32_PINMUX('C', 4, AF11) /* ETH1_RXD0 */
-				  STM32_PINMUX('C', 5, AF11) /* ETH1_RXD1 */
-				  STM32_PINMUX('D', 7, AF10) /* ETH1_RX_CLK */
-			>;
-			bias-disable;
-		};
-
-		pins3 {
-			pinmux = <
-				  STM32_PINMUX('B', 11, AF11)	/* ETH1_TX_CTL */
-				  STM32_PINMUX('C', 1, AF11)	/* ETH1_GTX_CLK */
-				  STM32_PINMUX('C', 2, AF11)	/* ETH1_TXD2 */
-				  STM32_PINMUX('E', 5, AF10)	/* ETH1_TXD3 */
-				  STM32_PINMUX('F', 12, AF11)	/* ETH1_CLK125 */
-				  STM32_PINMUX('G', 2, AF11)	/* ETH1_MDC */
-				  STM32_PINMUX('G', 13, AF11)	/* ETH1_TXD0 */
-				  STM32_PINMUX('G', 14, AF11)	/* ETH1_TXD1 */
-			>;
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <2>;
-		};
-
-		pins4 {
-			pinmux = <STM32_PINMUX('H', 6, AF10)>; /* ETH1_PHY_INTN */
-			bias-pull-up;
-		};
-	};
-
-	eth1_sleep_pins: eth1_sleep-0 {
-		pins {
-			pinmux = <
-				  STM32_PINMUX('A', 2, ANALOG)	 /* ETH1_MDIO */
-				  STM32_PINMUX('A', 7, ANALOG)	 /* ETH1_RX_CTL */
-				  STM32_PINMUX('B', 0, ANALOG)	 /* ETH1_RXD2 */
-				  STM32_PINMUX('B', 1, ANALOG)	 /* ETH1_RXD3 */
-				  STM32_PINMUX('B', 11, ANALOG)	 /* ETH1_TX_CTL */
-				  STM32_PINMUX('C', 1, ANALOG)	 /* ETH1_GTX_CLK */
-				  STM32_PINMUX('C', 2, ANALOG)	 /* ETH1_TXD2 */
-				  STM32_PINMUX('C', 4, ANALOG)	 /* ETH1_RXD0 */
-				  STM32_PINMUX('C', 5, ANALOG)	 /* ETH1_RXD1 */
-				  STM32_PINMUX('D', 7, ANALOG)	 /* ETH1_RX_CLK */
-				  STM32_PINMUX('E', 5, ANALOG)	 /* ETH1_TXD3 */
-				  STM32_PINMUX('F', 12, ANALOG)	 /* ETH1_CLK125 */
-				  STM32_PINMUX('G', 2, ANALOG)	 /* ETH1_MDC */
-				  STM32_PINMUX('G', 13, ANALOG)	 /* ETH1_TXD0 */
-				  STM32_PINMUX('G', 14, ANALOG)	 /* ETH1_TXD1 */
-				  STM32_PINMUX('H', 6, ANALOG)	 /* ETH1_PHY_INTN */
-			>;
-		};
-	};
-
 	i2c1_pins: i2c1-0 {
 		pins {
 			pinmux = <

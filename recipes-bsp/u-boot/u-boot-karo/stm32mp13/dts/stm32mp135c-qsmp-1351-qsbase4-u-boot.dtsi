@@ -1,0 +1,6 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+#include "stm32mp135c-qsmp-1351-u-boot.dtsi"
