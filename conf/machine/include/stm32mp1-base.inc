@@ -35,7 +35,7 @@ TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', ' tru
 TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', ' optee', '', d)}"
 
 # Manage proper update for TF_A_CONFIG_* var
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONFIG_serialboot', '', d)}"
+tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONFIG_usb', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'optee', 'TF_A_CONFIG_optee', '', d)}"
 
