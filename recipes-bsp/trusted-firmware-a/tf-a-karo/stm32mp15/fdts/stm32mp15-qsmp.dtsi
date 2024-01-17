@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
 /*
- * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright (C) 2021 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
  */
 
 #include "stm32mp157.dtsi"
@@ -17,92 +18,97 @@
 };
 
 &rcc {
-	st,csi-cal;
-	st,hsi-cal;
-	st,cal-sec = <60>;
+	status = "okay";
 	st,clksrc = <
+		CLK_CKPER_DISABLED
+		CLK_SDMMC12_PLL4P
+		CLK_STGEN_HSI
+		CLK_USBO_USBPHY
 		CLK_MPU_PLL1P
 		CLK_AXI_PLL2P
 		CLK_MCU_PLL3P
-		CLK_PLL12_HSE
-		CLK_PLL3_HSE
-		CLK_PLL4_HSE
-		CLK_RTC_LSE
-		CLK_MCO1_DISABLED
-		CLK_MCO2_DISABLED
 	>;
 	st,clkdiv = <
-		1	/* MPU */
-		0	/* AXI */
-		0	/* MCU */
-		1	/* APB1 */
-		1	/* APB2 */
-		1	/* APB3 */
-		1	/* APB4 */
-		2	/* APB5 */
-		0	/* RTC */
-		0	/* MCO1 */
-		0	/* MCO2 */
+		DIV(DIV_MPU, 1)
+		DIV(DIV_AXI, 0)
+		DIV(DIV_MCU, 0)
+		DIV(DIV_APB1, 1)
+		DIV(DIV_APB2, 1)
+		DIV(DIV_APB3, 1)
+		DIV(DIV_APB4, 1)
+		DIV(DIV_APB5, 2)
+		DIV(DIV_RTC, 0)
+		DIV(DIV_MCO1, 0)
+		DIV(DIV_MCO2, 0)
 	>;
-	st,pkcs = <
-		CLK_CKPER_HSE
-		CLK_QSPI_ACLK
-		CLK_ETH_PLL4P
-		CLK_SDMMC12_HCLK6
-		CLK_STGEN_HSE
-		CLK_USBPHY_HSE
-		CLK_SPI2S1_DISABLED
-		CLK_SPI2S23_DISABLED
-		CLK_SPI45_HSI
-		CLK_SPI6_HSI
-		CLK_I2C46_PCLK5
-		CLK_SDMMC3_DISABLED
-		CLK_USBO_USBPHY
-		CLK_ADC_CKPER
-		CLK_CEC_DISABLED
-		CLK_I2C12_PCLK1
-		CLK_I2C35_PCLK1
-		CLK_UART1_DISABLED
-		CLK_UART24_HSI
-		CLK_UART35_HSI
-		CLK_UART6_DISABLED
-		CLK_UART78_DISABLED
-		CLK_SPDIF_DISABLED
-		CLK_FDCAN_HSE
-		CLK_SAI1_DISABLED
-		CLK_SAI2_PLL4Q
-		CLK_SAI3_DISABLED
-		CLK_SAI4_DISABLED
-		CLK_LPTIM1_PCLK1
-		CLK_LPTIM23_DISABLED
-		CLK_LPTIM45_DISABLED
-		CLK_RNG1_LSI
-	>;
-	#address-cells = <1>;
-	#size-cells = <0>;
-	status = "okay";
 
-	st,pll@0 {
+	st,pll_vco {
+		pll1_vco_1300Mhz: pll1-vco-1300Mhz {
+			src = < CLK_PLL12_HSE >;
+			divmn = < 2 80 >;
+			frac = < 0x800 >;
+		};
+
+		pll2_vco_1066Mhz: pll2-vco-1066Mhz {
+			src = < CLK_PLL12_HSE >;
+			divmn = < 2 65 >;
+			frac = < 0x1400 >;
+		};
+
+		pll3_vco_417Mhz: pll3-vco-417Mhz {
+			src = < CLK_PLL3_HSE >;
+			divmn = < 1 33 >;
+			frac = < 0x1a04 >;
+		};
+
+		pll4_vco_600Mhz: pll4-vco-600Mhz {
+			src = < CLK_PLL4_HSE >;
+			divmn = < 1 49 >;
+		};
+	};
+
+	pll1:st,pll@0 {
 		reg = <0>;
-		cfg = <2 80 0 1 1 PQR(1, 0, 0)>;
-		frac = <2048>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = < &pll1_cfg1 >;
+
+		pll1_cfg1: pll1_cfg1 {
+			st,pll_vco = < &pll1_vco_1300Mhz >;
+			st,pll_div_pqr = < 0 1 1 >;
+		};
 	};
 
-	st,pll@1 {
+	pll2:st,pll@1 {
 		reg = <1>;
-		cfg = <2 65 1 0 0 PQR(1, 1, 1)>;
-		frac = <5120>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = < &pll2_cfg1 >;
+
+		pll2_cfg1: pll2_cfg1 {
+			st,pll_vco = < &pll2_vco_1066Mhz >;
+			st,pll_div_pqr = < 1 1 0 >;
+		};
 	};
 
-	st,pll@2 {
+	pll3:st,pll@2 {
 		reg = <2>;
-		cfg = <1 33 1 16 36 PQR(1, 0, 0)>;
-		frac = <6660>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = < &pll3_cfg1 >;
+
+		pll3_cfg1: pll3_cfg1 {
+			st,pll_vco = < &pll3_vco_417Mhz >;
+			st,pll_div_pqr = < 1 16 36 >;
+		};
 	};
 
-	st,pll@3 {
+	pll4:st,pll@3 {
 		reg = <3>;
-		cfg = <3 98 5 7 7 PQR(1, 1, 0)>;
+		compatible = "st,stm32mp1-pll";
+		st,pll = < &pll4_cfg1 >;
+
+		pll4_cfg1: pll4_cfg1 {
+			st,pll_vco = < &pll4_vco_600Mhz >;
+			st,pll_div_pqr = < 11 6 7 >;
+		};
 	};
 };
 
