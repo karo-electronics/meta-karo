@@ -1,0 +1,188 @@
+Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
+===================================================================
+--- kernel-source.orig/drivers/gpu/drm/panel/panel-simple.c
++++ kernel-source/drivers/gpu/drm/panel/panel-simple.c
+@@ -1751,6 +1751,56 @@ static const struct panel_desc edt_et043
+ 	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE,
+ };
+ 
++static const struct drm_display_mode edt_et0350g0dh6_mode = {
++	.clock = 6500,
++	.hdisplay = 320,
++	.hsync_start = 320 + 20,
++	.hsync_end = 320 + 20 + 0,
++	.htotal = 320 + 20 + 0 + 68,
++	.vdisplay = 240,
++	.vsync_start = 240 + 4,
++	.vsync_end = 240 + 4 + 0,
++	.vtotal = 240 + 4 + 0 + 18,
++	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
++};
++
++static const struct panel_desc edt_et0350g0dh6 = {
++	.modes = &edt_et0350g0dh6_mode,
++	.num_modes = 1,
++	.bpc = 6,
++	.size = {
++		.width = 70,
++		.height = 53,
++	},
++	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
++	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
++};
++
++static const struct drm_display_mode edt_et0430g0dh6_mode = {
++	.clock = 9000,
++	.hdisplay = 480,
++	.hsync_start = 480 + 2,
++	.hsync_end = 480 + 2 + 41,
++	.htotal = 480 + 2 + 41 + 2,
++	.vdisplay = 272,
++	.vsync_start = 272 + 2,
++	.vsync_end = 272 + 2 + 10,
++	.vtotal = 272 + 2 + 10 + 2,
++	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
++};
++
++static const struct panel_desc edt_et0430g0dh6 = {
++	.modes = &edt_et0430g0dh6_mode,
++	.num_modes = 1,
++	.bpc = 6,
++	.size = {
++		.width = 95,
++		.height = 54,
++	},
++	.bus_format = MEDIA_BUS_FMT_RGB666_1X18,
++	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE,
++};
++
+ static const struct drm_display_mode edt_et057090dhu_mode = {
+ 	.clock = 25175,
+ 	.hdisplay = 640,
+@@ -1920,6 +1970,31 @@ static const struct panel_desc edt_et101
+ 	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
+ };
+ 
++static const struct drm_display_mode edt_et1010g0dsa_mode = {
++	.clock = 71100,
++	.hdisplay = 1280,
++	.hsync_start = 1280 + 25,
++	.hsync_end = 1280 + 25 + 80,
++	.htotal = 1280 + 25 + 80 + 55,
++	.vdisplay = 800,
++	.vsync_start = 800 + 5,
++	.vsync_end = 800 + 5 + 2,
++	.vtotal = 800 + 5 + 2 + 16,
++	.flags = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
++};
++
++static const struct panel_desc edt_et1010g0dsa = {
++	.modes = &edt_et1010g0dsa_mode,
++	.num_modes = 1,
++	.bpc = 8,
++	.size = {
++		.width = 217,
++		.height = 136,
++	},
++	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG,
++	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
++};
++
+ static const struct display_timing evervision_vgg804821_timing = {
+ 	.pixelclock = { 27600000, 33300000, 50000000 },
+ 	.hactive = { 800, 800, 800 },
+@@ -3027,6 +3102,52 @@ static const struct panel_desc nlt_nl128
+ 	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG,
+ };
+ 
++static const struct drm_display_mode nlt_nl12880bc20_mode = {
++	.clock = 71000,
++	.hdisplay = 1280,
++	.hsync_start = 1280 + 50,
++	.hsync_end = 1280 + 50 + 60,
++	.htotal = 1280 + 50 + 60 + 50,
++	.vdisplay = 800,
++	.vsync_start = 800 + 5,
++	.vsync_end = 800 + 5 + 13,
++	.vtotal = 800 + 5 + 13 + 5,
++	.flags = 0,
++};
++
++static const struct panel_desc nlt_nl12880bc20_jeida = {
++	.modes = &nlt_nl12880bc20_mode,
++	.num_modes = 1,
++	.bpc = 8,
++	.size = {
++		.width = 261,
++		.height = 163,
++	},
++	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_JEIDA,
++};
++
++static const struct panel_desc nlt_nl12880bc20_spwg_18 = {
++	.modes = &nlt_nl12880bc20_mode,
++	.num_modes = 1,
++	.bpc = 6,
++	.size = {
++		.width = 261,
++		.height = 163,
++	},
++	.bus_format = MEDIA_BUS_FMT_RGB666_1X7X3_SPWG,
++};
++
++static const struct panel_desc nlt_nl12880bc20_spwg_24 = {
++	.modes = &nlt_nl12880bc20_mode,
++	.num_modes = 1,
++	.bpc = 8,
++	.size = {
++		.width = 261,
++		.height = 163,
++	},
++	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG,
++};
++
+ static const struct drm_display_mode nvd_9128_mode = {
+ 	.clock = 29500,
+ 	.hdisplay = 800,
+@@ -4155,6 +4276,12 @@ static const struct of_device_id platfor
+ 		.compatible = "edt,et0430g0dh6",
+ 		.data = &edt_et0430g0dh6,
+ 	}, {
++		.compatible = "edt,et0350g0dh6",
++		.data = &edt_et0350g0dh6,
++	}, {
++		.compatible = "edt,et0430g0dh6",
++		.data = &edt_et0430g0dh6,
++	}, {
+ 		.compatible = "dataimage,fg040346dsswbg04",
+ 		.data = &dataimage_fg040346dsswbg04,
+ 	}, {
+@@ -4188,6 +4315,12 @@ static const struct of_device_id platfor
+ 		.compatible = "edt,et070080dh6",
+ 		.data = &edt_etm0700g0dh6,
+ 	}, {
++		.compatible = "edt,et1010g0dsa",
++		.data = &edt_et1010g0dsa,
++	}, {
++		.compatible = "edt,etml1010g0dka",
++		.data = &edt_et1010g0dsa,
++	}, {
+ 		.compatible = "edt,etm0700g0dh6",
+ 		.data = &edt_etm0700g0dh6,
+ 	}, {
+@@ -4334,6 +4467,15 @@ static const struct of_device_id platfor
+ 	}, {
+ 		.compatible = "nlt,nl12880bc20-jeida",
+ 		.data = &nlt_nl12880bc20_jeida,
++	}, {
++		.compatible = "nlt,nl12880bc20-spwg-18",
++		.data = &nlt_nl12880bc20_spwg_18,
++	}, {
++		.compatible = "nlt,nl12880bc20-spwg-24",
++		.data = &nlt_nl12880bc20_spwg_24,
++	}, {
++		.compatible = "nlt,nl12880bc20-jeida",
++		.data = &nlt_nl12880bc20_jeida,
+ 	}, {
+ 		.compatible = "nlt,nl12880bc20-spwg-18",
+ 		.data = &nlt_nl12880bc20_spwg_18,

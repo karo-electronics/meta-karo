@@ -1,0 +1,107 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include <dt-bindings/gpio/gpio.h>
+
+&{/chosen} {
+	overlays {
+		qsmp-ksz9131;
+	};
+};
+
+&eth1 {
+	pinctrl-names = "default", "sleep";
+        pinctrl-0 = <&qsmp_ethernet0_rgmii_pins>;
+	pinctrl-1 = <&qsmp_ethernet0_rgmii_sleep_pins>;
+	phy-mode = "rgmii-id";
+	phy-handle = <&phy0>;
+	status = "okay";
+};
+
+&mdio0 {
+	reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+
+	phy0: ethernet-phy@7 {
+		reg = <7>;
+		interrupt-parent = <&gpioh>;
+		interrupts = <6 IRQ_TYPE_EDGE_FALLING>;
+	};
+};
+
+&pinctrl {
+	qsmp_ethernet0_rgmii_pins: qsmp-ethernet0-rgmii-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('B', 11, AF11) /* ETH1_RGMII_TX_CTL */
+				  STM32_PINMUX('C', 1, AF11) /* ETH1_RGMII_GTX_CLK */
+				  STM32_PINMUX('G', 13, AF11) /* ETH1_RGMII_TXD0 */
+				  STM32_PINMUX('G', 14, AF11) /* ETH1_RGMII_TXD1 */
+				  STM32_PINMUX('C', 2, AF11) /* ETH1_RGMII_TXD2 */
+				  STM32_PINMUX('E', 5, AF10) /* ETH1_RGMII_TXD3 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <2>;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('A', 2, AF11) /* ETH1_MDIO */
+				  STM32_PINMUX('G', 2, AF11) /* ETH1_MDC */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		/* Micrel KSZ9131 strap pins (PIN | PHY_PIN) */
+		pins3 {
+			pinmux = <
+				  STM32_PINMUX('A', 7, AF11) /* ETH1_RX_CTL | CLK125_EN */
+				  STM32_PINMUX('C', 5, AF11) /* ETH1_RXD1 | MODE1 */
+				  STM32_PINMUX('B', 0, AF11) /* ETH1_RXD2 | MODE2 */
+				  STM32_PINMUX('B', 1, AF11) /* ETH1_RXD3 | MODE3 */
+				  /* strap address LOW = 0x3, HIGH = 0x7 */
+				  STM32_PINMUX('D', 7, AF10) /* RX_CLK | PHYAD2 */
+			>;
+			bias-pull-up;
+		};
+
+		pins4 {
+			pinmux = <
+				  STM32_PINMUX('F', 12, AF11) /* CLK125 | LED_MODE */
+				  STM32_PINMUX('C', 4, AF11) /* ETH1_RXD0 | MODE0 */
+			>;
+			bias-pull-down;
+		};
+	};
+
+	qsmp_ethernet0_rgmii_sleep_pins: qsmp-rgmii-sleep-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('F', 12, ANALOG) /* ETH_RGMII_CLK125 */
+				  STM32_PINMUX('C', 1, ANALOG) /* ETH_RGMII_GTX_CLK */
+				  STM32_PINMUX('G', 13, ANALOG) /* ETH_RGMII_TXD0 */
+				  STM32_PINMUX('G', 14, ANALOG) /* ETH_RGMII_TXD1 */
+				  STM32_PINMUX('C', 2, ANALOG) /* ETH_RGMII_TXD2 */
+				  STM32_PINMUX('E', 5, ANALOG) /* ETH_RGMII_TXD3 */
+				  STM32_PINMUX('B', 11, ANALOG) /* ETH_RGMII_TX_CTL */
+				  STM32_PINMUX('A', 2, ANALOG) /* ETH_MDIO */
+				  STM32_PINMUX('G', 2, ANALOG) /* ETH_MDC */
+				  STM32_PINMUX('C', 4, ANALOG) /* ETH_RGMII_RXD0 */
+				  STM32_PINMUX('C', 5, ANALOG) /* ETH_RGMII_RXD1 */
+				  STM32_PINMUX('B', 0, ANALOG) /* ETH_RGMII_RXD2 */
+				  STM32_PINMUX('B', 1, ANALOG) /* ETH_RGMII_RXD3 */
+				  STM32_PINMUX('D', 7, ANALOG) /* ETH_RGMII_RX_CLK */
+				  STM32_PINMUX('A', 7, ANALOG) /* ETH_RGMII_RX_CTL */
+			>;
+		};
+	};
+};

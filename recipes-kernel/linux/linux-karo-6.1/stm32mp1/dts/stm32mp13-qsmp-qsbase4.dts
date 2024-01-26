@@ -1,0 +1,17 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+&{/chosen} {
+	overlays {
+		qsmp-qsbase4;
+	};
+};
+
+&sdmmc1 {
+	status = "disabled";
+};

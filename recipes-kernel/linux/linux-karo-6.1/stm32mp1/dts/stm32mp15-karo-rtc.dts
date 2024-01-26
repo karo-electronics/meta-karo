@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2022 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+#include <dt-bindings/clock/stm32mp1-clks.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+
+&{/chosen} {
+	overlays {
+		karo-rtc;
+	};
+};
+
+&i2c6 {
+	status = "okay";
+
+	rtc_i2c: rtc@6f {
+		compatible = "microchip,mcp7940x";
+		reg = <0x6f>;
+		status = "okay";
+	};
+};

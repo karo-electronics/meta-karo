@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: (GPL-2.0 OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+&{/chosen} {
+	overlays {
+		qsmp-qsbase1;
+	};
+};
+
+&sdmmc1 {
+	status = "okay";
+};
+
+&uart4 {
+	pinctrl-0 = <&qsbase_uart4_pins>;
+};
+
+&pinctrl {
+	qsbase_uart4_pins: qsbase-uart4-pins {
+		pins1 {
+			pinmux = <
+				STM32_PINMUX('D', 6, AF8) /* UART4_TX */
+				STM32_PINMUX('D', 8, AF8) /* UART4_RX */
+			>;
+			bias-pull-up;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+};

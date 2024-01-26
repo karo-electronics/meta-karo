@@ -10,7 +10,7 @@ BUILD_REPRODUCIBLE_BINARIES ?= "0"
 INHERIT:remove = "${@'reproducible_build' if d.getVar('BUILD_REPRODUCIBLE_BINARIES') == '0' else ''}"
 
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
-PREFERRED_VERSION_linux-karo = "5.15"
+PREFERRED_VERSION_linux-karo = "6.1"
 KERNEL_IMAGETYPE ??= "uImage"
 
 MACHINEOVERRIDES =. "use-mainline-bsp:"
