@@ -20,7 +20,8 @@ DEPENDS += "python3-pillow-native"
 inherit deploy python3native
 
 # Default log level
-ST_OPTEE_DEBUG_LOG_LEVEL ??= "2"
+ST_OPTEE_DEBUG_LOG_LEVEL ??= "4"
+# ST_OPTEE_DEBUG_TRACE = "1"
 
 # default core debug
 ST_OPTEE_CORE_DEBUG ??= "y"
@@ -36,9 +37,6 @@ EXTRA_OEMAKE += "CFG_STM32_CRYP=n"
 
 EXTRA_OEMAKE:append:stm32mp13 = " CFG_STM32MP13=y"
 EXTRA_OEMAKE:append:stm32mp13 = " CFG_DRAM_SIZE=${BOARD_DRAM_SIZE}"
-
-# should be removed later
-EXTRA_OEMAKE += "CFG_WITH_TUI=n"
 
 # debug and trace
 EXTRA_OEMAKE += "${@bb.utils.contains('ST_OPTEE_DEBUG_TRACE', '1', 'CFG_TEE_CORE_LOG_LEVEL=${ST_OPTEE_DEBUG_LOG_LEVEL} CFG_TEE_CORE_DEBUG=${ST_OPTEE_CORE_DEBUG}', '', d)}"

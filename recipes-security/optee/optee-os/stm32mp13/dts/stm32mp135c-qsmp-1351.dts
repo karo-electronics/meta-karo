@@ -14,6 +14,8 @@
 #include <dt-bindings/power/stm32mp1-power.h>
 #include <dt-bindings/random/stm32mp-rng.h>
 #include <dt-bindings/regulator/st,stm32mp13-regulator.h>
+#include <dt-bindings/soc/stm32mp13-tzc400.h>
+#include <dt-bindings/soc/stm32mp-tzc400-macro.h>
 
 #include "stm32mp135.dtsi"
 #include "stm32mp13xc.dtsi"
@@ -31,6 +33,12 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
+
+		optee_framebuffer: optee-framebuffer@cd000000 {
+			/* Secure framebuffer memory */
+			reg = <0xcd000000 0x1000000>;
+			st,protreg = <TZC_REGION_S_RDWR 0>;
+		};
 	};
 
 	aliases {
@@ -58,9 +66,8 @@
 	};
 
 	clocks {
-
 		clk_hsi: clk-hsi {
-			clock-frequency = <64000000>;
+			clock-frequency = <32000000>;
 		};
 		
 		clk_lse: clk-lse {
@@ -153,7 +160,7 @@
 		CLK_CKPER_DISABLED
 		CLK_ETH1_PLL4P
 		CLK_SDMMC1_PLL4P
-		CLK_SDMMC2_PLL4P
+		CLK_SDMMC2_HSI
 		CLK_STGEN_HSI
 		CLK_USBPHY_HSE
 		CLK_SPI1_PLL4P
