@@ -8,14 +8,8 @@
 #include "stm32mp13-u-boot.dtsi"
 
 / {
-	aliases {
-		mmc0 = &sdmmc2;
-		mmc1 = &sdmmc1;
-		usb0 = &usbotg_hs;
-	};
-
 	config {
-		u-boot,mmc-env-partition = "u-boot-env";
+		u-boot,boot-led = "Heartbeat";
 	};
 };
 
@@ -29,5 +23,4 @@
 
 &usbotg_hs {
 	u-boot,force-b-session-valid;
-	dr_mode = "peripheral";
 };
