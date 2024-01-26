@@ -35,9 +35,9 @@
 
 	clocks {
 		clk_hsi: clk-hsi {
-			clock-frequency = <64000000>;
+			clock-frequency = <32000000>;
 		};
-		
+
 		clk_lse: clk-lse {
 			clock-frequency = <32768>;
 			st,drive = < LSEDRV_MEDIUM_HIGH >;
@@ -86,7 +86,7 @@
 		CLK_AXI_PLL2P
 		CLK_MLAHBS_PLL3
 		CLK_CKPER_DISABLED
-		CLK_SDMMC2_PLL4P
+		CLK_SDMMC2_HSI
 		CLK_STGEN_HSI
 		CLK_UART4_PCLK1
 		CLK_RNG1_CSI
@@ -120,11 +120,6 @@
 			src = <CLK_PLL3_HSE>;
 			divmn = <1 33>;
 			frac = <0x1a04>;
-		};
-
-		pll4_vco_600Mhz: pll4-vco-600Mhz {
-			src = <CLK_PLL4_HSE>;
-			divmn = <1 49>;
 		};
 	};
 
@@ -160,18 +155,6 @@
 			st,pll_div_pqr = <1 16 36>;
 		};
 	};
-
-	pll4:st,pll@3 {
-		reg = <3>;
-		compatible = "st,stm32mp1-pll";
-		st,pll = <&pll4_cfg1>;
-
-		pll4_cfg1: pll4_cfg1 {
-			st,pll_vco = <&pll4_vco_600Mhz>;
-			st,pll_div_pqr = <11 6 7>;
-		};
-	};
-
 };
 
 &rng {
