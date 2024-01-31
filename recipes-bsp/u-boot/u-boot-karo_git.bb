@@ -18,13 +18,19 @@ RDEPENDS:${PN}:append:rzg2 = " tf-a-rzg2"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
-SRC_URI = "git:///net/karonas/repos/git/u-boot;branch=${SRCBRANCH}"
+SRC_URI = "${UBOOT_SRC};branch=${SRCBRANCH}"
+SRCBRANCH = "${@ d.getVar('UBOOT_BRANCH') if d.getVar('UBOOT_BRANCH') else \
+            d.getVar('UBOOT_BRANCH_DEFAULT')}"
+SRCREV = "${@ d.getVar('UBOOT_REV') if d.getVar('UBOOT_REV') else \
+            d.getVar('UBOOT_REF_DEFAULT')}"
 
-SRCBRANCH:stm32mp1 = "karo-stm32mp1-v2022.10"
-SRCREV:stm32mp1 = "d8115c0ae597a780bf48a274aabd3b4212e6a8b6"
+UBOOT_SRC ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
-SRCBRANCH:rzg2 = "karo-txrz"
-SRCREV:rzg2 = "66fed3c1ba38bf7229e10bfd9923b89bd7e98064"
+UBOOT_REF_DEFAULT:stm32mp1 = "d8115c0ae597a780bf48a274aabd3b4212e6a8b6"
+UBOOT_BRANCH_DEFAULT:stm32mp1 = "karo-stm32mp1-v2022.10"
+
+UBOOT_BRANCH_DEFAULT:rzg2 = "karo-txrz"
+UBOOT_REF_DEFAULT:rzg2 = "66fed3c1ba38bf7229e10bfd9923b89bd7e98064"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
