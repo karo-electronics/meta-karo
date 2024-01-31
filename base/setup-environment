@@ -23,7 +23,7 @@
 CWD="`cd .;pwd`"
 PROGNAME=setup-environment
 export BSPDIR="$CWD"
-TEMPLATECONF="${BSPDIR}/layers/meta-karo/conf/templates/default"
+TEMPLATECONF="${BSPDIR}/layers/base/conf/templates/default"
 
 if [ -z "$BASH_VERSION" ];then
     echo "This script must to be run from bash" >&2
