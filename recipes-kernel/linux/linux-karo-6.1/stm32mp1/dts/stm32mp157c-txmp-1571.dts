@@ -9,8 +9,8 @@
 #include "stm32mp157.dtsi"
 #include "stm32mp15xc.dtsi"
 #include "stm32mp15xxab-pinctrl.dtsi"
-#include "stm32mp157-karo.dtsi"
-#include "stm32mp157-txmp.dtsi"
+#include "stm32mp157c-txmp-scmi.dtsi"
+#include "stm32mp15-m4-srm.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1571 module";

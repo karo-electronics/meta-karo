@@ -6,7 +6,6 @@
 #include <dt-bindings/clock/stm32mp1-clks.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
-#include "stm32mp15-m4-srm.dtsi"
 
 / {
 	aliases {
@@ -25,12 +24,6 @@
 
 	firmware {
 		/delete-node/ optee;
-
-		scmi {
-			compatible = "arm,scmi-smc";
-			arm,smc-id = <0x82002000>;
-			/delete-property/ linaro,optee-channel-id;
-		};
 	};
 
 	leds {
@@ -210,7 +203,7 @@
 	status = "okay";
 };
 
-&sram {
+&sram4 {
 	dma_pool: dma_pool@0 {
 		reg = <0x50000 0x10000>;
 		pool;

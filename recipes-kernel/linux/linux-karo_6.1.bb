@@ -25,6 +25,9 @@ SRC_URI:append:stm32mp1 = " \
         file://dts/stm32mp157-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp157-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
         file://dts/stm32mp157-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp157c-karo-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp157c-qsmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/stm32mp157c-txmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
