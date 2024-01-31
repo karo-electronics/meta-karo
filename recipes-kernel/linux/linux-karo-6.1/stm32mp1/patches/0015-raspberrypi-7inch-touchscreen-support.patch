@@ -4,11 +4,11 @@ Date:   Mon Dec 12 11:43:17 2022 +0000
 
     add raspberrypi 7inch touchscreen support
 
-diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
-index f1a60de494c6..a738e6abf814 100644
---- a/drivers/gpu/drm/panel/Kconfig
-+++ b/drivers/gpu/drm/panel/Kconfig
-@@ -626,4 +626,15 @@ config DRM_PANEL_XINPENG_XPP055C272
+Index: linux-qsmp-1510/drivers/gpu/drm/panel/Kconfig
+===================================================================
+--- linux-qsmp-1510.orig/drivers/gpu/drm/panel/Kconfig
++++ linux-qsmp-1510/drivers/gpu/drm/panel/Kconfig
+@@ -726,4 +726,15 @@ config DRM_PANEL_XINPENG_XPP055C272
  	  Say Y here if you want to enable support for the Xinpeng
  	  XPP055C272 controller for 720x1280 LCD panels with MIPI/RGB/SPI
  	  system interfaces.
@@ -24,21 +24,20 @@ index f1a60de494c6..a738e6abf814 100644
 +	  Say Y here if you want to enable support for the official RaspberryPi 7inch panel.
 +
  endmenu
-diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
-index 57d7948975c2..9fb75c534d46 100644
---- a/drivers/gpu/drm/panel/Makefile
-+++ b/drivers/gpu/drm/panel/Makefile
-@@ -65,3 +65,4 @@ obj-$(CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA) += panel-truly-nt35597.o
+Index: linux-qsmp-1510/drivers/gpu/drm/panel/Makefile
+===================================================================
+--- linux-qsmp-1510.orig/drivers/gpu/drm/panel/Makefile
++++ linux-qsmp-1510/drivers/gpu/drm/panel/Makefile
+@@ -74,3 +74,4 @@ obj-$(CONFIG_DRM_PANEL_TRULY_NT35597_WQX
  obj-$(CONFIG_DRM_PANEL_VISIONOX_RM69299) += panel-visionox-rm69299.o
  obj-$(CONFIG_DRM_PANEL_WIDECHIPS_WS2401) += panel-widechips-ws2401.o
  obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
 +obj-$(CONFIG_DRM_PANEL_RPI_7INCH) += panel-rpi-7inch.o
-diff --git a/drivers/gpu/drm/panel/panel-rpi-7inch.c b/drivers/gpu/drm/panel/panel-rpi-7inch.c
-new file mode 100644
-index 000000000000..d1048837ce99
+Index: linux-qsmp-1510/drivers/gpu/drm/panel/panel-rpi-7inch.c
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/panel/panel-rpi-7inch.c
-@@ -0,0 +1,416 @@
++++ linux-qsmp-1510/drivers/gpu/drm/panel/panel-rpi-7inch.c
+@@ -0,0 +1,415 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021, Markus Bauer <mb@karo-electronics.de>
@@ -68,6 +67,7 @@ index 000000000000..d1048837ce99
 +
 +#include <linux/delay.h>
 +#include <linux/gpio/consumer.h>
++#include <linux/i2c.h>
 +#include <linux/module.h>
 +#include <linux/of_platform.h>
 +#include <linux/platform_device.h>
@@ -343,7 +343,7 @@ index 000000000000..d1048837ce99
 +	.get_timings = tc358762_get_timings,
 +};
 +
-+static int tc358762_remove(struct device *dev)
++static void tc358762_remove(struct device *dev)
 +{
 +	struct tc358762 *panel = dev_get_drvdata(dev);
 +
@@ -353,8 +353,6 @@ index 000000000000..d1048837ce99
 +
 +	if (panel->ddc)
 +		put_device(&panel->ddc->dev);
-+
-+	return 0;
 +}
 +
 +static void tc358762_shutdown(struct device *dev)
@@ -418,7 +416,7 @@ index 000000000000..d1048837ce99
 +	return 0;
 +}
 +
-+static int tc358762_dsi_remove(struct mipi_dsi_device *dsi)
++static void tc358762_dsi_remove(struct mipi_dsi_device *dsi)
 +{
 +	int err;
 +
@@ -426,7 +424,7 @@ index 000000000000..d1048837ce99
 +	if (err < 0)
 +		dev_err(&dsi->dev, "failed to detach from DSI host: %d\n", err);
 +
-+	return tc358762_remove(&dsi->dev);
++	tc358762_remove(&dsi->dev);
 +}
 +
 +static void tc358762_dsi_shutdown(struct mipi_dsi_device *dsi)
@@ -455,11 +453,11 @@ index 000000000000..d1048837ce99
 +MODULE_AUTHOR("Jerry <xbl@rock-chips.com>");
 +MODULE_DESCRIPTION("DRM Driver for toshiba tc358762 Bridge");
 +MODULE_LICENSE("GPL and additional rights");
-diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index d4e74738c5a8..59f4a600716c 100644
---- a/drivers/input/touchscreen/Kconfig
-+++ b/drivers/input/touchscreen/Kconfig
-@@ -1366,4 +1366,10 @@ config TOUCHSCREEN_ZINITIX
+Index: linux-qsmp-1510/drivers/input/touchscreen/Kconfig
+===================================================================
+--- linux-qsmp-1510.orig/drivers/input/touchscreen/Kconfig
++++ linux-qsmp-1510/drivers/input/touchscreen/Kconfig
+@@ -1379,4 +1379,10 @@ config TOUCHSCREEN_ZINITIX
  	  To compile this driver as a module, choose M here: the
  	  module will be called zinitix.
  
@@ -470,22 +468,21 @@ index d4e74738c5a8..59f4a600716c 100644
 +	  Controls the official RaspberryPi 7inch ft5406 touch ic.
 +
  endif
-diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
-index 7d34100f7f22..e2e50b273efe 100644
---- a/drivers/input/touchscreen/Makefile
-+++ b/drivers/input/touchscreen/Makefile
-@@ -113,4 +113,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
+Index: linux-qsmp-1510/drivers/input/touchscreen/Makefile
+===================================================================
+--- linux-qsmp-1510.orig/drivers/input/touchscreen/Makefile
++++ linux-qsmp-1510/drivers/input/touchscreen/Makefile
+@@ -115,4 +115,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+
  obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
  obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
  obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
 +obj-$(CONFIG_TOUCHSCREEN_RPI_FT5406)	+= rpi_ft5406.o
  obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
-diff --git a/drivers/input/touchscreen/rpi_ft5406.c b/drivers/input/touchscreen/rpi_ft5406.c
-new file mode 100644
-index 000000000000..c17e3ec5d254
+Index: linux-qsmp-1510/drivers/input/touchscreen/rpi_ft5406.c
+===================================================================
 --- /dev/null
-+++ b/drivers/input/touchscreen/rpi_ft5406.c
-@@ -0,0 +1,303 @@
++++ linux-qsmp-1510/drivers/input/touchscreen/rpi_ft5406.c
+@@ -0,0 +1,302 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + *
@@ -759,7 +756,7 @@ index 000000000000..c17e3ec5d254
 +	return ret;
 +}
 +
-+static int rpi_ft5406_remove(struct i2c_client *client)
++static void rpi_ft5406_remove(struct i2c_client *client)
 +{
 +	struct rpi_ft5406_data *ts_data = i2c_get_clientdata(client);
 +
@@ -769,7 +766,6 @@ index 000000000000..c17e3ec5d254
 +		input_free_device(ts_data->input_dev);
 +	}
 +	regulator_disable(ts_data->power_supply);
-+	return 0;
 +}
 +
 +static const struct i2c_device_id rpi_ft5406_id[] = {
@@ -789,11 +785,10 @@ index 000000000000..c17e3ec5d254
 +
 +MODULE_DESCRIPTION("RPI Display FT5406 Touch driver");
 +MODULE_LICENSE("GPL v2");
-diff --git a/drivers/input/touchscreen/rpi_ft5406.h b/drivers/input/touchscreen/rpi_ft5406.h
-new file mode 100644
-index 000000000000..55754a6bdd91
+Index: linux-qsmp-1510/drivers/input/touchscreen/rpi_ft5406.h
+===================================================================
 --- /dev/null
-+++ b/drivers/input/touchscreen/rpi_ft5406.h
++++ linux-qsmp-1510/drivers/input/touchscreen/rpi_ft5406.h
 @@ -0,0 +1,71 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +

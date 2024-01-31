@@ -1,8 +1,8 @@
-diff --git a/drivers/usb/dwc2/platform.c b/drivers/usb/dwc2/platform.c
-index 00c2e905b421..f0233f0add4c 100644
---- a/drivers/usb/dwc2/platform.c
-+++ b/drivers/usb/dwc2/platform.c
-@@ -553,7 +553,8 @@ static int dwc2_driver_probe(struct platform_device *dev)
+Index: linux-qsmp-1510/drivers/usb/dwc2/platform.c
+===================================================================
+--- linux-qsmp-1510.orig/drivers/usb/dwc2/platform.c
++++ linux-qsmp-1510/drivers/usb/dwc2/platform.c
+@@ -543,7 +543,8 @@ static int dwc2_driver_probe(struct plat
  		}
  
  		ggpio = dwc2_readl(hsotg, GGPIO);
@@ -12,7 +12,7 @@ index 00c2e905b421..f0233f0add4c 100644
  		ggpio |= GGPIO_STM32_OTG_GCCFG_VBDEN;
  		dwc2_writel(hsotg, ggpio, GGPIO);
  
-@@ -740,7 +741,8 @@ static int __maybe_unused dwc2_resume(struct device *dev)
+@@ -722,7 +723,8 @@ static int __maybe_unused dwc2_resume(st
  			return ret;
  
  		ggpio = dwc2_readl(dwc2, GGPIO);

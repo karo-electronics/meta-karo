@@ -1,9 +1,9 @@
-Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
+Index: linux-qsmp-1510/drivers/gpu/drm/panel/panel-simple.c
 ===================================================================
---- kernel-source.orig/drivers/gpu/drm/panel/panel-simple.c
-+++ kernel-source/drivers/gpu/drm/panel/panel-simple.c
-@@ -1751,6 +1751,56 @@ static const struct panel_desc edt_et043
- 	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE,
+--- linux-qsmp-1510.orig/drivers/gpu/drm/panel/panel-simple.c
++++ linux-qsmp-1510/drivers/gpu/drm/panel/panel-simple.c
+@@ -1619,6 +1619,81 @@ static const struct panel_desc edt_et035
+ 	.bus_flags = DRM_BUS_FLAG_DE_LOW | DRM_BUS_FLAG_PIXDATA_SAMPLE_POSEDGE,
  };
  
 +static const struct drm_display_mode edt_et0350g0dh6_mode = {
@@ -56,13 +56,6 @@ Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
 +	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE,
 +};
 +
- static const struct drm_display_mode edt_et057090dhu_mode = {
- 	.clock = 25175,
- 	.hdisplay = 640,
-@@ -1920,6 +1970,31 @@ static const struct panel_desc edt_et101
- 	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
- };
- 
 +static const struct drm_display_mode edt_et1010g0dsa_mode = {
 +	.clock = 71100,
 +	.hdisplay = 1280,
@@ -88,11 +81,11 @@ Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
 +	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE,
 +};
 +
- static const struct display_timing evervision_vgg804821_timing = {
- 	.pixelclock = { 27600000, 33300000, 50000000 },
- 	.hactive = { 800, 800, 800 },
-@@ -3027,6 +3102,52 @@ static const struct panel_desc nlt_nl128
- 	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG,
+ static const struct drm_display_mode edt_etm0350g0dh6_mode = {
+ 	.clock = 6520,
+ 	.hdisplay = 320,
+@@ -2879,6 +2954,52 @@ static const struct panel_desc newhaven_
+ 	.connector_type = DRM_MODE_CONNECTOR_DPI,
  };
  
 +static const struct drm_display_mode nlt_nl12880bc20_mode = {
@@ -141,12 +134,12 @@ Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
 +	.bus_format = MEDIA_BUS_FMT_RGB888_1X7X4_SPWG,
 +};
 +
- static const struct drm_display_mode nvd_9128_mode = {
- 	.clock = 29500,
- 	.hdisplay = 800,
-@@ -4155,6 +4276,12 @@ static const struct of_device_id platfor
- 		.compatible = "edt,et0430g0dh6",
- 		.data = &edt_et0430g0dh6,
+ static const struct display_timing nlt_nl192108ac18_02d_timing = {
+ 	.pixelclock = { 130000000, 148350000, 163000000 },
+ 	.hactive = { 1920, 1920, 1920 },
+@@ -4046,6 +4167,15 @@ static const struct of_device_id platfor
+ 		.compatible = "edt,et035012dm6",
+ 		.data = &edt_et035012dm6,
  	}, {
 +		.compatible = "edt,et0350g0dh6",
 +		.data = &edt_et0350g0dh6,
@@ -154,26 +147,28 @@ Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
 +		.compatible = "edt,et0430g0dh6",
 +		.data = &edt_et0430g0dh6,
 +	}, {
- 		.compatible = "dataimage,fg040346dsswbg04",
- 		.data = &dataimage_fg040346dsswbg04,
- 	}, {
-@@ -4188,6 +4315,12 @@ static const struct of_device_id platfor
- 		.compatible = "edt,et070080dh6",
- 		.data = &edt_etm0700g0dh6,
- 	}, {
 +		.compatible = "edt,et1010g0dsa",
 +		.data = &edt_et1010g0dsa,
 +	}, {
+ 		.compatible = "edt,etm0350g0dh6",
+ 		.data = &edt_etm0350g0dh6,
+ 	}, {
+@@ -4055,6 +4185,9 @@ static const struct of_device_id platfor
+ 		.compatible = "edt,etm0430g0dh6",
+ 		.data = &edt_etm0430g0dh6,
+ 	}, {
 +		.compatible = "edt,etml1010g0dka",
 +		.data = &edt_et1010g0dsa,
 +	}, {
- 		.compatible = "edt,etm0700g0dh6",
- 		.data = &edt_etm0700g0dh6,
+ 		.compatible = "edt,et057090dhu",
+ 		.data = &edt_et057090dhu,
  	}, {
-@@ -4334,6 +4467,15 @@ static const struct of_device_id platfor
+@@ -4196,6 +4329,15 @@ static const struct of_device_id platfor
+ 		.compatible = "newhaven,nhd-4.3-480272ef-atxl",
+ 		.data = &newhaven_nhd_43_480272ef_atxl,
  	}, {
- 		.compatible = "nlt,nl12880bc20-jeida",
- 		.data = &nlt_nl12880bc20_jeida,
++		.compatible = "nlt,nl12880bc20-jeida",
++		.data = &nlt_nl12880bc20_jeida,
 +	}, {
 +		.compatible = "nlt,nl12880bc20-spwg-18",
 +		.data = &nlt_nl12880bc20_spwg_18,
@@ -181,8 +176,6 @@ Index: kernel-source/drivers/gpu/drm/panel/panel-simple.c
 +		.compatible = "nlt,nl12880bc20-spwg-24",
 +		.data = &nlt_nl12880bc20_spwg_24,
 +	}, {
-+		.compatible = "nlt,nl12880bc20-jeida",
-+		.data = &nlt_nl12880bc20_jeida,
+ 		.compatible = "nlt,nl192108ac18-02d",
+ 		.data = &nlt_nl192108ac18_02d,
  	}, {
- 		.compatible = "nlt,nl12880bc20-spwg-18",
- 		.data = &nlt_nl12880bc20_spwg_18,

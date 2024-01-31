@@ -1,8 +1,8 @@
-diff --git a/drivers/gpu/drm/stm/drv.c b/drivers/gpu/drm/stm/drv.c
-index 9f441aadf2d5..451a99aeb7d9 100644
---- a/drivers/gpu/drm/stm/drv.c
-+++ b/drivers/gpu/drm/stm/drv.c
-@@ -202,7 +202,7 @@ static int stm_drm_platform_probe(struct platform_device *pdev)
+Index: linux-qsmp-1510/drivers/gpu/drm/stm/drv.c
+===================================================================
+--- linux-qsmp-1510.orig/drivers/gpu/drm/stm/drv.c
++++ linux-qsmp-1510/drivers/gpu/drm/stm/drv.c
+@@ -203,7 +203,7 @@ static int stm_drm_platform_probe(struct
  	if (ret)
  		goto err_put;
  

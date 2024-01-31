@@ -1,78 +1,52 @@
 diff --git a/drivers/regulator/rpi-panel-attiny-regulator.c b/drivers/regulator/rpi-panel-attiny-regulator.c
-index ee46bfbf5eee..0c2036a30cbc 100644
+index 308f7972941b..9763b20ddf4f 100644
 --- a/drivers/regulator/rpi-panel-attiny-regulator.c
 +++ b/drivers/regulator/rpi-panel-attiny-regulator.c
-@@ -27,6 +27,39 @@
- #define REG_POWERON	0x85
- #define REG_PWM		0x86
- 
-+static inline int attiny_regmap_write(struct regmap *m, unsigned int reg,
-+				  unsigned int val, const char *fn, int ln)
-+{
-+	int ret;
-+	int limit = 10;
-+
-+	do {
-+		ret = regmap_write(m, reg, val);
-+	} while (ret == -ENXIO && --limit > 0);
-+
-+	if (ret)
-+		pr_err("%s@%d: failed to write 0x%08x to reg 0x%02x: %d\n",
-+		       fn, ln, val, reg, ret);
-+	return ret;
-+}
-+
-+static inline int attiny_regmap_read(struct regmap *m, unsigned int reg,
-+				     unsigned int *val, const char *fn, int ln)
-+{
-+	int ret;
-+	int limit = 10;
-+
-+	do {
-+		ret = regmap_read(m, reg, val);
-+	} while (ret == -ENXIO && --limit > 0);
-+
-+	if (ret)
-+		pr_err("%s@%d: failed to read reg 0x%02x: %d\n", fn, ln, reg, ret);
-+	return ret;
-+}
-+#define regmap_write(m, r, v) attiny_regmap_write(m, r, v, __func__, __LINE__)
-+#define regmap_read(m, r, v) attiny_regmap_read(m, r, v, __func__, __LINE__)
-+
- static const struct regmap_config attiny_regmap_config = {
- 	.reg_bits = 8,
- 	.val_bits = 8,
-@@ -36,29 +69,44 @@ static const struct regmap_config attiny_regmap_config = {
+@@ -92,12 +92,16 @@ static u8 attiny_get_port_state(struct attiny_lcd *state, int reg)
  
  static int attiny_lcd_power_enable(struct regulator_dev *rdev)
  {
 +	int ret;
-+	int limit = 10;
- 	unsigned int data;
+ 	struct attiny_lcd *state = rdev_get_drvdata(rdev);
  
--	regmap_write(rdev->regmap, REG_POWERON, 1);
--	/* Wait for nPWRDWN to go low to indicate poweron is done. */
--	regmap_read_poll_timeout(rdev->regmap, REG_PORTB, data,
--					data & BIT(0), 10, 1000000);
-+	ret = regmap_write(rdev->regmap, REG_POWERON, 1);
+ 	mutex_lock(&state->lock);
+ 
+ 	/* Ensure bridge, and tp stay in reset */
+-	attiny_set_port_state(state, REG_PORTC, 0);
++	ret = attiny_set_port_state(state, REG_PORTC, 0);
 +	if (ret)
-+		return ret;
-+	do {
-+		/* Wait for nPWRDWN to go low to indicate poweron is done. */
-+		ret = regmap_read_poll_timeout(rdev->regmap, REG_PORTB, data,
-+					       data & BIT(0), 10, 1000000);
-+	} while (ret == -ENXIO && --limit > 0);
++		goto out;
 +
-+	if (ret)
-+		return ret;
+ 	usleep_range(5000, 10000);
  
  	/* Default to the same orientation as the closed source
- 	 * firmware used for the panel.  Runtime rotation
+@@ -105,40 +109,61 @@ static int attiny_lcd_power_enable(struct regulator_dev *rdev)
  	 * configuration will be supported using VC4's plane
  	 * orientation bits.
  	 */
--	regmap_write(rdev->regmap, REG_PORTA, BIT(2));
-+	ret = regmap_write(rdev->regmap, REG_PORTA, REG_PORTA_HF);
+-	attiny_set_port_state(state, REG_PORTA, PA_LCD_LR);
++	ret = attiny_set_port_state(state, REG_PORTA, PA_LCD_LR);
++	if (ret)
++		goto out;
++
+ 	usleep_range(5000, 10000);
+ 	/* Main regulator on, and power to the panel (LCD_VCC_N) */
+-	attiny_set_port_state(state, REG_PORTB, PB_LCD_MAIN);
++	ret = attiny_set_port_state(state, REG_PORTB, PB_LCD_MAIN);
++	if (ret)
++		goto out;
++
+ 	usleep_range(5000, 10000);
+ 	/* Bring controllers out of reset */
+-	attiny_set_port_state(state, REG_PORTC, PC_LED_EN);
++	ret = attiny_set_port_state(state, REG_PORTC, PC_LED_EN);
++	if (ret)
++		goto out;
+ 
+ 	msleep(80);
+-
++out:
+ 	mutex_unlock(&state->lock);
  
 -	return 0;
 +	return ret;
@@ -80,23 +54,87 @@ index ee46bfbf5eee..0c2036a30cbc 100644
  
  static int attiny_lcd_power_disable(struct regulator_dev *rdev)
  {
--	regmap_write(rdev->regmap, REG_PWM, 0);
--	regmap_write(rdev->regmap, REG_POWERON, 0);
 +	int ret;
-+
+ 	struct attiny_lcd *state = rdev_get_drvdata(rdev);
+ 
+ 	mutex_lock(&state->lock);
+ 
+-	regmap_write(rdev->regmap, REG_PWM, 0);
 +	ret = regmap_write(rdev->regmap, REG_PWM, 0);
 +	if (ret)
-+		return ret;
-+	ret = regmap_write(rdev->regmap, REG_POWERON, 0);
++		goto out;
++
+ 	usleep_range(5000, 10000);
+ 
+-	attiny_set_port_state(state, REG_PORTA, 0);
++	ret = attiny_set_port_state(state, REG_PORTA, 0);
 +	if (ret)
-+		return ret;
- 	udelay(1);
++		goto out;
++
+ 	usleep_range(5000, 10000);
+-	attiny_set_port_state(state, REG_PORTB, PB_LCD_VCC_N);
++	ret = attiny_set_port_state(state, REG_PORTB, PB_LCD_VCC_N);
++	if (ret)
++		goto out;
++
+ 	usleep_range(5000, 10000);
+-	attiny_set_port_state(state, REG_PORTC, 0);
+-	msleep(30);
++	ret = attiny_set_port_state(state, REG_PORTC, 0);
++	if (ret)
++		goto out;
+ 
++	msleep(30);
++out:
+ 	mutex_unlock(&state->lock);
+ 
 -	return 0;
 +	return ret;
  }
  
  static int attiny_lcd_power_is_enabled(struct regulator_dev *rdev)
-@@ -132,7 +180,7 @@ static const struct backlight_ops attiny_bl = {
+@@ -228,21 +253,34 @@ static void attiny_gpio_set(struct gpio_chip *gc, unsigned int off, int val)
+ 	else
+ 		last_val &= ~mappings[off].mask;
+ 
+-	attiny_set_port_state(state, mappings[off].reg, last_val);
++	ret = attiny_set_port_state(state, mappings[off].reg, last_val);
++	if (ret)
++		goto out;
+ 
+ 	if (off == RST_BRIDGE_N && val) {
+ 		usleep_range(5000, 8000);
+-		regmap_write(state->regmap, REG_ADDR_H, 0x04);
++		ret = regmap_write(state->regmap, REG_ADDR_H, 0x04);
++		if (ret)
++			goto out;
++
+ 		usleep_range(5000, 8000);
+-		regmap_write(state->regmap, REG_ADDR_L, 0x7c);
++		ret = regmap_write(state->regmap, REG_ADDR_L, 0x7c);
++		if (ret)
++			goto out;
++
+ 		usleep_range(5000, 8000);
+-		regmap_write(state->regmap, REG_WRITE_DATA_H, 0x00);
++		ret = regmap_write(state->regmap, REG_WRITE_DATA_H, 0x00);
++		if (ret)
++			goto out;
++
+ 		usleep_range(5000, 8000);
+-		regmap_write(state->regmap, REG_WRITE_DATA_L, 0x00);
++		ret = regmap_write(state->regmap, REG_WRITE_DATA_L, 0x00);
++		if (ret)
++			goto out;
+ 
+ 		msleep(100);
+ 	}
+-
++out:
+ 	mutex_unlock(&state->lock);
+ }
+ 
+@@ -283,7 +321,7 @@ static int attiny_i2c_read(struct i2c_client *client, u8 reg, unsigned int *buf)
   * I2C driver interface functions
   */
  static int attiny_i2c_probe(struct i2c_client *i2c,
@@ -105,7 +143,15 @@ index ee46bfbf5eee..0c2036a30cbc 100644
  {
  	struct backlight_properties props = { };
  	struct regulator_config config = { };
-@@ -159,14 +207,17 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
+@@ -293,6 +331,7 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
+ 	struct regmap *regmap;
+ 	unsigned int data;
+ 	int ret;
++	int limit = 10;
+ 
+ 	state = devm_kzalloc(&i2c->dev, sizeof(*state), GFP_KERNEL);
+ 	if (!state)
+@@ -318,6 +357,7 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
  	switch (data) {
  	case 0xde: /* ver 1 */
  	case 0xc3: /* ver 2 */
@@ -113,38 +159,53 @@ index ee46bfbf5eee..0c2036a30cbc 100644
  		break;
  	default:
  		dev_err(&i2c->dev, "Unknown Atmel firmware revision: 0x%02x\n", data);
- 		return -ENODEV;
+@@ -325,9 +365,23 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
+ 		goto error;
  	}
  
 -	regmap_write(regmap, REG_POWERON, 0);
--	mdelay(1);
+-	msleep(30);
+-	regmap_write(regmap, REG_PWM, 0);
 +	ret = regmap_write(regmap, REG_POWERON, 0);
 +	if (ret)
++		goto error;
++
++	/* Wait for nPWRDWN to go low to indicate poweron is done. */
++	do {
++		ret = regmap_read_poll_timeout(rdev->regmap, REG_PORTB, data,
++					       data & BIT(0), 10, 30000);
++	} while (ret == -ENXIO && --limit > 0);
++	dev_info(&i2c->dev, "PWRON %sOK after %u loops\n", ret == 0 ? "" : "NOT ",
++		 10 - limit);
++	if (ret)
 +		return ret;
-+	mdelay(800);
++
++	ret = regmap_write(regmap, REG_PWM, 0);
++	if (ret)
++		goto error;
  
  	config.dev = &i2c->dev;
  	config.regmap = regmap;
-@@ -185,17 +236,23 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
- 					    "7inch-touchscreen-panel-bl",
- 					    &i2c->dev, regmap, &attiny_bl,
+@@ -352,10 +406,17 @@ static int attiny_i2c_probe(struct i2c_client *i2c,
  					    &props);
--	if (IS_ERR(bl))
-+	if (IS_ERR(bl)) {
-+		dev_err(&i2c->dev, "failed to register backlight device: %ld\n",
-+			PTR_ERR(bl));
- 		return PTR_ERR(bl);
-+	}
+ 	if (IS_ERR(bl)) {
+ 		ret = PTR_ERR(bl);
++		dev_err(&i2c->dev, "failed to register backlight device: %d\n", ret);
+ 		goto error;
+ 	}
+ 
+-	bl->props.brightness = 0xff;
 +	bl->props.brightness = props.max_brightness;
 +	of_property_read_u32(i2c->dev.of_node, "default-brightness-level",
 +			     &bl->props.brightness);
++
++	ret = attiny_update_status();
++	if (ret)
++		goto error;
  
--	bl->props.brightness = 0xff;
--
-+	attiny_update_status(bl);
-+	dev_info(&i2c->dev, "registered\n");
- 	return 0;
- }
+ 	state->gc.parent = &i2c->dev;
+ 	state->gc.label = i2c->name;
+@@ -390,7 +451,7 @@ static void attiny_i2c_remove(struct i2c_client *client)
  
  static const struct of_device_id attiny_dt_ids[] = {
  	{ .compatible = "raspberrypi,7inch-touchscreen-panel-regulator" },

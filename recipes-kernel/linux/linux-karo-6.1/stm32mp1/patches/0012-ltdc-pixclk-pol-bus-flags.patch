@@ -1,8 +1,8 @@
-diff --git a/drivers/gpu/drm/stm/ltdc.c b/drivers/gpu/drm/stm/ltdc.c
-index 22cf21440e38..167f85437aba 100644
---- a/drivers/gpu/drm/stm/ltdc.c
-+++ b/drivers/gpu/drm/stm/ltdc.c
-@@ -947,7 +947,7 @@ static void ltdc_crtc_mode_set_nofb(struct drm_crtc *crtc)
+Index: linux-qsmp-1510/drivers/gpu/drm/stm/ltdc.c
+===================================================================
+--- linux-qsmp-1510.orig/drivers/gpu/drm/stm/ltdc.c
++++ linux-qsmp-1510/drivers/gpu/drm/stm/ltdc.c
+@@ -982,7 +982,7 @@ static void ltdc_crtc_mode_set_nofb(stru
  	if (bus_flags & DRM_BUS_FLAG_DE_LOW)
  		val |= GCR_DEPOL;
  
@@ -10,4 +10,4 @@ index 22cf21440e38..167f85437aba 100644
 +	if (bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE)
  		val |= GCR_PCPOL;
  
- 	regmap_update_bits(ldev->regmap, LTDC_GCR,
+ 	if (connector && connector->state->dithering == DRM_MODE_DITHERING_ON)

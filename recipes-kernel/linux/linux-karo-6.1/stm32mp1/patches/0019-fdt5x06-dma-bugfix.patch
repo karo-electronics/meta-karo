@@ -1,16 +1,17 @@
-diff --git a/drivers/input/touchscreen/edt-ft5x06.c b/drivers/input/touchscreen/edt-ft5x06.c
-index 918d81e6ebac..3426ae5469e6 100644
---- a/drivers/input/touchscreen/edt-ft5x06.c
-+++ b/drivers/input/touchscreen/edt-ft5x06.c
-@@ -825,20 +825,18 @@ static int edt_ft5x06_ts_identify(struct i2c_client *client,
- 					struct edt_ft5x06_ts_data *tsdata,
- 					char *fw_version)
+Index: linux-qsmp-1510/drivers/input/touchscreen/edt-ft5x06.c
+===================================================================
+--- linux-qsmp-1510.orig/drivers/input/touchscreen/edt-ft5x06.c
++++ linux-qsmp-1510/drivers/input/touchscreen/edt-ft5x06.c
+@@ -882,21 +882,19 @@ static void edt_ft5x06_ts_teardown_debug
+ static int edt_ft5x06_ts_identify(struct i2c_client *client,
+ 				  struct edt_ft5x06_ts_data *tsdata)
  {
 -	u8 rdbuf[EDT_NAME_LEN];
 +	u8 *rdbuf = kzalloc(EDT_NAME_LEN, GFP_KERNEL);
  	char *p;
  	int error;
  	char *model_name = tsdata->name;
+ 	char *fw_version = tsdata->fw_version;
  
 -	/* see what we find if we assume it is a M06 *
 -	 * if we get less than EDT_NAME_LEN, we don't want
@@ -28,14 +29,14 @@ index 918d81e6ebac..3426ae5469e6 100644
  
  	/* Probe content for something consistent.
  	 * M06 starts with a response byte, M12 gives the data directly.
-@@ -887,14 +885,14 @@ static int edt_ft5x06_ts_identify(struct i2c_client *client,
+@@ -945,14 +943,14 @@ static int edt_ft5x06_ts_identify(struct
  		error = edt_ft5x06_ts_readwrite(client, 1, "\xA6",
  						2, rdbuf);
  		if (error)
 -			return error;
 +			goto exit;
  
- 		strlcpy(fw_version, rdbuf, 2);
+ 		strscpy(fw_version, rdbuf, 2);
  
  		error = edt_ft5x06_ts_readwrite(client, 1, "\xA8",
  						1, rdbuf);
@@ -45,16 +46,16 @@ index 918d81e6ebac..3426ae5469e6 100644
  
  		/* This "model identification" is not exact. Unfortunately
  		 * not all firmwares for the ft5x06 put useful values in
-@@ -928,7 +926,7 @@ static int edt_ft5x06_ts_identify(struct i2c_client *client,
+@@ -986,7 +984,7 @@ static int edt_ft5x06_ts_identify(struct
  			error = edt_ft5x06_ts_readwrite(client, 1, "\x53",
  							1, rdbuf);
  			if (error)
 -				return error;
 +				goto exit;
- 			strlcpy(fw_version, rdbuf, 1);
+ 			strscpy(fw_version, rdbuf, 1);
  			snprintf(model_name, EDT_NAME_LEN,
  				 "EVERVISION-FT5726NEi");
-@@ -940,8 +938,9 @@ static int edt_ft5x06_ts_identify(struct i2c_client *client,
+@@ -998,8 +996,9 @@ static int edt_ft5x06_ts_identify(struct
  			break;
  		}
  	}

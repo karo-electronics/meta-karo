@@ -1,8 +1,8 @@
-diff --git a/drivers/usb/dwc2/core_intr.c b/drivers/usb/dwc2/core_intr.c
-index c786560fb54e..7d98ac08429a 100644
---- a/drivers/usb/dwc2/core_intr.c
-+++ b/drivers/usb/dwc2/core_intr.c
-@@ -514,6 +514,8 @@ static void dwc2_handle_usb_suspend_intr(struct dwc2_hsotg *hsotg)
+Index: linux-qsmp-1510/drivers/usb/dwc2/core_intr.c
+===================================================================
+--- linux-qsmp-1510.orig/drivers/usb/dwc2/core_intr.c
++++ linux-qsmp-1510/drivers/usb/dwc2/core_intr.c
+@@ -484,6 +484,8 @@ static void dwc2_handle_usb_suspend_intr
  	dev_dbg(hsotg->dev, "USB SUSPEND\n");
  
  	if (dwc2_is_device_mode(hsotg)) {
@@ -11,7 +11,7 @@ index c786560fb54e..7d98ac08429a 100644
  		/*
  		 * Check the Device status register to determine if the Suspend
  		 * state is active
-@@ -571,6 +573,8 @@ static void dwc2_handle_usb_suspend_intr(struct dwc2_hsotg *hsotg)
+@@ -541,6 +543,8 @@ static void dwc2_handle_usb_suspend_intr
  			call_gadget(hsotg, suspend);
  		}
  	} else {
@@ -20,7 +20,7 @@ index c786560fb54e..7d98ac08429a 100644
  		if (hsotg->op_state == OTG_STATE_A_PERIPHERAL) {
  			dev_dbg(hsotg->dev, "a_peripheral->a_host\n");
  
-@@ -617,6 +621,8 @@ static void dwc2_handle_lpm_intr(struct dwc2_hsotg *hsotg)
+@@ -587,6 +591,8 @@ static void dwc2_handle_lpm_intr(struct
  	enslpm = glpmcfg & GLPMCFG_ENBLSLPM;
  
  	if (dwc2_is_device_mode(hsotg)) {
@@ -29,7 +29,7 @@ index c786560fb54e..7d98ac08429a 100644
  		dev_dbg(hsotg->dev, "HIRD_THRES_EN = %d\n", hird_thres_en);
  
  		if (hird_thres_en && hird >= hird_thres) {
-@@ -840,6 +846,8 @@ irqreturn_t dwc2_handle_common_intr(int irq, void *dev)
+@@ -810,6 +816,8 @@ irqreturn_t dwc2_handle_common_intr(int
  		dev_warn(hsotg->dev, "Controller is dead\n");
  		goto out;
  	}
@@ -38,11 +38,11 @@ index c786560fb54e..7d98ac08429a 100644
  
  	/* Reading current frame number value in device or host modes. */
  	if (dwc2_is_device_mode(hsotg))
-diff --git a/drivers/usb/dwc2/platform.c b/drivers/usb/dwc2/platform.c
-index cdfd78535cab..00c2e905b421 100644
---- a/drivers/usb/dwc2/platform.c
-+++ b/drivers/usb/dwc2/platform.c
-@@ -434,6 +434,7 @@ int dwc2_check_core_version(struct dwc2_hsotg *hsotg)
+Index: linux-qsmp-1510/drivers/usb/dwc2/platform.c
+===================================================================
+--- linux-qsmp-1510.orig/drivers/usb/dwc2/platform.c
++++ linux-qsmp-1510/drivers/usb/dwc2/platform.c
+@@ -425,6 +425,7 @@ int dwc2_check_core_version(struct dwc2_
   * in the device private data. This allows the driver to access the dwc2_hsotg
   * structure on subsequent calls to driver methods for this device.
   */
@@ -50,7 +50,7 @@ index cdfd78535cab..00c2e905b421 100644
  static int dwc2_driver_probe(struct platform_device *dev)
  {
  	struct dwc2_hsotg *hsotg;
-@@ -473,7 +474,7 @@ static int dwc2_driver_probe(struct platform_device *dev)
+@@ -464,7 +465,7 @@ static int dwc2_driver_probe(struct plat
  	hsotg->irq = platform_get_irq(dev, 0);
  	if (hsotg->irq < 0)
  		return hsotg->irq;
@@ -59,7 +59,7 @@ index cdfd78535cab..00c2e905b421 100644
  	dev_dbg(hsotg->dev, "registering common handler for irq%d\n",
  		hsotg->irq);
  	retval = devm_request_irq(hsotg->dev, hsotg->irq,
-@@ -481,7 +482,7 @@ static int dwc2_driver_probe(struct platform_device *dev)
+@@ -472,7 +473,7 @@ static int dwc2_driver_probe(struct plat
  				  dev_name(hsotg->dev), hsotg);
  	if (retval)
  		return retval;
@@ -68,7 +68,7 @@ index cdfd78535cab..00c2e905b421 100644
  	hsotg->vbus_supply = devm_regulator_get_optional(hsotg->dev, "vbus");
  	if (IS_ERR(hsotg->vbus_supply)) {
  		retval = PTR_ERR(hsotg->vbus_supply);
-@@ -599,7 +600,15 @@ static int dwc2_driver_probe(struct platform_device *dev)
+@@ -591,7 +592,15 @@ static int dwc2_driver_probe(struct plat
  		}
  		hsotg->hcd_enabled = 1;
  	}
