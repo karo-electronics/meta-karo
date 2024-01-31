@@ -1,4 +1,4 @@
-SUMMARY = "5.15 Linux Kernel for Ka-Ro electronics Computer-On-Modules"
+SUMMARY = "Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:"
 
