@@ -19,12 +19,16 @@
 
 	lcd_backlight: lcd-backlight {
 		compatible = "gpio-backlight";
+		gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
 		default-on;
+		default-brightness-level = <50>;
+		status = "okay";
 	};
 
 	lcd_panel: lcd-panel {
-		compatible = "simple-panel";
-		// power-supply = <&scmi_vddcore>;
+		compatible = "panel-dpi";
+		power-supply = <&scmi_vddcore>;
+		enable-gpios = <&gpioa 10 GPIO_ACTIVE_LOW>;
 		data-mapping = "rgb24";
 		backlight = <&lcd_backlight>;
 		status = "okay";
@@ -40,25 +44,20 @@
 
 		// TODO
 		// insert more display timings
-		display-timings {
-			native-mode = <&ETV570>;
-
-			ETV570: ETV570 {
-				u-boot,panel-name = "edt,et057090dhu";
-				clock-frequency = <25200000>;
-				hactive = <640>;
-				vactive = <480>;
-				hback-porch = <114>;
-				hsync-len = <30>;
-				hfront-porch = <16>;
-				vback-porch = <32>;
-				vsync-len = <3>;
-				vfront-porch = <10>;
-				hsync-active = <0>;
-				vsync-active = <0>;
-				de-active = <1>;
-				pixelclk-active = <0>;
-			};
+		panel-timing {
+			clock-frequency = <25200000>;
+			hactive = <640>;
+			vactive = <480>;
+			hback-porch = <114>;
+			hsync-len = <30>;
+			hfront-porch = <16>;
+			vback-porch = <32>;
+			vsync-len = <3>;
+			vfront-porch = <10>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <1>;
+			pixelclk-active = <0>;
 		};
 	};
 };
@@ -182,6 +181,7 @@
 				  STM32_PINMUX('B', 12, AF14) /* LCD_VSYNC */
 				  STM32_PINMUX('H', 10, AF13) /* LCD_HSYNC */
 				  STM32_PINMUX('D',  9, AF13) /* LCD_CLK */
+				  STM32_PINMUX('E', 11,  AF9) /* LCD_R0 */
 				  STM32_PINMUX('G',  7, AF11) /* LCD_R1 */
 				  STM32_PINMUX('H',  8, AF14) /* LCD_R2 */
 				  STM32_PINMUX('B', 10, AF14) /* LCD_R3 */
@@ -189,12 +189,15 @@
 				  STM32_PINMUX('E',  7, AF14) /* LCD_R5 */
 				  STM32_PINMUX('A',  9, AF14) /* LCD_R6 */
 				  STM32_PINMUX('D', 11, AF11) /* LCD_R7 */
+				  STM32_PINMUX('F',  5,  AF9) /* LCD_G0 */
+				  STM32_PINMUX('F',  1, AF14) /* LCD_G1 */
 				  STM32_PINMUX('H', 13, AF14) /* LCD_G2 */
 				  STM32_PINMUX('F',  3, AF14) /* LCD_G3 */
 				  STM32_PINMUX('G',  5, AF11) /* LCD_G4 */
 				  STM32_PINMUX('G',  0, AF14) /* LCD_G5 */
 				  STM32_PINMUX('E', 12, AF14) /* LCD_G6 */
 				  STM32_PINMUX('A', 15, AF11) /* LCD_G7 */
+				  STM32_PINMUX('D',  5, AF13) /* LCD_B0 */
 				  STM32_PINMUX('G',  8,  AF7) /* LCD_B1 */
 				  STM32_PINMUX('D', 10, AF14) /* LCD_B2 */
 				  STM32_PINMUX('F',  2, AF14) /* LCD_B3 */
@@ -216,6 +219,7 @@
 				  STM32_PINMUX('B', 12, ANALOG) /* LCD_VSYNC */
 				  STM32_PINMUX('H', 10, ANALOG) /* LCD_HSYNC */
 				  STM32_PINMUX('D',  9, ANALOG) /* LCD_CLK */
+				  STM32_PINMUX('E', 11, ANALOG) /* LCD_R0 */
 				  STM32_PINMUX('G',  7, ANALOG) /* LCD_R1 */
 				  STM32_PINMUX('H',  8, ANALOG) /* LCD_R2 */
 				  STM32_PINMUX('B', 10, ANALOG) /* LCD_R3 */
@@ -223,12 +227,15 @@
 				  STM32_PINMUX('E',  7, ANALOG) /* LCD_R5 */
 				  STM32_PINMUX('A',  9, ANALOG) /* LCD_R6 */
 				  STM32_PINMUX('D', 11, ANALOG) /* LCD_R7 */
+				  STM32_PINMUX('F',  5, ANALOG) /* LCD_G0 */
+				  STM32_PINMUX('F',  1, ANALOG) /* LCD_G1 */
 				  STM32_PINMUX('H', 13, ANALOG) /* LCD_G2 */
 				  STM32_PINMUX('F',  3, ANALOG) /* LCD_G3 */
 				  STM32_PINMUX('G',  5, ANALOG) /* LCD_G4 */
 				  STM32_PINMUX('G',  0, ANALOG) /* LCD_G5 */
 				  STM32_PINMUX('E', 12, ANALOG) /* LCD_G6 */
 				  STM32_PINMUX('A', 15, ANALOG) /* LCD_G7 */
+				  STM32_PINMUX('D',  5, ANALOG) /* LCD_B0 */
 				  STM32_PINMUX('G',  8, ANALOG) /* LCD_B1 */
 				  STM32_PINMUX('D', 10, ANALOG) /* LCD_B2 */
 				  STM32_PINMUX('F',  2, ANALOG) /* LCD_B3 */

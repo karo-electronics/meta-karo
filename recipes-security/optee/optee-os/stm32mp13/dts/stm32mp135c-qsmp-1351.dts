@@ -33,12 +33,6 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
-
-		optee_framebuffer: optee-framebuffer@cd000000 {
-			/* Secure framebuffer memory */
-			reg = <0xcd000000 0x1000000>;
-			st,protreg = <TZC_REGION_S_RDWR 0>;
-		};
 	};
 
 	aliases {
@@ -292,7 +286,7 @@
 	};
 };
 
-&rng{
+&rng {
 	status = "okay";
 };
 

@@ -25,6 +25,9 @@
 	};
 
 	chosen {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
 		stdout-path = "serial0:115200n8";
 	};
 
@@ -65,20 +68,6 @@
 	};
 };
 
-&dma1 {
-	status = "okay";
-};
-
-&dma2 {
-	status = "okay";
-};
-
-&dmamux1 {
-	dma-masters = <&dma1 &dma2>;
-	dma-channels = <16>;
-	status = "okay";
-};
-
 &i2c1 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&i2c1_pins>;
@@ -104,10 +93,6 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&ltdc_pins>;
 	pinctrl-1 = <&ltdc_sleep_pins>;
-	status = "okay";
-};
-
-&rcc {
 	status = "okay";
 };
 
@@ -141,17 +126,6 @@
 	vqmmc-supply = <&scmi_vddcore>;
 	mmc-ddr-3_3v;
 	status = "okay";
-};
-
-&timers2 {
-	status = "okay";
-
-	pwm {
-		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&tim2_pwm_pins>;
-		pinctrl-1 = <&tim2_pwm_sleep_pins>;
-		status = "okay";
-	};
 };
 
 &uart4 {
@@ -525,21 +499,6 @@
 				  STM32_PINMUX('F', 0, ANALOG)	/* SDMMC2_D4 */
 				  STM32_PINMUX('G', 6, ANALOG)	/* SDMMC2_CMD */
 			>;
-		};
-	};
-
-	tim2_pwm_pins: tim2_pwm-0 {
-		pins {
-			pinmux = <STM32_PINMUX('A', 0, AF1)>; /* TIM2_CH1 */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-	};
-
-	tim2_pwm_sleep_pins: tim2_pwm_sleep-0 {
-		pins {
-			pinmux = <STM32_PINMUX('A', 0, ANALOG)>; /* TIM2_CH1 */
 		};
 	};
 
