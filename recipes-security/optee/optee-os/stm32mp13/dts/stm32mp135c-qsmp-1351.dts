@@ -135,7 +135,16 @@
 };
 
 &pwr_regulators {
- 	vdd-supply = <&vdd>;
+	system_suspend_supported_soc_modes = <
+		STM32_PM_CSLEEP_RUN
+		STM32_PM_CSTOP_ALLOW_LP_STOP
+		STM32_PM_CSTOP_ALLOW_LPLV_STOP
+		STM32_PM_CSTOP_ALLOW_LPLV_STOP2
+		STM32_PM_CSTOP_ALLOW_STANDBY_DDR_SR
+	>;
+
+	system_off_soc_mode = <STM32_PM_SHUTDOWN>;
+	vdd-supply = <&vdd>;
 };
 
 &rcc {
