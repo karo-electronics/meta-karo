@@ -20,5 +20,6 @@ MACHINE_FEATURES:append:qsrz = " dsi83"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySC0 115200;ttySC1 ${@ bb.utils.contains('DISTRO_FEATURES', 'copro', "", "115200;ttySC2", d)}"
+SERIAL_CONSOLES:txrz ?= "115200;ttySC0 115200;ttySC1"
 
 DTB_BASENAME ?= "r9a07g044l2-${MACHINE}"
