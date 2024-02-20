@@ -9,6 +9,7 @@ COMPATIBLE_MACHINE = "(txrz-.*|qsrz-.*)"
 
 PLATFORM = "g2l"
 EXTRA_FLAGS = "BOARD=${MACHINE}"
+EXTRA_FLAGS += "LDFLAGS=--no-warn-rwx-segments"
 FLASH_ADDRESS_BL2_BP = "00000"
 FLASH_ADDRESS_FIP = "1D200"
 
