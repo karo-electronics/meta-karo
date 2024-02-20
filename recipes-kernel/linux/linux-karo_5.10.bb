@@ -6,8 +6,8 @@ require recipes-kernel/linux/linux-karo.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
-SRCBRANCH = "rz-5.10-cip29"
-SRCREV = "909c54bf68141ef6f54297c7d70b1ade141697bd"
+SRCBRANCH = "rz-5.10-cip36"
+SRCREV = "c45e3a8129dd0ee36c51079e95962b2f85472e51"
 KERNEL_SRC = "git://github.com/renesas-rz/rz_linux-cip.git"
 
 SRC_URI:append = " \
