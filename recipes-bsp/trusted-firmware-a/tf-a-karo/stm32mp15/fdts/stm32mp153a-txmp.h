@@ -13,11 +13,11 @@
  * Relaxed Timing Mode: false
  * Address mapping type: RBC
  *
- * Save Date: 2019.08.16, save Time: 17:02:41
+ * Save Date: 2024.01.04, save Time: 14:09:19
  */
 
 #define DDR_MEM_NAME	"DDR3L-1066/777 bin F 1x2Gb 533MHz"
 #define DDR_MEM_SIZE	0x10000000
 #define DDR_ADDRMAP6	0x0F0F0606
 
-#include "stm32mp15-mx.h"
+#include "stm32mp15-txmp-mx.h"

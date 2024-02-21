@@ -9,15 +9,15 @@
  * DDR type: DDR3 / DDR3L
  * DDR width: 16bits
  * DDR density: 4Gb
- * System frequency: 533000Khz
+ * System frequency: 533000kHz
  * Relaxed Timing Mode: false
  * Address mapping type: RBC
  *
- * Save Date: 2019.09.19, save Time: 12:51:40
+ * Save Date: 2023.12.13, save Time: 14:57:04
  */
 
 #define DDR_MEM_NAME	"DDR3L-1066/777 bin F 1x4Gb 533MHz"
 #define DDR_MEM_SIZE	0x20000000
 #define DDR_ADDRMAP6	0x0F060606
 
-#include "stm32mp15-mx.h"
+#include "stm32mp15-qsmp-mx.h"
