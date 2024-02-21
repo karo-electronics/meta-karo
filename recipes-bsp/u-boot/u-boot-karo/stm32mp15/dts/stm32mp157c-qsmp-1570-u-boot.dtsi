@@ -4,9 +4,9 @@
  */
 
 #include <dt-bindings/clock/stm32mp1-clksrc.h>
-#include "stm32mp15-u-boot.dtsi"
 #include "stm32mp15-ddr.dtsi"
 #include "stm32mp15-qsmp-u-boot.dtsi"
+#include "stm32mp15-scmi-u-boot.dtsi"
 
 / {
 	config {

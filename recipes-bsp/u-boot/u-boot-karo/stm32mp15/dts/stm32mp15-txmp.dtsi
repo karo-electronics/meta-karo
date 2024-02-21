@@ -5,6 +5,26 @@
 
 #include "stm32mp15xxab-pinctrl.dtsi"
 
+/ {
+	reg_usbh_vbus: regulator-usbh-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "USBH VBUS";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&gpiob 9 GPIO_ACTIVE_HIGH>;
+	};
+
+	reg_usbotg_vbus: regulator-usbotg-vbus {
+		compatible = "regulator-fixed";
+		regulator-name = "USBOTG VBUS";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		enable-active-high;
+		gpio = <&gpioa 1 GPIO_ACTIVE_HIGH>;
+	};
+};
+
 &ethernet0 {
 	pinctrl-0 = <&ethernet0_rmii_pins>;
 	pinctrl-1 = <&ethernet0_rmii_pins_sleep>;
@@ -94,6 +114,14 @@
 		pinctrl-1 = <&tim1_pwm_sleep_pins>;
 		status = "okay";
 	};
+};
+
+&usbh_ehci {
+	vbus-supply = <&reg_usbh_vbus>;
+};
+
+&usbotg_hs {
+	vbus-supply = <&reg_usbotg_vbus>;
 };
 
 &pinctrl {

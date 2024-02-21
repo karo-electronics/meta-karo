@@ -8,6 +8,7 @@
 #include "stm32mp157c-qsmp.h"
 #include "stm32mp157-karo.dtsi"
 #include "stm32mp157-qsmp.dtsi"
+#include "stm32mp157c-karo-scmi.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1570 solder-in module";

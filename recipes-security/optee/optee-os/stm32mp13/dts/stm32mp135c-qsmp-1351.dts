@@ -22,7 +22,7 @@
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1351 solder-in module";
-	compatible = "st,stm32mp135c-qsmp-1351", "st,stm32mp135";
+	compatible = "karo,stm32mp135c-qsmp-1351", "st,stm32mp135";
 
 	memory@c0000000 {
 		device_type = "memory";
@@ -80,8 +80,6 @@
 };
 
 &bsec {
-	status = "okay";
-
 	board_id: board_id@f0 {
 		reg = <0xf0 0x4>;
 		st,non-secure-otp;
@@ -93,11 +91,10 @@
 };
 
 &etzpc {
-	status = "okay";
 	st,decprot = <
-		/*"NS_R S_W" peripherals*/
+		/* "NS_R S_W" peripherals */
 		DECPROT(STM32MP1_ETZPC_DDRCTRLPHY_ID, DECPROT_NS_R_S_W, DECPROT_LOCK)
-		/*"Non Secured" peripherals*/
+		/* "Non Secured" peripherals */
 		DECPROT(STM32MP1_ETZPC_ETH1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_I2C4_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_I2C5_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
@@ -110,19 +107,12 @@
 		DECPROT(STM32MP1_ETZPC_USART2_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_OTG_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_USBPHYCTRL_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
-		/*"Secured" peripherals*/
+		/* "Secured" peripherals */
 		DECPROT(STM32MP1_ETZPC_HASH_ID, DECPROT_S_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_PKA_ID, DECPROT_S_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_RNG_ID, DECPROT_S_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_SAES_ID, DECPROT_S_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_STGENC_ID, DECPROT_S_RW, DECPROT_UNLOCK)
-
-	/*Restriction: following IDs are not managed  - please to use User-Section if needed:
-		STM32MP1_ETZPC_SRAMx_ID  STM32MP1_ETZPC_BKPSRAM_ID*/
-
-	/*STM32CubeMX generates a basic and standard configuration for ETZPC.
-	Additional device configurations can be added here if needed.
-	"etzpc" node could be also overloaded in "addons" User-Section.*/
 	>;
 };
 
@@ -150,8 +140,6 @@
 &rcc {
 	clocks = <&clk_hse>, <&clk_hsi>, <&clk_lse>, <&clk_lsi>, <&clk_csi>;
 	clock-names = "clk-hse", "clk-hsi", "clk-lse", "clk-lsi", "clk-csi";
-	status = "okay";
-
 	st,clksrc = <
 		CLK_MPU_PLL1P
 		CLK_AXI_PLL2P

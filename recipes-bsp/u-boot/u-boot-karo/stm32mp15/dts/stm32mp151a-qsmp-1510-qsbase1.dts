@@ -8,3 +8,7 @@
 / {
 	model = "Ka-Ro electronics GmbH QSMP-1510 solder-in module on QSBASE1 baseboard";
 };
+
+&ethernet0 {
+	status = "okay";
+};

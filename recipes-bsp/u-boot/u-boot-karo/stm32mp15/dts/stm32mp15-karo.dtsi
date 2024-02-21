@@ -7,8 +7,6 @@
 #include "stm32mp15-pinctrl.dtsi"
 #include <dt-bindings/clock/stm32mp1-clksrc.h>
 #include <dt-bindings/gpio/gpio.h>
-// #include "stm32mp15-m4-srm.dtsi"
-// #include "stm32mp15-scmi.dtsi"
 
 / {
 	aliases {
@@ -189,24 +187,6 @@
 		regulator-always-on;
 	};
 
-	reg_usbh_vbus: regulator-usbh-vbus {
-		compatible = "regulator-fixed";
-		regulator-name = "USBH VBUS";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		enable-active-high;
-		gpio = <&gpiob 9 GPIO_ACTIVE_HIGH>;
-	};
-
-	reg_usbotg_vbus: regulator-usbotg-vbus {
-		compatible = "regulator-fixed";
-		regulator-name = "USBOTG VBUS";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		enable-active-high;
-		gpio = <&gpioc 0 GPIO_ACTIVE_HIGH>;
-	};
-
 	reserved-memory {
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -268,11 +248,6 @@
 		#size-cells = <0>;
 		compatible = "snps,dwmac-mdio";
 	};
-};
-
-&rcc{
-	u-boot,dm-pre-reloc;
-	status = "okay";
 };
 
 &i2c6 {
@@ -358,7 +333,6 @@
 &usbh_ehci {
 	phy-names = "usb";
 	phys = <&usbphyc_port0>;
-	vbus-supply = <&reg_usbh_vbus>;
 	status = "okay";
 };
 
@@ -366,7 +340,6 @@
 	dr_mode = "peripheral";
 	phy-names = "usb2-phy";
 	phys = <&usbphyc_port1 0>;
-	vbus-supply = <&reg_usbotg_vbus>;
 	u-boot,force-b-session-valid;
 	hnp-srp-disable;
 	status = "okay";
