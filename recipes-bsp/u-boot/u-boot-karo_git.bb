@@ -43,7 +43,7 @@ EXTRA_OEMAKE:append = " V=0"
 
 # append git hash to u-boot name
 SCMVERSION ??= "y"
-LOCALVERSION ??= "+karo"
+LOCALVERSION ??= "-karo"
 
 UBOOT_BOARD_DIR:stm32mp1 = "board/karo/stm32mp1"
 UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
@@ -318,15 +318,15 @@ do_deploy () {
 }
 
 def get_tfa_configs(d):
-    cfg = ""
+    cfg = ()
     for type in d.getVar('UBOOT_CONFIG').split():
         tfa_cfg = d.getVarFlag('TF_A_CONFIG', type, True)
         if tfa_cfg == None:
             bb.note("TF_A_CONFIG[%s] is not defined" % type)
             tfa_cfg = type
         bb.warn("TF_A_CONFIG[%s]='%s'" % (type, tfa_cfg))
-        cfg += ' ' + tfa_cfg
-    return cfg
+        cfg += (tfa_cfg,)
+    return " ".join(cfg)
 
 TF_A_CONFIGS = "${@ get_tfa_configs(d)}"
 

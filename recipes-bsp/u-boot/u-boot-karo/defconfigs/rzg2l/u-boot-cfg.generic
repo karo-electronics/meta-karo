@@ -1,1 +1,1 @@
-# placeholder
+CONFIG_SYS_LOAD_ADDR=0x58000000

@@ -33,8 +33,8 @@ EXTRA_IMAGEDEPENDS:append:stm32mp13 = " optee-os"
 # Define default TF-A config
 # Set default TF-A config
 TF_A_CONFIG = "usb"
-TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', ' trusted', '', d)}"
-TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', ' optee', '', d)}"
+TF_A_CONFIG:prepend = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', 'trusted ', '', d)}"
+TF_A_CONFIG:prepend = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', 'optee ', '', d)}"
 
 # link TF_A_CONFIG to UBOOT_CONFIG
 TF_A_CONFIG[mfg] = "usb"
