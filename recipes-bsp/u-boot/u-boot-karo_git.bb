@@ -89,18 +89,18 @@ do_configure:prepend() {
 
 do_configure:append() {
     tmpfile="`mktemp cfg-XXXXXX.tmp`"
-    if [ "${KARO_BASEBOARD}" != "" ];then
-        if [ -z "$tmpfile" ];then
-            bbfatal "Failed to create tmpfile"
-        fi
-        cat <<EOF >> "$tmpfile"
-CONFIG_DEFAULT_DEVICE_TREE="${DTB_BASENAME}-${KARO_BASEBOARD}"
-EOF
-        grep -q "${DTB_BASENAME}-${KARO_BASEBOARD}\.dtb" ${S}/arch/arm/dts/Makefile || \
-                sed -i '/^targets /i\
-dtb-y += ${DTB_BASENAME}-${KARO_BASEBOARD}.dtb\
-' ${S}/arch/arm/dts/Makefile
+    if [ -z "$tmpfile" ];then
+        bbfatal "Failed to create tmpfile"
     fi
+    bbnote "UBOOT_DEVICE_TREE='${UBOOT_DEVICE_TREE}'"
+    cat <<EOF >> "$tmpfile"
+CONFIG_DEFAULT_DEVICE_TREE="${UBOOT_DEVICE_TREE}"
+EOF
+    grep -q "${UBOOT_DEVICE_TREE}\.dtb" ${S}/arch/arm/dts/Makefile || \
+            sed -i '/^targets /i\
+dtb-y += ${UBOOT_DEVICE_TREE}.dtb\
+' ${S}/arch/arm/dts/Makefile
+
     bbnote "UBOOT_ENV_FILE='${UBOOT_ENV_FILE}'"
     cat <<EOF >> "$tmpfile"
 CONFIG_DEFAULT_ENV_FILE="board/\$(VENDOR)/\$(BOARD)/${UBOOT_ENV_FILE}"
