@@ -11,34 +11,27 @@ SRCREV = "a762698b52729ab7a4680bca2efee857cf7b845d"
 inherit deploy
 
 S = "${WORKDIR}/git"
+B = "${S}/AArch64_output"
+
+FILES:${PN} += "Flash_Writer_SCIF_${MACHINE}.mot"
 
 do_compile() {
-        # uppercasing $MACHINE would be enough, but how?
-        if [ "${MACHINE}" = "txrz-g2l0" ]; then
-                BOARD="TXRZ-G2L0";
-        fi
-        if [ "${MACHINE}" = "txrz-g2l1" ]; then
-                BOARD="TXRZ-G2L1";
-        fi
-        if [ "${MACHINE}" = "txrz-g2l2" ]; then
-                BOARD="TXRZ-G2L0";
-        fi
-        if [ "${MACHINE}" = "qsrz-g2l0" ]; then
-                BOARD="QSRZ-G2L0";
-        fi
-        if [ "${MACHINE}" = "qsrz-g2l1" ]; then
-                BOARD="QSRZ-G2L1";
-        fi
-        cd ${S}
+    BOARD="$(echo "${MACHINE}" | tr 'a-z' 'A-Z')"
 
-	oe_runmake BOARD=${BOARD} EMMC=ENABLE
+    cd ${S}
+    oe_runmake BOARD=${BOARD} EMMC=ENABLE FILE_NAME="${B}/Flash_Writer_SCIF_${MACHINE}"
 }
 
-do_install[noexec] = "1"
+do_install() {
+    install -v "${B}/Flash_Writer_SCIF_${MACHINE}.mot" "${D}/Flash_Writer_SCIF_${MACHINE}.mot"
+}
 
 do_deploy() {
-        install -d ${DEPLOYDIR}
-        install -m 644 ${S}/AArch64_output/*.mot ${DEPLOYDIR}/Flash_Writer_SCIF_${MACHINE}.mot
+    install -v "${D}/Flash_Writer_SCIF_${MACHINE}.mot" "${DEPLOYDIR}/"
 }
+addtask do_deploy after do_install
+
 PARALLEL_MAKE = "-j 1"
-addtask deploy after do_compile
+
+FILESEXTRAPATHS:prepend := "${THISDIR}/patches:"
+SRC_URI:append = " file://txrz-g2l2-bugfix.patch"
