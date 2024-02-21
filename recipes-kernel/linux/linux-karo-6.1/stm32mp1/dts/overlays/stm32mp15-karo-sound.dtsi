@@ -32,7 +32,7 @@
 			"MIC_IN", "Mic Jack",
 			"Mic Jack", "Mic Bias",
 			"Headphone Jack", "HP_OUT";
-		dais = <&sai2a_port>;
+		dais = <&sai2a_port &sai2b_port>;
 		status = "okay";
 	};
 };
@@ -46,12 +46,16 @@
 		reg = <0xa>;
 		VDDA-supply = <&reg_2v5>;
 		VDDIO-supply = <&reg_3v3>;
-		clocks = <&mclk>;
+		clocks = <&sai2a>;
 		status = "okay";
 
 		port {
-			sgtl5000_in: endpoint {
+			sgtl5000_in: tx_endpoint {
 				remote-endpoint = <&sai2_out>;
+			};
+
+			sgtl5000_out: rx_endpoint {
+				remote-endpoint = <&sai2_in>;
 			};
 		};
 	};
@@ -73,6 +77,25 @@
 			remote-endpoint = <&sgtl5000_in>;
 			dai-format = "i2s";
 			bitclock-master = <&sgtl5000>;
+			frame-master = <&sgtl5000>;
+			mclk-fs = <256>;
+		};
+	};
+};
+
+&sai2b {
+	dma-names = "rx";
+	clocks = <&rcc SAI2_K>, <&sai2a>;
+	clock-names = "sai_ck", "MCLK";
+	st,sync = <&sai2a 2>;
+	status = "okay";
+
+	sai2b_port: port {
+		sai2_in: endpoint {
+			remote-endpoint = <&sgtl5000_out>;
+			dai-format = "i2s";
+			bitclock-master = <&sgtl5000>;
+			frame-master = <&sgtl5000>;
 			mclk-fs = <256>;
 		};
 	};
