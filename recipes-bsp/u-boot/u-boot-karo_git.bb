@@ -5,7 +5,7 @@ OVERLAY_INC_FILE:rzg2 = "rzg2-overlays.inc"
 require conf/machine/include/${OVERLAY_INC_FILE}
 
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
-LICENSE = "GPL-2.0-or-later"
+LICENSE = "GPL-2.0"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 LIC_FILES_CHKSUM:stm32mp1 = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 
