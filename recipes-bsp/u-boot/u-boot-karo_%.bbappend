@@ -10,29 +10,6 @@ SRC_URI:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', \
 
 UBOOT_FEATURES:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', "copro", " copro", "", d)}"
 
-SRC_URI:append:stm32mp1 = " \
-        file://v2021-fittings.patch \
-        file://fdt-overlay-support.patch \
-        file://fdt-size.patch \
-        file://board-txmp-temp-fixes.patch \
-        file://board-txmp-led-fixes.patch \
-        file://image-sparse-return-long.patch \
-        file://board-txmp-unused-variable.patch \
-        file://makefile-non-existent-dtb.patch \
-        file://config-video-as-defconfig.patch \
-        file://karo-fdt-common-fixes.patch \
-        file://stm32mp13-introduction.patch \
-        file://stm32mp13-introduction2.patch \
-        file://stm32mp13-introduction3.patch \
-        file://stm32mp13-introduction4.patch \
-        file://stm32mp13-introduction5.patch \
-        file://stm32mp13-define-sysram.patch \
-"
-
-SRC_URI:remove:qsmp-1510 = " \
-       file://fdt-overlay-support.patch \
-"
-
 SRC_URI:append:rzg2l = " \
         file://dts/r9a07g044l2-qsrz.dtsi;subdir=git/arch/arm \
         file://dts/r9a07g044l2-qsrz-qsbase1.dtsi;subdir=git/arch/arm \
