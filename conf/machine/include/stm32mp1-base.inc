@@ -7,8 +7,10 @@ include conf/machine/include/soc-family.inc
 include conf/machine/include/arm/armv7a/tune-cortexa7.inc
 
 MACHINE_FEATURES:append = " emmc"
+MACHINE_FEATURES:append:stm32mp13 = " optee"
 
-UBOOT_CONFIG ??= "mfg trusted"
+UBOOT_CONFIG ??= "${@ "optee" if 'optee' in d.getVar('MACHINE_FEATURES').split() else "trusted"} mfg noenv"
+UBOOT_FEATURES ?= "${@ "emmc fastboot" if 'emmc' in d.getVar('MACHINE_FEATURES').split() else ""}"
 
 UBOOT_ENTRYPOINT = "0xc0008000"
 
@@ -25,8 +27,8 @@ BOOTSCHEME_LABELS ??= "trusted"
 # tf-a
 # =========================================================================
 # Finally we must compile tf-a in all cases as we need trusted binary to boot
-EXTRA_IMAGEDEPENDS += "firmware-pack tf-a-stm32mp"
-EXTRA_IMAGEDEPENDS:append:stm32mp13 = " optee-os-stm32mp"
+EXTRA_IMAGEDEPENDS += "tf-a-karo"
+EXTRA_IMAGEDEPENDS:append:stm32mp13 = " optee-os"
 
 # Define default TF-A config
 # Set default TF-A config
@@ -34,14 +36,16 @@ TF_A_CONFIG = "usb"
 TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', ' trusted', '', d)}"
 TF_A_CONFIG:append = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', ' optee', '', d)}"
 
+# link TF_A_CONFIG to UBOOT_CONFIG
+TF_A_CONFIG[mfg] = "usb"
+TF_A_CONFIG[noenv] = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', "optee", "trusted", d)}"
+
 # Manage proper update for TF_A_CONFIG_* var
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONFIG_usb', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'optee', 'TF_A_CONFIG_optee', '', d)}"
 
 DTB_BASENAME ?= "${TF_A_DEVICETREE}"
-
-FIPTOOL_DIR = "fiptool"
 
 # coprocessor stuff
 M4_BOARDS ?= "STM32MP157C-DK2"

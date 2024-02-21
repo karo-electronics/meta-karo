@@ -7,11 +7,13 @@ SRCREV = "afacf356f9593a7f83cae9f96026824ec242ff52"
 
 SRC_URI += " \
     file://fonts.tar.gz;subdir=git;name=fonts  \
-    file://0001-3.19.0-stm32mp-r1.patch \
+    file://0001-${OPTEE_VERSION}-${OPTEE_SUBVERSION}-r1.patch \
     file://0002-${OPTEE_VERSION}-${OPTEE_SUBVERSION}-${OPTEE_RELEASE}.patch \
-    "
+"
 
 SRC_URI[fonts.sha256sum] = "4941e8bb6d8ac377838e27b214bf43008c496a24a8f897e0b06433988cbd53b2"
+
+PROVIDES += "optee-os"
 
 OPTEE_VERSION = "3.19.0"
 OPTEE_SUBVERSION = "stm32mp"

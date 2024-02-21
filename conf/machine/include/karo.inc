@@ -17,6 +17,8 @@ MACHINEOVERRIDES =. "use-mainline-bsp:"
 
 IMAGE_CLASSES += "st-partitions-image"
 
+FIPTOOL_DIR = "fiptool"
+
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
                           kernel-modules \
