@@ -109,11 +109,17 @@ EOF
         for config in ${UBOOT_MACHINE};do
             c="$(echo "$config" | sed s/_config/_defconfig/)"
             merge_config.sh -m -r -O "${c}" "${c}/.config" "$tmpfile"
-            oe_runmake -C ${c} oldconfig
+            oe_runmake -C ${c} olddefconfig
+            if grep '^CONFIG_.*=$' ${c}/.config;then
+                bbfatal "defconfig is incomplete"
+            fi
         done
     else
         merge_config.sh -m -r -O "${B}" "${B}/.config" "$tmpfile"
-        oe_runmake -C "${B}" oldconfig
+        oe_runmake -C "${B}" olddefconfig
+        if grep '^CONFIG_.*=$' ${B}/.config;then
+            bbfatal "defconfig is incomplete"
+        fi
     fi
     rm -vf "$tmpfile"
 }
