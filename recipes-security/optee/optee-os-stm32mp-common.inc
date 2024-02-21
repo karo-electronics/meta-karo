@@ -17,27 +17,29 @@ DEPENDS += "python3-pyelftools-native"
 DEPENDS += "libgcc python3-cryptography-native"
 DEPENDS += "python3-pillow-native"
 
+do_compile[vardeps] += "EXTRA_OEMAKE"
+
 inherit deploy python3native
 
 # Default log level
-ST_OPTEE_DEBUG_LOG_LEVEL ??= "4"
+ST_OPTEE_DEBUG_LOG_LEVEL ??= "3"
 # ST_OPTEE_DEBUG_TRACE = "1"
 
 # default core debug
-ST_OPTEE_CORE_DEBUG ??= "y"
-ST_OPTEE_CORE_DEBUG:stm32mp15 ?= "n"
+ST_OPTEE_CORE_DEBUG ??= "n"
 
 EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE}"
 EXTRA_OEMAKE += "CROSS_COMPILE_core=${HOST_PREFIX}"
 EXTRA_OEMAKE += "CROSS_COMPILE_ta_arm64=${HOST_PREFIX}"
 EXTRA_OEMAKE += "${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'CFG_ARM64_core=y ta-targets=ta_arm64', 'CFG_ARM32_core=y CROSS_COMPILE_ta_arm32=${HOST_PREFIX}', d)}"
-EXTRA_OEMAKE += "NOWERROR=1"
+#EXTRA_OEMAKE += "NOWERROR=1"
 EXTRA_OEMAKE += "LDFLAGS="
 EXTRA_OEMAKE += "CFG_STM32_CRYP=n"
 EXTRA_OEMAKE += "CFG_WITH_TUI=n"
+EXTRA_OEMAKE += "CFG_STPMIC1=n"
+EXTRA_OEMAKE += "CFG_DRAM_SIZE=${BOARD_DRAM_SIZE}"
 
 EXTRA_OEMAKE:append:stm32mp13 = " CFG_STM32MP13=y"
-EXTRA_OEMAKE:append:stm32mp13 = " CFG_DRAM_SIZE=${BOARD_DRAM_SIZE}"
 
 # debug and trace
 EXTRA_OEMAKE += "${@bb.utils.contains('ST_OPTEE_DEBUG_TRACE', '1', 'CFG_TEE_CORE_LOG_LEVEL=${ST_OPTEE_DEBUG_LOG_LEVEL} CFG_TEE_CORE_DEBUG=${ST_OPTEE_CORE_DEBUG}', '', d)}"

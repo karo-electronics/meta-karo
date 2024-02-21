@@ -7,7 +7,7 @@ include conf/machine/include/soc-family.inc
 include conf/machine/include/arm/armv7a/tune-cortexa7.inc
 
 MACHINE_FEATURES:append = " emmc"
-MACHINE_FEATURES:append:stm32mp13 = " optee"
+MACHINE_FEATURES:append = " optee"
 
 UBOOT_CONFIG ??= "${@ "optee" if 'optee' in d.getVar('MACHINE_FEATURES').split() else "trusted"} mfg noenv"
 UBOOT_FEATURES ?= "${@ "emmc fastboot" if 'emmc' in d.getVar('MACHINE_FEATURES').split() else ""}"
@@ -21,14 +21,14 @@ SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
 # boot scheme
 # =========================================================================
 # List of supported boot schemes
-BOOTSCHEME_LABELS ??= "trusted"
+BOOTSCHEME_LABELS ??= "optee"
 
 # =========================================================================
 # tf-a
 # =========================================================================
 # Finally we must compile tf-a in all cases as we need trusted binary to boot
 EXTRA_IMAGEDEPENDS += "tf-a-karo"
-EXTRA_IMAGEDEPENDS:append:stm32mp13 = " optee-os"
+EXTRA_IMAGEDEPENDS += "optee-os"
 
 # Define default TF-A config
 # Set default TF-A config

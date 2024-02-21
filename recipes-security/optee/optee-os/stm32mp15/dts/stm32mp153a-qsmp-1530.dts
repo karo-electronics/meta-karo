@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "stm32mp153.dtsi"
+#include "stm32mp157-qsmp.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1530 solder-in module";
+	compatible = "karo,stm32mp153c-qsmp-1530", "st,stm32mp153";
+
+	memory@c0000000 {
+		device_type = "memory";
+		reg = <0xc0000000 0x10000000>;
+	};
+};

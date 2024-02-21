@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR BSD-3-Clause)
+/*
+ * Copyright (C) 2021 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright (C) 2024 Markus Bauer <MB@KARO-electronics.de>
+ */
+
+#include "stm32mp151-qsmp.dtsi"
+
+&cpu1 {
+	cpu-supply = <&vddcpu>;
+};

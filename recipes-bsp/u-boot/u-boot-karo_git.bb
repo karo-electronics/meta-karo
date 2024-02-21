@@ -6,8 +6,8 @@ require conf/machine/include/${OVERLAY_INC_FILE}
 
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0"
-LIC_FILES_CHKSUM = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
-LIC_FILES_CHKSUM:stm32mp1 = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
+LIC_FILES_CHKSUM = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
+LIC_FILES_CHKSUM:rzg2l = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
 PROVIDES += "u-boot"
 
@@ -72,9 +72,14 @@ SRC_URI:append = " file://u-boot-cfg.${MACHINE}"
 SRC_URI:append = "${@ "".join(map(lambda f: " file://u-boot-cfg.%s" % f, d.getVar('UBOOT_CONFIG').split()))}"
 SRC_URI:append = "${@ "".join(map(lambda f: " file://cfg/%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
 
-do_compile[depends] += "\
-    virtual/trusted-firmware-a:do_deploy \
-"
+do_compile[depends] += "virtual/trusted-firmware-a:do_deploy"
+do_compile[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-os:do_deploy', '', d)}"
+
+do_configure:prepend:stm32mp1() {
+    if [ -z "${UBOOT_CONFIG}" ]; then
+        bbfatal "Wrong u-boot-karo configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
+    fi
+}
 
 do_configure() {
     if [ -n "${UBOOT_CONFIG}" ];then
@@ -294,29 +299,6 @@ do_compile:prepend() {
 # -----------------------------------------------------------------------------
 # Append deploy to handle specific device tree binary deployement
 #
-do_deploy () {
-    if [ -n "${UBOOT_CONFIG}" ]; then
-        i=0
-        for config in ${UBOOT_MACHINE}; do
-            i=$(expr $i + 1)
-            j=0
-            for type in ${UBOOT_CONFIG}; do
-                j=$(expr $j + 1)
-                [ $j -lt $i ] && continue
-                install -v -d ${DEPLOYDIR}/${FIPTOOL_DIR}/${type}
-                install -v ${B}/${config}/u-boot-${type}.bin ${DEPLOYDIR}
-                install -v ${B}/${config}/u-boot-nodtb.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${type}/u-boot-nodtb.bin
-                install -v ${B}/${config}/u-boot.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${type}/u-boot.dtb
-                break
-            done
-            unset j
-        done
-        unset i
-    else
-        bbfatal "Wrong u-boot-karo configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
-    fi
-}
-
 def get_tfa_configs(d):
     cfg = ()
     for type in d.getVar('UBOOT_CONFIG').split():
@@ -330,37 +312,9 @@ def get_tfa_configs(d):
 
 TF_A_CONFIGS = "${@ get_tfa_configs(d)}"
 
-do_deploy:append:stm32mp15 () {
-    # Create fip images
-    i=0
-    for config in ${UBOOT_MACHINE}; do
-        i=$(expr $i + 1)
-        j=0
-        for type in ${UBOOT_CONFIG}; do
-            j=$(expr $j + 1)
-            [ $j -lt $i ] && continue
-            k=0
-            for cfg in ${TF_A_CONFIGS}; do
-                k=$(expr $k + 1)
-                [ $k -lt $j ] && continue
-                bbnote "i=$i j=$j k=$k type='$type' cfg='$cfg'"
-                for dt in ${TF_A_DEVICETREE}; do
-                    fiptool create \
-                        --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
-                        --hw-config ${DEPLOYDIR}/${FIPTOOL_DIR}/${type}/u-boot.dtb \
-                        --nt-fw ${DEPLOYDIR}/${FIPTOOL_DIR}/${type}/u-boot-nodtb.bin \
-                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/bl32.bin \
-                        --tos-fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-bl32.dtb \
-                        ${DEPLOYDIR}/fip-${dt}-${type}.bin
-                done
-                break
-            done
-            break
-        done
-    done
-}
+do_install[noexec] = "1"
 
-do_deploy:append:stm32mp13 () {
+do_deploy () {
     # Create fip images
     i=0
     for config in ${UBOOT_MACHINE}; do
@@ -404,8 +358,8 @@ do_deploy:rzg2l() {
                 fiptool create --align 16 --soc-fw \
                     "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
                     --nt-fw "${B}/${config}/u-boot-${type}.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin"
-                if [ $i = 0 ];then
-                    ln -s fip-${MACHINE}-${type}.bin "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}.bin"
+                if [ $i = 1 ];then
+                    ln -s ${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin "${DEPLOYDIR}/fip-${MACHINE}.bin"
                 fi
                 break
             done
@@ -415,12 +369,6 @@ do_deploy:rzg2l() {
             --nt-fw "${B}/u-boot.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}.bin"
     fi
 }
-
-# -----------------------------------------------------
-# rzg2
-# -----------------------------------------------------
-FILES:${PN}:rzg2 = "/boot "
-SYSROOT_DIRS:rzg2 += "/boot"
 
 python do_env_overlays () {
     import os

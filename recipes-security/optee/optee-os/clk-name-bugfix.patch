@@ -1,0 +1,21 @@
+Index: git/core/drivers/clk/clk-stm32mp15.c
+===================================================================
+--- git.orig/core/drivers/clk/clk-stm32mp15.c
++++ git/core/drivers/clk/clk-stm32mp15.c
+@@ -1861,7 +1861,6 @@ const struct clk_name exposed_clk_name[]
+ 	CLOCK_NAME(RTCAPB, "rtcapb"),
+ 	CLOCK_NAME(BKPSRAM, "bkpsram"),
+ 	CLOCK_NAME(RTC, "rtc"),
+-	CLOCK_NAME(CRYP1, "crpy1"),
+ 	CLOCK_NAME(SYSCFG, "syscfg"),
+ 	CLOCK_NAME(GPIOA, "gpioa"),
+ 	CLOCK_NAME(GPIOB, "gpiob"),
+@@ -1875,7 +1874,7 @@ const struct clk_name exposed_clk_name[]
+ 	CLOCK_NAME(GPIOJ, "gpioj"),
+ 	CLOCK_NAME(GPIOK, "gpiok"),
+ 	CLOCK_NAME(GPIOZ, "gpioz"),
+-	/* Clock exposed by SCMI. SCMI clock fmro DT bindings to come... */
++	/* Clock exposed by SCMI. SCMI clock from DT bindings to come... */
+ 	CLOCK_NAME(CK_HSE, "hse"),
+ 	CLOCK_NAME(CK_HSI, "hsi"),
+ 	CLOCK_NAME(CK_CSI, "csi"),
