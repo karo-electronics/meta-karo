@@ -46,16 +46,16 @@ UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
 
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = ""
+UBOOT_DEVICE_TREE ?= "${@ "${DTB_BASENAME}-${KARO_BASEBOARD}" if "${KARO_BASEBOARD}" != "" else "${DTB_BASENAME}"}"
 
 UBOOT_ENV_FILE ?= "${@ "${MACHINE}-${KARO_BASEBOARD}_env.txt" if "${KARO_BASEBOARD}" != "" else "${MACHINE}_env.txt"}"
 
 SRC_URI:append = "${@ " file://${UBOOT_ENV_FILE};subdir=git/${UBOOT_BOARD_DIR}" if "${UBOOT_ENV_FILE}" != "" else ""}"
 
-SRC_URI:append = "${@ " \
-    file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}.dts;subdir=git/arch/arm \
-    file://dts/${DTB_BASENAME}-${KARO_BASEBOARD}-u-boot.dtsi;subdir=git/arch/arm" \
-    if "${KARO_BASEBOARD}" != "" else "" \
-}"
+SRC_URI:append = " \
+    file://dts/${UBOOT_DEVICE_TREE}.dts;subdir=git/arch/arm \
+    file://dts/${UBOOT_DEVICE_TREE}-u-boot.dtsi;subdir=git/arch/arm \
+"
 
 SRC_URI:append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
 
