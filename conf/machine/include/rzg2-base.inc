@@ -24,4 +24,4 @@ UBOOT_CONFIG ??= "generic noenv"
 SERIAL_CONSOLES ?= "115200;ttySC0 115200;ttySC1 ${@ bb.utils.contains('DISTRO_FEATURES', 'copro', "", "115200;ttySC2", d)}"
 SERIAL_CONSOLES:txrz ?= "115200;ttySC0 115200;ttySC1"
 
-DTB_BASENAME ?= "r9a07g044l2-${MACHINE}"
+DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
