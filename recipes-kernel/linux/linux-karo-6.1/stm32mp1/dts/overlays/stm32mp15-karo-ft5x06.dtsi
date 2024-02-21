@@ -3,25 +3,13 @@
  * Copyright (C) 2022 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-/ {
-	#address-cells = <1>;
-	#size-cells = <0>;
+&i2c6 {
+	status = "okay";
 
-	fragment@300 {
-		reg = <0x300>;
-		target = <&i2c6>;
-
-		__overlay__ {
-			#address-cells = <1>;
-			#size-cells = <0>;
-			status = "okay";
-
-			touchpanel@38 {
-				compatible = "edt,edt-ft5x06";
-				reg = <0x38>;
-				wakeup-source;
-				status = "okay";
-			};
-		};
+	touchpanel@38 {
+		compatible = "edt,edt-ft5x06";
+		reg = <0x38>;
+		wakeup-source;
+		status = "okay";
 	};
 };
