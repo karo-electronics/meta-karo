@@ -272,10 +272,3 @@ SANITY_TESTED_DISTROS:append = " devuan-4"
 unset SOURCE_DATE_EPOCH
 REPRODUCIBLE_TIMESTAMP_ROOTFS = ""
 KERNEL_DEBUG_TIMESTAMPS = "1"
-
-UBOOT_SRC = "git:///net/karonas/repos/git/u-boot"
-UBOOT_BRANCH = "u-boot-update"
-UBOOT_REV = "58e666fa66bd579bc681bf05ba16d9d4c43909c0"
-
-#UBOOT_BRANCH = "karo-txrz"
-#UBOOT_REV = "66fed3c1ba38bf7229e10bfd9923b89bd7e98064"
