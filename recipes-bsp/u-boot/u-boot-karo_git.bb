@@ -56,9 +56,9 @@ UBOOT_ENV_FILE ?= "${@ "%s%s" % (d.getVar('MACHINE'), \
                        "-" + d.getVar('KARO_BASEBOARD') \
                        if d.getVar('KARO_BASEBOARD') != "" else "")}"
 
-SRC_URI:append:rzg2 = "${@ " file://%s.env;subdir=git/%s" % \
+SRC_URI:append = "${@ " file://%s.env;subdir=git/%s" % \
                       (d.getVar('UBOOT_ENV_FILE'), d.getVar('UBOOT_BOARD_DIR')) \
-                      if d.getVar('UBOOT_ENV_FILE') != None else ""} \
+                      if d.getVar('UBOOT_ENV_FILE') != "" else ""} \
 "
 
 SRC_URI:append = " \
