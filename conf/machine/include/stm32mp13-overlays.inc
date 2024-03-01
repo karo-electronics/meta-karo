@@ -7,6 +7,7 @@ DTB_OVERLAY_INCLUDES ?= "\
 "
 
 DTB_OVERLAYS_generic:append:qsmp = " \
+        qsmp-ft5x06 \
         qsmp-lcd-panel \
         qsmp-ksz9031 \
         qsmp-ksz9131 \
@@ -23,6 +24,7 @@ KARO_DTB_OVERLAYS[qsbase1] = " \
         qsmp-qsbase1 \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
+        qsmp-ft5x06 \
 "
 
 KARO_DTB_OVERLAYS[qsbase4] = " \
