@@ -1,3 +1,4 @@
+prevent speculative prefetch into optee reserved memory
 diff --git a/arch/arm/boot/compressed/head.S b/arch/arm/boot/compressed/head.S
 index 9f406e9c0ea6..dca6d99c2cb0 100644
 --- a/arch/arm/boot/compressed/head.S
