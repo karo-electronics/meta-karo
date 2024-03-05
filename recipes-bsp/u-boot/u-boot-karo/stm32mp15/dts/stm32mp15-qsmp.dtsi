@@ -17,7 +17,7 @@
 	pinctrl-1 = <&qsmp_ethernet0_rgmii_pins_sleep_b>;
 	phy-mode = "rgmii";
 	phy-reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
-	phy-reset-duration-us = <10000>;
+	phy-reset-delay-us = <10000>;
 	phy-reset-post-delay-us = <100>;
 };
 
@@ -68,8 +68,6 @@
 };
 
 &module_led {
-	pinctrl-0 = <&qsmp_led_pins>;
-	pinctrl-1 = <&qsmp_led_sleep_pins>;
 	gpios = <&gpioa 13 GPIO_ACTIVE_LOW>;
 };
 

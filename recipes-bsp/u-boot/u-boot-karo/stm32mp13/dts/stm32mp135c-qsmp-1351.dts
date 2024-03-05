@@ -21,7 +21,8 @@
 		serial0 = &uart4;
 		mmc0 = &sdmmc2;
 		mmc1 = &sdmmc1;
-		usb0 = &usbotg_hs;
+		usb-host = &usbh_ehci;
+		usbotg = &usbotg_hs;
 	};
 
 	chosen {
@@ -52,7 +53,7 @@
 		#size-cells = <1>;
 		ranges;
 
-		optee@ce000000{
+		optee@ce000000 {
 			reg = <0xce000000 0x2000000>;
 			no-map;
 		};

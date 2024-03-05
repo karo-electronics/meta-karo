@@ -172,7 +172,6 @@
 		compatible = "gpio-leds";
 
 		module_led: module-led {
-			pinctrl-names = "default", "sleep";
 			label = "Heartbeat";
 			default-state = "on";
 			linux,default-trigger = "heartbeat";
