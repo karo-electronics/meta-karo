@@ -15,6 +15,7 @@
 
 	aliases {
 		display = &lcd_panel;
+		ethernet0 = &eth1;
 	};
 
 	lcd_backlight: lcd-backlight {
@@ -66,17 +67,16 @@
 	pinctrl-names = "default", "sleep";
         pinctrl-0 = <&qsmp_ethernet0_rgmii_pins>;
 	pinctrl-1 = <&qsmp_ethernet0_rgmii_sleep_pins>;
-	phy-mode = "rgmii-id";
+	phy-mode = "rgmii";
 	phy-handle = <&phy0>;
+	phy-reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+	phy-reset-delay-us = <10000>;
+	phy-reset-post-delay-us = <100>;
 	status = "okay";
 
 	mdio0: mdio0 {
 		#address-cells = <1>;
 		#size-cells = <0>;
-		compatible = "snps,dwmac-mdio";
-		reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
-		reset-delay-us = <10000>;
-		reset-post-delay-us = <100>;
 
 		phy0: ethernet-phy@7 {
 			reg = <7>;
@@ -136,7 +136,7 @@
 			slew-rate = <0>;
 		};
 
-		/* Micrel KSZ9031 strap pins (PIN | PHY_PIN) */
+		/* Micrel KSZ9031 strap pins (PIN | strap option) */
 		pins3 {
 			pinmux = <
 				  STM32_PINMUX('A', 7, AF11) /* ETH1_RX_CTL | CLK125_EN */
@@ -144,11 +144,17 @@
 				  STM32_PINMUX('C', 5, AF11) /* ETH1_RXD1 | MODE1 */
 				  STM32_PINMUX('B', 0, AF11) /* ETH1_RXD2 | MODE2 */
 				  STM32_PINMUX('B', 1, AF11) /* ETH1_RXD3 | MODE3 */
-				  STM32_PINMUX('F', 12, AF11) /* CLK125 | LED_MODE */
-				  /* strap address LOW = 0x3, HIGH = 0x7 */
+				  /* strap PHY address; LOW = 0x3, HIGH = 0x7 */
 				  STM32_PINMUX('D', 7, AF10) /* RX_CLK | PHYAD2 */
 			>;
 			bias-pull-up;
+		};
+
+		pins4 {
+			pinmux = <
+				  STM32_PINMUX('F', 12, AF11) /* CLK125 | LED_MODE */
+			>;
+			bias-pull-down;
 		};
 	};
 
