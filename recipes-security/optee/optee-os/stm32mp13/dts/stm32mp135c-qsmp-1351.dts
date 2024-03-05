@@ -141,6 +141,13 @@
 	clocks = <&clk_hse>, <&clk_hsi>, <&clk_lse>, <&clk_lsi>, <&clk_csi>;
 	clock-names = "clk-hse", "clk-hsi", "clk-lse", "clk-lsi", "clk-csi";
 	st,clksrc = <
+		/*
+		 * OPTEE does not update downstream clock dividers when a clock
+		 * parent is changed. Thus, leave all clock sources at their reset
+		 * defaults to prevent rogue clock rate changes due to
+		 * reparenting clocks.
+		 */
+/*
 		CLK_MPU_PLL1P
 		CLK_AXI_PLL2P
 		CLK_MLAHBS_PLL3
@@ -169,6 +176,7 @@
 		CLK_SAI2_PLL4Q
 		CLK_RNG1_CSI
 		CLK_SAES_AXI
+*/
 	>;
 	st,clkdiv = <
 		DIV(DIV_MPU, 1)
