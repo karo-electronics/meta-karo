@@ -28,6 +28,7 @@ SRC_URI:append:stm32mp1 = " \
         file://STM-patches/0025-v6.1-stm32mp-r1.1.patch \
         file://STM-patches/0026-v6.1-stm32mp-r1.1-dmaengine-stm32.patch \
         file://patches/0007-stm32cryp-dependencies.patch \
+        file://patches/stm32mp1-smsc-phy.bugfix.patch \
 "
 
 SRC_URI:append:stm32mp1 = " \

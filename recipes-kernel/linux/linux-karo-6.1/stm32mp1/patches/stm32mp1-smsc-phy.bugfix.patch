@@ -1,0 +1,28 @@
+bugfix for zeroed intmask introduced by 0014-v6.1-stm32mp-r1-NET-TTY.patch
+Index: linux-txmp-1570/drivers/net/phy/smsc.c
+===================================================================
+--- linux-txmp-1570.orig/drivers/net/phy/smsc.c
++++ linux-txmp-1570/drivers/net/phy/smsc.c
+@@ -44,7 +44,7 @@ static struct smsc_hw_stat smsc_hw_stats
+ };
+ 
+ struct smsc_phy_priv {
+- 	u16 intmask;
++	u16 intmask;
+ 	bool energy_enable;
+ 	bool wakeup_enable;
+ };
+@@ -66,12 +66,11 @@ static int smsc_phy_config_intr(struct p
+ 		if (rc)
+ 			return rc;
+ 
++		priv->intmask = MII_LAN83C185_ISF_INT_PHYLIB_EVENTS;
+ 		if (priv->wakeup_enable)
+ 			priv->intmask |= MII_LAN83C185_ISF_INT8;
+ 		rc = phy_write(phydev, MII_LAN83C185_IM, priv->intmask);
+ 	} else {
+-		priv->intmask = 0;
+-
+ 		rc = phy_write(phydev, MII_LAN83C185_IM, 0);
+ 		if (rc)
+ 			return rc;
