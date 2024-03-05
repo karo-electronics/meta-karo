@@ -30,7 +30,7 @@ SRCREV = "${@ d.getVar('UBOOT_REV') if d.getVar('UBOOT_REV') else \
 
 UBOOT_SRC ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https;branch=${SRCBRANCH}"
 
-UBOOT_REF_DEFAULT:stm32mp1 = "4227e640b29a74257a91aab502cab1e4ecf1092c"
+UBOOT_REF_DEFAULT:stm32mp1 = "d2bc87d5c6c069c6dcad44cbeb7a53d6688e5789"
 UBOOT_BRANCH_DEFAULT:stm32mp1 = "karo-stm32mp1-v2022.10"
 
 UBOOT_BRANCH_DEFAULT:rzg2 = "karo-txrz"
