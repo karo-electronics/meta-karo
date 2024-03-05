@@ -20,16 +20,15 @@
 
 	lcd_backlight: lcd-backlight {
 		compatible = "gpio-backlight";
-		gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
+		gpios = <&gpioa 0 GPIO_ACTIVE_LOW>;
 		default-on;
-		default-brightness-level = <50>;
 		status = "okay";
 	};
 
 	lcd_panel: lcd-panel {
 		compatible = "panel-dpi";
 		power-supply = <&scmi_vddcore>;
-		enable-gpios = <&gpioa 10 GPIO_ACTIVE_LOW>;
+		enable-gpios = <&gpioa 10 GPIO_ACTIVE_HIGH>;
 		data-mapping = "rgb24";
 		backlight = <&lcd_backlight>;
 		status = "okay";
