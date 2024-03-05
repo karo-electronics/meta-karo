@@ -110,14 +110,6 @@
 	clock-frequency = <650>;
 };
 
-&dma1 {
-	sram = <&dma_pool>;
-};
-
-&dma2 {
-	sram = <&dma_pool>;
-};
-
 &dts {
 	status = "okay";
 };
@@ -201,13 +193,6 @@
 	st,neg-edge;
 	non-removable;
 	status = "okay";
-};
-
-&sram4 {
-	dma_pool: dma_pool@0 {
-		reg = <0x50000 0x10000>;
-		pool;
-	};
 };
 
 &timers1 {

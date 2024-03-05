@@ -57,6 +57,14 @@
 	/delete-property/ st,syscfg-holdboot;
 };
 
+&m_can1 {
+	clocks = <&scmi_clk CK_SCMI_HSE>, <&rcc FDCAN_K>;
+};
+
+&m_can2 {
+	clocks = <&scmi_clk CK_SCMI_HSE>, <&rcc FDCAN_K>;
+};
+
 &mdma1 {
 	resets = <&scmi_reset RST_SCMI_MDMA>;
 };
@@ -82,12 +90,6 @@
 
 &rtc {
 	clocks = <&scmi_clk CK_SCMI_RTCAPB>, <&scmi_clk CK_SCMI_RTC>;
-};
-
-&scmi {
-	compatible = "arm,scmi-smc";
-	arm,smc-id = <0x82002000>;
-	/delete-property/ linaro,optee-channel-id;
 };
 
 &usart1 {
