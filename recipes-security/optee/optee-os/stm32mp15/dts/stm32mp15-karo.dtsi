@@ -115,10 +115,10 @@
 		 * defaults to prevent rogue clock rate changes due to
 		 * reparenting clocks.
 		 */
+		CLK_RTC_LSE
 /*
 		CLK_MCU_PLL3P
 		CLK_AXI_PLL2P
-		CLK_RTC_LSE
 		CLK_MCO1_DISABLED
 		CLK_MCO2_DISABLED
 		CLK_CKPER_HSE
@@ -167,7 +167,6 @@
 		DIV(DIV_APB3, 1)
 		DIV(DIV_APB4, 1)
 		DIV(DIV_APB5, 2)
-		DIV(DIV_RTC, 0)
 		DIV(DIV_MCO1, 0)
 		DIV(DIV_MCO2, 0)
 	>;
