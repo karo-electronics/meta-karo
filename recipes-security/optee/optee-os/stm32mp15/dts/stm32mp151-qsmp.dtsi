@@ -38,5 +38,4 @@
 		/* "Mcu Isolation" peripherals */
 		DECPROT(STM32MP1_ETZPC_DMA2_ID, DECPROT_MCU_ISOLATION, DECPROT_UNLOCK)
 	>;
-	status = "okay";
 };

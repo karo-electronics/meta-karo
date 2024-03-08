@@ -201,7 +201,7 @@
 	pll1:st,pll@0 {
 		reg = <0>;
 		compatible = "st,stm32mp1-pll";
-		st,pll = < &pll1_cfg1 >;
+		st,pll = <&pll1_cfg1>;
 
 		pll1_cfg1: pll1_cfg1 {
 			st,pll_vco = <&pll1_vco_1300Mhz>;
@@ -212,7 +212,7 @@
 	pll2:st,pll@1 {
 		reg = <1>;
 		compatible = "st,stm32mp1-pll";
-		st,pll = < &pll2_cfg1 >;
+		st,pll = <&pll2_cfg1>;
 
 		pll2_cfg1: pll2_cfg1 {
 			st,pll_vco = <&pll2_vco_1066Mhz>;
@@ -223,7 +223,7 @@
 	pll3:st,pll@2 {
 		reg = <2>;
 		compatible = "st,stm32mp1-pll";
-		st,pll = < &pll3_cfg1 >;
+		st,pll = <&pll3_cfg1>;
 
 		pll3_cfg1: pll3_cfg1 {
 			st,pll_vco = <&pll3_vco_417Mhz>;
@@ -234,7 +234,7 @@
 	pll4:st,pll@3 {
 		reg = <3>;
 		compatible = "st,stm32mp1-pll";
-		st,pll = < &pll4_cfg1 >;
+		st,pll = <&pll4_cfg1>;
 
 		pll4_cfg1: pll4_cfg1 {
 			st,pll_vco = <&pll4_vco_600Mhz>;
