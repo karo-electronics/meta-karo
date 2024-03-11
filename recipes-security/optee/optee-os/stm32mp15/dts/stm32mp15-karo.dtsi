@@ -191,13 +191,13 @@
 			frac = <0x1a04>;
 		};
 
-		pll4_vco_600Mhz: pll4-vco-600Mhz {
+		pll4_vco_594Mhz: pll4-vco-594Mhz {
 			src = <CLK_PLL4_HSE>;
-			divmn = <1 49>;
+			divmn = <3 98>;
 		};
 	};
 
-	pll1:st,pll@0 {
+	pll1: st,pll@0 {
 		reg = <0>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll1_cfg1>;
@@ -208,7 +208,7 @@
 		};
 	};
 
-	pll2:st,pll@1 {
+	pll2: st,pll@1 {
 		reg = <1>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll2_cfg1>;
@@ -219,7 +219,7 @@
 		};
 	};
 
-	pll3:st,pll@2 {
+	pll3: st,pll@2 {
 		reg = <2>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll3_cfg1>;
@@ -230,14 +230,14 @@
 		};
 	};
 
-	pll4:st,pll@3 {
+	pll4: st,pll@3 {
 		reg = <3>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll4_cfg1>;
 
 		pll4_cfg1: pll4_cfg1 {
-			st,pll_vco = <&pll4_vco_600Mhz>;
-			st,pll_div_pqr = <11 6 7>;
+			st,pll_vco = <&pll4_vco_594Mhz>;
+			st,pll_div_pqr = <5 7 7>;
 		};
 	};
 
