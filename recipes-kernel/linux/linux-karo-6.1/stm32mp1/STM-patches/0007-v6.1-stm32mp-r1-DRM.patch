@@ -22,10 +22,10 @@ Signed-off-by: Romuald Jeanne <romuald.jeanne@st.com>
  14 files changed, 818 insertions(+), 61 deletions(-)
  create mode 100644 drivers/gpu/drm/panel/panel-rocktech-hx8394.c
 
-diff --git a/drivers/gpu/drm/bridge/sii902x.c b/drivers/gpu/drm/bridge/sii902x.c
-index 878fb7d3732b..b78726f3bd28 100644
---- a/drivers/gpu/drm/bridge/sii902x.c
-+++ b/drivers/gpu/drm/bridge/sii902x.c
+Index: linux-qsmp-1570/drivers/gpu/drm/bridge/sii902x.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/bridge/sii902x.c
++++ linux-qsmp-1570/drivers/gpu/drm/bridge/sii902x.c
 @@ -17,6 +17,7 @@
  #include <linux/i2c.h>
  #include <linux/media-bus-format.h>
@@ -46,7 +46,7 @@ index 878fb7d3732b..b78726f3bd28 100644
  struct sii902x {
  	struct i2c_client *i2c;
  	struct regmap *regmap;
-@@ -1003,6 +1009,13 @@ static int sii902x_init(struct sii902x *sii902x)
+@@ -1003,6 +1009,13 @@ static int sii902x_init(struct sii902x *
  {
  	struct device *dev = &sii902x->i2c->dev;
  	unsigned int status = 0;
@@ -60,7 +60,7 @@ index 878fb7d3732b..b78726f3bd28 100644
  	u8 chipid[4];
  	int ret;
  
-@@ -1025,13 +1038,22 @@ static int sii902x_init(struct sii902x *sii902x)
+@@ -1025,13 +1038,22 @@ static int sii902x_init(struct sii902x *
  		return -EINVAL;
  	}
  
@@ -85,7 +85,7 @@ index 878fb7d3732b..b78726f3bd28 100644
  
  		ret = devm_request_threaded_irq(dev, sii902x->i2c->irq, NULL,
  						sii902x_interrupt,
-@@ -1156,6 +1178,65 @@ static void sii902x_remove(struct i2c_client *client)
+@@ -1156,6 +1178,65 @@ static void sii902x_remove(struct i2c_cl
  			       sii902x->supplies);
  }
  
@@ -151,7 +151,7 @@ index 878fb7d3732b..b78726f3bd28 100644
  static const struct of_device_id sii902x_dt_ids[] = {
  	{ .compatible = "sil,sii9022", },
  	{ }
-@@ -1174,6 +1255,7 @@ static struct i2c_driver sii902x_driver = {
+@@ -1174,6 +1255,7 @@ static struct i2c_driver sii902x_driver
  	.driver = {
  		.name = "sii902x",
  		.of_match_table = sii902x_dt_ids,
@@ -159,11 +159,11 @@ index 878fb7d3732b..b78726f3bd28 100644
  	},
  	.id_table = sii902x_i2c_ids,
  };
-diff --git a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
-index b2efecf7d160..92f125996a5f 100644
---- a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
-+++ b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
-@@ -851,6 +851,9 @@ static void dw_mipi_dsi_bridge_post_atomic_disable(struct drm_bridge *bridge,
+Index: linux-qsmp-1570/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
++++ linux-qsmp-1570/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
+@@ -851,6 +851,9 @@ static void dw_mipi_dsi_bridge_post_atom
  	struct dw_mipi_dsi *dsi = bridge_to_dsi(bridge);
  	const struct dw_mipi_dsi_phy_ops *phy_ops = dsi->plat_data->phy_ops;
  
@@ -173,7 +173,7 @@ index b2efecf7d160..92f125996a5f 100644
  	/*
  	 * Switch to command mode before panel-bridge post_disable &
  	 * panel unprepare.
-@@ -878,7 +881,6 @@ static void dw_mipi_dsi_bridge_post_atomic_disable(struct drm_bridge *bridge,
+@@ -878,7 +881,6 @@ static void dw_mipi_dsi_bridge_post_atom
  	}
  	dw_mipi_dsi_disable(dsi);
  
@@ -181,7 +181,7 @@ index b2efecf7d160..92f125996a5f 100644
  	pm_runtime_put(dsi->dev);
  }
  
-@@ -904,14 +906,11 @@ static void dw_mipi_dsi_mode_set(struct dw_mipi_dsi *dsi,
+@@ -904,14 +906,11 @@ static void dw_mipi_dsi_mode_set(struct
  	int ret;
  	u32 lanes = dw_mipi_dsi_get_lanes(dsi);
  
@@ -196,7 +196,7 @@ index b2efecf7d160..92f125996a5f 100644
  	dw_mipi_dsi_init(dsi);
  	dw_mipi_dsi_dpi_config(dsi, adjusted_mode);
  	dw_mipi_dsi_packet_handler_config(dsi);
-@@ -948,6 +947,8 @@ static void dw_mipi_dsi_bridge_mode_set(struct drm_bridge *bridge,
+@@ -948,6 +947,8 @@ static void dw_mipi_dsi_bridge_mode_set(
  {
  	struct dw_mipi_dsi *dsi = bridge_to_dsi(bridge);
  
@@ -205,7 +205,7 @@ index b2efecf7d160..92f125996a5f 100644
  	dw_mipi_dsi_mode_set(dsi, adjusted_mode);
  	if (dsi->slave)
  		dw_mipi_dsi_mode_set(dsi->slave, adjusted_mode);
-@@ -958,6 +959,9 @@ static void dw_mipi_dsi_bridge_atomic_enable(struct drm_bridge *bridge,
+@@ -958,6 +959,9 @@ static void dw_mipi_dsi_bridge_atomic_en
  {
  	struct dw_mipi_dsi *dsi = bridge_to_dsi(bridge);
  
@@ -215,11 +215,11 @@ index b2efecf7d160..92f125996a5f 100644
  	/* Switch to video mode for panel-bridge enable & panel enable */
  	dw_mipi_dsi_set_mode(dsi, MIPI_DSI_MODE_VIDEO);
  	if (dsi->slave)
-diff --git a/drivers/gpu/drm/drm_atomic_uapi.c b/drivers/gpu/drm/drm_atomic_uapi.c
-index 79730fa1dd8e..423e853d2ade 100644
---- a/drivers/gpu/drm/drm_atomic_uapi.c
-+++ b/drivers/gpu/drm/drm_atomic_uapi.c
-@@ -737,6 +737,8 @@ static int drm_atomic_connector_set_property(struct drm_connector *connector,
+Index: linux-qsmp-1570/drivers/gpu/drm/drm_atomic_uapi.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/drm_atomic_uapi.c
++++ linux-qsmp-1570/drivers/gpu/drm/drm_atomic_uapi.c
+@@ -737,6 +737,8 @@ static int drm_atomic_connector_set_prop
  		state->content_type = val;
  	} else if (property == connector->scaling_mode_property) {
  		state->scaling_mode = val;
@@ -228,7 +228,7 @@ index 79730fa1dd8e..423e853d2ade 100644
  	} else if (property == config->content_protection_property) {
  		if (val == DRM_MODE_CONTENT_PROTECTION_ENABLED) {
  			drm_dbg_kms(dev, "only drivers can set CP Enabled\n");
-@@ -828,6 +830,8 @@ drm_atomic_connector_get_property(struct drm_connector *connector,
+@@ -828,6 +830,8 @@ drm_atomic_connector_get_property(struct
  		*val = state->colorspace;
  	} else if (property == connector->scaling_mode_property) {
  		*val = state->scaling_mode;
@@ -237,11 +237,11 @@ index 79730fa1dd8e..423e853d2ade 100644
  	} else if (property == config->hdr_output_metadata_property) {
  		*val = state->hdr_output_metadata ?
  			state->hdr_output_metadata->base.id : 0;
-diff --git a/drivers/gpu/drm/drm_connector.c b/drivers/gpu/drm/drm_connector.c
-index 27de2a97f1d1..76df92391ccb 100644
---- a/drivers/gpu/drm/drm_connector.c
-+++ b/drivers/gpu/drm/drm_connector.c
-@@ -947,6 +947,12 @@ static const struct drm_prop_enum_list drm_scaling_mode_enum_list[] = {
+Index: linux-qsmp-1570/drivers/gpu/drm/drm_connector.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/drm_connector.c
++++ linux-qsmp-1570/drivers/gpu/drm/drm_connector.c
+@@ -947,6 +947,12 @@ static const struct drm_prop_enum_list d
  	{ DRM_MODE_SCALE_ASPECT, "Full aspect" },
  };
  
@@ -254,11 +254,10 @@ index 27de2a97f1d1..76df92391ccb 100644
  static const struct drm_prop_enum_list drm_aspect_ratio_enum_list[] = {
  	{ DRM_MODE_PICTURE_ASPECT_NONE, "Automatic" },
  	{ DRM_MODE_PICTURE_ASPECT_4_3, "4:3" },
-@@ -1919,6 +1925,62 @@ int drm_connector_attach_scaling_mode_property(struct drm_connector *connector,
- }
+@@ -1920,6 +1926,62 @@ int drm_connector_attach_scaling_mode_pr
  EXPORT_SYMBOL(drm_connector_attach_scaling_mode_property);
  
-+/**
+ /**
 + * drm_connector_attach_dithering_property - attach atomic dithering property
 + * @connector: connector to attach dithering property on.
 + * @dithering_mask: or'ed mask of BIT(%DRM_MODE_DITHERING_\*).
@@ -314,13 +313,14 @@ index 27de2a97f1d1..76df92391ccb 100644
 +}
 +EXPORT_SYMBOL(drm_connector_attach_dithering_property);
 +
- /**
++/**
   * drm_mode_create_aspect_ratio_property - create aspect ratio property
   * @dev: DRM device
-diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
-index a582ddd583c2..30f016358b15 100644
---- a/drivers/gpu/drm/panel/Kconfig
-+++ b/drivers/gpu/drm/panel/Kconfig
+  *
+Index: linux-qsmp-1570/drivers/gpu/drm/panel/Kconfig
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/panel/Kconfig
++++ linux-qsmp-1570/drivers/gpu/drm/panel/Kconfig
 @@ -435,6 +435,15 @@ config DRM_PANEL_RAYDIUM_RM68200
  	  Say Y here if you want to enable support for Raydium RM68200
  	  720x1280 DSI video mode panel.
@@ -337,11 +337,11 @@ index a582ddd583c2..30f016358b15 100644
  config DRM_PANEL_RONBO_RB070D30
  	tristate "Ronbo Electronics RB070D30 panel"
  	depends on OF
-diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
-index 34e717382dbb..4d0a07e72895 100644
---- a/drivers/gpu/drm/panel/Makefile
-+++ b/drivers/gpu/drm/panel/Makefile
-@@ -13,6 +13,7 @@ obj-$(CONFIG_DRM_PANEL_EBBG_FT8719) += panel-ebbg-ft8719.o
+Index: linux-qsmp-1570/drivers/gpu/drm/panel/Makefile
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/panel/Makefile
++++ linux-qsmp-1570/drivers/gpu/drm/panel/Makefile
+@@ -13,6 +13,7 @@ obj-$(CONFIG_DRM_PANEL_EBBG_FT8719) += p
  obj-$(CONFIG_DRM_PANEL_ELIDA_KD35T133) += panel-elida-kd35t133.o
  obj-$(CONFIG_DRM_PANEL_FEIXIN_K101_IM2BA02) += panel-feixin-k101-im2ba02.o
  obj-$(CONFIG_DRM_PANEL_FEIYANG_FY07024DI26A30D) += panel-feiyang-fy07024di26a30d.o
@@ -349,10 +349,10 @@ index 34e717382dbb..4d0a07e72895 100644
  obj-$(CONFIG_DRM_PANEL_ILITEK_IL9322) += panel-ilitek-ili9322.o
  obj-$(CONFIG_DRM_PANEL_ILITEK_ILI9341) += panel-ilitek-ili9341.o
  obj-$(CONFIG_DRM_PANEL_ILITEK_ILI9881C) += panel-ilitek-ili9881c.o
-diff --git a/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c b/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c
-index b4729a94c34a..b0fbd7f1ec4d 100644
---- a/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c
-+++ b/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c
+Index: linux-qsmp-1570/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c
++++ linux-qsmp-1570/drivers/gpu/drm/panel/panel-orisetech-otm8009a.c
 @@ -10,6 +10,7 @@
  #include <linux/delay.h>
  #include <linux/gpio/consumer.h>
@@ -361,7 +361,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  #include <linux/regulator/consumer.h>
  
  #include <video/mipi_display.h>
-@@ -290,16 +291,15 @@ static int otm8009a_disable(struct drm_panel *panel)
+@@ -290,16 +291,15 @@ static int otm8009a_disable(struct drm_p
  static int otm8009a_unprepare(struct drm_panel *panel)
  {
  	struct otm8009a *ctx = panel_to_otm8009a(panel);
@@ -383,7 +383,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  
  	ctx->prepared = false;
  
-@@ -314,20 +314,12 @@ static int otm8009a_prepare(struct drm_panel *panel)
+@@ -314,20 +314,12 @@ static int otm8009a_prepare(struct drm_p
  	if (ctx->prepared)
  		return 0;
  
@@ -406,7 +406,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  	ret = otm8009a_init_sequence(ctx);
  	if (ret)
  		return ret;
-@@ -380,6 +372,8 @@ static int otm8009a_get_modes(struct drm_panel *panel,
+@@ -380,6 +372,8 @@ static int otm8009a_get_modes(struct drm
  
  	connector->display_info.width_mm = mode->width_mm;
  	connector->display_info.height_mm = mode->height_mm;
@@ -415,7 +415,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  
  	return num_modes;
  }
-@@ -446,8 +440,10 @@ static int otm8009a_probe(struct mipi_dsi_device *dsi)
+@@ -446,8 +440,10 @@ static int otm8009a_probe(struct mipi_ds
  
  	ctx->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
  	if (IS_ERR(ctx->reset_gpio)) {
@@ -428,7 +428,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  	}
  
  	ctx->supply = devm_regulator_get(dev, "power");
-@@ -494,6 +490,10 @@ static int otm8009a_probe(struct mipi_dsi_device *dsi)
+@@ -494,6 +490,10 @@ static int otm8009a_probe(struct mipi_ds
  		return ret;
  	}
  
@@ -439,7 +439,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  	return 0;
  }
  
-@@ -503,8 +503,49 @@ static void otm8009a_remove(struct mipi_dsi_device *dsi)
+@@ -503,8 +503,49 @@ static void otm8009a_remove(struct mipi_
  
  	mipi_dsi_detach(dsi);
  	drm_panel_remove(&ctx->panel);
@@ -489,7 +489,7 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  static const struct of_device_id orisetech_otm8009a_of_match[] = {
  	{ .compatible = "orisetech,otm8009a" },
  	{ }
-@@ -517,6 +558,7 @@ static struct mipi_dsi_driver orisetech_otm8009a_driver = {
+@@ -517,6 +558,7 @@ static struct mipi_dsi_driver orisetech_
  	.driver = {
  		.name = "panel-orisetech-otm8009a",
  		.of_match_table = orisetech_otm8009a_of_match,
@@ -497,10 +497,10 @@ index b4729a94c34a..b0fbd7f1ec4d 100644
  	},
  };
  module_mipi_dsi_driver(orisetech_otm8009a_driver);
-diff --git a/drivers/gpu/drm/panel/panel-raydium-rm68200.c b/drivers/gpu/drm/panel/panel-raydium-rm68200.c
-index 5f9b340588fb..387720bed586 100644
---- a/drivers/gpu/drm/panel/panel-raydium-rm68200.c
-+++ b/drivers/gpu/drm/panel/panel-raydium-rm68200.c
+Index: linux-qsmp-1570/drivers/gpu/drm/panel/panel-raydium-rm68200.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/panel/panel-raydium-rm68200.c
++++ linux-qsmp-1570/drivers/gpu/drm/panel/panel-raydium-rm68200.c
 @@ -10,6 +10,7 @@
  #include <linux/gpio/consumer.h>
  #include <linux/mod_devicetable.h>
@@ -509,7 +509,7 @@ index 5f9b340588fb..387720bed586 100644
  #include <linux/regulator/consumer.h>
  
  #include <video/mipi_display.h>
-@@ -91,7 +92,7 @@ static const struct drm_display_mode default_mode = {
+@@ -91,7 +92,7 @@ static const struct drm_display_mode def
  	.vsync_start = 1280 + 12,
  	.vsync_end = 1280 + 12 + 5,
  	.vtotal = 1280 + 12 + 5 + 12,
@@ -518,7 +518,7 @@ index 5f9b340588fb..387720bed586 100644
  	.width_mm = 68,
  	.height_mm = 122,
  };
-@@ -260,14 +261,10 @@ static int rm68200_unprepare(struct drm_panel *panel)
+@@ -260,14 +261,10 @@ static int rm68200_unprepare(struct drm_
  	if (ret)
  		dev_warn(panel->dev, "failed to enter sleep mode: %d\n", ret);
  
@@ -537,7 +537,7 @@ index 5f9b340588fb..387720bed586 100644
  
  	ctx->prepared = false;
  
-@@ -283,19 +280,12 @@ static int rm68200_prepare(struct drm_panel *panel)
+@@ -283,19 +280,12 @@ static int rm68200_prepare(struct drm_pa
  	if (ctx->prepared)
  		return 0;
  
@@ -559,7 +559,7 @@ index 5f9b340588fb..387720bed586 100644
  	rm68200_init_sequence(ctx);
  
  	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
-@@ -347,6 +337,8 @@ static int rm68200_get_modes(struct drm_panel *panel,
+@@ -347,6 +337,8 @@ static int rm68200_get_modes(struct drm_
  
  	connector->display_info.width_mm = mode->width_mm;
  	connector->display_info.height_mm = mode->height_mm;
@@ -568,7 +568,7 @@ index 5f9b340588fb..387720bed586 100644
  
  	return 1;
  }
-@@ -372,7 +364,8 @@ static int rm68200_probe(struct mipi_dsi_device *dsi)
+@@ -372,7 +364,8 @@ static int rm68200_probe(struct mipi_dsi
  	ctx->reset_gpio = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
  	if (IS_ERR(ctx->reset_gpio)) {
  		ret = PTR_ERR(ctx->reset_gpio);
@@ -578,7 +578,7 @@ index 5f9b340588fb..387720bed586 100644
  		return ret;
  	}
  
-@@ -409,6 +402,10 @@ static int rm68200_probe(struct mipi_dsi_device *dsi)
+@@ -409,6 +402,10 @@ static int rm68200_probe(struct mipi_dsi
  		return ret;
  	}
  
@@ -589,7 +589,7 @@ index 5f9b340588fb..387720bed586 100644
  	return 0;
  }
  
-@@ -418,8 +415,48 @@ static void rm68200_remove(struct mipi_dsi_device *dsi)
+@@ -418,8 +415,48 @@ static void rm68200_remove(struct mipi_d
  
  	mipi_dsi_detach(dsi);
  	drm_panel_remove(&ctx->panel);
@@ -638,7 +638,7 @@ index 5f9b340588fb..387720bed586 100644
  static const struct of_device_id raydium_rm68200_of_match[] = {
  	{ .compatible = "raydium,rm68200" },
  	{ }
-@@ -432,6 +469,7 @@ static struct mipi_dsi_driver raydium_rm68200_driver = {
+@@ -432,6 +469,7 @@ static struct mipi_dsi_driver raydium_rm
  	.driver = {
  		.name = "panel-raydium-rm68200",
  		.of_match_table = raydium_rm68200_of_match,
@@ -646,11 +646,10 @@ index 5f9b340588fb..387720bed586 100644
  	},
  };
  module_mipi_dsi_driver(raydium_rm68200_driver);
-diff --git a/drivers/gpu/drm/panel/panel-rocktech-hx8394.c b/drivers/gpu/drm/panel/panel-rocktech-hx8394.c
-new file mode 100644
-index 000000000000..cc71168be292
+Index: linux-qsmp-1570/drivers/gpu/drm/panel/panel-rocktech-hx8394.c
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/panel/panel-rocktech-hx8394.c
++++ linux-qsmp-1570/drivers/gpu/drm/panel/panel-rocktech-hx8394.c
 @@ -0,0 +1,429 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -1081,11 +1080,11 @@ index 000000000000..cc71168be292
 +MODULE_AUTHOR("Yannick Fertre <yannick.fertre@foss.st.com>");
 +MODULE_DESCRIPTION("DRM Driver for rocktech HX8394 MIPI DSI panel");
 +MODULE_LICENSE("GPL v2");
-diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
-index 8a3b685c2fcc..1ff29d660c96 100644
---- a/drivers/gpu/drm/panel/panel-simple.c
-+++ b/drivers/gpu/drm/panel/panel-simple.c
-@@ -467,6 +467,7 @@ static int panel_dpi_probe(struct device *dev,
+Index: linux-qsmp-1570/drivers/gpu/drm/panel/panel-simple.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/panel/panel-simple.c
++++ linux-qsmp-1570/drivers/gpu/drm/panel/panel-simple.c
+@@ -467,6 +467,7 @@ static int panel_dpi_probe(struct device
  	struct panel_desc *desc;
  	unsigned int bus_flags;
  	struct videomode vm;
@@ -1093,7 +1092,7 @@ index 8a3b685c2fcc..1ff29d660c96 100644
  	int ret;
  
  	np = dev->of_node;
-@@ -491,6 +492,21 @@ static int panel_dpi_probe(struct device *dev,
+@@ -491,6 +492,21 @@ static int panel_dpi_probe(struct device
  	of_property_read_u32(np, "width-mm", &desc->size.width);
  	of_property_read_u32(np, "height-mm", &desc->size.height);
  
@@ -1115,10 +1114,10 @@ index 8a3b685c2fcc..1ff29d660c96 100644
  	/* Extract bus_flags from display_timing */
  	bus_flags = 0;
  	vm.flags = timing->flags;
-diff --git a/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c b/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c
-index 89897d5f5c72..6c0f9bd2a61c 100644
---- a/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c
-+++ b/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c
+Index: linux-qsmp-1570/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c
++++ linux-qsmp-1570/drivers/gpu/drm/stm/dw_mipi_dsi-stm.c
 @@ -11,6 +11,7 @@
  #include <linux/mod_devicetable.h>
  #include <linux/module.h>
@@ -1127,15 +1126,27 @@ index 89897d5f5c72..6c0f9bd2a61c 100644
  #include <linux/regulator/consumer.h>
  
  #include <video/mipi_display.h>
-@@ -77,6 +78,7 @@ enum dsi_color {
+@@ -75,8 +76,10 @@ enum dsi_color {
+ #define TIMEOUT_US	200000
+ 
  struct dw_mipi_dsi_stm {
++	struct device *dev;
  	void __iomem *base;
  	struct clk *pllref_clk;
 +	struct clk *pclk;
  	struct dw_mipi_dsi *dsi;
  	u32 hw_version;
  	int lane_min_kbps;
-@@ -443,16 +445,13 @@ static int dw_mipi_dsi_stm_probe(struct platform_device *pdev)
+@@ -435,7 +438,7 @@ static struct dw_mipi_dsi_plat_data dw_m
+ 
+ static const struct of_device_id dw_mipi_dsi_stm_dt_ids[] = {
+ 	{ .compatible = "st,stm32-dsi", .data = &dw_mipi_dsi_stm_plat_data, },
+-	{ },
++	{ }
+ };
+ MODULE_DEVICE_TABLE(of, dw_mipi_dsi_stm_dt_ids);
+ 
+@@ -443,16 +446,14 @@ static int dw_mipi_dsi_stm_probe(struct
  {
  	struct device *dev = &pdev->dev;
  	struct dw_mipi_dsi_stm *dsi;
@@ -1149,11 +1160,12 @@ index 89897d5f5c72..6c0f9bd2a61c 100644
  
 -	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 -	dsi->base = devm_ioremap_resource(dev, res);
++	dsi->dev = &pdev->dev;
 +	dsi->base = devm_platform_ioremap_resource(pdev, 0);
  	if (IS_ERR(dsi->base)) {
  		ret = PTR_ERR(dsi->base);
  		DRM_ERROR("Unable to get dsi registers %d\n", ret);
-@@ -485,21 +484,21 @@ static int dw_mipi_dsi_stm_probe(struct platform_device *pdev)
+@@ -485,21 +486,21 @@ static int dw_mipi_dsi_stm_probe(struct
  		goto err_clk_get;
  	}
  
@@ -1180,7 +1192,7 @@ index 89897d5f5c72..6c0f9bd2a61c 100644
  
  	if (dsi->hw_version != HWVER_130 && dsi->hw_version != HWVER_131) {
  		ret = -ENODEV;
-@@ -555,6 +554,7 @@ static int __maybe_unused dw_mipi_dsi_stm_suspend(struct device *dev)
+@@ -555,6 +556,7 @@ static int __maybe_unused dw_mipi_dsi_st
  	DRM_DEBUG_DRIVER("\n");
  
  	clk_disable_unprepare(dsi->pllref_clk);
@@ -1188,7 +1200,7 @@ index 89897d5f5c72..6c0f9bd2a61c 100644
  	regulator_disable(dsi->vdd_supply);
  
  	return 0;
-@@ -573,8 +573,16 @@ static int __maybe_unused dw_mipi_dsi_stm_resume(struct device *dev)
+@@ -573,8 +575,16 @@ static int __maybe_unused dw_mipi_dsi_st
  		return ret;
  	}
  
@@ -1205,7 +1217,7 @@ index 89897d5f5c72..6c0f9bd2a61c 100644
  		regulator_disable(dsi->vdd_supply);
  		DRM_ERROR("Failed to enable pllref_clk: %d\n", ret);
  		return ret;
-@@ -584,8 +592,10 @@ static int __maybe_unused dw_mipi_dsi_stm_resume(struct device *dev)
+@@ -584,8 +594,10 @@ static int __maybe_unused dw_mipi_dsi_st
  }
  
  static const struct dev_pm_ops dw_mipi_dsi_stm_pm_ops = {
@@ -1218,11 +1230,11 @@ index 89897d5f5c72..6c0f9bd2a61c 100644
  };
  
  static struct platform_driver dw_mipi_dsi_stm_driver = {
-diff --git a/drivers/gpu/drm/stm/ltdc.c b/drivers/gpu/drm/stm/ltdc.c
-index 03c6becda795..c2b17c0407dc 100644
---- a/drivers/gpu/drm/stm/ltdc.c
-+++ b/drivers/gpu/drm/stm/ltdc.c
-@@ -776,10 +776,17 @@ static void ltdc_crtc_atomic_enable(struct drm_crtc *crtc,
+Index: linux-qsmp-1570/drivers/gpu/drm/stm/ltdc.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/gpu/drm/stm/ltdc.c
++++ linux-qsmp-1570/drivers/gpu/drm/stm/ltdc.c
+@@ -776,10 +776,17 @@ static void ltdc_crtc_atomic_enable(stru
  {
  	struct ltdc_device *ldev = crtc_to_ltdc(crtc);
  	struct drm_device *ddev = crtc->dev;
@@ -1241,7 +1253,7 @@ index 03c6becda795..c2b17c0407dc 100644
  
  	/* Sets the background color value */
  	regmap_write(ldev->regmap, LTDC_BCCR, BCCR_BCBLACK);
-@@ -817,7 +824,7 @@ static void ltdc_crtc_atomic_disable(struct drm_crtc *crtc,
+@@ -817,7 +824,7 @@ static void ltdc_crtc_atomic_disable(str
  	if (!ldev->caps.plane_reg_shadow)
  		regmap_set_bits(ldev->regmap, LTDC_SRCR, SRCR_IMR);
  
@@ -1250,7 +1262,7 @@ index 03c6becda795..c2b17c0407dc 100644
  
  	/*  clear interrupt error counters */
  	mutex_lock(&ldev->err_lock);
-@@ -978,8 +985,11 @@ static void ltdc_crtc_mode_set_nofb(struct drm_crtc *crtc)
+@@ -978,8 +985,11 @@ static void ltdc_crtc_mode_set_nofb(stru
  	if (bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE)
  		val |= GCR_PCPOL;
  
@@ -1263,7 +1275,7 @@ index 03c6becda795..c2b17c0407dc 100644
  
  	/* Set Synchronization size */
  	val = (hsync << 16) | vsync;
-@@ -1057,6 +1067,20 @@ static void ltdc_crtc_atomic_flush(struct drm_crtc *crtc,
+@@ -1057,6 +1067,20 @@ static void ltdc_crtc_atomic_flush(struc
  	}
  }
  
@@ -1284,7 +1296,7 @@ index 03c6becda795..c2b17c0407dc 100644
  static bool ltdc_crtc_get_scanout_position(struct drm_crtc *crtc,
  					   bool in_vblank_irq,
  					   int *vpos, int *hpos,
-@@ -1117,6 +1141,7 @@ static const struct drm_crtc_helper_funcs ltdc_crtc_helper_funcs = {
+@@ -1117,6 +1141,7 @@ static const struct drm_crtc_helper_func
  	.atomic_flush = ltdc_crtc_atomic_flush,
  	.atomic_enable = ltdc_crtc_atomic_enable,
  	.atomic_disable = ltdc_crtc_atomic_disable,
@@ -1292,7 +1304,7 @@ index 03c6becda795..c2b17c0407dc 100644
  	.get_scanout_position = ltdc_crtc_get_scanout_position,
  };
  
-@@ -1260,6 +1285,7 @@ static void ltdc_plane_atomic_update(struct drm_plane *plane,
+@@ -1260,6 +1285,7 @@ static void ltdc_plane_atomic_update(str
  				     struct drm_atomic_state *state)
  {
  	struct ltdc_device *ldev = plane_to_ltdc(plane);
@@ -1300,7 +1312,7 @@ index 03c6becda795..c2b17c0407dc 100644
  	struct drm_plane_state *newstate = drm_atomic_get_new_plane_state(state,
  									  plane);
  	struct drm_framebuffer *fb = newstate->fb;
-@@ -1290,6 +1316,9 @@ static void ltdc_plane_atomic_update(struct drm_plane *plane,
+@@ -1290,6 +1316,9 @@ static void ltdc_plane_atomic_update(str
  			 newstate->crtc_w, newstate->crtc_h,
  			 newstate->crtc_x, newstate->crtc_y);
  
@@ -1310,7 +1322,7 @@ index 03c6becda795..c2b17c0407dc 100644
  	regmap_read(ldev->regmap, LTDC_BPCR, &bpcr);
  
  	ahbp = (bpcr & BPCR_AHBP) >> 16;
-@@ -1508,8 +1537,12 @@ static void ltdc_plane_atomic_disable(struct drm_plane *plane,
+@@ -1508,8 +1537,12 @@ static void ltdc_plane_atomic_disable(st
  	struct drm_plane_state *oldstate = drm_atomic_get_old_plane_state(state,
  									  plane);
  	struct ltdc_device *ldev = plane_to_ltdc(plane);
@@ -1323,7 +1335,7 @@ index 03c6becda795..c2b17c0407dc 100644
  	/* Disable layer */
  	regmap_write_bits(ldev->regmap, LTDC_L1CR + lofs, LXCR_LEN | LXCR_CLUTEN |  LXCR_HMEN, 0);
  
-@@ -1658,6 +1691,16 @@ static int ltdc_crtc_init(struct drm_device *ddev, struct drm_crtc *crtc)
+@@ -1658,6 +1691,16 @@ static int ltdc_crtc_init(struct drm_dev
  	int supported_rotations = DRM_MODE_ROTATE_0 | DRM_MODE_REFLECT_X | DRM_MODE_REFLECT_Y;
  	unsigned int i;
  	int ret;
@@ -1358,11 +1370,11 @@ index 03c6becda795..c2b17c0407dc 100644
  	if (IS_ERR(ldev->regs)) {
  		DRM_ERROR("Unable to get ltdc registers\n");
  		ret = PTR_ERR(ldev->regs);
-diff --git a/drivers/video/backlight/gpio_backlight.c b/drivers/video/backlight/gpio_backlight.c
-index 6f78d928f054..d3fa3a8bef4d 100644
---- a/drivers/video/backlight/gpio_backlight.c
-+++ b/drivers/video/backlight/gpio_backlight.c
-@@ -53,6 +53,7 @@ static int gpio_backlight_probe(struct platform_device *pdev)
+Index: linux-qsmp-1570/drivers/video/backlight/gpio_backlight.c
+===================================================================
+--- linux-qsmp-1570.orig/drivers/video/backlight/gpio_backlight.c
++++ linux-qsmp-1570/drivers/video/backlight/gpio_backlight.c
+@@ -53,6 +53,7 @@ static int gpio_backlight_probe(struct p
  	struct backlight_device *bl;
  	struct gpio_backlight *gbl;
  	int ret, init_brightness, def_value;
@@ -1370,7 +1382,7 @@ index 6f78d928f054..d3fa3a8bef4d 100644
  
  	gbl = devm_kzalloc(dev, sizeof(*gbl), GFP_KERNEL);
  	if (gbl == NULL)
-@@ -93,7 +94,11 @@ static int gpio_backlight_probe(struct platform_device *pdev)
+@@ -93,7 +94,11 @@ static int gpio_backlight_probe(struct p
  	else
  		bl->props.power = FB_BLANK_UNBLANK;
  
@@ -1383,37 +1395,37 @@ index 6f78d928f054..d3fa3a8bef4d 100644
  
  	init_brightness = backlight_get_brightness(bl);
  	ret = gpiod_direction_output(gbl->gpiod, init_brightness);
-diff --git a/include/drm/drm_connector.h b/include/drm/drm_connector.h
-index 4d830fc55a3d..aff22a4ea793 100644
---- a/include/drm/drm_connector.h
-+++ b/include/drm/drm_connector.h
-@@ -815,6 +815,12 @@ struct drm_connector_state {
- 	 */
+Index: linux-qsmp-1570/include/drm/drm_connector.h
+===================================================================
+--- linux-qsmp-1570.orig/include/drm/drm_connector.h
++++ linux-qsmp-1570/include/drm/drm_connector.h
+@@ -816,6 +816,12 @@ struct drm_connector_state {
  	unsigned int scaling_mode;
  
-+	/**
+ 	/**
 +	 * @dithering: Connector property to control the
 +	 * dithering.
 +	 */
 +	unsigned int dithering;
 +
- 	/**
++	/**
  	 * @content_protection: Connector property to request content
  	 * protection. This is most commonly used for HDCP.
-@@ -1463,6 +1469,12 @@ struct drm_connector {
  	 */
+@@ -1464,6 +1470,12 @@ struct drm_connector {
  	struct drm_property *scaling_mode_property;
  
-+	/**
+ 	/**
 +	 * @dithering_property: Optional atomic property to control the
 +	 * dithering.
 +	 */
 +	struct drm_property *dithering_property;
 +
- 	/**
++	/**
  	 * @vrr_capable_property: Optional property to help userspace
  	 * query hardware support for variable refresh rate on a connector.
-@@ -1811,6 +1823,8 @@ int drm_mode_create_scaling_mode_property(struct drm_device *dev);
+ 	 * connector. Drivers can add the property to a connector by
+@@ -1811,6 +1823,8 @@ int drm_mode_create_scaling_mode_propert
  int drm_connector_attach_content_type_property(struct drm_connector *dev);
  int drm_connector_attach_scaling_mode_property(struct drm_connector *connector,
  					       u32 scaling_mode_mask);
@@ -1422,6 +1434,3 @@ index 4d830fc55a3d..aff22a4ea793 100644
  int drm_connector_attach_vrr_capable_property(
  		struct drm_connector *connector);
  int drm_connector_attach_colorspace_property(struct drm_connector *connector);
--- 
-2.17.1
-

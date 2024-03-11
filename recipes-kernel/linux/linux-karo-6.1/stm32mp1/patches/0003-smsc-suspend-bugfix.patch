@@ -2,7 +2,7 @@ Index: linux-qsmp-1570/drivers/net/phy/smsc.c
 ===================================================================
 --- linux-qsmp-1570.orig/drivers/net/phy/smsc.c
 +++ linux-qsmp-1570/drivers/net/phy/smsc.c
-@@ -186,9 +186,36 @@ static int smsc_phy_suspend(struct phy_d
+@@ -185,9 +185,36 @@ static int smsc_phy_suspend(struct phy_d
  {
  	struct device *dev = &phydev->mdio.dev;
  
@@ -41,7 +41,7 @@ Index: linux-qsmp-1570/drivers/net/phy/smsc.c
  
  	return 0;
  }
-@@ -500,8 +527,8 @@ static struct phy_driver smsc_phy_driver
+@@ -499,8 +526,8 @@ static struct phy_driver smsc_phy_driver
  	.get_strings	= smsc_get_strings,
  	.get_stats	= smsc_get_stats,
  
@@ -52,7 +52,7 @@ Index: linux-qsmp-1570/drivers/net/phy/smsc.c
  }, {
  	.phy_id		= 0x0007c110,
  	.phy_id_mask	= 0xfffffff0,
-@@ -557,7 +584,7 @@ static struct phy_driver smsc_phy_driver
+@@ -556,7 +583,7 @@ static struct phy_driver smsc_phy_driver
  	.get_stats	= smsc_get_stats,
  
  	.suspend	= smsc_phy_suspend,

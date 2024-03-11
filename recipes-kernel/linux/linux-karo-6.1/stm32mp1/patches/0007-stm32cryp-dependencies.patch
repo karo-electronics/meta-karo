@@ -1,8 +1,8 @@
-diff --git a/drivers/crypto/stm32/Kconfig b/drivers/crypto/stm32/Kconfig
-index 4a4c3284ae1f..005215ee266c 100644
---- a/drivers/crypto/stm32/Kconfig
-+++ b/drivers/crypto/stm32/Kconfig
-@@ -24,9 +24,11 @@ config CRYPTO_DEV_STM32_HASH
+Index: linux-qsmp-1570/drivers/crypto/stm32/Kconfig
+===================================================================
+--- linux-qsmp-1570.orig/drivers/crypto/stm32/Kconfig
++++ linux-qsmp-1570/drivers/crypto/stm32/Kconfig
+@@ -26,9 +26,11 @@ config CRYPTO_DEV_STM32_HASH
  config CRYPTO_DEV_STM32_CRYP
  	tristate "Support for STM32 cryp accelerators"
  	depends on ARCH_STM32
