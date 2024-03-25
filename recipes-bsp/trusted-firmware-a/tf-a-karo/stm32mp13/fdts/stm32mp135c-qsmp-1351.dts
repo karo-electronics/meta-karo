@@ -218,7 +218,7 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('D', 8, AF8)>; /* UART4_RX */
-			bias-disable;
+			bias-pull-up;
 		};
 	};
 };
