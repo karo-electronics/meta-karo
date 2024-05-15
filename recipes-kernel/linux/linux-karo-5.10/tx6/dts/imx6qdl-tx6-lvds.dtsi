@@ -83,9 +83,29 @@
 	};
 
 	lvds0_panel: lvds0-panel {
-		compatible = "nlt,nl12880bc20-spwg-24";
+		compatible = "panel-dpi";
 		backlight = <&backlight0>;
 		power-supply = <&reg_3v3>;
+		width-mm = <217>;
+		height-mm = <136>;
+		data-mapping = "lvds666";
+
+		panel-timing {
+			/*will be updated by u-boot*/
+			clock-frequency = <62500000>;
+			hactive = <1280>;
+			vactive = <800>;
+			hback-porch = <80>;
+			hfront-porch = <80>;
+			vback-porch = <12>;
+			vfront-porch = <11>;
+			hsync-len = <2>;
+			vsync-len = <1>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <0>;
+			pixelclk-active = <0>;
+		};
 
 		port {
 			panel_in_lvds0: endpoint {
@@ -95,9 +115,29 @@
 	};
 
 	lvds1_panel: lvds1-panel {
-		compatible = "nlt,nl12880bc20-spwg-24";
+		compatible = "panel-dpi";
 		backlight = <&backlight1>;
 		power-supply = <&reg_3v3>;
+		width-mm = <217>;
+		height-mm = <136>;
+		data-mapping = "lvds666";
+
+		panel-timing {
+			/*will be updated by u-boot*/
+			clock-frequency = <62500000>;
+			hactive = <1280>;
+			vactive = <800>;
+			hback-porch = <80>;
+			hfront-porch = <80>;
+			vback-porch = <12>;
+			vfront-porch = <11>;
+			hsync-len = <2>;
+			vsync-len = <1>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <0>;
+			pixelclk-active = <0>;
+		};
 
 		port {
 			panel_in_lvds1: endpoint {
@@ -209,6 +249,22 @@
 				de-active = <1>;
 				pixelclk-active = <0>;
 			};
+
+			TM101JVHG32 {
+				clock-frequency = <62500000>;
+				hactive = <1280>;
+				vactive = <800>;
+				hback-porch = <80>;
+				hfront-porch = <80>;
+				vback-porch = <12>;
+				vfront-porch = <11>;
+				hsync-len = <2>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
 		};
 	};
 
@@ -270,6 +326,22 @@
 				vsync-active = <0>;
 				de-active = <1>;
 				pixelclk-active = <1>;
+			};
+
+			TM101JVHG32 {
+				clock-frequency = <62500000>;
+				hactive = <1280>;
+				vactive = <800>;
+				hback-porch = <80>;
+				hfront-porch = <80>;
+				vback-porch = <12>;
+				vfront-porch = <11>;
+				hsync-len = <2>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
 			};
 		};
 	};
