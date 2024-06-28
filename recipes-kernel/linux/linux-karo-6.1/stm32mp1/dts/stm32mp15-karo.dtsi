@@ -144,7 +144,7 @@
 
 &pwr_regulators {
 	vdd-supply = <&reg_3v3>;
-	vdd_3v3_usbfs-supply = <&reg18>;
+	vdd_3v3_usbfs-supply = <&reg_3v3>;
 };
 
 &qspi {
