@@ -6,6 +6,7 @@
 #include <dt-bindings/clock/stm32mp1-clks.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
+#include "stm32mp15-m4-srm.dtsi"
 
 / {
 	aliases {
