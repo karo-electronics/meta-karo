@@ -83,7 +83,6 @@
 	vmmc-supply = <&reg_3v3>;
 	no-1-8-v;
 	st,neg-edge;
-	st,use-ckin;
 	status = "okay";
 };
 
