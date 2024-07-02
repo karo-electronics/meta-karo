@@ -3,6 +3,8 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
+#include "stm32mp15-karo.dtsi"
+
 / {
 	aliases {
 		i2c1 = &i2c2;

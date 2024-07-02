@@ -3,4 +3,3 @@
  * Copyright (C) 2021 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp153-karo.dtsi"

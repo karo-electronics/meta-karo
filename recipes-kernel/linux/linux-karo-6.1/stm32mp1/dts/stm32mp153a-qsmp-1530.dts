@@ -9,6 +9,8 @@
 #include "stm32mp153.dtsi"
 #include "stm32mp15xa.dtsi"
 #include "stm32mp15xxac-pinctrl.dtsi"
+#include "stm32mp153-qsmp.dtsi"
+#include "stm32mp153a-karo-scmi.dtsi"
 #include "stm32mp153a-qsmp-scmi.dtsi"
 
 / {

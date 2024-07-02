@@ -22,19 +22,6 @@
 	clocks = <&scmi_clk CK_SCMI_MPU>;
 };
 
-&cpu1 {
-	clocks = <&scmi_clk CK_SCMI_MPU>;
-};
-
-&cryp1 {
-	clocks = <&scmi_clk CK_SCMI_CRYP1>;
-	resets = <&scmi_reset RST_SCMI_CRYP1>;
-};
-
-&dsi {
-	clocks = <&rcc DSI_K>, <&scmi_clk CK_SCMI_HSE>, <&rcc DSI_PX>;
-};
-
 &hash1 {
 	clocks = <&scmi_clk CK_SCMI_HASH1>;
 	resets = <&scmi_reset RST_SCMI_HASH1>;
@@ -59,14 +46,6 @@
 		 <&scmi_reset RST_SCMI_MCU_HOLD_BOOT>;
 	reset-names = "mcu_rst", "hold_boot";
 	/delete-property/ st,syscfg-holdboot;
-};
-
-&m_can1 {
-	clocks = <&scmi_clk CK_SCMI_HSE>, <&rcc FDCAN_K>;
-};
-
-&m_can2 {
-	clocks = <&scmi_clk CK_SCMI_HSE>, <&rcc FDCAN_K>;
 };
 
 &mdma1 {

@@ -3,9 +3,4 @@
  * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp153a-karo-scmi.dtsi"
-#include "stm32mp153-qsmp.dtsi"
-
-&gpioz {
-	clocks = <&scmi_clk CK_SCMI_GPIOZ>;
-};
+#include "stm32mp15-qsmp-scmi.dtsi"

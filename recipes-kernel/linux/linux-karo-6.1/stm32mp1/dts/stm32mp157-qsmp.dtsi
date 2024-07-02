@@ -3,6 +3,7 @@
  * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
  */
 
+#include "stm32mp157-karo.dtsi"
 #include "stm32mp153-qsmp.dtsi"
 
 &cryp1 {
