@@ -166,15 +166,33 @@ EOF
             c="$(echo "$config" | sed s/_config/_defconfig/)"
             merge_config.sh -m -r -O "${c}" "${c}/.config" "$tmpfile"
             oe_runmake -C ${c} olddefconfig
-            if grep '^CONFIG_.*=$' ${c}/.config;then
-                bbfatal "defconfig is incomplete"
+            rc=0
+            missing_vals="$(grep '^CONFIG_.*=$' ${c}/.config)" || rc=$?
+            if [ $rc -gt 1 ];then
+                bbfatal "Failed to read ${c}/.config"
+            fi
+            if [ -n "$missing_vals" ];then
+                bberror "The following config variables have missing values:"
+                for var in $missing_vals;do
+                    bberror "$var"
+                done
+                bbfatal "${c}/.config is incomplete"
             fi
         done
     else
         merge_config.sh -m -r -O "${B}" "${B}/.config" "$tmpfile"
         oe_runmake -C "${B}" olddefconfig
-        if grep '^CONFIG_.*=$' ${B}/.config;then
-            bbfatal "defconfig is incomplete"
+        rc=0
+        missing_vals="$(grep '^CONFIG_.*=$' ${B}/.config)" || rc=$?
+        if [ $rc -gt 1 ];then
+            bbfatal "Failed to read ${B}/.config"
+        fi
+        if [ -n "$missing_vals" ];then
+            bberror "The following config variables have missing values:"
+            for var in $missing_vals;do
+                bberror "$var"
+            done
+            bbfatal ".config is incomplete"
         fi
     fi
     rm -vf "$tmpfile"
