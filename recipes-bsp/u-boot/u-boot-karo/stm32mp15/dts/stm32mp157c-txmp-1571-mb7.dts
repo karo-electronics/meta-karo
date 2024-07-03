@@ -3,7 +3,7 @@
  * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp157-txmp-1571.dts"
+#include "stm32mp157c-txmp-1571.dts"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1571 module on MB7 baseboard";
