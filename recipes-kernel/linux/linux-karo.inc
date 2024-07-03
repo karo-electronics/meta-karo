@@ -68,8 +68,10 @@ do_check_config() {
     ifs="$IFS"
     IFS="
 "
-    applied=$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/.config" | sort)
-    configured=$(cat "${WORKDIR}/${KBUILD_DEFCONFIG}" | sort)
+    applied=$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/.config" | sort) || \
+        bbfatal "Failed to read ${B}/.config or ${WORKDIR}/${KBUILD_DEFCONFIG}"
+    configured=$(sort "${WORKDIR}/${KBUILD_DEFCONFIG}") || \
+        bbfatal "Failed to read ${WORKDIR}/${KBUILD_DEFCONFIG}"
     if [ "$applied" != "$configured" ];then
         bad=$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" ${B}/.config | \
                 fgrep -vf - "${WORKDIR}/${KBUILD_DEFCONFIG}" | sed 's/^# //;s/[= ].*$//')
@@ -82,13 +84,17 @@ do_check_config() {
                     break
                 fi
             done
+            if ! $override;then
+                bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/${KBUILD_DEFCONFIG}")' from '${KBUILD_DEFCONFIG}' has not been accepted by Kconfig"
+            fi
         done
-        if ! $override;then
-            bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/${KBUILD_DEFCONFIG}")' from '${KBUILD_DEFCONFIG}' has not been accepted by Kconfig"
-        fi
     fi
+    rc=0
     obsolete="$(fgrep -f "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/defconfig" | \
-            fgrep -vf - "${WORKDIR}/${KBUILD_DEFCONFIG}")"
+            fgrep -vf - "${WORKDIR}/${KBUILD_DEFCONFIG}")" || rc=$?
+    if [ $rc -gt 1 ];then
+        bbfatal "Failed to read defconfig or ${KBUILD_DEFCONFIG}"
+    fi
     for pat in $obsolete;do
         if fgrep -qw "$pat" "${B}/.config";then
             bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/${KBUILD_DEFCONFIG}")' is obsolete in '${KBUILD_DEFCONFIG}'"
@@ -98,7 +104,7 @@ do_check_config() {
     for f in ${KERNEL_FEATURES};do
         bbdebug 1 "Checking '$f'"
         applied=$(fgrep -f "${WORKDIR}/cfg/${f}" ${B}/.config | sort)
-        configured=$(cat "${WORKDIR}/cfg/${f}" | sort)
+        configured=$(sort "${WORKDIR}/cfg/${f}")
         if [ "$applied" != "$configured" ];then
             bad=$(fgrep -f "${WORKDIR}/cfg/${f}" ${B}/.config | \
                     fgrep -vf - "${WORKDIR}/cfg/${f}" | sed 's/^# //;s/[= ].*$//')
@@ -121,6 +127,18 @@ do_check_config() {
             fi
         done
     done
+    rc=0
+    missing_vals="$(grep '^CONFIG_.*=$' ${B}/.config)" || rc=$?
+    if [ $rc -gt 1 ];then
+        bbfatal "Failed to read ${B}/.config"
+    fi
+    if [ -n "$missing_vals" ];then
+        bberror "The following config variables have missing values:"
+        for var in $missing_vals;do
+            bberror "$var"
+        done
+        bbfatal ".config is incomplete"
+    fi
     IFS="$ifs"
 }
 addtask do_check_config after do_savedefconfig
