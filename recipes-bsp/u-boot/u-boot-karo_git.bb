@@ -55,9 +55,7 @@ UBOOT_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES', 'rauc', ' rauc'
 
 UBOOT_ENV_FILE ?= "${@ "%s%s%s" % (d.getVar('MACHINE'), \
                        "-" + d.getVar('KARO_BASEBOARD') \
-                       if d.getVar('KARO_BASEBOARD') != "" else "", \
-                       "-" + "rauc" \
-                       if 'rauc' in d.getVar('DISTRO_FEATURES').split() else "")}"
+                       if d.getVar('KARO_BASEBOARD') != "" else "")}"
 
 
 
