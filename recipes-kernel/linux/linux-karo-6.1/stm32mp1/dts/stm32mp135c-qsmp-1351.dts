@@ -73,6 +73,10 @@
 	};
 };
 
+&cpu0 {
+	clock-frequency = <65000000>;
+};
+
 &cryp {
 	status = "okay";
 };

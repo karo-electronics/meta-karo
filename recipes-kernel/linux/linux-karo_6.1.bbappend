@@ -51,3 +51,7 @@ SRC_URI:append:stm32mp15 = " \
         file://patches/0017-spi-nand-dma-map-bugfix.patch \
         file://patches/0019-fdt5x06-dma-bugfix.patch \
 "
+
+SRC_URI:append:stm32mp13 = " \
+        file://patches/stm32mp157-kconfig-dep-bugfix.patch \
+"
