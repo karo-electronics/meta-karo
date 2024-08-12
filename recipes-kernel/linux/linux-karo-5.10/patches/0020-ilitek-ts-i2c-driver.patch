@@ -4,11 +4,10 @@ Date:   Mon May 23 09:03:56 2022 +0000
 
     pick ilitek_ts_i2c.c touchscreen support from upstream mainline kernel
 
-diff --git a/Documentation/devicetree/bindings/input/touchscreen/ilitek_ts_i2c.yaml b/Documentation/devicetree/bindings/input/touchscreen/ilitek_ts_i2c.yaml
-new file mode 100644
-index 000000000000..a190e7baac31
+Index: git/Documentation/devicetree/bindings/input/touchscreen/ilitek_ts_i2c.yaml
+===================================================================
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/input/touchscreen/ilitek_ts_i2c.yaml
++++ git/Documentation/devicetree/bindings/input/touchscreen/ilitek_ts_i2c.yaml
 @@ -0,0 +1,73 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
@@ -83,10 +82,10 @@ index 000000000000..a190e7baac31
 +            wakeup-source;
 +        };
 +    };
-diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index cc18f54ea887..f0f9baa3112e 100644
---- a/drivers/input/touchscreen/Kconfig
-+++ b/drivers/input/touchscreen/Kconfig
+Index: git/drivers/input/touchscreen/Kconfig
+===================================================================
+--- git.orig/drivers/input/touchscreen/Kconfig
++++ git/drivers/input/touchscreen/Kconfig
 @@ -430,6 +430,18 @@ config TOUCHSCREEN_ILI210X
  	  To compile this driver as a module, choose M here: the
  	  module will be called ili210x.
@@ -106,11 +105,11 @@ index cc18f54ea887..f0f9baa3112e 100644
  config TOUCHSCREEN_IPROC
  	tristate "IPROC touch panel driver support"
  	depends on ARCH_BCM_IPROC || COMPILE_TEST
-diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
-index 6233541e9173..26100feefb0b 100644
---- a/drivers/input/touchscreen/Makefile
-+++ b/drivers/input/touchscreen/Makefile
-@@ -47,6 +47,7 @@ obj-$(CONFIG_TOUCHSCREEN_FUJITSU)	+= fujitsu_ts.o
+Index: git/drivers/input/touchscreen/Makefile
+===================================================================
+--- git.orig/drivers/input/touchscreen/Makefile
++++ git/drivers/input/touchscreen/Makefile
+@@ -47,6 +47,7 @@ obj-$(CONFIG_TOUCHSCREEN_FUJITSU)	+= fuj
  obj-$(CONFIG_TOUCHSCREEN_GOODIX)	+= goodix.o
  obj-$(CONFIG_TOUCHSCREEN_HIDEEP)	+= hideep.o
  obj-$(CONFIG_TOUCHSCREEN_ILI210X)	+= ili210x.o
@@ -118,11 +117,10 @@ index 6233541e9173..26100feefb0b 100644
  obj-$(CONFIG_TOUCHSCREEN_IMX6UL_TSC)	+= imx6ul_tsc.o
  obj-$(CONFIG_TOUCHSCREEN_INEXIO)	+= inexio.o
  obj-$(CONFIG_TOUCHSCREEN_IPROC)		+= bcm_iproc_tsc.o
-diff --git a/drivers/input/touchscreen/ilitek_ts_i2c.c b/drivers/input/touchscreen/ilitek_ts_i2c.c
-new file mode 100644
-index 000000000000..c5d259c76adc
+Index: git/drivers/input/touchscreen/ilitek_ts_i2c.c
+===================================================================
 --- /dev/null
-+++ b/drivers/input/touchscreen/ilitek_ts_i2c.c
++++ git/drivers/input/touchscreen/ilitek_ts_i2c.c
 @@ -0,0 +1,690 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*

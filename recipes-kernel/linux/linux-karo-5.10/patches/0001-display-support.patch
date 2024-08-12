@@ -8,7 +8,7 @@ Index: git/drivers/gpu/drm/panel/panel-simple.c
 ===================================================================
 --- git.orig/drivers/gpu/drm/panel/panel-simple.c
 +++ git/drivers/gpu/drm/panel/panel-simple.c
-@@ -1765,6 +1765,56 @@ static const struct panel_desc edt_etm04
+@@ -1767,6 +1767,56 @@ static const struct panel_desc edt_etm04
  	},
  };
  
@@ -65,7 +65,7 @@ Index: git/drivers/gpu/drm/panel/panel-simple.c
  static const struct drm_display_mode edt_et057090dhu_mode = {
  	.clock = 25175,
  	.hdisplay = 640,
-@@ -1828,6 +1878,31 @@ static const struct panel_desc edt_etm07
+@@ -1830,6 +1880,31 @@ static const struct panel_desc edt_etm07
  	.bus_flags = DRM_BUS_FLAG_DE_HIGH | DRM_BUS_FLAG_PIXDATA_DRIVE_POSEDGE,
  };
  
@@ -97,7 +97,7 @@ Index: git/drivers/gpu/drm/panel/panel-simple.c
  static const struct display_timing evervision_vgg804821_timing = {
  	.pixelclock = { 27600000, 33300000, 50000000 },
  	.hactive = { 800, 800, 800 },
-@@ -2931,6 +3006,52 @@ static const struct panel_desc nlt_nl192
+@@ -2936,6 +3011,52 @@ static const struct panel_desc nlt_nl192
  	.connector_type = DRM_MODE_CONNECTOR_LVDS,
  };
  
@@ -150,7 +150,7 @@ Index: git/drivers/gpu/drm/panel/panel-simple.c
  static const struct drm_display_mode nvd_9128_mode = {
  	.clock = 29500,
  	.hdisplay = 800,
-@@ -4015,6 +4136,12 @@ static const struct of_device_id platfor
+@@ -4021,6 +4142,12 @@ static const struct of_device_id platfor
  		.compatible = "chunghwa,claa101wb01",
  		.data = &chunghwa_claa101wb01
  	}, {
@@ -163,7 +163,7 @@ Index: git/drivers/gpu/drm/panel/panel-simple.c
  		.compatible = "dataimage,scf0700c48ggu18",
  		.data = &dataimage_scf0700c48ggu18,
  	}, {
-@@ -4042,6 +4169,12 @@ static const struct of_device_id platfor
+@@ -4048,6 +4175,12 @@ static const struct of_device_id platfor
  		.compatible = "edt,etm0700g0dh6",
  		.data = &edt_etm0700g0dh6,
  	}, {
@@ -176,7 +176,7 @@ Index: git/drivers/gpu/drm/panel/panel-simple.c
  		.compatible = "edt,etm0700g0bdh6",
  		.data = &edt_etm0700g0bdh6,
  	}, {
-@@ -4174,6 +4307,15 @@ static const struct of_device_id platfor
+@@ -4180,6 +4313,15 @@ static const struct of_device_id platfor
  		.compatible = "nlt,nl192108ac18-02d",
  		.data = &nlt_nl192108ac18_02d,
  	}, {

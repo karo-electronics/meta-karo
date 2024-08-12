@@ -4,11 +4,11 @@ Date:   Thu Jul 14 09:49:17 2022 +0000
 
     Add SN65DSI83 mipi-to-lvds bridge support
 
-diff --git a/drivers/gpu/drm/bridge/Kconfig b/drivers/gpu/drm/bridge/Kconfig
-index 4e82647a621e..0b5f570843c1 100644
---- a/drivers/gpu/drm/bridge/Kconfig
-+++ b/drivers/gpu/drm/bridge/Kconfig
-@@ -246,6 +246,8 @@ source "drivers/gpu/drm/bridge/adv7511/Kconfig"
+Index: git/drivers/gpu/drm/bridge/Kconfig
+===================================================================
+--- git.orig/drivers/gpu/drm/bridge/Kconfig
++++ git/drivers/gpu/drm/bridge/Kconfig
+@@ -246,6 +246,8 @@ source "drivers/gpu/drm/bridge/adv7511/K
  
  source "drivers/gpu/drm/bridge/cadence/Kconfig"
  
@@ -17,11 +17,11 @@ index 4e82647a621e..0b5f570843c1 100644
  source "drivers/gpu/drm/bridge/synopsys/Kconfig"
  
  endmenu
-diff --git a/drivers/gpu/drm/bridge/Makefile b/drivers/gpu/drm/bridge/Makefile
-index 2b3aff104e46..cbf9e647eccf 100644
---- a/drivers/gpu/drm/bridge/Makefile
-+++ b/drivers/gpu/drm/bridge/Makefile
-@@ -19,6 +19,7 @@ obj-$(CONFIG_DRM_TOSHIBA_TC358767) += tc358767.o
+Index: git/drivers/gpu/drm/bridge/Makefile
+===================================================================
+--- git.orig/drivers/gpu/drm/bridge/Makefile
++++ git/drivers/gpu/drm/bridge/Makefile
+@@ -19,6 +19,7 @@ obj-$(CONFIG_DRM_TOSHIBA_TC358767) += tc
  obj-$(CONFIG_DRM_TOSHIBA_TC358768) += tc358768.o
  obj-$(CONFIG_DRM_TOSHIBA_TC358775) += tc358775.o
  obj-$(CONFIG_DRM_I2C_ADV7511) += adv7511/
@@ -29,11 +29,10 @@ index 2b3aff104e46..cbf9e647eccf 100644
  obj-$(CONFIG_DRM_TI_SN65DSI86) += ti-sn65dsi86.o
  obj-$(CONFIG_DRM_TI_TFP410) += ti-tfp410.o
  obj-$(CONFIG_DRM_TI_TPD12S015) += ti-tpd12s015.o
-diff --git a/drivers/gpu/drm/bridge/sn65dsi83/Kconfig b/drivers/gpu/drm/bridge/sn65dsi83/Kconfig
-new file mode 100644
-index 000000000000..e1b8e802f61f
+Index: git/drivers/gpu/drm/bridge/sn65dsi83/Kconfig
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/bridge/sn65dsi83/Kconfig
++++ git/drivers/gpu/drm/bridge/sn65dsi83/Kconfig
 @@ -0,0 +1,6 @@
 +config DRM_I2C_SN65DSI83
 +	bool "TI SN65DSI83 MIPI DSI to LVDS bridge"
@@ -41,19 +40,17 @@ index 000000000000..e1b8e802f61f
 +	select DRM_MIPI_DSI
 +	help
 +	  TI SN65DSI83 MIPI DSI to LVDS bridge driver
-diff --git a/drivers/gpu/drm/bridge/sn65dsi83/Makefile b/drivers/gpu/drm/bridge/sn65dsi83/Makefile
-new file mode 100644
-index 000000000000..dee7f493b323
+Index: git/drivers/gpu/drm/bridge/sn65dsi83/Makefile
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/bridge/sn65dsi83/Makefile
++++ git/drivers/gpu/drm/bridge/sn65dsi83/Makefile
 @@ -0,0 +1,2 @@
 +sn65dsi83-objs := sn65dsi83_drv.o sn65dsi83_brg.o
 +obj-$(CONFIG_DRM_I2C_SN65DSI83) := sn65dsi83.o
-diff --git a/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.c b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.c
-new file mode 100644
-index 000000000000..211c7fcb3e53
+Index: git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.c
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.c
++++ git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.c
 @@ -0,0 +1,422 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -477,11 +474,10 @@ index 000000000000..211c7fcb3e53
 +{
 +	return &brg;
 +}
-diff --git a/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.h b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.h
-new file mode 100644
-index 000000000000..659b24f6071b
+Index: git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.h
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.h
++++ git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_brg.h
 @@ -0,0 +1,63 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
@@ -546,11 +542,10 @@ index 000000000000..659b24f6071b
 +#define LOW(A)		((A) & 0xFF)
 +
 +#endif /* _SN65DSI83_BRG_H__ */
-diff --git a/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_drv.c b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_drv.c
-new file mode 100644
-index 000000000000..e06c2ddaaf72
+Index: git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_drv.c
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_drv.c
++++ git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_drv.c
 @@ -0,0 +1,429 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -981,11 +976,10 @@ index 000000000000..e06c2ddaaf72
 +MODULE_AUTHOR("CompuLab <compulab@compula.co.il>");
 +MODULE_DESCRIPTION("SN65DSI bridge driver");
 +MODULE_LICENSE("GPL");
-diff --git a/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_timing.h b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_timing.h
-new file mode 100644
-index 000000000000..228f0d0b4a7f
+Index: git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_timing.h
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_timing.h
++++ git/drivers/gpu/drm/bridge/sn65dsi83/sn65dsi83_timing.h
 @@ -0,0 +1,38 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*

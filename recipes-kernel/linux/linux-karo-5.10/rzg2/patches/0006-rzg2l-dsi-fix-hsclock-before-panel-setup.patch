@@ -1,8 +1,8 @@
-diff --git a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-index 65c1f11080f6..5abd7770c584 100644
---- a/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-+++ b/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
-@@ -616,6 +616,10 @@ static void rzg2l_mipi_dsi_enable(struct drm_bridge *bridge)
+Index: git/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+===================================================================
+--- git.orig/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
++++ git/drivers/gpu/drm/rcar-du/rzg2l_mipi_dsi.c
+@@ -621,6 +621,10 @@ static void rzg2l_mipi_dsi_enable(struct
  
  	rzg2l_mipi_dsi_set_display_timing(mipi_dsi);
  
@@ -13,7 +13,7 @@ index 65c1f11080f6..5abd7770c584 100644
  	if (mipi_dsi->panel) {
  		/*
  		 * Workaround
-@@ -645,9 +649,6 @@ static void rzg2l_mipi_dsi_enable(struct drm_bridge *bridge)
+@@ -650,9 +654,6 @@ static void rzg2l_mipi_dsi_enable(struct
  		}
  	}
  

@@ -34,7 +34,7 @@ Index: git/Makefile
 ===================================================================
 --- git.orig/Makefile
 +++ git/Makefile
-@@ -1364,6 +1364,9 @@ ifneq ($(dtstree),)
+@@ -1382,6 +1382,9 @@ ifneq ($(dtstree),)
  %.dtb: include/config/kernel.release scripts_dtc
  	$(Q)$(MAKE) $(build)=$(dtstree) $(dtstree)/$@
  

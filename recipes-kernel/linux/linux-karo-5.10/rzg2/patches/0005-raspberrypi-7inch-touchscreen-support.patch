@@ -4,10 +4,10 @@ Date:   Thu Feb 2 10:45:17 2023 +0000
 
     Raspberrypi 7 inch display support for Ka-Ro RZ/G2L based QSRZ module
 
-diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
-index 6153972e0127..25964028a5a8 100644
---- a/drivers/gpu/drm/panel/Kconfig
-+++ b/drivers/gpu/drm/panel/Kconfig
+Index: git/drivers/gpu/drm/panel/Kconfig
+===================================================================
+--- git.orig/drivers/gpu/drm/panel/Kconfig
++++ git/drivers/gpu/drm/panel/Kconfig
 @@ -500,4 +500,15 @@ config DRM_PANEL_XINPENG_XPP055C272
  	  Say Y here if you want to enable support for the Xinpeng
  	  XPP055C272 controller for 720x1280 LCD panels with MIPI/RGB/SPI
@@ -24,20 +24,19 @@ index 6153972e0127..25964028a5a8 100644
 +	  Say Y here if you want to enable support for the official RaspberryPi 7inch panel.
 +
  endmenu
-diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
-index 2ba560bca61d..6f399325daa7 100644
---- a/drivers/gpu/drm/panel/Makefile
-+++ b/drivers/gpu/drm/panel/Makefile
-@@ -53,3 +53,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += panel-tpo-tpg110.o
+Index: git/drivers/gpu/drm/panel/Makefile
+===================================================================
+--- git.orig/drivers/gpu/drm/panel/Makefile
++++ git/drivers/gpu/drm/panel/Makefile
+@@ -53,3 +53,4 @@ obj-$(CONFIG_DRM_PANEL_TPO_TPG110) += pa
  obj-$(CONFIG_DRM_PANEL_TRULY_NT35597_WQXGA) += panel-truly-nt35597.o
  obj-$(CONFIG_DRM_PANEL_VISIONOX_RM69299) += panel-visionox-rm69299.o
  obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
 +obj-$(CONFIG_DRM_PANEL_RPI_7INCH) += panel-rpi-7inch.o
-diff --git a/drivers/gpu/drm/panel/panel-rpi-7inch.c b/drivers/gpu/drm/panel/panel-rpi-7inch.c
-new file mode 100644
-index 000000000000..22e2d365f086
+Index: git/drivers/gpu/drm/panel/panel-rpi-7inch.c
+===================================================================
 --- /dev/null
-+++ b/drivers/gpu/drm/panel/panel-rpi-7inch.c
++++ git/drivers/gpu/drm/panel/panel-rpi-7inch.c
 @@ -0,0 +1,408 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -447,10 +446,10 @@ index 000000000000..22e2d365f086
 +MODULE_AUTHOR("Jerry <xbl@rock-chips.com>");
 +MODULE_DESCRIPTION("DRM Driver for toshiba tc358762 Bridge");
 +MODULE_LICENSE("GPL and additional rights");
-diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
-index 2fa40e1e9b8a..f0f9baa3112e 100644
---- a/drivers/input/touchscreen/Kconfig
-+++ b/drivers/input/touchscreen/Kconfig
+Index: git/drivers/input/touchscreen/Kconfig
+===================================================================
+--- git.orig/drivers/input/touchscreen/Kconfig
++++ git/drivers/input/touchscreen/Kconfig
 @@ -1347,4 +1347,10 @@ config TOUCHSCREEN_ZINITIX
  	  To compile this driver as a module, choose M here: the
  	  module will be called zinitix.
@@ -462,21 +461,20 @@ index 2fa40e1e9b8a..f0f9baa3112e 100644
 +	  Controls the official RaspberryPi 7inch ft5406 touch ic.
 +
  endif
-diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
-index 35f0e321e779..26100feefb0b 100644
---- a/drivers/input/touchscreen/Makefile
-+++ b/drivers/input/touchscreen/Makefile
-@@ -112,4 +112,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+= colibri-vf50-ts.o
+Index: git/drivers/input/touchscreen/Makefile
+===================================================================
+--- git.orig/drivers/input/touchscreen/Makefile
++++ git/drivers/input/touchscreen/Makefile
+@@ -112,4 +112,5 @@ obj-$(CONFIG_TOUCHSCREEN_COLIBRI_VF50)	+
  obj-$(CONFIG_TOUCHSCREEN_ROHM_BU21023)	+= rohm_bu21023.o
  obj-$(CONFIG_TOUCHSCREEN_RASPBERRYPI_FW)	+= raspberrypi-ts.o
  obj-$(CONFIG_TOUCHSCREEN_IQS5XX)	+= iqs5xx.o
 +obj-$(CONFIG_TOUCHSCREEN_RPI_FT5406)	+= rpi_ft5406.o
  obj-$(CONFIG_TOUCHSCREEN_ZINITIX)	+= zinitix.o
-diff --git a/drivers/input/touchscreen/rpi_ft5406.c b/drivers/input/touchscreen/rpi_ft5406.c
-new file mode 100644
-index 000000000000..c17e3ec5d254
+Index: git/drivers/input/touchscreen/rpi_ft5406.c
+===================================================================
 --- /dev/null
-+++ b/drivers/input/touchscreen/rpi_ft5406.c
++++ git/drivers/input/touchscreen/rpi_ft5406.c
 @@ -0,0 +1,303 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -781,11 +779,10 @@ index 000000000000..c17e3ec5d254
 +
 +MODULE_DESCRIPTION("RPI Display FT5406 Touch driver");
 +MODULE_LICENSE("GPL v2");
-diff --git a/drivers/input/touchscreen/rpi_ft5406.h b/drivers/input/touchscreen/rpi_ft5406.h
-new file mode 100644
-index 000000000000..55754a6bdd91
+Index: git/drivers/input/touchscreen/rpi_ft5406.h
+===================================================================
 --- /dev/null
-+++ b/drivers/input/touchscreen/rpi_ft5406.h
++++ git/drivers/input/touchscreen/rpi_ft5406.h
 @@ -0,0 +1,71 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +
