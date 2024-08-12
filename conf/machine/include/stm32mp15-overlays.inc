@@ -11,7 +11,7 @@ DTB_OVERLAY_INCLUDES ?= "\
 
 # STM32
 DTB_OVERLAYS_generic:append:stm32mp1 = " \
-        karo-gpu \
+        ${@ mach_overlay(d, "karo-gpu", "stm32mp157c")} \
         karo-rtc \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
 "
@@ -23,7 +23,7 @@ DTB_OVERLAYS_generic:append:txmp = " \
         txmp-sound \
 "
 DTB_OVERLAYS_generic:append:qsmp = " \
-        qsmp-dsi-panel \
+        ${@ mach_overlay(d, "qsmp-dsi-panel", "stm32mp157c")} \
         qsmp-ft5x06 \
         qsmp-ksz9031 \
         qsmp-ksz9131 \
@@ -32,7 +32,7 @@ DTB_OVERLAYS_generic:append:qsmp = " \
         qsmp-qsbase2 \
         qsmp-qsbase4 \
         qsmp-qsglyn1 \
-        qsmp-raspi-display \
+        ${@ mach_overlay(d, "qsmp-raspi-display", "stm32mp157c")} \
         qsmp-sdcard \
         qsmp-sdcard-cd \
         qsmp-smsc-phy \
@@ -81,16 +81,16 @@ KARO_DTB_OVERLAYS[qsbase2] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
         qsmp-qsbase2 \
         qsmp-ksz9031 \
-        ${@ "qsmp-dsi-panel" if d.getVar('SOC_FAMILY') == "stm32mp157c" else ""} \
-        ${@ "qsmp-raspi-display" if "raspi-display" in d.getVar('DISTRO_FEATURES') else ""} \
+        ${@ mach_overlay(d, "qsmp-dsi-panel", "stm32mp157c")} \
+        ${@ mach_overlay(d, "qsmp-raspi-display", "stm32mp157c")} \
 "
 
 KARO_DTB_OVERLAYS[qsbase4] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
         qsmp-qsbase4 \
         qsmp-ksz9131 \
-        ${@ "qsmp-dsi-panel" if d.getVar('SOC_FAMILY') == "stm32mp157c" else ""} \
-        ${@ "qsmp-raspi-display" if "raspi-display" in d.getVar('DISTRO_FEATURES') else ""} \
+        ${@ mach_overlay(d, "qsmp-dsi-panel", "stm32mp157c")} \
+        ${@ mach_overlay(d, "qsmp-raspi-display", "stm32mp157c")} \
 "
 
 KARO_DTB_OVERLAYS[qsglyn1] = " \
