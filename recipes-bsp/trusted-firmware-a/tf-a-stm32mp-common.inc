@@ -1,153 +1,47 @@
-COMPATIBLE_MACHINE = "(stm32mp1)"
-
-PACKAGE_ARCH = "${MACHINE_ARCH}"
-
 FILESEXTRAPATHS:prepend := "${THISDIR}/tf-a-stm32mp:"
 
-inherit deploy
+SECTION = "bootloaders"
 
-B = "${WORKDIR}/build"
-# Configure build dir for externalsrc class usage through devtool
-EXTERNALSRC_BUILD:pn-${PN} = "${WORKDIR}/build"
+LICENSE = "BSD-3-Clause"
+LIC_FILES_CHKSUM = "file://license.rst;md5=1dd070c98a281d18d9eefd938729b031"
 
-DEPENDS += "dtc-native"
+def get_tfa_machine(d):
+    if d.getVar('SOC_PREFIX') == "stm32mp13":
+        return "stm32mp1" 
+    if d.getVar('SOC_PREFIX') == "stm32mp15":
+        return "stm32mp1"
+    if d.getVar('SOC_PREFIX') == "stm32mp25":
+        return "stm32mp2"
+    return ""
 
-# Define default TF-A namings
-TF_A_BASENAME ?= "tf-a"
-TF_A_SUFFIX ?= "stm32"
+TF_A_MACHINE = "${@ get_tfa_machine(d)}"
 
-# Output the ELF generated
-ELF_DEBUG_ENABLE ?= ""
-TF_A_ELF_SUFFIX = "elf"
-
-BL1_NAME ?= "bl1/bl1"
-BL1_ELF = "${BL1_NAME}.${TF_A_ELF_SUFFIX}"
-BL1_BASENAME = "${@os.path.basename(d.getVar("BL1_NAME"))}"
-
-BL2_NAME ?= "bl2/bl2"
-BL2_ELF = "${BL2_NAME}.${TF_A_ELF_SUFFIX}"
-BL2_BASENAME = "${@os.path.basename(d.getVar("BL2_NAME"))}"
-
-BL32_NAME ?= "bl32/bl32"
-BL32_ELF = "${BL32_NAME}.${TF_A_ELF_SUFFIX}"
-BL32_BASENAME = "${@os.path.basename(d.getVar("BL32_NAME"))}"
-
-# -----------------------------------------------
-# Enable use of work-shared folder
-STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
-# Make sure to move ${S} to STAGING_TFA_DIR. We can't just
-# create the symlink in advance as the git fetcher can't cope with
-# the symlink.
-do_unpack[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
-do_clean[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
-
-base_do_unpack:append () {
-    # Specific part to update devtool-source class
-    if bb.data.inherits_class('devtool-source', d):
-        # We don't want to move the source to STAGING_TFA_DIR here
-        if d.getVar('STAGING_TFA_DIR', d):
-            d.setVar('STAGING_TFA_DIR', '${S}')
-
-    # Copy/Paste from kernel class with adaptation to TFA var
-    s = d.getVar("S")
-    if s[-1] == '/':
-        # drop trailing slash, so that os.symlink(tfasrc, s) doesn't use s as directory name and fail
-        s=s[:-1]
-    tfasrc = d.getVar("STAGING_TFA_DIR")
-    if s != tfasrc:
-        bb.utils.mkdirhier(tfasrc)
-        bb.utils.remove(tfasrc, recurse=True)
-        if d.getVar("EXTERNALSRC"):
-            # With EXTERNALSRC S will not be wiped so we can symlink to it
-            os.symlink(s, tfasrc)
-        else:
-            import shutil
-            shutil.move(s, tfasrc)
-            os.symlink(tfasrc, s)
-}
+TF_A_SRC_DEFAULT = "${@ "git://git.trustedfirmware.org/TF-A/trusted-firmware-a.git;protocol=https" if get_tfa_machine(d) == 'stm32mp1' else \
+                        "git://github.com/STMicroelectronics/arm-trusted-firmware.git;protocol=https"}"
+TF_A_BRANCH_DEFAULT = "${@ "lts-v2.8" if get_tfa_machine(d) == 'stm32mp1' else "v2.8-stm32mp"}"
+TF_A_REV_DEFAULT = "${@ "ff0bd5f9bb2ba2f31fb9cec96df917747af9e92d" if get_tfa_machine(d) == 'stm32mp1' else "1568486ae9e1c15c0add1bc80e6fe225fa90714a"}"
 
 
-# Manage to export any specific setting for defined configs
-python tfaconfig_env () {
-    import filecmp
-    import shutil
-    if d.getVar('TF_A_CONFIG'):
-        tfaconfig_env = os.path.join(d.getVar('T'), "tfaconfig_env")
-        try:
-            tmpfile = "tfaconfig_env" + ".tmp"
-            f = open(tmpfile, 'w')
-            for config in d.getVar('TF_A_CONFIG').split():
-                f.write( "export TF_A_CONFIG_%s=\"%s\"\n" % (config, d.getVar(('TF_A_CONFIG_' + config))) )
-            f.close()
-            if os.path.exists(tfaconfig_env) and filecmp.cmp(tfaconfig_env, tmpfile):
-                bb.note("config unchanged; removing '%s'" % tmpfile)
-                os.remove(tmpfile)
-            else:
-                if os.path.exists(tfaconfig_env):
-                    bb.note("Removing '%s' due to changed config" % d.getVar('B'))
-                    shutil.rmtree(d.getVar('B'))
-                shutil.move(tmpfile, tfaconfig_env)
-        except:
-            pass
-}
-do_compile[prefuncs] += "tfaconfig_env"
+TF_A_SRC ?= "${TF_A_SRC_DEFAULT}"
+TF_A_BRANCH ?= "${TF_A_BRANCH_DEFAULT}"
+TF_A_REV ?= "${TF_A_REV_DEFAULT}"
 
-do_compile() {
-    . ${T}/tfaconfig_env
+SRC_URI = "${TF_A_SRC};branch=${TF_A_BRANCH}"
+SRCREV = "${TF_A_REV}"
 
-    unset LDFLAGS
-    unset CFLAGS
-    unset CPPFLAGS
+SRC_URI[fw.sha256sum] = "c87d8a03a8feab1f8a51818a7942deade5d31abb7f4afaa6d6dfa922383e9805"
 
-    for config in ${TF_A_CONFIG}; do
-        # Get any specific EXTRA_OEMAKE for current config
-        eval local add_extraoemake=\"\$TF_A_CONFIG_${config}\"
-        if [ -n "${TF_A_DEVICETREE}" ]; then
-            for dt in ${TF_A_DEVICETREE}; do
-                oe_runmake -C ${S} DTB_FILE_NAME=${dt}.dtb BUILD_PLAT=${B}/${config} ${add_extraoemake}
-                cp ${B}/${config}/${TF_A_BASENAME}-${dt}.${TF_A_SUFFIX} ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX}
-            done
-        else
-            oe_runmake -C ${S} BUILD_PLAT=${B}/${config}
-        fi
-    done
-}
+#SRC_URI += "${@ "file://0001-v2.8-stm32mp-r2.patch" if "${SOC_PREFIX}" == "stm32mp25" else ""}"
+SRC_URI += "${@ "file://tf-a-st-ddr.tar.gz;subdir=git;name=fw" if "${SOC_PREFIX}" == "stm32mp25" else ""}"
 
-do_deploy() {
-    install -v -d ${DEPLOYDIR}/${FIPTOOL_DIR}
+TF_A_VERSION ?= "${@ 'v2.8' if get_tfa_machine(d) == 'stm32mp1' else 'v2.8.15'}"
+TF_A_RELEASE = "${@ 'lts' if get_tfa_machine(d) == 'stm32mp1' else 'r2'}"
 
-    for config in ${TF_A_CONFIG}; do
-        install -v -d ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
-        if [ -f ${B}/${config}/bl32.bin ]; then
-            install -v ${B}/${config}/bl32.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
-        fi
-        if [ -n "${TF_A_DEVICETREE}" ]; then
-            for dt in ${TF_A_DEVICETREE}; do
-                install -v ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX} ${DEPLOYDIR}
-                if [ -f ${B}/${config}/fdts/${dt}-bl32.dtb ]; then
-                    install -v ${B}/${config}/fdts/${dt}-bl32.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
-                fi
-                install -v ${B}/${config}/fdts/${dt}-fw-config.dtb ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
-            done
-        else
-            # Get tf-a binary basename to copy
-            tf_a_binary_basename=$(find ${B}/${config} -name "${TF_A_BASENAME}-*.${TF_A_SUFFIX}" -exec basename {} \; | sed 's|\.'"${TF_A_SUFFIX}"'||g')
-            install -v ${B}/${config}/${tf_a_binary_basename}.${TF_A_SUFFIX} ${DEPLOYDIR}/${FIPTOOL_DIR}/${tf_a_binary_basename}-${config}.${TF_A_SUFFIX}
-        fi
-    done
+#TF_A_VERSION:stm32mp1 ?= "v2.8"
+#TF_A_RELEASE:stm32mp1 = "lts"
 
-    if [ -n "${ELF_DEBUG_ENABLE}" ]; then
-        for config in ${TF_A_CONFIG}; do
-            if [ -f ${B}/${config}/${BL1_ELF} ]; then
-                install -v ${B}/${config}/${BL1_ELF} ${DEPLOYDIR}/${FIPTOOL_DIR}/${TF_A_BASENAME}-${BL1_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
-            fi
-            if [ -f ${B}/${config}/${BL2_ELF} ]; then
-                install -v ${B}/${config}/${BL2_ELF} ${DEPLOYDIR}/${FIPTOOL_DIR}/${TF_A_BASENAME}-${BL2_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
-            fi
-            if [ -f ${B}/${config}/${BL32_ELF} ]; then
-                install -v ${B}/${config}/${BL32_ELF} ${DEPLOYDIR}/${FIPTOOL_DIR}/${TF_A_BASENAME}-${BL32_BASENAME}-${config}.${TF_A_ELF_SUFFIX}
-            fi
-        done
-    fi
-}
-addtask deploy before do_build after do_compile
+TF_A_SUBVERSION = "stm32mp"
+
+PV = "${TF_A_VERSION}-${TF_A_SUBVERSION}-${TF_A_RELEASE}"
+
+S = "${WORKDIR}/git"

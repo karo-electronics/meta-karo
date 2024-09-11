@@ -1,0 +1,20 @@
+Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_def.h
++++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
+@@ -152,11 +152,11 @@ enum ddr_type {
+ #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #else
+ #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
+-#define STM32MP_BL2_RO_SIZE		U(0x0001F000)	/* 124 KB */
+-#define STM32MP_BL2_SIZE		U(0x00028000)	/* 160 KB for BL2 */
++#define STM32MP_BL2_RO_SIZE		U(0x00022000)	/* 124 KB */
++#define STM32MP_BL2_SIZE		U(0x00029000)	/* 176 KB for BL2 */
+ #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+-#define STM32MP_BL2_RO_SIZE		U(0x00020000)	/* 128 KB */
+-#define STM32MP_BL2_SIZE		U(0x00029000)	/* 164 KB for BL2 */
++#define STM32MP_BL2_RO_SIZE		U(0x00023000)	/* 156 KB */
++#define STM32MP_BL2_SIZE		U(0x0002B000)	/* 176 KB for BL2 */
+ #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #endif
+ 

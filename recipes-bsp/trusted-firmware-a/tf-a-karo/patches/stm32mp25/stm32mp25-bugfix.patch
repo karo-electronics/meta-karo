@@ -1,0 +1,534 @@
+Index: tf-a-txmp-2550/fdts/stm32mp251.dtsi
+===================================================================
+--- tf-a-txmp-2550.orig/fdts/stm32mp251.dtsi
++++ tf-a-txmp-2550/fdts/stm32mp251.dtsi
+@@ -138,6 +138,8 @@
+ 				reg = <0 0 0x400>;
+ 				clocks = <&rcc CK_KER_OSPI1>;
+ 				resets = <&rcc OSPI1_R>, <&rcc OSPI1DLL_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -146,6 +148,8 @@
+ 				reg = <1 0 0x400>;
+ 				clocks = <&rcc CK_KER_OSPI2>;
+ 				resets = <&rcc OSPI2_R>, <&rcc OSPI2DLL_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 		};
+@@ -193,6 +197,8 @@
+ 				reg = <0x40120000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C1>;
+ 				resets = <&rcc I2C1_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -201,6 +207,8 @@
+ 				reg = <0x40130000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C2>;
+ 				resets = <&rcc I2C2_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -209,6 +217,8 @@
+ 				reg = <0x40140000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C3>;
+ 				resets = <&rcc I2C3_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -217,6 +227,8 @@
+ 				reg = <0x40150000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C4>;
+ 				resets = <&rcc I2C4_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -225,6 +237,8 @@
+ 				reg = <0x40160000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C5>;
+ 				resets = <&rcc I2C5_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -233,6 +247,8 @@
+ 				reg = <0x40170000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C6>;
+ 				resets = <&rcc I2C6_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -241,6 +257,8 @@
+ 				reg = <0x40180000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C7>;
+ 				resets = <&rcc I2C7_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -321,6 +339,8 @@
+ 				reg = <0x46040000 0x400>;
+ 				clocks = <&rcc CK_KER_I2C8>;
+ 				resets = <&rcc I2C8_R>;
++				#address-cells = <1>;
++				#size-cells = <0>;
+ 				status = "disabled";
+ 			};
+ 
+@@ -371,33 +391,42 @@
+ 			#address-cells = <1>;
+ 			#size-cells = <1>;
+ 
+-			uid_otp@14 {
++			uid-otp@14 {
+ 				reg = <0x14 0xc>;
+ 			};
+-			part_number_otp@24 {
++
++			part-number-otp@24 {
+ 				reg = <0x24 0x4>;
+ 			};
++
+ 			nand_otp: otp16@40 {
+ 				reg = <0x40 0x4>;
+ 			};
++
+ 			lifecycle2_otp: otp18@48 {
+ 				reg = <0x48 0x4>;
+ 			};
++
+ 			nand2_otp: otp20@50 {
+ 				reg = <0x50 0x4>;
+ 			};
+-			rev_otp@198 {
++
++			rev-otp@198 {
+ 				reg = <0x198 0x4>;
+ 			};
+-			package_otp@1e8 {
++
++			package-otp@1e8 {
+ 				reg = <0x1e8 0x1>;
+ 			};
++
+ 			hconf1_otp: otp124@1f0 {
+ 				reg = <0x1f0 0x4>;
+ 			};
++
+ 			pkh_otp: otp144@240 {
+ 				reg = <0x240 0x20>;
+ 			};
++
+ 			oem_fip_enc_key: otp260@410 {
+ 				reg = <0x410 0x20>;
+ 			};
+Index: tf-a-txmp-2550/lib/fconf/fconf_dyn_cfg_getter.c
+===================================================================
+--- tf-a-txmp-2550.orig/lib/fconf/fconf_dyn_cfg_getter.c
++++ tf-a-txmp-2550/lib/fconf/fconf_dyn_cfg_getter.c
+@@ -112,20 +112,23 @@ int fconf_populate_dtb_registry(uintptr_
+ 		/* Read configuration dtb information */
+ 		rc = fdt_read_uint64(dtb, child, "load-address", &val64);
+ 		if (rc < 0) {
+-			ERROR("FCONF: Incomplete configuration property in dtb-registry.\n");
++			ERROR("FCONF: 'load-address' property is missing in %s.\n",
++			      fdt_get_name(dtb, child, NULL));
+ 			return rc;
+ 		}
+ 		config_addr = (uintptr_t)val64;
+ 
+ 		rc = fdt_read_uint32(dtb, child, "max-size", &config_max_size);
+ 		if (rc < 0) {
+-			ERROR("FCONF: Incomplete configuration property in dtb-registry.\n");
++			ERROR("FCONF: 'max-size' property is missing in %s.\n",
++			      fdt_get_name(dtb, child, NULL));
+ 			return rc;
+ 		}
+ 
+ 		rc = fdt_read_uint32(dtb, child, "id", &config_id);
+ 		if (rc < 0) {
+-			ERROR("FCONF: Incomplete configuration property in dtb-registry.\n");
++			ERROR("FCONF: 'id' property is missing in %s.\n",
++			      fdt_get_name(dtb, child, NULL));
+ 			return rc;
+ 		}
+ 
+Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_def.h
++++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
+@@ -367,17 +367,23 @@ enum ddr_type {
+ #define STM32MP2_UPPER_OTP_START	0x100U
+ 
+ /* OTP labels */
+-#define PART_NUMBER_OTP			"part_number_otp"
+-#define REVISION_OTP			"rev_otp"
+-#define PACKAGE_OTP			"package_otp"
++#define PART_NUMBER_OTP			"part-number-otp"
++#define REVISION_OTP			"rev-otp"
++#define PACKAGE_OTP			"package-otp"
+ #define HCONF1_OTP			"otp124"
+ #define NAND_OTP			"otp16"
+ #define NAND2_OTP			"otp20"
+-#define BOARD_ID_OTP			"board_id"
+-#define UID_OTP				"uid_otp"
++#define BOARD_ID_OTP			"board-id"
++#define UID_OTP				"uid-otp"
+ #define LIFECYCLE2_OTP			"otp18"
+ #define PKH_OTP				"otp144"
+ #define ENCKEY_OTP			"otp260"
++/* legacy definitions */
++#define PART_NUMBER_OTP_LEGACY		"part_number_otp"
++#define REVISION_OTP_LEGACY		"rev_otp"
++#define PACKAGE_OTP_LEGACY		"package_otp"
++#define BOARD_ID_OTP_LEGACY		"board_id"
++#define UID_OTP_LEGACY			"uid_otp"
+ 
+ /* OTP mask */
+ /* PACKAGE */
+Index: tf-a-txmp-2550/plat/st/stm32mp2/platform.mk
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/platform.mk
++++ tf-a-txmp-2550/plat/st/stm32mp2/platform.mk
+@@ -211,9 +211,7 @@ PLAT_BL_COMMON_SOURCES	+=	drivers/st/clk
+ 
+ PLAT_BL_COMMON_SOURCES  +=	drivers/st/nvmem/stm32mp_tamp_nvram_mp2.c
+ 
+-ifeq ($(filter 1,${STM32MP_UART_PROGRAMMER} ${STM32MP_USB_PROGRAMMER}),)
+ PLAT_BL_COMMON_SOURCES  +=	plat/st/stm32mp2/stm32mp2_context.c
+-endif
+ 
+ BL2_SOURCES		+=	plat/st/stm32mp2/plat_bl2_mem_params_desc.c
+ 
+@@ -295,9 +293,7 @@ BL31_SOURCES		+=	${FDT_WRAPPERS_SOURCES}
+ BL31_SOURCES		+=	plat/st/stm32mp2/bl31_plat_setup.c			\
+ 				plat/st/stm32mp2/stm32mp2_topology.c
+ 
+-ifeq ($(filter 1,${STM32MP_UART_PROGRAMMER} ${STM32MP_USB_PROGRAMMER}),)
+ BL31_SOURCES		+=	plat/st/stm32mp2/stm32mp2_pm.c
+-endif
+ 
+ BL31_SOURCES		+=	drivers/st/ddr/stm32mp2_ddr_helpers.c
+ 
+Index: tf-a-txmp-2550/plat/st/stm32mp2/bl31_plat_setup.c
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/bl31_plat_setup.c
++++ tf-a-txmp-2550/plat/st/stm32mp2/bl31_plat_setup.c
+@@ -160,22 +160,3 @@ entry_point_info_t *bl31_plat_get_next_i
+ 
+ 	return NULL;
+ }
+-
+-#if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
+-static const plat_psci_ops_t null_psci_ops;
+-
+-/* Stub PSCI platform functions */
+-plat_local_state_t plat_get_target_pwr_state(unsigned int lvl,
+-					     const plat_local_state_t *states,
+-					     unsigned int ncpu)
+-{
+-	return 0U;
+-}
+-
+-int plat_setup_psci_ops(uintptr_t sec_entrypoint,
+-			const plat_psci_ops_t **psci_ops)
+-{
+-	*psci_ops = &null_psci_ops;
+-	return 0;
+-}
+-#endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+Index: tf-a-txmp-2550/drivers/st/nvmem/nvmem.c
+===================================================================
+--- tf-a-txmp-2550.orig/drivers/st/nvmem/nvmem.c
++++ tf-a-txmp-2550/drivers/st/nvmem/nvmem.c
+@@ -25,13 +25,11 @@ static struct nvmem_dev nvmem_dev_array[
+ int nvmem_driver_register(int nodeoffset, const struct nvmem_ops *nvmem_ops,
+ 			  void *drv_data)
+ {
+-	struct nvmem_dev *nvmem_dev = NULL;
++	struct nvmem_dev *nvmem_dev;
+ 
+-	for_each_nvmem_dev(nvmem_dev) {
+-		if (nvmem_dev->drv_data == NULL) {
++	for_each_nvmem_dev(nvmem_dev)
++		if (!nvmem_dev->drv_data)
+ 			break;
+-		}
+-	}
+ 
+ 	if (nvmem_dev > &nvmem_dev_array[PLAT_NB_NVMEM_DEVS - 1U]) {
+ 		WARN("Not enough place for NVMEM dev, PLAT_NB_NVMEM_DEVS should be increased.\n");
+@@ -47,13 +45,11 @@ int nvmem_driver_register(int nodeoffset
+ 
+ static struct nvmem_dev *nvmem_get_by_node(int node_offset)
+ {
+-	struct nvmem_dev *nvmem_dev = NULL;
++	struct nvmem_dev *nvmem_dev;
+ 
+-	for_each_nvmem_dev(nvmem_dev) {
+-		if (nvmem_dev->offset == node_offset) {
++	for_each_nvmem_dev(nvmem_dev)
++		if (nvmem_dev->offset == node_offset)
+ 			return nvmem_dev;
+-		}
+-	}
+ 
+ 	WARN("%s: node %d not found\n", __func__, node_offset);
+ 	return NULL;
+@@ -62,12 +58,12 @@ static struct nvmem_dev *nvmem_get_by_no
+ int nvmem_get_cell_by_index(const void *fdt, int nodeoffset, unsigned int index,
+ 			    struct nvmem_cell *cell)
+ {
+-	int len = 0;
+-	const fdt32_t *nvmem_cells_prop = NULL, *nvmem_cell_reg_prop = NULL;
++	int len;
++	const fdt32_t *nvmem_cells_prop, *nvmem_cell_reg_prop;
+ 	uint32_t phandle;
+ 	int nvmem_cell_node;
+ 	int parent_node;
+-	struct nvmem_dev *dev = NULL;
++	struct nvmem_dev *dev;
+ 
+ 	nvmem_cells_prop = fdt_getprop(fdt, nodeoffset, "nvmem-cells", &len);
+ 	if (nvmem_cells_prop == NULL) {
+@@ -80,10 +76,10 @@ int nvmem_get_cell_by_index(const void *
+ 
+ 	nvmem_cell_reg_prop = fdt_getprop(fdt, nvmem_cell_node, "reg", &len);
+ 
+-	if ((nvmem_cell_reg_prop == NULL) ||
+-	    ((unsigned int)len != (sizeof(uint32_t) * U(2)))) {
++	if (!nvmem_cell_reg_prop)
++		return len;
++	if ((unsigned int)len != (sizeof(uint32_t) * U(2)))
+ 		return -FDT_ERR_NOTFOUND;
+-	}
+ 
+ 	cell->offset = fdt32_to_cpu(nvmem_cell_reg_prop[0]);
+ 	cell->len = fdt32_to_cpu(nvmem_cell_reg_prop[1]);
+@@ -103,9 +99,8 @@ int nvmem_get_cell_by_name(const void *f
+ {
+ 	int index = fdt_stringlist_search(fdt, nodeoffset, "nvmem-cell-names", name);
+ 
+-	if (index < 0) {
+-		return -FDT_ERR_NOTFOUND;
+-	}
++	if (index < 0)
++		return index;
+ 
+ 	return nvmem_get_cell_by_index(fdt, nodeoffset, (unsigned int)index,
+ 				       cell);
+@@ -114,9 +109,8 @@ int nvmem_get_cell_by_name(const void *f
+ int nvmem_cell_read(struct nvmem_cell *cell, uint8_t *output_buf,
+ 		    size_t buf_len, size_t *read_len)
+ {
+-	if (cell->dev->nvmem_ops->read_cell == NULL) {
++	if (!cell->dev->nvmem_ops->read_cell)
+ 		return -ENOTSUP;
+-	}
+ 
+ 	return cell->dev->nvmem_ops->read_cell(cell, output_buf, buf_len,
+ 					       read_len);
+@@ -125,9 +119,8 @@ int nvmem_cell_read(struct nvmem_cell *c
+ int nvmem_cell_write(struct nvmem_cell *cell, uint8_t *input_buf,
+ 		     size_t buf_len)
+ {
+-	if (cell->dev->nvmem_ops->write_cell == NULL) {
++	if (!cell->dev->nvmem_ops->write_cell)
+ 		return -ENOTSUP;
+-	}
+ 
+ 	return cell->dev->nvmem_ops->write_cell(cell, input_buf, buf_len);
+ }
+Index: tf-a-txmp-2550/plat/st/common/stm32mp_common.c
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/common/stm32mp_common.c
++++ tf-a-txmp-2550/plat/st/common/stm32mp_common.c
+@@ -180,26 +180,27 @@ int stm32_get_otp_index(const char *otp_
+ 
+ int stm32_get_otp_value(const char *otp_name, uint32_t *otp_val)
+ {
++	int ret;
+ 	uint32_t otp_idx;
+ 
+ 	assert(otp_name != NULL);
+ 	assert(otp_val != NULL);
+ 
+-	if (stm32_get_otp_index(otp_name, &otp_idx, NULL) != 0) {
+-		return -1;
++	ret = stm32_get_otp_index(otp_name, &otp_idx, NULL);
++	if (ret) {
++		return ret;
+ 	}
+ 
+-	if (stm32_get_otp_value_from_idx(otp_idx, otp_val) != 0) {
++	ret = stm32_get_otp_value_from_idx(otp_idx, otp_val);
++	if (ret != BSEC_OK)
+ 		ERROR("BSEC: %s Read Error\n", otp_name);
+-		return -1;
+-	}
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ int stm32_get_otp_value_from_idx(const uint32_t otp_idx, uint32_t *otp_val)
+ {
+-	uint32_t ret = BSEC_NOT_SUPPORTED;
++	uint32_t ret;
+ 
+ 	assert(otp_val != NULL);
+ 
+@@ -212,7 +213,7 @@ int stm32_get_otp_value_from_idx(const u
+ #endif
+ 	if (ret != BSEC_OK) {
+ 		ERROR("BSEC: idx=%u Read Error\n", otp_idx);
+-		return -1;
++		return BSEC_ERROR;
+ 	}
+ 
+ 	return 0;
+Index: tf-a-txmp-2550/plat/st/common/stm32mp_dt.c
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/common/stm32mp_dt.c
++++ tf-a-txmp-2550/plat/st/common/stm32mp_dt.c
+@@ -6,15 +6,14 @@
+ 
+ #include <assert.h>
+ #include <errno.h>
+-
++#include <libfdt.h>
++#include <platform_def.h>
++#include <stm32mp_dt.h>
++#include <string.h>
+ #include <common/debug.h>
+ #include <common/fdt_wrappers.h>
+ #include <drivers/st/regulator.h>
+ #include <drivers/st/stm32_gpio.h>
+-#include <libfdt.h>
+-
+-#include <platform_def.h>
+-#include <stm32mp_dt.h>
+ 
+ static void *fdt;
+ 
+@@ -27,9 +26,8 @@ int dt_open_and_check(uintptr_t dt_addr)
+ 	int ret;
+ 
+ 	ret = fdt_check_header((void *)dt_addr);
+-	if (ret == 0) {
++	if (ret == 0)
+ 		fdt = (void *)dt_addr;
+-	}
+ 
+ 	return ret;
+ }
+@@ -41,9 +39,8 @@ int dt_open_and_check(uintptr_t dt_addr)
+  ******************************************************************************/
+ int fdt_get_address(void **fdt_addr)
+ {
+-	if (fdt == NULL) {
++	if (fdt == NULL)
+ 		return 0;
+-	}
+ 
+ 	*fdt_addr = fdt;
+ 
+@@ -343,6 +340,26 @@ const char *dt_get_board_model(void)
+ 	return (const char *)fdt_getprop(fdt, node, "model", NULL);
+ }
+ 
++static int find_legacy_node_name(const char *name, int node)
++{
++	int ret;
++	char legacy_name[42];
++	char *l;
++
++	if (strlen(name) >= sizeof(legacy_name))
++		return -FDT_ERR_NOTFOUND;
++
++	strlcpy(legacy_name, name, sizeof(legacy_name));
++	for (l = legacy_name; *l != '\0'; l++)
++		if (*l == '-')
++			*l = '_';
++	ret = fdt_subnode_offset(fdt, node, legacy_name);
++	if (ret == 0)
++		WARN("Found legacy property '%s' in DTB; please convert to: '%s'\n",
++		     legacy_name, name);
++	return ret;
++}
++
+ /*******************************************************************************
+  * dt_find_otp_name: get OTP ID and length in DT.
+  * name: sub-node name to look up.
+@@ -352,24 +369,27 @@ const char *dt_get_board_model(void)
+  ******************************************************************************/
+ int dt_find_otp_name(const char *name, uint32_t *otp, uint32_t *otp_len)
+ {
++	int ret;
+ 	int node;
+ 	int len;
+ 	const fdt32_t *cuint;
+ 
+-	if ((name == NULL) || (otp == NULL)) {
++	if ((name == NULL) || (otp == NULL))
+ 		return -FDT_ERR_BADVALUE;
+-	}
+ 
+ 	node = fdt_node_offset_by_compatible(fdt, -1, DT_BSEC_COMPAT);
+-	if (node < 0) {
++	if (node < 0)
+ 		return node;
+-	}
+ 
+-	node = fdt_subnode_offset(fdt, node, name);
+-	if (node < 0) {
++	ret = fdt_subnode_offset(fdt, node, name);
++	if (ret < 0)
++		ret = find_legacy_node_name(name, node);
++
++	if (ret < 0) {
+ 		ERROR("nvmem node %s not found\n", name);
+-		return node;
++		return ret;
+ 	}
++	node = ret;
+ 
+ 	cuint = fdt_getprop(fdt, node, "reg", &len);
+ 	if ((cuint == NULL) || (len != (2 * (int)sizeof(uint32_t)))) {
+Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_private.c
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_private.c
++++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_private.c
+@@ -196,13 +196,11 @@ uint32_t stm32mp_get_chip_version(void)
+ {
+ 	static uint32_t rev;
+ 
+-	if (rev != 0U) {
++	if (rev != 0U)
+ 		return rev;
+-	}
+ 
+-	if (stm32_get_otp_value(REVISION_OTP, &rev) != 0) {
++	if (stm32_get_otp_value(REVISION_OTP, &rev) != 0)
+ 		panic();
+-	}
+ 
+ 	return rev;
+ }
