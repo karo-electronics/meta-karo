@@ -26,27 +26,45 @@ ST_OPTEE_DEBUG_LOG_LEVEL ??= "3"
 # ST_OPTEE_DEBUG_TRACE = "1"
 
 # default core debug
-ST_OPTEE_CORE_DEBUG ??= "n"
+ST_OPTEE_CORE_DEBUG ??= "y"
+ST_OPTEE_CORE_DEBUG:stm32mp15common ?= "n"
 
-EXTRA_OEMAKE = "PLATFORM=${OPTEEMACHINE}"
+EXTRA_OEMAKE += "-j1"
+EXTRA_OEMAKE += "PLATFORM=${OPTEEMACHINE}"
 EXTRA_OEMAKE += "CROSS_COMPILE_core=${HOST_PREFIX}"
 EXTRA_OEMAKE += "CROSS_COMPILE_ta_arm64=${HOST_PREFIX}"
-EXTRA_OEMAKE += "${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'CFG_ARM64_core=y ta-targets=ta_arm64', 'CFG_ARM32_core=y CROSS_COMPILE_ta_arm32=${HOST_PREFIX}', d)}"
+EXTRA_OEMAKE += "${@bb.utils.contains('TUNE_FEATURES', 'aarch64', 'ARCH=arm CFG_ARM64_core=y', 'ARCH=arm CFG_ARM32_core=y CROSS_COMPILE_ta_arm32=${HOST_PREFIX}', d)}"
 #EXTRA_OEMAKE += "NOWERROR=1"
 EXTRA_OEMAKE += "LDFLAGS="
-EXTRA_OEMAKE += "CFG_STM32_CRYP=n"
-EXTRA_OEMAKE += "CFG_WITH_TUI=n"
-EXTRA_OEMAKE += "CFG_STPMIC1=n"
 EXTRA_OEMAKE += "CFG_DRAM_SIZE=${BOARD_DRAM_SIZE}"
+
+EXTRA_OEMAKE:append:stm32mp1common = " CFG_STM32_CRYP=n"
+EXTRA_OEMAKE:append:stm32mp1common = " CFG_WITH_TUI=n"
+EXTRA_OEMAKE:append:stm32mp1common = " CFG_STPMIC1=n"
 
 EXTRA_OEMAKE:append:stm32mp13 = " CFG_STM32MP13=y"
 
+EXTRA_OEMAKE:append:stm32mp25 = " CFG_SCMI_SCPFW=y"
+EXTRA_OEMAKE:append:stm32mp25 = " CFG_SCP_FIRMWARE=${S}/core/lib/scmi-server/SCP-firmware"
+
 # debug and trace
+EXTRA_OEMAKE:append:stm32mp25 = " CFG_STM32_PANIC_ON_IAC_EVENT=n"
 EXTRA_OEMAKE += "${@bb.utils.contains('ST_OPTEE_DEBUG_TRACE', '1', 'CFG_TEE_CORE_LOG_LEVEL=${ST_OPTEE_DEBUG_LOG_LEVEL} CFG_TEE_CORE_DEBUG=${ST_OPTEE_CORE_DEBUG}', '', d)}"
 
 OPTEE_ARCH:armv7a = "arm32"
 OPTEE_ARCH:armv7ve = "arm32"
 OPTEE_ARCH:aarch64 = "arm64"
+
+base_do_unpack:append () {
+    s = d.getVar("S")
+    b = d.getVar("B")
+    bb.note("s=%s b=%s\n" % (s, b))
+    bb.note("S=%s B=%s\n" % (os.path.realpath(s), os.path.realpath(b)))
+    bb.note("Creating symlink %s -> %s (wd=%s)\n" % \
+    	    (os.path.relpath(b, os.path.realpath(s)), os.path.join(s, 'build'), \
+	     os.environ.get('PWD')))
+    os.symlink(os.path.relpath(b, os.path.realpath(s)), os.path.join(s, 'build'))
+}
 
 do_configure:prepend(){
     chmod 755 ${S}/scripts/bin_to_c.py
@@ -55,18 +73,57 @@ do_configure:prepend(){
 do_compile() {
     export CFLAGS="${CFLAGS} --sysroot=${STAGING_DIR_HOST}"
     export OPENSSL_MODULES=${STAGING_LIBDIR_NATIVE}/ossl-modules/
+    if [ -n "${OPTEE_CONF}" ]; then
+        for conf in ${OPTEE_CONF}; do
+            # Configure SOC switch
+            soc_extra=""
+            for soc in ${STM32MP_SOC_NAME}; do
+                if [ "$(echo ${conf} | grep -c ${soc})" -eq 1 ]; then
+                    soc_extra="$(echo CFG_${soc} | awk '{print toupper($0)}')=y"
+                    break
+                fi
+            done
 
-    oe_runmake -C ${S} O=${B}/${TF_A_DEVICETREE} CFG_EMBED_DTB_SOURCE_FILE=${TF_A_DEVICETREE}.dts
+            oe_runmake -C ${S} O=${B}/${conf} CFG_EMBED_DTB_SOURCE_FILE=${conf}.dts ${soc_extra}
+        done
+    else
+        oe_runmake -C ${S} O=${B}/out
+    fi
 }
 
-do_install() {
+do_install:stm32mp1common() {
     #install TA devkit
     install -d ${D}${includedir}/optee/export-user_ta/
 
-    for f in  ${B}/${TF_A_DEVICETREE}/export-ta_${OPTEE_ARCH}/* ; do
-        cp -aRf  $f ${D}${includedir}/optee/export-user_ta/
-    done
+    if [ -n "${OPTEE_CONF}" ]; then
+        for conf in ${OPTEE_CONF}; do
+            for f in  ${B}/${conf}/export-ta_${OPTEE_ARCH}/* ; do
+                cp -aRf  $f ${D}${includedir}/optee/export-user_ta/
+            done
+        done
+    fi
 }
+do_install:stm32mp2common() {
+    #install TA devkit
+    install -d ${D}${includedir}/optee/export-user_ta_arm32/
+    install -d ${D}${includedir}/optee/export-user_ta_arm64/
+
+    if [ -n "${OPTEE_CONF}" ]; then
+        for conf in ${OPTEE_CONF}; do
+            if [ -d  ${B}/${conf}/export-ta_arm32 ]; then
+                for f in  ${B}/${conf}/export-ta_arm32/* ; do
+                    cp -aRf  $f ${D}${includedir}/optee/export-user_ta_arm32/
+                done
+            fi
+            if [ -d  ${B}/${conf}/export-ta_arm64 ]; then
+                for f in  ${B}/${conf}/export-ta_arm64/* ; do
+                    cp -aRf  $f ${D}${includedir}/optee/export-user_ta_arm64/
+                done
+            fi
+        done
+    fi
+}
+
 
 # Configure optee binaries
 OPTEE_HEADER    = "tee-header_v2"
@@ -78,16 +135,29 @@ ELF_DEBUG_ENABLE ?= ""
 OPTEE_ELF = "tee"
 OPTEE_ELF_SUFFIX = "elf"
 
+do_deploy[sstate-outputdirs] = "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}"
 do_deploy() {
-    install -d ${DEPLOYDIR}/${FIPTOOL_DIR}
-    for conf in ${TF_A_DEVICETREE}; do
-        install -m 644 ${B}/${conf}/core/${OPTEE_HEADER}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${FIPTOOL_DIR}/${OPTEE_HEADER}.${OPTEE_SUFFIX}
-        install -m 644 ${B}/${conf}/core/${OPTEE_PAGER}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${FIPTOOL_DIR}/${OPTEE_PAGER}.${OPTEE_SUFFIX}
-        install -m 644 ${B}/${conf}/core/${OPTEE_PAGEABLE}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${FIPTOOL_DIR}/${OPTEE_PAGEABLE}.${OPTEE_SUFFIX}
+set -x
+    if [ -n "${ELF_DEBUG_ENABLE}" ]; then
+        install -d ${DEPLOYDIR}/debug
+    fi
+    if [ -n "${OPTEE_CONF}" ]; then
+        for conf in ${OPTEE_CONF}; do
+            install -m 644 ${B}/${conf}/core/${OPTEE_HEADER}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${OPTEE_HEADER}-${conf}.${OPTEE_SUFFIX}
+            install -m 644 ${B}/${conf}/core/${OPTEE_PAGER}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${OPTEE_PAGER}-${conf}.${OPTEE_SUFFIX}
+            install -m 644 ${B}/${conf}/core/${OPTEE_PAGEABLE}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${OPTEE_PAGEABLE}-${conf}.${OPTEE_SUFFIX}
+            if [ -n "${ELF_DEBUG_ENABLE}" ]; then
+                install -m 644 ${B}/${conf}/core/${OPTEE_ELF}.${OPTEE_ELF_SUFFIX} ${DEPLOYDIR}/debug/${OPTEE_ELF}-${conf}.${OPTEE_ELF_SUFFIX}
+            fi
+        done
+    else
+        install -m 644 ${B}/out/core/${OPTEE_HEADER}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${OPTEE_HEADER}.${OPTEE_SUFFIX}
+        install -m 644 ${B}/out/core/${OPTEE_PAGER}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${OPTEE_PAGER}.${OPTEE_SUFFIX}
+        install -m 644 ${B}/out/core/${OPTEE_PAGEABLE}.${OPTEE_SUFFIX} ${DEPLOYDIR}/${OPTEE_PAGEABLE}.${OPTEE_SUFFIX}
         if [ -n "${ELF_DEBUG_ENABLE}" ]; then
-            install -m 644 ${B}/${conf}/core/${OPTEE_ELF}.${OPTEE_ELF_SUFFIX} ${DEPLOYDIR}/debug/${OPTEE_ELF}-${conf}.${OPTEE_ELF_SUFFIX}
+            install -m 644 ${B}/out/core/${OPTEE_ELF}.${OPTEE_ELF_SUFFIX} ${DEPLOYDIR}/debug/${OPTEE_ELF}.${OPTEE_ELF_SUFFIX}
         fi
-    done
+    fi
 }
 addtask deploy before do_build after do_compile
 
@@ -97,3 +167,6 @@ FILES:${PN}-dev = "/usr/include/optee"
 INSANE_SKIP:${PN}-dev = "staticdev"
 
 INHIBIT_PACKAGE_STRIP = "1"
+# ---------------------------------------------------------------------
+# Avoid QA Issue: contains reference to TMPDIR [buildpaths]
+INSANE_SKIP:${PN} += "buildpaths"

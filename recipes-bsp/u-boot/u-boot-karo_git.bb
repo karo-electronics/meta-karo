@@ -367,9 +367,9 @@ do_deploy () {
                         --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
                         --hw-config ${B}/${config}/u-boot.dtb \
                         --nt-fw ${B}/${config}/u-boot-nodtb.bin \
-                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2.bin \
-                        --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2.bin \
-                        --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2.bin \
+                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
+                        --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
+                        --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
                         ${DEPLOYDIR}/fip-${dt}-${type}.bin
                 done
                 break

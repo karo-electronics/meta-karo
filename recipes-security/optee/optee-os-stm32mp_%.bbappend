@@ -1,5 +1,21 @@
+# patches
+SRC_URI:append:stm32mp1 = " \
+    file://patches/0001-${OPTEE_VERSION}-${OPTEE_SUBVERSION}-r1.patch \
+    file://patches/0002-${OPTEE_VERSION}-${OPTEE_SUBVERSION}-${OPTEE_RELEASE}.patch \
+"
+
+SRC_URI:append:stm32mp1 = " \
+    file://patches/dump-general-regs.patch \
+    file://patches/clk-name-bugfix.patch \
+"
+
+SRC_URI:append:stm32mp2 = " \
+    file://patches/stm32mp2-bugfix.patch \
+"
+
+# dts files
 SRC_URI:append = " \
-    file://dts/${TF_A_DEVICETREE}.dts;subdir=git/core/arch/arm/ \
+    file://dts/${DTB_BASENAME}.dts;subdir=git/core/arch/arm/ \
 "
 
 SRC_URI:append:stm32mp15 = " \
@@ -9,7 +25,8 @@ SRC_URI:append:stm32mp15 = " \
     file://dts/stm32mp157-qsmp.dtsi;subdir=git/core/arch/arm/ \
 "
 
-SRC_URI:append = " \
-    file://dump-general-regs.patch \
-    file://clk-name-bugfix.patch \
+SRC_URI:append:stm32mp25 = " \
+    file://dts/stm32mp255c-txmp-2550-rcc.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp255c-txmp-2550-resmem.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp255c-txmp-2550-rif.dtsi;subdir=git/core/arch/arm/ \
 "
