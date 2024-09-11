@@ -34,7 +34,6 @@ SRC_URI:append:stm32mp1 = " \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
-KERNEL_IMAGETYPE:stm32mp1 = "uImage"
 
 KBUILD_DEFCONFIG = "defconfig"
 KBUILD_DEFCONFIG:qsmp-1510 = "qsmp-1510_defconfig"

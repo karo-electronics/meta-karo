@@ -1,4 +1,4 @@
-MACHINEOVERRIDES =. "stm32mp1:"
+MACHINEOVERRIDES =. "stm32mpcommon:stm32mp1common:stm32mp1:"
 
 DEFAULTTUNE ?= "cortexa7thf-neon-vfpv4"
 
@@ -13,6 +13,8 @@ UBOOT_CONFIG ??= "${@ "optee" if 'optee' in d.getVar('MACHINE_FEATURES').split()
 UBOOT_FEATURES ?= "${@ "emmc fastboot" if 'emmc' in d.getVar('MACHINE_FEATURES').split() else ""}"
 
 UBOOT_ENTRYPOINT = "0xc0008000"
+
+KERNEL_IMAGETYPE ?= "uImage"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
@@ -45,10 +47,13 @@ tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONF
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'optee', 'TF_A_CONFIG_optee', '', d)}"
 
-DTB_BASENAME ?= "${TF_A_DEVICETREE}"
+DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
 
 # coprocessor stuff
 M4_BOARDS ?= "STM32MP157C-DK2"
 
 # op-tee
+OPTEE_CONF ?= "${DTB_BASENAME}"
+STM32MP_SOC_NAME ?= "${SOC_PREFIX}"
+
 BOARD_DRAM_SIZE ??= "0x20000000"
