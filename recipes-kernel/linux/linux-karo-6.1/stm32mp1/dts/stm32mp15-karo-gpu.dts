@@ -7,12 +7,23 @@
 
 /plugin/;
 
-&{/chosen} {
-	overlays {
-		karo-gpu;
+&{/} {
+	chosen {
+		overlays {
+			karo-gpu;
+		};
+	};
+
+
+	reserved-memory {
+		gpu_reserved: gpu@d4000000 {
+			reg = <0xd4000000 0x4000000>;
+			no-map;
+		};
 	};
 };
 
 &gpu {
+	contiguous-area = <&gpu_reserved>;
 	status = "okay";
 };
