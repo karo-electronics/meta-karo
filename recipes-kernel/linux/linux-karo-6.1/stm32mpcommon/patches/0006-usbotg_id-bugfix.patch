@@ -1,0 +1,24 @@
+Index: linux-txmp-2550/drivers/usb/dwc2/platform.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/usb/dwc2/platform.c
++++ linux-txmp-2550/drivers/usb/dwc2/platform.c
+@@ -553,7 +553,8 @@ static int dwc2_driver_probe(struct plat
+ 		}
+ 
+ 		ggpio = dwc2_readl(hsotg, GGPIO);
+-		ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
++		if (hsotg->dr_mode == USB_DR_MODE_OTG)
++			ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
+ 		ggpio |= GGPIO_STM32_OTG_GCCFG_VBDEN;
+ 		dwc2_writel(hsotg, ggpio, GGPIO);
+ 
+@@ -732,7 +733,8 @@ static int __maybe_unused dwc2_resume(st
+ 			return ret;
+ 
+ 		ggpio = dwc2_readl(dwc2, GGPIO);
+-		ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
++		if (dwc2->dr_mode == USB_DR_MODE_OTG)
++			ggpio |= GGPIO_STM32_OTG_GCCFG_IDEN;
+ 		ggpio |= GGPIO_STM32_OTG_GCCFG_VBDEN;
+ 		dwc2_writel(dwc2, ggpio, GGPIO);
+ 

@@ -28,11 +28,11 @@ SRC_URI:append:stm32mp1 = " \
         file://STM-patches/0025-v6.1-stm32mp-r1.1.patch \
         file://STM-patches/0026-v6.1-stm32mp-r1.1-dmaengine-stm32.patch \
         file://patches/0007-stm32cryp-dependencies.patch \
-        file://patches/stm32mp1-smsc-phy.bugfix.patch \
 "
 
 SRC_URI:append:stm32mp1 = " \
         file://patches/0001-stm32mp1-compress-ram-size.patch \
+        file://patches/stm32-usart-dma-bugfix.patch \
 "
 
 SRC_URI:append:stm32mp15 = " \
@@ -54,4 +54,13 @@ SRC_URI:append:stm32mp15 = " \
 
 SRC_URI:append:stm32mp13 = " \
         file://patches/stm32mp157-kconfig-dep-bugfix.patch \
+"
+
+SRC_URI:append:stm32mp2 = " \
+        file://patches/stm32mp2-bugfix.patch \
+        file://patches/stm32-usart-dma-bugfix.patch \
+"
+
+SRC_URI:append:stm32mpcommon = " \
+        file://patches/stm32mp-smsc-phy-bugfix.patch \
 "

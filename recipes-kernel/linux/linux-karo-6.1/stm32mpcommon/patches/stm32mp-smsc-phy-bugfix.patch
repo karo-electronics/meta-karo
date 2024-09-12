@@ -1,8 +1,8 @@
 bugfix for zeroed intmask introduced by 0014-v6.1-stm32mp-r1-NET-TTY.patch
-Index: linux-txmp-1570/drivers/net/phy/smsc.c
+Index: linux-txmp-2550/drivers/net/phy/smsc.c
 ===================================================================
---- linux-txmp-1570.orig/drivers/net/phy/smsc.c
-+++ linux-txmp-1570/drivers/net/phy/smsc.c
+--- linux-txmp-2550.orig/drivers/net/phy/smsc.c
++++ linux-txmp-2550/drivers/net/phy/smsc.c
 @@ -44,7 +44,7 @@ static struct smsc_hw_stat smsc_hw_stats
  };
  
