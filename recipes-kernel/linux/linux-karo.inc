@@ -27,15 +27,27 @@ SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
-#SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f, "${OVERLAY_SRC_FILES}".split()))}"
 
 SRC_URI:append:rzg2 = "${@ "".join(map(lambda f: " file://dts/renesas/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 SRC_URI:append:stm32mp1 = "${@ "".join(map(lambda f: " file://dts/overlays/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
+SRC_URI:append:stm32mp2 = "${@ "".join(map(lambda f: " file://dts/st/includes/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 
 KERNEL_DTC_FLAGS += "-@"
 
-def get_overlays(d, vendor="", ext="dtb"):
+do_symlink_kernsrc:append () {
+    b = d.getVar("B")
+    bb.note("s=%s b=%s\n" % (s, b))
+    bb.note("S=%s B=%s\n" % (os.path.realpath(s), os.path.realpath(b)))
+    s = os.path.realpath(s)
+    bb.note("Creating symlink %s -> %s (wd=%s)\n" % \
+    	    (os.path.relpath(b, s), os.path.join(s, 'build'), os.environ.get('PWD')))
+    os.symlink(os.path.relpath(b, s), os.path.join(s, 'build'))
+}
+
+def get_overlays(d):
     ovlist = []
+    vendor = d.getVar('dtb_vendordir')
+    ext = d.getVar('dtb_ext')
     g = d.getVar('DTB_OVERLAYS_generic') or ""
     o = d.getVar('DTB_OVERLAYS') or ""
     for ov in g.split():
@@ -61,8 +73,7 @@ def get_overlays(d, vendor="", ext="dtb"):
     bb.debug(2, "ovlist='%s'" % ovlist)
     return " ".join(ovlist)
 
-KERNEL_DEVICETREE:append:rzg2l = "${@ get_overlays(d, "renesas", "dtbo") }"
-KERNEL_DEVICETREE:append:stm32mp1 = "${@ get_overlays(d) }"
+KERNEL_DEVICETREE:append = "${@ get_overlays(d) }"
 
 do_check_config() {
     ifs="$IFS"
@@ -145,6 +156,7 @@ addtask do_check_config after do_savedefconfig
 do_check_config[nostamp] = "1"
 
 do_compile_dtbs() {
+    bbnote "Compiling ${KERNEL_DEVICETREE}"
     oe_runmake -C ${B} DTC_FLAGS="${KERNEL_DTC_FLAGS}" ${KERNEL_DEVICETREE}
 }
 addtask do_compile_dtbs after do_configure before do_check_dtbs
@@ -170,6 +182,7 @@ dtb_ext = "dtb"
 dtb_vendordir = ""
 dtb_ext:rzg2 = "dtbo"
 dtb_vendordir:rzg2 = "renesas"
+dtb_vendordir:stm32mp2 = "st"
 
 python do_check_dtbs () {
     import os
@@ -224,7 +237,10 @@ python do_check_dtbs () {
     for baseboard in baseboards.split():
         bb.debug(2, "creating %s-%s.dtb from %s.dtb" % (basename, baseboard, basename))
         outfile = "%s-%s" % (basename, baseboard)
-        overlays = " ".join(map(lambda f: f, d.getVarFlag('KARO_DTB_OVERLAYS', baseboard, True).split()))
+        karo_dtb_overlays = d.getVarFlag('KARO_DTB_OVERLAYS', baseboard, True)
+        if karo_dtb_overlays == None:
+            continue
+        overlays = " ".join(map(lambda f: f, karo_dtb_overlays.split()))
         bb.note("overlays_%s=%s" % (baseboard, overlays))
         if overlays == None or len(overlays.split()) == 0:
             bb.fatal("%s: No overlays specified for %s" % (d.getVar('MACHINE'), baseboard))
@@ -233,4 +249,46 @@ python do_check_dtbs () {
         apply_overlays(basename, outfile, overlays)
     os.chdir(here)
 }
+do_check_dtbs[vardeps] += "DTB_OVERLAYS KARO_DTB_OVERLAYS"
 addtask do_check_dtbs after do_compile_dtbs before do_compile
+
+python do_check_overlays() {
+    import os
+    import subprocess
+    import itertools
+
+    dtbdir = os.path.join(d.getVar('B'), d.getVar('KERNEL_OUTPUT_DIR'), "dts")
+
+    def ov_file(ov):
+        return os.path.join(dtbdir, ov)
+
+    def get_syms(file, node):
+        cmd = ['fdtget', '-p', '-d', "", file, node]
+        syms = subprocess.check_output(cmd, text=True)
+        if syms != None:
+            return syms.split()
+        return ()
+
+    syms = dict()
+    refs = dict()
+    for f in d.getVar('KERNEL_DEVICETREE').split():
+        syms[f] = get_syms(ov_file(f), "/__symbols__")
+        refs[f] = get_syms(ov_file(f), "/__fixups__")
+
+    ok = True
+    for f in d.getVar('KERNEL_DEVICETREE').split():
+        bb.note("Checking DTB '%s'" % f)
+        for s in refs[f]:
+            bb.note("Looking up %s from %s" % (s, f))
+            if not s in list(itertools.chain.from_iterable(syms.values())):
+                bb.error("'%s' referenced in '%s' is not defined in any DTB file" % (s, f))
+                ok = False
+            else:
+                for (sf,ss) in syms.items():
+                    if s in ss:
+                        bb.debug(1, "%s referenced in %s is defined in %s" % (s, f, sf))
+                        break
+
+    return ok
+}
+addtask do_check_overlays after do_compile_dtbs before do_compile

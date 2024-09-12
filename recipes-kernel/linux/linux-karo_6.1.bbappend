@@ -1,5 +1,9 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}:"
 
+SRC_URI:append = " \
+        file://karo-spidev-test.patch \
+"
+
 SRC_URI:append:stm32mp1 = " \
         file://STM-patches/0001-v6.1-stm32mp-r1-BUS.patch \
         file://STM-patches/0002-v6.1-stm32mp-r1-CLOCK.patch \
@@ -32,7 +36,7 @@ SRC_URI:append:stm32mp1 = " \
 
 SRC_URI:append:stm32mp1 = " \
         file://patches/0001-stm32mp1-compress-ram-size.patch \
-        file://patches/stm32-usart-dma-bugfix.patch \
+        file://patches/0005-stmmac-gpio-bugfix.patch \
 "
 
 SRC_URI:append:stm32mp15 = " \
@@ -40,7 +44,6 @@ SRC_URI:append:stm32mp15 = " \
         file://patches/0002-pinctrl-z.patch \
         file://patches/0003-smsc-suspend-bugfix.patch \
         file://patches/0004-smsc-lan8741-support.patch \
-        file://patches/0005-stmmac-gpio-bugfix.patch \
         file://patches/0006-usbotg_id-bugfix.patch \
         file://patches/0007-usb-phy-bugfix.patch \
         file://patches/0009-dwc2-usbotg-bugfix.patch \
@@ -57,10 +60,5 @@ SRC_URI:append:stm32mp13 = " \
 "
 
 SRC_URI:append:stm32mp2 = " \
-        file://patches/stm32mp2-bugfix.patch \
-        file://patches/stm32-usart-dma-bugfix.patch \
-"
-
-SRC_URI:append:stm32mpcommon = " \
-        file://patches/stm32mp-smsc-phy-bugfix.patch \
+        file://patches/0005-stmmac-gpio-bugfix.patch \
 "

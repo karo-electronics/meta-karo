@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+
+/dts-v1/;
+
+/plugin/;
+
+&{/} {
+	chosen {
+		overlays {
+			txmp-keypad;
+		};
+	};
+
+	matrix_keypad: matrix-keypad {
+		compatible = "gpio-matrix-keypad";
+		debounce-delay-ms = <5>;
+		col-scan-delay-us = <2>;
+		row-gpios = <
+			     &gpiog 0 GPIO_ACTIVE_HIGH
+			     &gpioc 3  GPIO_ACTIVE_HIGH
+			     &gpioc 8 GPIO_ACTIVE_HIGH
+			     &gpiof 4 GPIO_ACTIVE_HIGH
+		>;
+		col-gpios = <
+			     &gpioc 12 GPIO_ACTIVE_HIGH
+			     &gpioc 7 GPIO_ACTIVE_HIGH
+			     &gpioc 4 GPIO_ACTIVE_HIGH
+			     &gpioz 8 GPIO_ACTIVE_HIGH
+		>;
+		linux,keymap = <
+		>;
+	};
+};

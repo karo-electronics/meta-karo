@@ -11,7 +11,6 @@ INHERIT:remove = "${@'reproducible_build' if d.getVar('BUILD_REPRODUCIBLE_BINARI
 
 PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
 PREFERRED_VERSION_linux-karo = "6.1"
-KERNEL_IMAGETYPE ??= "uImage"
 
 MACHINEOVERRIDES =. "use-mainline-bsp:"
 
@@ -19,11 +18,24 @@ IMAGE_CLASSES += "st-partitions-image"
 
 FIPTOOL_DIR = "fiptool"
 
+GPU_IMAGE_INSTALL ??= ""
+GPU_LIST ??= ""
+
+GPU_USERLAND_LIBRARIES_INSTALL ??= "libdrm-etnaviv"
+
+GPU_LIST:stm32mp2 = "\
+    gcnano-driver-stm32mp \
+    ${GPU_USERLAND_LIBRARIES_INSTALL} \
+"
+
+GPU_IMAGE_INSTALL:stm32mp2 = "${@bb.utils.contains('MACHINE_FEATURES', 'gpu', '${GPU_LIST}', '', d)} "
+
 # Ship kernel modules
 MACHINE_EXTRA_RRECOMMENDS = " \
-                          kernel-modules \
-                          kernel-devicetree \
-                          u-boot-karo \
+    kernel-modules \
+    kernel-devicetree \
+    u-boot-karo \
+    ${GPU_IMAGE_INSTALL} \
 "
 
 MACHINE_FEATURES = " \

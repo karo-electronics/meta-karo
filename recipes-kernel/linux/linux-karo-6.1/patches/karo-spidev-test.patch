@@ -1,0 +1,59 @@
+Index: linux-txmp-2550/drivers/spi/spidev.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/spi/spidev.c
++++ linux-txmp-2550/drivers/spi/spidev.c
+@@ -700,33 +700,22 @@ static const struct spi_device_id spidev
+ 	{ .name = "m53cpld" },
+ 	{ .name = "spi-petra" },
+ 	{ .name = "spi-authenta" },
+-	{},
++	{ .name = "spidev-test" },
++	{}
+ };
+ MODULE_DEVICE_TABLE(spi, spidev_spi_ids);
+ 
+-/*
+- * spidev should never be referenced in DT without a specific compatible string,
+- * it is a Linux implementation thing rather than a description of the hardware.
+- */
+-static int spidev_of_check(struct device *dev)
+-{
+-	if (device_property_match_string(dev, "compatible", "spidev") < 0)
+-		return 0;
+-
+-	dev_err(dev, "spidev listed directly in DT is not supported\n");
+-	return -EINVAL;
+-}
+-
+ static const struct of_device_id spidev_dt_ids[] = {
+-	{ .compatible = "rohm,dh2228fv", .data = &spidev_of_check },
+-	{ .compatible = "lineartechnology,ltc2488", .data = &spidev_of_check },
+-	{ .compatible = "semtech,sx1301", .data = &spidev_of_check },
+-	{ .compatible = "lwn,bk4", .data = &spidev_of_check },
+-	{ .compatible = "dh,dhcom-board", .data = &spidev_of_check },
+-	{ .compatible = "menlo,m53cpld", .data = &spidev_of_check },
+-	{ .compatible = "cisco,spi-petra", .data = &spidev_of_check },
+-	{ .compatible = "micron,spi-authenta", .data = &spidev_of_check },
+-	{},
++	{ .compatible = "rohm,dh2228fv", },
++	{ .compatible = "lineartechnology,ltc2488", },
++	{ .compatible = "semtech,sx1301", },
++	{ .compatible = "lwn,bk4", },
++	{ .compatible = "dh,dhcom-board", },
++	{ .compatible = "menlo,m53cpld", },
++	{ .compatible = "cisco,spi-petra", },
++	{ .compatible = "micron,spi-authenta", },
++	{ .compatible = "karo,spidev-test", },
++	{}
+ };
+ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
+ 
+@@ -747,7 +736,7 @@ static const struct acpi_device_id spide
+ 	{ "SPT0001", (kernel_ulong_t)&spidev_acpi_check },
+ 	{ "SPT0002", (kernel_ulong_t)&spidev_acpi_check },
+ 	{ "SPT0003", (kernel_ulong_t)&spidev_acpi_check },
+-	{},
++	{}
+ };
+ MODULE_DEVICE_TABLE(acpi, spidev_acpi_ids);
+ 

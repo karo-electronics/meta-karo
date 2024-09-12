@@ -1,0 +1,55 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include "includes/stm32mp25-karo-sound.dtsi"
+
+&{/chosen} {
+	overlays {
+		txmp-sound;
+	};
+};
+
+&sai1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sai1_pins>;
+	pinctrl-1 = <&sai1_sleep_pins>;
+};
+
+&pinctrl {
+	sai1_pins: sai1-pins {
+		pins1 {
+			pinmux = <
+				STM32_PINMUX('D', 9, AF3)	/* TXD */
+				STM32_PINMUX('D', 8, AF3)	/* FS */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <
+				STM32_PINMUX('D', 4, AF4)	/* RXD */
+				STM32_PINMUX('I', 10, AF1)	/* SCK */
+			>;
+		};
+	};
+
+	sai1_sleep_pins: sai1-sleep-pins {
+		pins {
+			pinmux = <
+				STM32_PINMUX('D', 9, ANALOG)	/* TXD */
+				STM32_PINMUX('D', 8, ANALOG)	/* FS */
+				STM32_PINMUX('D', 4, ANALOG)	/* RXD */
+				STM32_PINMUX('I', 10, ANALOG)	/* SCK */
+			>;
+		};
+	};
+};
