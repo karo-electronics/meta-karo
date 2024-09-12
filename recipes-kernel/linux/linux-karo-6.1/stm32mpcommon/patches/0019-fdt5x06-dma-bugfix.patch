@@ -171,7 +171,7 @@ Index: linux-txmp-1570/drivers/input/touchscreen/edt-ft5x06.c
  	struct edt_ft5x06_ts_data *tsdata;
 -	u8 buf[2] = { 0xfc, 0x00 };
 +	u8 *buf;
- 	struct mipi_dsi_device *panel;
+ 	struct drm_panel *panel;
  	struct device_node *np;
  	struct input_dev *input;
 @@ -1294,6 +1299,8 @@ static int edt_ft5x06_ts_probe(struct i2

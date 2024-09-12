@@ -10,9 +10,9 @@ KERNEL_SRC_DEFAULT = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux
 KERNEL_BRANCH_DEFAULT = "linux-6.1.y"
 KERNEL_REV_DEFAULT = "316071de521e96bc0f7e928e3d20508891961fa4"
 
-KERNEL_SRC_DEFAULT:stm32mp2 = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
-KERNEL_BRANCH_DEFAULT:stm32mp2 = "linux-stm32mp-v6.1"
-KERNEL_REV_DEFAULT:stm32mp2 = "388441690e1c5cf1e699a2e685ef31fc20b9e7ae"
+KERNEL_SRC_DEFAULT:stm32mpcommon = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
+KERNEL_BRANCH_DEFAULT:stm32mpcommon = "linux-stm32mp-v6.1"
+KERNEL_REV_DEFAULT:stm32mpcommon = "388441690e1c5cf1e699a2e685ef31fc20b9e7ae"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \

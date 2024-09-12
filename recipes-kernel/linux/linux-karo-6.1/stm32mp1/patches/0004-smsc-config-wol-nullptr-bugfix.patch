@@ -1,0 +1,40 @@
+commit 388441690e1c5cf1e699a2e685ef31fc20b9e7ae
+Author: Lothar Waßmann <LW@KARO-electronics.de>
+Date:   Fri Sep 6 12:31:02 2024 +0200
+
+    net: phy: smsc: fix broken link detection
+    
+    Link detection via interrupt is broken since
+    commit e9146aff64d8 ("net: phy: smsc: add support of WoL")
+    which makes the driver clear the intmask when WoL is disabled rather
+    than leaving the original value intact.
+    
+    Fixes: e9146aff64d8 ("net: phy: smsc: add support of WoL")
+
+diff --git a/drivers/net/phy/smsc.c b/drivers/net/phy/smsc.c
+index 0d08f1739f3c..5778ea0386ff 100644
+--- a/drivers/net/phy/smsc.c
++++ b/drivers/net/phy/smsc.c
+@@ -44,7 +44,7 @@ static struct smsc_hw_stat smsc_hw_stats[] = {
+ };
+ 
+ struct smsc_phy_priv {
+- 	u16 intmask;
++	u16 intmask;
+ 	bool energy_enable;
+ 	bool wakeup_enable;
+ };
+@@ -66,12 +66,11 @@ static int smsc_phy_config_intr(struct phy_device *phydev)
+ 		if (rc)
+ 			return rc;
+ 
++		priv->intmask = MII_LAN83C185_ISF_INT_PHYLIB_EVENTS;
+ 		if (priv->wakeup_enable)
+ 			priv->intmask |= MII_LAN83C185_ISF_INT8;
+ 		rc = phy_write(phydev, MII_LAN83C185_IM, priv->intmask);
+ 	} else {
+-		priv->intmask = 0;
+-
+ 		rc = phy_write(phydev, MII_LAN83C185_IM, 0);
+ 		if (rc)
+ 			return rc;
