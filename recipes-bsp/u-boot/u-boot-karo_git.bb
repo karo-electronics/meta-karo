@@ -16,25 +16,31 @@ DEPENDS:append = " \
     bison-native \
     xxd-native \
     python3-setuptools-native \
-    fiptool-native \
-    ${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-os', '', d)} \
 "
+
+fiptool = "${@ "tf-a-tools-native" if "stm32mp2" in d.getVar('MACHINEOVERRIDES').split(':') else "fiptool-native"}"
+DEPENDS:append = " ${fiptool}"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
-SRC_URI = "${UBOOT_SRC};branch=${SRCBRANCH}"
-SRCBRANCH = "${@ d.getVar('UBOOT_BRANCH') if d.getVar('UBOOT_BRANCH') else \
-            d.getVar('UBOOT_BRANCH_DEFAULT')}"
-SRCREV = "${@ d.getVar('UBOOT_REV') if d.getVar('UBOOT_REV') else \
-            d.getVar('UBOOT_REV_DEFAULT')}"
-
-UBOOT_SRC ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
+UBOOT_SRC_DEFAULT ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
 
 UBOOT_BRANCH_DEFAULT:stm32mp1 = "karo-stm32mp1-v2022.10"
 UBOOT_REV_DEFAULT:stm32mp1 = "af3041c12c318e17d089ec1dcdf36ebc900e61c7"
 
+UBOOT_BRANCH_DEFAULT:stm32mp2 = "karo-stm32mp2-v2022.10"
+UBOOT_REV_DEFAULT:stm32mp2 = "7323909e99f45c789bb3b64c017dd4bda00d3d59"
+
 UBOOT_BRANCH_DEFAULT:rzg2 = "karo-txrz"
 UBOOT_REV_DEFAULT:rzg2 = "6369729a31bd80e062f7bc0d93f1f3380d3e3b2c"
+
+UBOOT_BRANCH ?= "${UBOOT_BRANCH_DEFAULT}"
+UBOOT_SRC ?= "${UBOOT_SRC_DEFAULT}"
+UBOOT_REV ?= "${UBOOT_REV_DEFAULT}"
+
+SRC_URI = "${UBOOT_SRC};branch=${SRCBRANCH}"
+SRCBRANCH = "${UBOOT_BRANCH}"
+SRCREV = "${UBOOT_REV}"
 
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
@@ -46,6 +52,7 @@ SCMVERSION ??= "y"
 LOCALVERSION ??= "-karo"
 
 UBOOT_BOARD_DIR:stm32mp1 = "board/karo/stm32mp1"
+UBOOT_BOARD_DIR:stm32mp2 = "board/karo/stm32mp2"
 UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
 
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
@@ -82,7 +89,7 @@ UBOOT_FEATURES:append = "${@ " " + d.getVar('KARO_BASEBOARD') if d.getVar('KARO_
 do_deploy[depends] += "virtual/trusted-firmware-a:do_deploy"
 do_deploy[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-os:do_deploy', '', d)}"
 
-do_configure:prepend:stm32mp1() {
+do_configure:prepend:stm32mpcommon() {
     if [ -z "${UBOOT_CONFIG}" ]; then
         bbfatal "Wrong u-boot-karo configuration: please make sure to use UBOOT_CONFIG through BOOTSCHEME_LABELS config"
     fi
@@ -195,6 +202,7 @@ EOF
     fi
     rm -vf "$tmpfile"
 }
+addtask do_configure before do_devshell
 
 do_savedefconfig() {
     if [ -n "${UBOOT_CONFIG}" ];then
@@ -321,9 +329,6 @@ do_compile:prepend() {
     fi
 }
 
-# -----------------------------------------------------------------------------
-# Append deploy to handle specific device tree binary deployement
-#
 def get_tfa_configs(d):
     cfg = ()
     for type in d.getVar('UBOOT_CONFIG').split():
@@ -349,7 +354,8 @@ do_install () {
     fi
 }
 
-do_deploy () {
+do_deploy:stm32mp1 () {
+    dt=${TF_A_DEVICETREE}
     # Create fip images
     i=0
     for config in ${UBOOT_MACHINE}; do
@@ -362,16 +368,14 @@ do_deploy () {
             for cfg in ${TF_A_CONFIGS}; do
                 k=$(expr $k + 1)
                 [ $k -lt $j ] && continue
-                for dt in ${TF_A_DEVICETREE}; do
-                    fiptool create \
-                        --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
-                        --hw-config ${B}/${config}/u-boot.dtb \
-                        --nt-fw ${B}/${config}/u-boot-nodtb.bin \
-                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
-                        --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
-                        --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
-                        ${DEPLOYDIR}/fip-${dt}-${type}.bin
-                done
+                fiptool create \
+                    --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
+                    --hw-config ${B}/${config}/u-boot.dtb \
+                    --nt-fw ${B}/${config}/u-boot-nodtb.bin \
+                    --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
+                    --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
+                    --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
+                    ${DEPLOYDIR}/fip-${dt}-${type}.bin
                 break
             done
             break
@@ -379,7 +383,40 @@ do_deploy () {
     done
 }
 
-do_deploy:append:stm32mp1 () {
+do_deploy:stm32mp2 () {
+set -x
+    dt=${TF_A_DEVICETREE}
+    # Create fip images
+    i=0
+    for config in ${UBOOT_MACHINE}; do
+        i=$(expr $i + 1)
+        j=0
+        for type in ${UBOOT_CONFIG}; do
+            j=$(expr $j + 1)
+            [ $j -lt $i ] && continue
+            k=0
+            for cfg in ${TF_A_CONFIGS}; do
+                k=$(expr $k + 1)
+                [ $k -lt $j ] && continue
+                fiptool create \
+                    --nt-fw ${B}/${config}/u-boot-nodtb.bin \
+                    --hw-config ${B}/${config}/u-boot.dtb \
+		    --ddr-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/ddr_pmu-${OPTEE_CONF}.bin \
+                    --soc-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/bl31-${MACHINE}.bin \
+                    --soc-fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-bl31.dtb \
+                    --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
+                    --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${OPTEE_CONF}.bin \
+                    --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${OPTEE_CONF}.bin \
+                    --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${OPTEE_CONF}.bin \
+                    ${DEPLOYDIR}/fip-${dt}-${type}.bin
+                break
+            done
+            break
+        done
+    done
+}
+
+do_deploy:append:stm32mpcommon () {
     # create bash script to start 'fastboot' on the target via dfu-util
     cat <<EOF > ${DEPLOYDIR}/fastboot.cmd
 fastboot 0
@@ -401,8 +438,8 @@ do_deploy:rzg2l() {
             for type in ${UBOOT_CONFIG};do
                 j=$(expr $j + 1)
                 [ $j -lt $i ] && continue
-                fiptool create --align 16 --soc-fw \
-                    "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
+                fiptool create --align 16 \
+                    --soc-fw "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
                     --nt-fw "${B}/${config}/u-boot-${type}.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin"
                 if [ $i = 1 ];then
                     ln -s ${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin "${DEPLOYDIR}/fip-${MACHINE}.bin"
@@ -476,5 +513,4 @@ do_env_overlays[vardeps] += "KARO_BASEBOARDS KARO_DTB_OVERLAYS"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"
-COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"
-
+COMPATIBLE_MACHINE:stm32mpcommon = "(txmp-.*|qsmp-.*)"

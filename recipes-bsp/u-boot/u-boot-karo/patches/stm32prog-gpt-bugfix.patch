@@ -1,0 +1,39 @@
+Index: u-boot-qsmp-1570/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
+===================================================================
+--- u-boot-qsmp-1570.orig/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
++++ u-boot-qsmp-1570/arch/arm/mach-stm32mp/cmd_stm32prog/stm32prog.c
+@@ -592,7 +592,7 @@ static int parse_flash_layout(struct stm
+ 		}
+ 	}
+ 	if (part_list_size > PHASE_LAST_USER) {
+-		stm32prog_err("Layout: too many partition (%d)",
++		stm32prog_err("Layout: too many partitions (%d)",
+ 			      part_list_size);
+ 		return -1;
+ 	}
+@@ -1104,7 +1104,7 @@ static int create_gpt_partitions(struct
+ 			}
+ 
+ 			if (!offset)
+-				offset += sprintf(buf, "gpt write mmc %d \"",
++				offset += sprintf(buf, "gpt write mmc %d ",
+ 						  data->dev[i].dev_id);
+ 
+ 			offset += snprintf(buf + offset, buflen - offset,
+@@ -1165,14 +1165,13 @@ static int create_gpt_partitions(struct
+ 						   ",uuid=%s", uuid);
+ 			}
+ 
+-			offset += snprintf(buf + offset, buflen - offset, ";");
++			offset += snprintf(buf + offset, buflen - offset, "\\;");
+ 		}
+ 
+ 		if (offset) {
+-			offset += snprintf(buf + offset, buflen - offset, "\"");
+ 			log_debug("\ncmd: %s\n", buf);
+ 			if (run_command(buf, 0)) {
+-				stm32prog_err("GPT partitionning fail: %s",
++				stm32prog_err("GPT partitioning failed: %s",
+ 					      buf);
+ 				free(buf);
+ 

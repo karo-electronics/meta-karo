@@ -1,0 +1,2464 @@
+Index: u-boot-txmp-2550/board/karo/stm32mp1/Kconfig
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/stm32mp1/Kconfig
++++ u-boot-txmp-2550/board/karo/stm32mp1/Kconfig
+@@ -1,7 +1,3 @@
+-source "board/karo/common/Kconfig"
+-
+-if TARGET_KARO_STM32MP1
+-
+ config SYS_BOARD
+ 	default "stm32mp1"
+ 
+@@ -11,112 +7,4 @@ config SYS_VENDOR
+ config SYS_CONFIG_NAME
+ 	default "txmp"
+ 
+-config KARO_STM32
+-	bool
+-	imply DM_RNG
+-	imply DM_USB
+-	imply DM_USB_GADGET
+-	imply RNG_STM32MP1
+-
+ source "board/st/common/Kconfig"
+-
+-choice
+-	prompt "Ka-Ro STM32 module variant"
+-
+-config KARO_TXMP_1570
+-	bool "Ka-Ro TXMP-1570 module"
+-	depends on STM32MP15X
+-	select KARO_STM32
+-	imply KARO_STM32_EMMC
+-	help
+-	  Enable support for the Ka-Ro electronics TXMP-1570 module featuring
+-	  an STM32MP157C SOC, 512MiB of SDRAM and 4GiB or 8GiB eMMC.
+-
+-config KARO_TXMP_1571
+-	bool "Ka-Ro TXMP-1571 module"
+-	depends on STM32MP15X
+-	select KARO_STM32
+-	imply KARO_STM32_EMMC
+-	help
+-	  TXMP-1570 with corrected pinout compatible with the rest of the
+-	  TX module family
+-
+-config KARO_QSMP_1510
+-	bool "Ka-Ro QSMP-1510 solder-in module"
+-	depends on STM32MP15X
+-	select KARO_STM32
+-	select KARO_STM32_NAND
+-	help
+-	  Enable support for the Ka-Ro electronics QSMP-1510 module featuring
+-	  an STM32MP151A SOC, 256MiB of SDRAM and 128MiB NAND flash on a
+-	  solder-in module.
+-
+-config KARO_QSMP_1530
+-	bool "Ka-Ro QSMP-1530 solder-in module"
+-	depends on STM32MP15X
+-	select KARO_STM32
+-	imply KARO_STM32_EMMC
+-	help
+-	  Enable support for the Ka-Ro electronics QSMP-1530 module featuring
+-	  an STM32MP153A SOC, 256MiB of SDRAM and 4GiB eMMC on a solder-in
+-	  module.
+-
+-config KARO_QSMP_1570
+-	bool "Ka-Ro QSMP-1570 solder-in module"
+-	depends on STM32MP15X
+-	select KARO_STM32
+-	imply KARO_STM32_EMMC
+-	help
+-	  Enable support for the Ka-Ro electronics QSMP-1570 module featuring
+-	  an STM32MP157C SOC, 512MiB of SDRAM and 4GiB eMMC on a solder-in
+-	  module.
+-
+-config KARO_QSMP_1351
+-	bool "Ka-Ro QSMP-1351 solder-in module"
+-	depends on STM32MP13X
+-	select KARO_STM32
+-	imply KARO_STM32_EMMC
+-	help
+-	  Enable support for the Ka-Ro electronics QSMP-1351 module featuring
+-	  an STM32MP135C SOC, 256MiB of SDRAM and 4GiB eMMC on a solder-in
+-	  module.
+-
+-endchoice
+-
+-choice
+-	prompt "Ka-Ro TXMP/QSMP boot device"
+-	default KARO_STM32_NAND if KARO_QSMP_1510
+-	default KARO_STM32_EMMC
+-
+-config KARO_STM32_EMMC
+-	bool "eMMC device"
+-
+-config KARO_STM32_NAND
+-	bool "SPI NAND device"
+-	depends on STM32_QSPI
+-	select DM_MTD
+-
+-config KARO_STM32_SPI
+-	bool "SPI NOR device"
+-	depends on STM32_QSPI
+-	select DM_MTD
+-
+-endchoice
+-
+-choice
+-        prompt "U-Boot image variant"
+-        default KARO_UBOOT
+-
+-config KARO_UBOOT
+-        bool "Standard U-Boot image"
+-
+-config KARO_UBOOT_MFG
+-        bool "U-Boot image for use with stm32prog"
+-
+-config KARO_UBOOT_NOENV
+-        bool "U-Boot using only built-in environment"
+-        select UBOOT_IGNORE_ENV
+-
+-endchoice
+-
+-endif
+Index: u-boot-txmp-2550/board/karo/stm32mp2/Kconfig
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/stm32mp2/Kconfig
+@@ -0,0 +1,10 @@
++config SYS_BOARD
++	default "stm32mp2"
++
++config SYS_VENDOR
++	default "karo"
++
++config SYS_CONFIG_NAME
++	default "txmp"
++
++source "board/st/common/Kconfig"
+Index: u-boot-txmp-2550/board/karo/stm32mp2/Makefile
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/stm32mp2/Makefile
+@@ -0,0 +1,6 @@
++# SPDX-License-Identifier: GPL-2.0
++#
++# Copyright (C) 2022, STMicroelectronics - All Rights Reserved
++#
++
++obj-y += stm32mp2.o
+Index: u-boot-txmp-2550/board/karo/common/Kconfig
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/common/Kconfig
++++ u-boot-txmp-2550/board/karo/common/Kconfig
+@@ -1,3 +1,13 @@
++if TARGET_KARO_STM32MP15 || TARGET_KARO_STM32MP13 || TARGET_KARO_STM32MP2
++
++if TARGET_KARO_STM32MP15 || TARGET_KARO_STM32MP13
++source "board/karo/stm32mp1/Kconfig"
++endif
++
++if TARGET_KARO_STM32MP2
++source "board/karo/stm32mp2/Kconfig"
++endif
++
+ config UBOOT_IGNORE_ENV
+ 	bool
+ 	help
+@@ -7,11 +17,124 @@ config UBOOT_IGNORE_ENV
+ 
+ config SYS_FDT_ADDR
+ 	hex "FDT load address"
+-	default 0xc4000000
++	default 0xc4000000 if STM32MP15X || STM32MP13X
++	default 0x8c000000 if STM32MP25X
+ 	help
+ 	  The address the FDT file should be loaded to.
+ 
+-config TARGET_KARO_STM32MP1
+-	bool "Support Ka-Ro STM32MP1 modules"
++config KARO_STM32
++	bool
++	imply DM_RNG
++	imply DM_USB
++	imply DM_USB_GADGET
++	imply RNG_STM32MP1
++
++choice
++	prompt "Ka-Ro STM32 module variant"
++
++config KARO_TXMP_1570
++	bool "Ka-Ro TXMP-1570 module"
++	depends on TARGET_KARO_STM32MP15
++	select KARO_STM32
++	imply KARO_STM32_EMMC
++	help
++	  Enable support for the Ka-Ro electronics TXMP-1570 module featuring
++	  an STM32MP157C SOC, 512MiB of SDRAM and 4GiB or 8GiB eMMC.
++
++config KARO_TXMP_1571
++	bool "Ka-Ro TXMP-1571 module"
++	depends on TARGET_KARO_STM32MP15
++	select KARO_STM32
++	imply KARO_STM32_EMMC
++	help
++	  TXMP-1570 with corrected pinout compatible with the rest of the
++	  TX module family
++
++config KARO_QSMP_1510
++	bool "Ka-Ro QSMP-1510 solder-in module"
++	depends on TARGET_KARO_STM32MP15
++	select KARO_STM32
++	select KARO_STM32_NAND
++	help
++	  Enable support for the Ka-Ro electronics QSMP-1510 module featuring
++	  an STM32MP151A SOC, 256MiB of SDRAM and 128MiB NAND flash on a
++	  solder-in module.
++
++config KARO_QSMP_1530
++	bool "Ka-Ro QSMP-1530 solder-in module"
++	depends on TARGET_KARO_STM32MP15
++	select KARO_STM32
++	imply KARO_STM32_EMMC
++	help
++	  Enable support for the Ka-Ro electronics QSMP-1530 module featuring
++	  an STM32MP153A SOC, 256MiB of SDRAM and 4GiB eMMC on a solder-in
++	  module.
++
++config KARO_QSMP_1570
++	bool "Ka-Ro QSMP-1570 solder-in module"
++	depends on TARGET_KARO_STM32MP15
++	select KARO_STM32
++	imply KARO_STM32_EMMC
++	help
++	  Enable support for the Ka-Ro electronics QSMP-1570 module featuring
++	  an STM32MP157C SOC, 512MiB of SDRAM and 4GiB eMMC on a solder-in
++	  module.
++
++config KARO_QSMP_1351
++	bool "Ka-Ro QSMP-1351 solder-in module"
++	depends on TARGET_KARO_STM32MP13
++	select KARO_STM32
++	imply KARO_STM32_EMMC
++	help
++	  Enable support for the Ka-Ro electronics QSMP-1351 module featuring
++	  an STM32MP135C SOC, 256MiB of SDRAM and 4GiB eMMC on a solder-in
++	  module.
++
++config KARO_TXMP_2550
++	bool "Ka-Ro TXMP-2550 module"
++	depends on TARGET_KARO_STM32MP2
++	select KARO_STM32
++	imply KARO_STM32_EMMC
+ 	help
+-	  Ka-Ro electronics STM32MP1 based TXMP/QSMP board support
++	  Enable support for the Ka-Ro electronics TXMP-2550 module featuring
++	  an STM32MP255C SOC, 1GiB of SDRAM and 4GiB or 8GiB eMMC.
++
++endchoice
++
++choice
++	prompt "Ka-Ro TXMP/QSMP boot devices"
++	default KARO_STM32_NAND if KARO_QSMP_1510
++	default KARO_STM32_EMMC
++
++config KARO_STM32_EMMC
++	bool "eMMC device"
++
++config KARO_STM32_NAND
++	bool "SPI NAND device"
++	depends on STM32_QSPI
++	select DM_MTD
++
++config KARO_STM32_SPI
++	bool "SPI NOR device"
++	depends on STM32_QSPI
++	select DM_MTD
++
++endchoice
++
++choice
++	prompt "U-Boot image variant"
++	default KARO_UBOOT
++
++config KARO_UBOOT
++	bool "Standard U-Boot image"
++
++config KARO_UBOOT_MFG
++	bool "U-Boot image for use with stm32prog"
++
++config KARO_UBOOT_NOENV
++	bool "U-Boot using only built-in environment"
++	select UBOOT_IGNORE_ENV
++
++endchoice
++
++endif
+Index: u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig.13x
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/mach-stm32mp/Kconfig.13x
++++ u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig.13x
+@@ -15,6 +15,11 @@ config TARGET_ST_STM32MP13X
+ 		managed by board/st/stm32mp1.
+ 		The difference between board are managed with devicetree
+ 
++config TARGET_KARO_STM32MP13
++	bool "Support Ka-Ro STM32MP13 modules"
++	help
++	  Ka-Ro electronics STM32MP13 based TXMP/QSMP board support
++
+ endchoice
+ 
+ config SYS_TEXT_BASE
+Index: u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig.15x
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/mach-stm32mp/Kconfig.15x
++++ u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig.15x
+@@ -69,6 +69,11 @@ config TARGET_ICORE_STM32MP1
+ 	  * i.Core STM32MP1 needs to mount on top of this Carrier board
+ 	    for creating complete i.Core STM32MP1 C.TOUCH 2.0 board.
+ 
++config TARGET_KARO_STM32MP15
++	bool "Support Ka-Ro STM32MP15 modules"
++	help
++	  Ka-Ro electronics STM32MP15 based TXMP/QSMP board support
++
+ endchoice
+ 
+ config STM32MP15_PWR
+Index: u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig.25x
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/mach-stm32mp/Kconfig.25x
++++ u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig.25x
+@@ -13,6 +13,11 @@ config TARGET_ST_STM32MP25X
+ 		managed by board/st/stm32mp2
+ 		The difference between board are managed with devicetree
+ 
++config TARGET_KARO_STM32MP2
++	bool "Ka-Ro electronics STM32MP2 modules"
++	help
++	  Ka-Ro electronics STM32MP2 based TXMP board support
++
+ endchoice
+ 
+ config SYS_TEXT_BASE
+Index: u-boot-txmp-2550/include/configs/txmp.h
+===================================================================
+--- u-boot-txmp-2550.orig/include/configs/txmp.h
++++ u-boot-txmp-2550/include/configs/txmp.h
+@@ -17,21 +17,45 @@
+ #endif
+ 
+ #ifndef CONFIG_SPL_BUILD
++#if CONFIG_IS_ENABLED(LED)
+ #define CONFIG_SHOW_ACTIVITY
+ #endif
++#endif
+ 
+ #if defined(CONFIG_STM32MP13X)
+ #define SOC_PREFIX "stm32mp13"
+ #elif defined(CONFIG_STM32MP15X)
+ #define SOC_PREFIX "stm32mp15"
++#elif defined(CONFIG_STM32MP25X)
++#define SOC_PREFIX "stm32mp25"
+ #else
+ #error Unsupported STM32MP1 SoC
+ #endif
+ 
++#if defined(CONFIG_KARO_QSMP_1351)
++#define SOC_FAMILY "stm32mp135c"
++#elif defined(CONFIG_KARO_QSMP_1510)
++#define SOC_FAMILY "stm32mp151a"
++#elif defined(CONFIG_KARO_QSMP_1530)
++#define SOC_FAMILY "stm32mp153a"
++#elif defined(CONFIG_KARO_QSMP_1570)
++#define SOC_FAMILY "stm32mp157c"
++#elif defined(CONFIG_KARO_TXMP_1570)
++#define SOC_FAMILY "stm32mp157c"
++#elif defined(CONFIG_KARO_TXMP_1571)
++#define SOC_FAMILY "stm32mp157c"
++#elif defined(CONFIG_KARO_TXMP_2550)
++#define SOC_FAMILY "stm32mp255c"
++#else
++#error Unsupported Ka-Ro STM32MP module
++#endif
++
+ /*
+  * Configuration of the external SRAM memory used by U-Boot
+  */
++#define PHYS_SDRAM_1			STM32_DDR_BASE
+ #define CONFIG_SYS_SDRAM_BASE		STM32_DDR_BASE
++
+ /* required for exception handlers to work */
+ #define IRAM_BASE_ADDR			(STM32_SYSRAM_BASE + \
+ 					 STM32_SYSRAM_SIZE)
+@@ -45,25 +69,4 @@
+ 
+ /*****************************************************************************/
+ 
+-/* Ethernet */
+-#ifdef CONFIG_DWC_ETH_QOS
+-#define CONFIG_SYS_NONCACHED_MEMORY	(1 * SZ_1M)	/* 1M */
+-#endif
+-
+-#if defined(CONFIG_KARO_QSMP_1351)
+-#define SOC_FAMILY "stm32mp135c"
+-#elif defined(CONFIG_KARO_QSMP_1510)
+-#define SOC_FAMILY "stm32mp151a"
+-#elif defined(CONFIG_KARO_QSMP_1530)
+-#define SOC_FAMILY "stm32mp153a"
+-#elif defined(CONFIG_KARO_QSMP_1570)
+-#define SOC_FAMILY "stm32mp157c"
+-#elif defined(CONFIG_KARO_TXMP_1570)
+-#define SOC_FAMILY "stm32mp157c"
+-#elif defined(CONFIG_KARO_TXMP_1571)
+-#define SOC_FAMILY "stm32mp157c"
+-#else
+-#error Unsupported Ka-Ro STM32MP1 module
+-#endif
+-
+ #endif /* __CONFIG_H */
+Index: u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/mach-stm32mp/Kconfig
++++ u-boot-txmp-2550/arch/arm/mach-stm32mp/Kconfig
+@@ -162,5 +162,5 @@ source "arch/arm/mach-stm32mp/Kconfig.25
+ 
+ source "arch/arm/mach-stm32mp/cmd_stm32prog/Kconfig"
+ 
+-source "board/karo/stm32mp1/Kconfig"
++source "board/karo/common/Kconfig"
+ endif
+Index: u-boot-txmp-2550/board/karo/common/env.c
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/common/env.c
++++ u-boot-txmp-2550/board/karo/common/env.c
+@@ -13,6 +13,7 @@
+ #include <asm/bootm.h>
+ #include <asm/global_data.h>
+ #include <asm/setup.h>
++#include <dm/ofnode.h>
+ #include "karo.h"
+ 
+ DECLARE_GLOBAL_DATA_PTR;
+@@ -30,6 +31,8 @@ DECLARE_GLOBAL_DATA_PTR;
+ #define KARO_BOARD_NAME		"txmp-1570"
+ #elif defined(CONFIG_KARO_TXMP_1571)
+ #define KARO_BOARD_NAME		"txmp-1571"
++#elif defined(CONFIG_KARO_TXMP_2550)
++#define KARO_BOARD_NAME		"txmp-2550"
+ #else
+ #error Unsupported module variant
+ #endif
+@@ -42,7 +45,21 @@ __weak void board_debug_uart_init(void)
+ 
+ static void karo_env_set_uboot_vars(void)
+ {
+-	env_set("board_name", KARO_BOARD_NAME);
++	const void *fdt_compat;
++	int fdt_compat_len;
++	const char *vendor_pfx = "karo,";
++	const int pl = strlen(vendor_pfx);
++
++	fdt_compat = ofnode_get_property(ofnode_root(), "compatible",
++					 &fdt_compat_len);
++	if (fdt_compat && fdt_compat_len) {
++		if (strncmp(fdt_compat, vendor_pfx, pl) != 0)
++			env_set("board_name", fdt_compat);
++		else
++			env_set("board_name", fdt_compat + pl);
++	} else {
++		env_set("board_name", KARO_BOARD_NAME);
++	}
+ 
+ 	if (IS_ENABLED(CONFIG_KARO_UBOOT_MFG))
+ 		env_set("board_rev", "mfg");
+Index: u-boot-txmp-2550/board/karo/stm32mp2/stm32mp2.c
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/stm32mp2/stm32mp2.c
+@@ -0,0 +1,573 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
++ *   based on: board/st/stm32mp2/stm32mp2.c
++ *   Copyright (C) 2022 STMicroelectronics - All Rights Reserved
++ */
++
++#include <common.h>
++#include <config.h>
++#include <dm.h>
++#include <env.h>
++#include <env_internal.h>
++#include <fdt_support.h>
++#include <fuse.h>
++#include <g_dnl.h>
++#include <i2c.h>
++#include <led.h>
++#include <log.h>
++#include <misc.h>
++#include <mmc.h>
++#include <mtd_node.h>
++#include <init.h>
++#include <net.h>
++#include <netdev.h>
++#include <phy.h>
++#include <regmap.h>
++#include <rng.h>
++#include <syscon.h>
++#include <system-constants.h>
++#include <asm/io.h>
++#include <asm/global_data.h>
++#include <asm/gpio.h>
++#include <asm/sections.h>
++#include <asm/arch/sys_proto.h>
++#include <dm/device.h>
++#include <dm/device-internal.h>
++#include <dm/device_compat.h>
++#include <dm/ofnode.h>
++#include <dm/uclass.h>
++#include <dt-bindings/gpio/gpio.h>
++#include <jffs2/load_kernel.h>
++#include <linux/delay.h>
++
++#ifdef CONFIG_VIDEO_LOGO
++#include <video.h>
++#include <bmp_logo.h>
++#endif
++
++#include "../common/karo.h"
++
++#define SYSCFG_ETHCR_ETH_SEL_MII	0
++#define SYSCFG_ETHCR_ETH_SEL_RGMII	BIT(4)
++#define SYSCFG_ETHCR_ETH_SEL_RMII	BIT(6)
++#define SYSCFG_ETHCR_ETH_CLK_SEL	BIT(1)
++#define SYSCFG_ETHCR_ETH_REF_CLK_SEL	BIT(0)
++
++/* CLOCK feed to PHY */
++#define ETH_CK_F_25M	25000000
++#define ETH_CK_F_50M	50000000
++#define ETH_CK_F_125M	125000000
++
++/*
++ * Get a global data pointer
++ */
++DECLARE_GLOBAL_DATA_PTR;
++
++#if CONFIG_IS_ENABLED(VIDEO_LOGO)
++static void show_bmp_logo(void)
++{
++	int ret;
++	struct udevice *dev;
++
++	ret = uclass_get_device(UCLASS_VIDEO, 0, &dev);
++	debug("uclass_get_device(UCLASS_VIDEO) returned %d\n", ret);
++	if (ret)
++		return;
++
++	video_bmp_display(dev, (uintptr_t)bmp_logo_bitmap,
++			  0, 0, false);
++}
++#else
++static inline void show_bmp_logo(void)
++{
++}
++#endif
++
++#if IS_ENABLED(CONFIG_KARO_UBOOT_MFG) || defined(DEBUG)
++enum mem_regions {
++	TEXT,
++	DTB,
++	BSS,
++	STACK,
++	MALLOC,
++	TFA,
++	OPTEE,
++};
++
++#define TFA_START	0x0e000000
++#define TFA_END		0x0e040000
++
++#define OPTEE_START	0x82000000
++#define OPTEE_END	0x83000000
++
++static struct mem_region {
++	const char *name;
++	unsigned long start;
++	unsigned long end;
++} mem_regions[] = {
++	[TEXT] = { "U-Boot", (unsigned long)&__image_copy_start,
++		(unsigned long)&__image_copy_end, },
++	[DTB] = { "DTB", (unsigned long)&_end, },
++	[BSS] = { "BSS", (unsigned long)&__bss_start,
++		(unsigned long)&__bss_end, },
++	[STACK] = { "STACK", },
++	[MALLOC] = { "MALLOC", },
++	[TFA] = { "TF-A", TFA_START, TFA_END, },
++	[OPTEE] = { "OPTEE", OPTEE_START, OPTEE_END, },
++};
++
++static int check_region(const struct mem_region *r1, const struct mem_region *r2)
++{
++	if (r1->start >= r2->end || r1->end <= r2->start)
++		return 0;
++	printf("%s:\t%08lx..%08lx overlaps %s %08lx..%08lx\n", r1->name,
++	       r1->start, r1->end - 1, r2->name, r2->start, r2->end - 1);
++	return 1;
++}
++
++#define STACK_SIZE	SZ_8K
++
++void check_mem_regions(void)
++{
++	unsigned long sp;
++	unsigned long eof = (unsigned long)&_end;
++	unsigned long dtb = (unsigned long)gd->fdt_blob;
++	size_t i, j;
++	int err = 0;
++	int mri[ARRAY_SIZE(mem_regions)] = { -1, };
++
++	asm("mov %0, sp\n" : "=r"(sp));
++
++	mem_regions[STACK].end = SYS_INIT_SP_ADDR - CONFIG_VAL(SYS_MALLOC_F_LEN);
++	mem_regions[STACK].start = mem_regions[STACK].end - STACK_SIZE;
++
++	if (sp < mem_regions[STACK].start)
++		printf("Stack overflow: sp=%08lx [%08lx..%08lx]\n", sp,
++		       mem_regions[STACK].start, mem_regions[STACK].end - 1);
++	if (sp >= mem_regions[STACK].end)
++		printf("Stack underflow: sp=%08lx [%08lx..%08lx]\n", sp,
++		       mem_regions[STACK].start, mem_regions[STACK].end - 1);
++
++	if (gd->fdt_blob && !fdt_check_header(gd->fdt_blob)) {
++		eof += fdt_totalsize(gd->fdt_blob);
++		mem_regions[DTB].start = dtb;
++		mem_regions[DTB].end = dtb + fdt_totalsize(gd->fdt_blob);
++	} else {
++		printf("No valid DTB found\n");
++	}
++	mem_regions[MALLOC].start = gd->malloc_base;
++	mem_regions[MALLOC].end = gd->malloc_base + gd->malloc_limit;
++
++	for (i = j = 0; i < ARRAY_SIZE(mem_regions); i++) {
++		int k;
++
++		if (!mem_regions[i].start || !mem_regions[i].end)
++			continue;
++		mri[j++] = i;
++		if (i == 0)
++			continue;
++		for (k = j; k > 0; k--) {
++			if (mem_regions[mri[k - 1]].start < mem_regions[i].start)
++				break;
++
++			mri[k] = mri[k - 1];
++			mri[k - 1] = i;
++		}
++	}
++	for (i = 0; i < ARRAY_SIZE(mri); i++) {
++		if (mri[i] < 0)
++			break;
++		j = mri[i];
++		printf("%s:\t\t%08lx..%08lx\n", mem_regions[j].name,
++		       mem_regions[j].start, mem_regions[j].end - 1);
++	}
++	for (i = 0; i < ARRAY_SIZE(mem_regions); i++) {
++		if (!mem_regions[i].start || !mem_regions[i].end)
++			continue;
++		for (j = i + 1; j < ARRAY_SIZE(mem_regions); j++) {
++			if (!mem_regions[j].start || !mem_regions[j].end)
++				continue;
++			err |= check_region(&mem_regions[i], &mem_regions[j]);
++		}
++	}
++	if (err)
++#ifdef DEBUG
++		printf("Memory regions overlap detected\n");
++#else
++		panic("Memory regions overlap detected\n");
++#endif
++}
++#else
++static inline void check_mem_regions(void)
++{
++}
++#endif
++
++int checkboard(void)
++{
++	const char *fdt_compat;
++	int fdt_compat_len;
++
++	debug("%s@%d:\n", __func__, __LINE__);
++
++	check_mem_regions();
++
++	printf("Board: TXMP-2550");
++
++	fdt_compat = ofnode_get_property(ofnode_root(), "compatible", &fdt_compat_len);
++	if (fdt_compat && fdt_compat_len)
++		printf(" (%s)", fdt_compat);
++	puts("\n");
++
++	return 0;
++}
++
++#ifdef CONFIG_USB_GADGET_DOWNLOAD
++#define STM32MP1_G_DNL_DFU_PRODUCT_NUM 0xdf11
++#define STM32MP1_G_DNL_FASTBOOT_PRODUCT_NUM 0x0afb
++
++int g_dnl_bind_fixup(struct usb_device_descriptor *dev, const char *name)
++{
++	if (IS_ENABLED(CONFIG_DFU_OVER_USB) &&
++	    !strcmp(name, "usb_dnl_dfu"))
++		put_unaligned(STM32MP1_G_DNL_DFU_PRODUCT_NUM, &dev->idProduct);
++	else if (IS_ENABLED(CONFIG_FASTBOOT) &&
++		 !strcmp(name, "usb_dnl_fastboot"))
++		put_unaligned(STM32MP1_G_DNL_FASTBOOT_PRODUCT_NUM,
++			      &dev->idProduct);
++	else
++		put_unaligned(CONFIG_USB_GADGET_PRODUCT_NUM, &dev->idProduct);
++
++	return 0;
++}
++#endif /* CONFIG_USB_GADGET_DOWNLOAD */
++
++#if CONFIG_IS_ENABLED(LED)
++enum {
++	LED_STATE_INIT = -1,
++	LED_STATE_OFF,
++	LED_STATE_ON,
++	LED_STATE_DISABLED,
++};
++
++static int led_state = LED_STATE_INIT;
++static struct udevice *led_dev;
++
++static int txmp_get_led(struct udevice **dev, char *led_string)
++{
++	const char *led_name;
++	int ret;
++
++	if (led_state == LED_STATE_DISABLED)
++		return -ENODEV;
++
++	led_name = ofnode_conf_read_str(led_string);
++	if (!led_name) {
++		debug("%s(): could not find %s config string\n",
++		      __func__, led_string);
++		return -ENOENT;
++	}
++	ret = led_get_by_label(led_name, dev);
++	if (ret)
++		pr_err("led_get_by_label() returned: %d\n", ret);
++
++	return ret;
++}
++
++static void txmp_setup_led(void)
++{
++	int ret;
++
++	ret = txmp_get_led(&led_dev, "u-boot,boot-led");
++	if (ret) {
++		debug("No boot-led defined\n");
++		led_state = LED_STATE_DISABLED;
++	}
++}
++
++#ifdef CONFIG_SHOW_ACTIVITY
++void show_activity(int arg)
++{
++	static int blink_rate = CONFIG_SYS_HZ / 2;
++	static ulong last;
++	int ret;
++
++	if (!led_dev || led_state == LED_STATE_DISABLED)
++		return;
++
++	if (led_state == LED_STATE_INIT) {
++		last = get_timer(0);
++		ret = led_set_state(led_dev, LEDST_ON);
++		if (ret) {
++			led_state = LED_STATE_DISABLED;
++			return;
++		}
++		led_state = LED_STATE_ON;
++	}
++	if (get_timer(last) > blink_rate) {
++		last = get_timer(0);
++		if (led_state == LED_STATE_ON) {
++			led_set_state(led_dev, LEDST_OFF);
++			led_state = LED_STATE_OFF;
++		} else {
++			led_set_state(led_dev, LEDST_ON);
++			led_state = LED_STATE_ON;
++		}
++	}
++}
++#endif /* CONFIG_SHOW_ACTIVITY */
++#endif /* CONFIG_LED */
++
++/* board dependent setup after reloc */
++int board_init(void)
++{
++	struct udevice *dev;
++
++	/* address of boot parameters */
++	gd->bd->bi_boot_params = PHYS_SDRAM_1 + 0x100;
++
++	/* probe all PINCTRL for hog */
++	for (uclass_first_device(UCLASS_PINCTRL, &dev);
++	     dev;
++	     uclass_next_device(&dev)) {
++		debug("probe pincontrol = %s\n", dev->name);
++	}
++
++	txmp_setup_led();
++
++	return 0;
++}
++
++int get_eth_nb(void)
++{
++	int eth_ports = 2;
++	const char *baseboard = env_get("baseboard");
++
++	if (baseboard) {
++		if (strcmp(baseboard, "mb7") == 0)
++			eth_ports = 1;
++		else if (strcmp(baseboard, "lvds-mb") == 0)
++			eth_ports = 1;
++		debug("%s@%d: %u ethernet port(s) for %s board\n",
++		      __func__, __LINE__, eth_ports, baseboard);
++	} else {
++		debug("%s@%d: %u ethernet port(s)\n", __func__, __LINE__, eth_ports);
++	}
++	return eth_ports;
++}
++
++static void print_mac_from_fuse(void)
++{
++	u32 fuse[2];
++	u8 mac[ETH_ALEN];
++
++	fuse_read(0, BSEC_OTP_MAC, &fuse[0]);
++	fuse_read(0, BSEC_OTP_MAC + 1, &fuse[1]);
++	memcpy(mac, fuse, ETH_ALEN);
++
++	if (is_valid_ethaddr(mac))
++		printf("MAC addr from fuse: %pM\n", mac);
++}
++
++/* eth init function : weak called in eqos driver */
++int board_interface_eth_init(struct udevice *dev,
++			     phy_interface_t interface_type, ulong rate)
++{
++	struct regmap *regmap;
++	uint regmap_mask, regmap_offset;
++	int ret;
++	u32 value;
++	bool ext_phyclk;
++
++	/* Ethernet PHY has no crystal or needs to be clocked by RCC */
++	ext_phyclk = dev_read_bool(dev, "st,ext-phyclk");
++
++	regmap = syscon_regmap_lookup_by_phandle(dev, "st,syscon");
++	if (!IS_ERR(regmap)) {
++		u32 fmp[3];
++
++		ret = dev_read_u32_array(dev, "st,syscon", fmp, ARRAY_SIZE(fmp));
++		if (ret) {
++			dev_err(dev, "failed to read st,syscon property: %d\n",
++				ret);
++			return ret;
++		}
++		regmap_mask = fmp[2];
++		regmap_offset = fmp[1];
++	} else {
++		dev_err(dev, "st,syscon property is missing in DTB\n");
++		return -ENODEV;
++	}
++
++	print_mac_from_fuse();
++
++	switch (interface_type) {
++	case PHY_INTERFACE_MODE_MII:
++		value = SYSCFG_ETHCR_ETH_SEL_MII;
++		debug("%s: PHY_INTERFACE_MODE_MII\n", __func__);
++		break;
++	case PHY_INTERFACE_MODE_RMII:
++		if (rate == ETH_CK_F_50M && ext_phyclk)
++			value = SYSCFG_ETHCR_ETH_SEL_RMII |
++				SYSCFG_ETHCR_ETH_REF_CLK_SEL;
++		else
++			value = SYSCFG_ETHCR_ETH_SEL_RMII;
++		debug("%s: PHY_INTERFACE_MODE_RMII\n", __func__);
++		break;
++	case PHY_INTERFACE_MODE_RGMII:
++	case PHY_INTERFACE_MODE_RGMII_ID:
++	case PHY_INTERFACE_MODE_RGMII_RXID:
++	case PHY_INTERFACE_MODE_RGMII_TXID:
++		if (rate == ETH_CK_F_125M && ext_phyclk)
++			value = SYSCFG_ETHCR_ETH_SEL_RGMII |
++				SYSCFG_ETHCR_ETH_CLK_SEL;
++		else
++			value = SYSCFG_ETHCR_ETH_SEL_RGMII;
++		debug("%s: PHY_INTERFACE_MODE_RGMII\n", __func__);
++		break;
++	default:
++		debug("%s: Do not manage %d interface\n",
++		      __func__, interface_type);
++		/* Do not manage other interfaces */
++		return -EINVAL;
++	}
++
++	ret = regmap_update_bits(regmap, regmap_offset, regmap_mask, value);
++
++	return ret;
++}
++
++static inline void txmp_set_bootdevice(void)
++{
++	const char *bootdev = env_get("boot_device");
++
++	debug("%s@%d:\n", __func__, __LINE__);
++
++	if (!bootdev) {
++		printf("boot_device is not set\n");
++		return;
++	}
++	debug("%s@%d: boot_device='%s' boot_instance='%s' preboot='%s'\n",
++	      __func__, __LINE__, bootdev,
++	      env_get("boot_instance"), env_get("preboot"));
++	if (strcmp(bootdev, "mmc") == 0) {
++		unsigned long instance = env_get_ulong("boot_instance", 0, 0);
++
++		if (instance == 1) {
++			instance = 0;
++			env_set_ulong("boot_instance", instance);
++		}
++	} else if (strcmp(bootdev, "usb") == 0) {
++		const char *bootcmd = env_get("bootcmd");
++		if (CONFIG_IS_ENABLED(CMD_STM32PROG)) {
++			/* Save original 'bootcmd' for restoration after stm32prog */
++			env_set(".bootcmd", bootcmd);
++			env_set("bootcmd", "stm32prog ${boot_device} ${boot_instance}");
++		}
++	}
++}
++
++static inline void rand_init(void)
++{
++	unsigned int seed;
++	int ret;
++	struct udevice *dev;
++
++	ret = uclass_get_device(UCLASS_RNG, 0, &dev);
++	if (ret) {
++		printf("Failed to get RNG device: %d\n", ret);
++		return;
++	}
++
++	ret = dm_rng_read(dev, &seed, sizeof(seed));
++	if (ret)
++		printf("Failed to read RNG: %d\n", ret);
++
++	debug("RANDOM seed: %08x\n", seed);
++	srand(seed);
++}
++
++int board_late_init(void)
++{
++	karo_env_cleanup();
++
++	if (ctrlc()) {
++		printf("<CTRL-C> detected; safeboot enabled\n");
++		env_set_hex("safeboot", 1);
++	} else if (!IS_ENABLED(CONFIG_KARO_UBOOT_MFG)) {
++		karo_fdt_move_fdt();
++		rand_init();
++		show_bmp_logo();
++	}
++	txmp_set_bootdevice();
++
++	clear_ctrlc();
++	return 0;
++}
++
++void board_quiesce_devices(void)
++{
++}
++
++#if CONFIG_IS_ENABLED(OF_BOARD_SETUP)
++
++#if CONFIG_IS_ENABLED(FDT_FIXUP_PARTITIONS)
++	struct node_info nodes[] = {
++		{ "st,stm32f469-qspi",	MTD_DEV_TYPE_NOR, },
++		{ "stf1ge4u00m",	MTD_DEV_TYPE_SPINAND, },
++	};
++#endif
++
++int ft_board_setup(void *blob, struct bd_info *bd)
++{
++	int ret;
++
++	debug("%s@%d:\n", __func__, __LINE__);
++
++	ret = fdt_increase_size(blob, 4096);
++	if (ret)
++		printf("Warning: Failed to increase FDT size: %s\n",
++		       fdt_strerror(ret));
++
++#if CONFIG_IS_ENABLED(FDT_FIXUP_PARTITIONS)
++	karo_fixup_mtdparts(blob, nodes, ARRAY_SIZE(nodes));
++#endif
++
++	karo_fixup_lcd_panel(env_get("videomode"));
++
++	return 0;
++}
++#endif
++
++#if defined(CONFIG_USB_DWC3) && defined(CONFIG_CMD_STM32PROG_USB)
++#include <dfu.h>
++/*
++ * TEMP: force USB BUS reset forced to false, because it is not supported
++ *       in DWC3 USB driver
++ * avoid USB bus reset support in DFU stack is required to reenumeration in
++ * stm32prog command after flashlayout load or after "dfu-util -e -R"
++ */
++bool dfu_usb_get_reset(void)
++{
++	return false;
++}
++#endif
++
++/* weak function called from common/board_r.c */
++int is_flash_available(void)
++{
++	struct udevice *dev;
++	int ret;
++
++	ret = uclass_get_device_by_driver(UCLASS_MTD,
++					  DM_DRIVER_GET(stm32_hyperbus),
++					  &dev);
++	return !ret;
++}
++
++/* weak function called from env/sf.c */
++void *env_sf_get_env_addr(void)
++{
++	return NULL;
++}
+Index: u-boot-txmp-2550/board/karo/common/Makefile
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/common/Makefile
++++ u-boot-txmp-2550/board/karo/common/Makefile
+@@ -1,4 +1,5 @@
+-
++obj-$(CONFIG_SYS_MTDPARTS_RUNTIME) += board_mtdparts.o
++obj-$(CONFIG_DFU) += dfu.o
+ obj-y += env.o
+ ifeq ($(CONFIG_SPL_BUILD),)
+ 	obj-y += fdt.o
+Index: u-boot-txmp-2550/board/karo/common/board_mtdparts.c
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/common/board_mtdparts.c
+@@ -0,0 +1,44 @@
++// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
++/*
++ * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
++ */
++
++#include <config.h>
++#include <common.h>
++#include <env.h>
++#include <dm/uclass.h>
++#include <linux/mtd/mtd.h>
++
++void board_mtdparts_default(const char **mtdids, const char **mtdparts)
++{
++	struct udevice *dev;
++	char s_nand0[512];
++	static char parts[512];
++	static char ids[128];
++
++	if (parts[0] && ids[0]) {
++		*mtdids = ids;
++		*mtdparts = parts;
++		debug("%s@%d: reusing mtdids=%s & mtdparts=%s\n",
++		      __func__, __LINE__, ids, parts);
++		return;
++	}
++
++	parts[0] = '\0';
++	ids[0] = '\0';
++
++	if (uclass_get_device(UCLASS_MTD, 0, &dev))
++		return;
++
++	env_get_f("mtdparts_nand0", s_nand0, sizeof(s_nand0));
++
++	snprintf(ids, sizeof(ids), "spi-nand0=spi-nand0");
++	snprintf(parts, sizeof(parts), "mtdparts=spi-nand0:%s",
++		 s_nand0);
++
++	debug("%s@%d: mtdids=%s & mtdparts=%s\n", __func__, __LINE__,
++	      ids, parts);
++
++	*mtdids = ids;
++	*mtdparts = parts;
++}
+Index: u-boot-txmp-2550/board/karo/stm32mp1/Makefile
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/stm32mp1/Makefile
++++ u-boot-txmp-2550/board/karo/stm32mp1/Makefile
+@@ -5,5 +5,3 @@
+ 
+ obj-y += stm32mp1.o
+ obj-$(CONFIG_DEBUG_UART_BOARD_INIT) += dbg-uart.o
+-obj-$(CONFIG_SYS_MTDPARTS_RUNTIME) += board_mtdparts.o
+-obj-$(CONFIG_DFU) += dfu.o
+Index: u-boot-txmp-2550/board/karo/stm32mp1/board_mtdparts.c
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/stm32mp1/board_mtdparts.c
++++ /dev/null
+@@ -1,44 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+-/*
+- * Copyright (C) 2020 Lothar Waßmann <LW@KARO-electronics.de>
+- */
+-
+-#include <config.h>
+-#include <common.h>
+-#include <env.h>
+-#include <dm/uclass.h>
+-#include <linux/mtd/mtd.h>
+-
+-void board_mtdparts_default(const char **mtdids, const char **mtdparts)
+-{
+-	struct udevice *dev;
+-	char s_nand0[512];
+-	static char parts[512];
+-	static char ids[128];
+-
+-	if (parts[0] && ids[0]) {
+-		*mtdids = ids;
+-		*mtdparts = parts;
+-		debug("%s@%d: reusing mtdids=%s & mtdparts=%s\n",
+-		      __func__, __LINE__, ids, parts);
+-		return;
+-	}
+-
+-	parts[0] = '\0';
+-	ids[0] = '\0';
+-
+-	if (uclass_get_device(UCLASS_MTD, 0, &dev))
+-		return;
+-
+-	env_get_f("mtdparts_nand0", s_nand0, sizeof(s_nand0));
+-
+-	snprintf(ids, sizeof(ids), "spi-nand0=spi-nand0");
+-	snprintf(parts, sizeof(parts), "mtdparts=spi-nand0:%s",
+-		 s_nand0);
+-
+-	debug("%s@%d: mtdids=%s & mtdparts=%s\n", __func__, __LINE__,
+-	      ids, parts);
+-
+-	*mtdids = ids;
+-	*mtdparts = parts;
+-}
+Index: u-boot-txmp-2550/common/board_f.c
+===================================================================
+--- u-boot-txmp-2550.orig/common/board_f.c
++++ u-boot-txmp-2550/common/board_f.c
+@@ -718,14 +718,25 @@ static int fix_fdt(void)
+ #endif
+ 
+ #if CONFIG_IS_ENABLED(CHECK_REL_DYN)
+-int check_rel_dyn(void)
++static int check_rel_dyn(void)
+ {
+ 	unsigned long img_start = (unsigned long)__image_copy_start;
++#ifndef CONFIG_ARM64
+ 	unsigned long img_end = (unsigned long)_image_binary_end;
++	const unsigned long rel_type = R_ARM_RELATIVE;
+ 	struct reloc_entry {
+ 		unsigned long addr;
+-		unsigned int code;
++		unsigned long code;
+ 	};
++#else
++	unsigned long img_end = (unsigned long)__image_copy_end;
++	const unsigned long rel_type = R_AARCH64_RELATIVE;
++	struct reloc_entry {
++		unsigned long addr;
++		unsigned long code;
++		unsigned long val;
++	};
++#endif
+ 	struct reloc_entry *rel_start = (void *)__rel_dyn_start;
+ 	struct reloc_entry *rel_end = (void *)__rel_dyn_end;
+ 	struct reloc_entry *p;
+@@ -736,13 +747,15 @@ int check_rel_dyn(void)
+ 		if (p->addr < img_start || p->addr > img_end) {
+ 			if (errors == 0)
+ 				pr_err("Relocation table has been corrupted! Fix your U-Boot sourcecode!\n");
+-			pr_err("Entry at %p in relocation table points outside the code to be relocated: %08lx, %08x\n",
+-			       p, p->addr, p->code);
++			pr_err("Entry at %p in relocation table (%08lx,%08lx) points outside the code to be relocated: %08lx..%08lx\n",
++			       p, p->addr, p->code, img_start, img_end - 1);
+ 			errors++;
+ 		}
+-		if (p->code != R_ARM_RELATIVE)
+-			pr_warn("Entry at %p in relocation table has unsupported relocation type: %08lx, %08x\n",
++		if (p->code != rel_type)
++			pr_warn("Entry at %p in relocation table has unsupported relocation type: %08lx, %08lx\n",
+ 				p, p->addr, p->code);
++		if (errors >= 10)
++			hang();
+ 	}
+ 	return errors;
+ }
+Index: u-boot-txmp-2550/board/karo/common/dfu.c
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/common/dfu.c
+@@ -0,0 +1,217 @@
++// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
++/*
++ * Copyright (C) 2020, STMicroelectronics - All Rights Reserved
++ */
++
++#include <common.h>
++#include <blk.h>
++#include <dm.h>
++#include <dfu.h>
++#include <env.h>
++#include <memalign.h>
++#include <misc.h>
++#include <mtd.h>
++#include <mtd_node.h>
++#include <asm/arch/stm32prog.h>
++
++#define DFU_ALT_BUF_LEN SZ_1K
++
++#if CONFIG_IS_ENABLED(SET_DFU_ALT_INFO)
++static void board_get_alt_info_mmc(struct udevice *dev, char *buf)
++{
++	struct disk_partition info;
++	int p, len, devnum;
++	bool first = true;
++	const char *name;
++	struct mmc *mmc;
++	struct blk_desc *desc;
++
++	mmc = mmc_get_mmc_dev(dev);
++	if (!mmc)
++		return;
++
++	if (mmc_init(mmc))
++		return;
++
++	desc = mmc_get_blk_desc(mmc);
++	if (!desc)
++		return;
++
++	name = blk_get_if_type_name(desc->if_type);
++	devnum = desc->devnum;
++	len = strlen(buf);
++
++	if (buf[0] != '\0')
++		len += snprintf(buf + len,
++				DFU_ALT_BUF_LEN - len, "&");
++	len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++			 "%s %d=", name, devnum);
++
++	if (IS_MMC(mmc) && mmc->capacity_boot) {
++		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++				"%s%d_boot1 raw 0x0 0x%llx mmcpart 1;",
++				name, devnum, mmc->capacity_boot);
++		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++				"%s%d_boot2 raw 0x0 0x%llx mmcpart 2",
++				name, devnum, mmc->capacity_boot);
++		first = false;
++	}
++
++	for (p = 1; p < MAX_SEARCH_PARTITIONS; p++) {
++		if (part_get_info(desc, p, &info))
++			continue;
++		if (!first)
++			len += snprintf(buf + len, DFU_ALT_BUF_LEN - len, ";");
++		first = false;
++		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++				"%s%d_%s part %d %d",
++				name, devnum, info.name, devnum, p);
++	}
++}
++
++static void board_get_alt_info_mtd(struct mtd_info *mtd, char *buf)
++{
++	struct mtd_info *part;
++	bool first = true;
++	const char *name;
++	int len, partnum = 0;
++
++	name = mtd->name;
++	len = strlen(buf);
++
++	if (buf[0] != '\0')
++		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len, "&");
++	len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++			"mtd %s=", name);
++
++	len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++			"%s raw 0x0 0x%llx ",
++			name, mtd->size);
++
++	list_for_each_entry(part, &mtd->partitions, node) {
++		partnum++;
++		if (!first)
++			len += snprintf(buf + len, DFU_ALT_BUF_LEN - len, ";");
++		first = false;
++
++		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
++				"%s_%s part %d",
++				name, part->name, partnum);
++	}
++}
++
++void set_dfu_alt_info(char *interface, char *devstr)
++{
++	struct udevice *dev;
++	struct mtd_info *mtd;
++
++	ALLOC_CACHE_ALIGN_BUFFER(char, buf, DFU_ALT_BUF_LEN);
++
++	if (env_get("dfu_alt_info"))
++		return;
++
++	memset(buf, 0, sizeof(buf));
++
++	snprintf(buf, DFU_ALT_BUF_LEN,
++		 "ram 0=%s", CONFIG_DFU_ALT_RAM0);
++
++	if (CONFIG_IS_ENABLED(MMC)) {
++		if (!uclass_get_device(UCLASS_MMC, 0, &dev))
++			board_get_alt_info_mmc(dev, buf);
++
++		if (!uclass_get_device(UCLASS_MMC, 1, &dev))
++			board_get_alt_info_mmc(dev, buf);
++	}
++
++	if (CONFIG_IS_ENABLED(MTD)) {
++		/* probe all MTD devices */
++		mtd_probe_devices();
++
++		/* probe SPI flash device on a bus */
++		if (!uclass_get_device(UCLASS_SPI_FLASH, 0, &dev)) {
++			mtd = get_mtd_device_nm("nor0");
++			if (!IS_ERR_OR_NULL(mtd))
++				board_get_alt_info_mtd(mtd, buf);
++		}
++
++		mtd = get_mtd_device_nm("nand0");
++		if (!IS_ERR_OR_NULL(mtd))
++			board_get_alt_info_mtd(mtd, buf);
++
++		mtd = get_mtd_device_nm("spi-nand0");
++		if (!IS_ERR_OR_NULL(mtd))
++			board_get_alt_info_mtd(mtd, buf);
++	}
++
++	if (IS_ENABLED(CONFIG_DFU_VIRT))
++		strlcat(buf, "&virt 0=OTP", DFU_ALT_BUF_LEN);
++
++	env_set("dfu_alt_info", buf);
++	puts("DFU alt info setting: done\n");
++}
++#endif
++
++#if CONFIG_IS_ENABLED(DFU_VIRT)
++#include <dfu.h>
++
++static int dfu_otp_read(u64 offset, u8 *buffer, long *size)
++{
++	struct udevice *dev;
++	int ret;
++
++	ret = uclass_get_device_by_driver(UCLASS_MISC,
++					  DM_DRIVER_GET(stm32mp_bsec),
++					  &dev);
++	if (ret)
++		return ret;
++
++	ret = misc_read(dev, offset + STM32_BSEC_OTP_OFFSET, buffer, *size);
++	if (ret >= 0) {
++		*size = ret;
++		ret = 0;
++	}
++
++	return 0;
++}
++
++int dfu_read_medium_virt(struct dfu_entity *dfu, u64 offset,
++			 void *buf, long *len)
++{
++	switch (dfu->data.virt.dev_num) {
++	case 0x0:
++		return dfu_otp_read(offset, buf, len);
++	case 0x1:
++		/* STPMIC1 */
++		return -EOPNOTSUPP;
++	}
++
++	if (CONFIG_IS_ENABLED(CMD_STM32PROG) &&
++	    dfu->data.virt.dev_num >= STM32PROG_VIRT_FIRST_DEV_NUM)
++		return stm32prog_read_medium_virt(dfu, offset, buf, len);
++
++	*len = 0;
++	return 0;
++}
++
++int dfu_write_medium_virt(struct dfu_entity *dfu, u64 offset,
++			  void *buf, long *len)
++{
++	if (CONFIG_IS_ENABLED(CMD_STM32PROG) &&
++	    dfu->data.virt.dev_num >= STM32PROG_VIRT_FIRST_DEV_NUM)
++		return stm32prog_write_medium_virt(dfu, offset, buf, len);
++
++	return -EOPNOTSUPP;
++}
++
++int __weak dfu_get_medium_size_virt(struct dfu_entity *dfu, u64 *size)
++{
++	if (CONFIG_IS_ENABLED(CMD_STM32PROG) &&
++	    dfu->data.virt.dev_num >= STM32PROG_VIRT_FIRST_DEV_NUM)
++		return stm32prog_get_medium_size_virt(dfu, size);
++
++	*size = SZ_1K;
++
++	return 0;
++}
++
++#endif
+Index: u-boot-txmp-2550/board/karo/stm32mp1/dfu.c
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/stm32mp1/dfu.c
++++ /dev/null
+@@ -1,217 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0+ OR BSD-3-Clause
+-/*
+- * Copyright (C) 2020, STMicroelectronics - All Rights Reserved
+- */
+-
+-#include <common.h>
+-#include <blk.h>
+-#include <dm.h>
+-#include <dfu.h>
+-#include <env.h>
+-#include <memalign.h>
+-#include <misc.h>
+-#include <mtd.h>
+-#include <mtd_node.h>
+-#include <asm/arch/stm32prog.h>
+-
+-#define DFU_ALT_BUF_LEN SZ_1K
+-
+-#if CONFIG_IS_ENABLED(SET_DFU_ALT_INFO)
+-static void board_get_alt_info_mmc(struct udevice *dev, char *buf)
+-{
+-	struct disk_partition info;
+-	int p, len, devnum;
+-	bool first = true;
+-	const char *name;
+-	struct mmc *mmc;
+-	struct blk_desc *desc;
+-
+-	mmc = mmc_get_mmc_dev(dev);
+-	if (!mmc)
+-		return;
+-
+-	if (mmc_init(mmc))
+-		return;
+-
+-	desc = mmc_get_blk_desc(mmc);
+-	if (!desc)
+-		return;
+-
+-	name = blk_get_if_type_name(desc->if_type);
+-	devnum = desc->devnum;
+-	len = strlen(buf);
+-
+-	if (buf[0] != '\0')
+-		len += snprintf(buf + len,
+-				DFU_ALT_BUF_LEN - len, "&");
+-	len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-			 "%s %d=", name, devnum);
+-
+-	if (IS_MMC(mmc) && mmc->capacity_boot) {
+-		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-				"%s%d_boot1 raw 0x0 0x%llx mmcpart 1;",
+-				name, devnum, mmc->capacity_boot);
+-		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-				"%s%d_boot2 raw 0x0 0x%llx mmcpart 2",
+-				name, devnum, mmc->capacity_boot);
+-		first = false;
+-	}
+-
+-	for (p = 1; p < MAX_SEARCH_PARTITIONS; p++) {
+-		if (part_get_info(desc, p, &info))
+-			continue;
+-		if (!first)
+-			len += snprintf(buf + len, DFU_ALT_BUF_LEN - len, ";");
+-		first = false;
+-		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-				"%s%d_%s part %d %d",
+-				name, devnum, info.name, devnum, p);
+-	}
+-}
+-
+-static void board_get_alt_info_mtd(struct mtd_info *mtd, char *buf)
+-{
+-	struct mtd_info *part;
+-	bool first = true;
+-	const char *name;
+-	int len, partnum = 0;
+-
+-	name = mtd->name;
+-	len = strlen(buf);
+-
+-	if (buf[0] != '\0')
+-		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len, "&");
+-	len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-			"mtd %s=", name);
+-
+-	len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-			"%s raw 0x0 0x%llx ",
+-			name, mtd->size);
+-
+-	list_for_each_entry(part, &mtd->partitions, node) {
+-		partnum++;
+-		if (!first)
+-			len += snprintf(buf + len, DFU_ALT_BUF_LEN - len, ";");
+-		first = false;
+-
+-		len += snprintf(buf + len, DFU_ALT_BUF_LEN - len,
+-				"%s_%s part %d",
+-				name, part->name, partnum);
+-	}
+-}
+-
+-void set_dfu_alt_info(char *interface, char *devstr)
+-{
+-	struct udevice *dev;
+-	struct mtd_info *mtd;
+-
+-	ALLOC_CACHE_ALIGN_BUFFER(char, buf, DFU_ALT_BUF_LEN);
+-
+-	if (env_get("dfu_alt_info"))
+-		return;
+-
+-	memset(buf, 0, sizeof(buf));
+-
+-	snprintf(buf, DFU_ALT_BUF_LEN,
+-		 "ram 0=%s", CONFIG_DFU_ALT_RAM0);
+-
+-	if (CONFIG_IS_ENABLED(MMC)) {
+-		if (!uclass_get_device(UCLASS_MMC, 0, &dev))
+-			board_get_alt_info_mmc(dev, buf);
+-
+-		if (!uclass_get_device(UCLASS_MMC, 1, &dev))
+-			board_get_alt_info_mmc(dev, buf);
+-	}
+-
+-	if (CONFIG_IS_ENABLED(MTD)) {
+-		/* probe all MTD devices */
+-		mtd_probe_devices();
+-
+-		/* probe SPI flash device on a bus */
+-		if (!uclass_get_device(UCLASS_SPI_FLASH, 0, &dev)) {
+-			mtd = get_mtd_device_nm("nor0");
+-			if (!IS_ERR_OR_NULL(mtd))
+-				board_get_alt_info_mtd(mtd, buf);
+-		}
+-
+-		mtd = get_mtd_device_nm("nand0");
+-		if (!IS_ERR_OR_NULL(mtd))
+-			board_get_alt_info_mtd(mtd, buf);
+-
+-		mtd = get_mtd_device_nm("spi-nand0");
+-		if (!IS_ERR_OR_NULL(mtd))
+-			board_get_alt_info_mtd(mtd, buf);
+-	}
+-
+-	if (IS_ENABLED(CONFIG_DFU_VIRT))
+-		strlcat(buf, "&virt 0=OTP", DFU_ALT_BUF_LEN);
+-
+-	env_set("dfu_alt_info", buf);
+-	puts("DFU alt info setting: done\n");
+-}
+-#endif
+-
+-#if CONFIG_IS_ENABLED(DFU_VIRT)
+-#include <dfu.h>
+-
+-static int dfu_otp_read(u64 offset, u8 *buffer, long *size)
+-{
+-	struct udevice *dev;
+-	int ret;
+-
+-	ret = uclass_get_device_by_driver(UCLASS_MISC,
+-					  DM_DRIVER_GET(stm32mp_bsec),
+-					  &dev);
+-	if (ret)
+-		return ret;
+-
+-	ret = misc_read(dev, offset + STM32_BSEC_OTP_OFFSET, buffer, *size);
+-	if (ret >= 0) {
+-		*size = ret;
+-		ret = 0;
+-	}
+-
+-	return 0;
+-}
+-
+-int dfu_read_medium_virt(struct dfu_entity *dfu, u64 offset,
+-			 void *buf, long *len)
+-{
+-	switch (dfu->data.virt.dev_num) {
+-	case 0x0:
+-		return dfu_otp_read(offset, buf, len);
+-	case 0x1:
+-		/* STPMIC1 */
+-		return -EOPNOTSUPP;
+-	}
+-
+-	if (CONFIG_IS_ENABLED(CMD_STM32PROG) &&
+-	    dfu->data.virt.dev_num >= STM32PROG_VIRT_FIRST_DEV_NUM)
+-		return stm32prog_read_medium_virt(dfu, offset, buf, len);
+-
+-	*len = 0;
+-	return 0;
+-}
+-
+-int dfu_write_medium_virt(struct dfu_entity *dfu, u64 offset,
+-			  void *buf, long *len)
+-{
+-	if (CONFIG_IS_ENABLED(CMD_STM32PROG) &&
+-	    dfu->data.virt.dev_num >= STM32PROG_VIRT_FIRST_DEV_NUM)
+-		return stm32prog_write_medium_virt(dfu, offset, buf, len);
+-
+-	return -EOPNOTSUPP;
+-}
+-
+-int __weak dfu_get_medium_size_virt(struct dfu_entity *dfu, u64 *size)
+-{
+-	if (CONFIG_IS_ENABLED(CMD_STM32PROG) &&
+-	    dfu->data.virt.dev_num >= STM32PROG_VIRT_FIRST_DEV_NUM)
+-		return stm32prog_get_medium_size_virt(dfu, size);
+-
+-	*size = SZ_1K;
+-
+-	return 0;
+-}
+-
+-#endif
+Index: u-boot-txmp-2550/arch/arm/cpu/armv8/cache_v8.c
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/cpu/armv8/cache_v8.c
++++ u-boot-txmp-2550/arch/arm/cpu/armv8/cache_v8.c
+@@ -133,7 +133,7 @@ static u64 *find_pte(u64 addr, int level
+ 	u64 va_bits;
+ 	int i;
+ 
+-	debug("addr=%llx level=%d\n", addr, level);
++	pr_devel("addr=%llx level=%d\n", addr, level);
+ 
+ 	get_tcr(NULL, &va_bits);
+ 	if (va_bits < 39)
+@@ -147,7 +147,7 @@ static u64 *find_pte(u64 addr, int level
+ 	for (i = start_level; i < 4; i++) {
+ 		idx = (addr >> level2shift(i)) & 0x1FF;
+ 		pte += idx;
+-		debug("idx=%llx PTE %p at level %d: %llx\n", idx, pte, i, *pte);
++		pr_devel("idx=%llx PTE %p at level %d: %llx\n", idx, pte, i, *pte);
+ 
+ 		/* Found it */
+ 		if (i == level)
+@@ -187,7 +187,7 @@ static u64 *create_table(void)
+ static void set_pte_table(u64 *pte, u64 *table)
+ {
+ 	/* Point *pte to the new table */
+-	debug("Setting %p to addr=%p\n", pte, table);
++	pr_devel("Setting %p to addr=%p\n", pte, table);
+ 	*pte = PTE_TYPE_TABLE | (ulong)table;
+ }
+ 
+@@ -206,7 +206,7 @@ static void split_block(u64 *pte, int le
+ 		      "mem_map.", pte, old_pte);
+ 
+ 	new_table = create_table();
+-	debug("Splitting pte %p (%llx) into %p\n", pte, old_pte, new_table);
++	pr_devel("Splitting pte %p (%llx) into %p\n", pte, old_pte, new_table);
+ 
+ 	for (i = 0; i < MAX_PTE_ENTRIES; i++) {
+ 		new_table[i] = old_pte | (i << levelshift);
+@@ -215,7 +215,7 @@ static void split_block(u64 *pte, int le
+ 		if ((level + 1) == 3)
+ 			new_table[i] |= PTE_TYPE_TABLE;
+ 
+-		debug("Setting new_table[%lld] = %llx\n", i, new_table[i]);
++		pr_devel("Setting new_table[%lld] = %llx\n", i, new_table[i]);
+ 	}
+ 
+ 	/* Set the new table into effect */
+@@ -237,7 +237,7 @@ static void add_map(struct mm_region *ma
+ 	while (size) {
+ 		pte = find_pte(virt, 0);
+ 		if (pte && (pte_type(pte) == PTE_TYPE_FAULT)) {
+-			debug("Creating table for virt 0x%llx\n", virt);
++			pr_devel("Creating table for virt 0x%llx\n", virt);
+ 			new_table = create_table();
+ 			set_pte_table(pte, new_table);
+ 		}
+@@ -248,12 +248,12 @@ static void add_map(struct mm_region *ma
+ 				panic("pte not found\n");
+ 
+ 			blocksize = 1ULL << level2shift(level);
+-			debug("Checking if pte fits for virt=%llx size=%llx blocksize=%llx\n",
+-			      virt, size, blocksize);
++			pr_devel("Checking if pte fits for virt=%llx size=%llx blocksize=%llx\n",
++				 virt, size, blocksize);
+ 			if (size >= blocksize && !(virt & (blocksize - 1))) {
+ 				/* Page fits, create block PTE */
+-				debug("Setting PTE %p to block virt=%llx\n",
+-				      pte, virt);
++				pr_devel("Setting PTE %p to block virt=%llx\n",
++					 pte, virt);
+ 				if (level == 3)
+ 					*pte = phys | attrs | PTE_TYPE_PAGE;
+ 				else
+@@ -264,13 +264,13 @@ static void add_map(struct mm_region *ma
+ 				break;
+ 			} else if (pte_type(pte) == PTE_TYPE_FAULT) {
+ 				/* Page doesn't fit, create subpages */
+-				debug("Creating subtable for virt 0x%llx blksize=%llx\n",
+-				      virt, blocksize);
++				pr_devel("Creating subtable for virt 0x%llx blksize=%llx\n",
++					 virt, blocksize);
+ 				new_table = create_table();
+ 				set_pte_table(pte, new_table);
+ 			} else if (pte_type(pte) == PTE_TYPE_BLOCK) {
+-				debug("Split block into subtable for virt 0x%llx blksize=0x%llx\n",
+-				      virt, blocksize);
++				pr_devel("Split block into subtable for virt 0x%llx blksize=0x%llx\n",
++					 virt, blocksize);
+ 				split_block(pte, level);
+ 			}
+ 		}
+@@ -463,9 +463,9 @@ inline void flush_dcache_all(void)
+ 	__asm_flush_dcache_all();
+ 	ret = __asm_flush_l3_dcache();
+ 	if (ret)
+-		debug("flushing dcache returns 0x%x\n", ret);
++		pr_devel("flushing dcache returns 0x%x\n", ret);
+ 	else
+-		debug("flushing dcache successfully.\n");
++		pr_devel("flushing dcache successfully.\n");
+ }
+ 
+ #ifndef CONFIG_SYS_DISABLE_DCACHE_OPS
+@@ -554,13 +554,13 @@ static u64 set_one_region(u64 start, u64
+ 			*pte &= ~PMD_ATTRINDX_MASK;
+ 			*pte |= attrs & PMD_ATTRINDX_MASK;
+ 		}
+-		debug("Set attrs=%llx pte=%p level=%d\n", attrs, pte, level);
++		pr_devel("Set attrs=%llx pte=%p level=%d\n", attrs, pte, level);
+ 
+ 		return levelsize;
+ 	}
+ 
+ 	/* Unaligned or doesn't fit, maybe split block into table */
+-	debug("addr=%llx level=%d pte=%p (%llx)\n", start, level, pte, *pte);
++	pr_devel("addr=%llx level=%d pte=%p (%llx)\n", start, level, pte, *pte);
+ 
+ 	/* Maybe we need to split the block into a table */
+ 	if (pte_type(pte) == PTE_TYPE_BLOCK)
+@@ -582,7 +582,7 @@ void mmu_set_region_dcache_behaviour(phy
+ 	u64 real_start = start;
+ 	u64 real_size = size;
+ 
+-	debug("start=%lx size=%lx\n", (ulong)start, (ulong)size);
++	pr_devel("start=%lx size=%lx\n", (ulong)start, (ulong)size);
+ 
+ 	if (!gd->arch.tlb_emerg)
+ 		panic("Emergency page table not setup.");
+Index: u-boot-txmp-2550/configs/txmp-2550_mfg_defconfig
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/configs/txmp-2550_mfg_defconfig
+@@ -0,0 +1,137 @@
++CONFIG_ARM=y
++CONFIG_USE_ARCH_MEMCPY=y
++CONFIG_USE_ARCH_MEMSET=y
++CONFIG_ARCH_STM32MP=y
++CONFIG_SYS_MALLOC_F_LEN=0x400000
++CONFIG_ENV_SIZE=0x1000
++CONFIG_ENV_OFFSET=0x1FF000
++CONFIG_DEFAULT_DEVICE_TREE="stm32mp255c-txmp-2550-mb7"
++CONFIG_SYS_PROMPT="TXMP U-Boot > "
++CONFIG_STM32MP25X=y
++CONFIG_TARGET_KARO_STM32MP2=y
++CONFIG_CMD_STM32PROG=y
++CONFIG_KARO_UBOOT_MFG=y
++CONFIG_SYS_LOAD_ADDR=0x84000000
++CONFIG_SYS_MEMTEST_START=0x84000000
++CONFIG_SYS_MEMTEST_END=0x88000000
++CONFIG_CHECK_REL_DYN=y
++CONFIG_ENV_VARS_UBOOT_CONFIG=y
++CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x90000000
++# CONFIG_ANDROID_BOOT_IMAGE is not set
++CONFIG_FIT=y
++# CONFIG_BOOTSTD is not set
++CONFIG_SUPPORT_RAW_INITRD=y
++CONFIG_BOOTDELAY=0
++CONFIG_USE_BOOTCOMMAND=y
++# CONFIG_USE_PREBOOT is not set
++# CONFIG_DISABLE_CONSOLE is not set
++# CONFIG_SILENT_CONSOLE is not set
++CONFIG_USB_HUB_DEBOUNCE_TIMEOUT=2000
++CONFIG_SYS_MAXARGS=256
++CONFIG_SYS_CBSIZE=2048
++CONFIG_SYS_PBSIZE=1050
++CONFIG_SYS_BOOTM_LEN=0x02000000
++# CONFIG_CMD_ELF is not set
++# CONFIG_CMD_XIMG is not set
++CONFIG_CMD_ERASEENV=y
++CONFIG_CMD_MEMINFO=y
++CONFIG_CMD_MEMTEST=y
++# CONFIG_CMD_LZMADEC is not set
++# CONFIG_CMD_UNLZ4 is not set
++# CONFIG_CMD_UNZIP is not set
++CONFIG_CMD_CLK=y
++CONFIG_CMD_DFU=y
++CONFIG_CMD_FUSE=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_LSBLK=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_BKOPS_ENABLE=y
++CONFIG_CMD_PART=y
++CONFIG_CMD_READ=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
++CONFIG_CMD_DHCP=y
++CONFIG_BOOTP_RANDOM_ID=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_CACHE=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_RNG=y
++CONFIG_CMD_TIMER=y
++CONFIG_CMD_UUID=y
++CONFIG_CMD_REGULATOR=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_OF_LIVE=y
++CONFIG_ENV_OVERWRITE=y
++CONFIG_ENV_IS_NOWHERE=y
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_SYS_RELOC_GD_ENV_ADDR=y
++CONFIG_SYS_MMC_ENV_PART=1
++CONFIG_USE_DEFAULT_ENV_FILE=y
++CONFIG_DEFAULT_ENV_FILE="board/$(VENDOR)/$(BOARD)/txmp-2550-mb7.env"
++CONFIG_SYS_64BIT_LBA=y
++CONFIG_SET_DFU_ALT_INFO=y
++CONFIG_USB_FUNCTION_FASTBOOT=y
++CONFIG_FASTBOOT_BUF_ADDR=0x84000000
++CONFIG_FASTBOOT_BUF_SIZE=0x02000000
++CONFIG_FASTBOOT_USB_DEV=1
++CONFIG_FASTBOOT_FLASH=y
++CONFIG_FASTBOOT_UUU_SUPPORT=y
++CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_MMC_BOOT_SUPPORT=y
++CONFIG_FASTBOOT_MMC_USER_SUPPORT=y
++CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
++CONFIG_FASTBOOT_CMD_OEM_UCMD=y
++CONFIG_FASTBOOT_CMD_OEM_PARTCONF=y
++# CONFIG_SCMI_AGENT_SMCCC is not set
++CONFIG_GPIO_HOG=y
++CONFIG_DM_HWSPINLOCK=y
++CONFIG_HWSPINLOCK_STM32=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_STM32F7=y
++# CONFIG_INPUT is not set
++CONFIG_LED=y
++CONFIG_LED_GPIO=y
++CONFIG_SUPPORT_EMMC_BOOT=y
++CONFIG_STM32_SDMMC2=y
++CONFIG_DWC_ETH_QOS=y
++CONFIG_PHY=y
++CONFIG_PHY_STM32_USB2PHY=y
++CONFIG_PINCONF=y
++CONFIG_DM_PMIC=y
++CONFIG_DM_REGULATOR_FIXED=y
++CONFIG_DM_REGULATOR_STM32_VREFBUF=y
++CONFIG_RAM=y
++# CONFIG_STM32MP1_DDR is not set
++CONFIG_RNG_STM32=y
++CONFIG_SERIAL_RX_BUFFER=y
++CONFIG_SPI=y
++CONFIG_DM_SPI=y
++CONFIG_STM32_QSPI=y
++CONFIG_SYSRESET_CMD_POWEROFF=y
++# CONFIG_OPTEE_TA_AVB is not set
++CONFIG_USB=y
++CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_XHCI_DWC3=y
++CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS=1
++CONFIG_USB_STM32_USBH=y
++CONFIG_USB_DWC3=y
++CONFIG_USB_DWC3_GENERIC=y
++CONFIG_USB_STORAGE=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="STMicroelectronics"
++CONFIG_USB_GADGET_VENDOR_NUM=0x0483
++CONFIG_USB_GADGET_PRODUCT_NUM=0x5720
++CONFIG_WDT=y
++CONFIG_WDT_STM32MP=y
++CONFIG_UBIFS_SILENCE_MSG=y
++# CONFIG_REGEX is not set
++# CONFIG_EFI_LOADER is not set
++# CONFIG_LMB_USE_MAX_REGIONS is not set
++CONFIG_LMB_MEMORY_REGIONS=2
++CONFIG_LMB_RESERVED_REGIONS=32
+Index: u-boot-txmp-2550/configs/txmp-2550_noenv_defconfig
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/configs/txmp-2550_noenv_defconfig
+@@ -0,0 +1,132 @@
++CONFIG_ARM=y
++CONFIG_USE_ARCH_MEMCPY=y
++CONFIG_USE_ARCH_MEMSET=y
++CONFIG_ARCH_STM32MP=y
++CONFIG_SYS_MALLOC_F_LEN=0x400000
++CONFIG_ENV_SIZE=0x1000
++CONFIG_ENV_OFFSET=0x1FF000
++CONFIG_DEFAULT_DEVICE_TREE="stm32mp255c-txmp-2550-mb7"
++CONFIG_SYS_PROMPT="TXMP U-Boot > "
++CONFIG_STM32MP25X=y
++CONFIG_TARGET_KARO_STM32MP2=y
++CONFIG_KARO_UBOOT_NOENV=y
++CONFIG_SYS_LOAD_ADDR=0x84000000
++CONFIG_SYS_MEMTEST_START=0x84000000
++CONFIG_SYS_MEMTEST_END=0x88000000
++CONFIG_CHECK_REL_DYN=y
++CONFIG_ENV_VARS_UBOOT_CONFIG=y
++CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x90000000
++# CONFIG_ANDROID_BOOT_IMAGE is not set
++CONFIG_FIT=y
++# CONFIG_BOOTSTD is not set
++CONFIG_SUPPORT_RAW_INITRD=y
++CONFIG_BOOTDELAY=-1
++CONFIG_USE_BOOTCOMMAND=y
++CONFIG_USB_HUB_DEBOUNCE_TIMEOUT=2000
++CONFIG_SYS_MAXARGS=256
++CONFIG_SYS_CBSIZE=2048
++CONFIG_SYS_PBSIZE=1050
++CONFIG_SYS_BOOTM_LEN=0x02000000
++# CONFIG_CMD_ELF is not set
++# CONFIG_CMD_XIMG is not set
++CONFIG_CMD_ERASEENV=y
++CONFIG_CMD_MEMINFO=y
++CONFIG_CMD_MEMTEST=y
++# CONFIG_CMD_LZMADEC is not set
++# CONFIG_CMD_UNLZ4 is not set
++# CONFIG_CMD_UNZIP is not set
++CONFIG_CMD_CLK=y
++CONFIG_CMD_FUSE=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPT=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_LSBLK=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_BKOPS_ENABLE=y
++CONFIG_CMD_PART=y
++CONFIG_CMD_READ=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
++CONFIG_CMD_DHCP=y
++CONFIG_BOOTP_RANDOM_ID=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_CACHE=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_RNG=y
++CONFIG_CMD_TIMER=y
++CONFIG_CMD_UUID=y
++CONFIG_CMD_REGULATOR=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_PARTITION_TYPE_GUID=y
++CONFIG_OF_LIVE=y
++CONFIG_ENV_OVERWRITE=y
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_SYS_RELOC_GD_ENV_ADDR=y
++CONFIG_SYS_MMC_ENV_PART=1
++CONFIG_USE_DEFAULT_ENV_FILE=y
++CONFIG_DEFAULT_ENV_FILE="board/$(VENDOR)/$(BOARD)/txmp-2550-mb7.env"
++CONFIG_SYS_64BIT_LBA=y
++CONFIG_USB_FUNCTION_FASTBOOT=y
++CONFIG_FASTBOOT_BUF_ADDR=0x84000000
++CONFIG_FASTBOOT_BUF_SIZE=0x02000000
++CONFIG_FASTBOOT_USB_DEV=1
++CONFIG_FASTBOOT_FLASH=y
++CONFIG_FASTBOOT_UUU_SUPPORT=y
++CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_MMC_BOOT_SUPPORT=y
++CONFIG_FASTBOOT_MMC_USER_SUPPORT=y
++CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
++CONFIG_FASTBOOT_CMD_OEM_UCMD=y
++CONFIG_FASTBOOT_CMD_OEM_PARTCONF=y
++# CONFIG_SCMI_AGENT_SMCCC is not set
++CONFIG_GPIO_HOG=y
++CONFIG_DM_HWSPINLOCK=y
++CONFIG_HWSPINLOCK_STM32=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_STM32F7=y
++# CONFIG_INPUT is not set
++CONFIG_LED=y
++CONFIG_LED_GPIO=y
++CONFIG_SUPPORT_EMMC_BOOT=y
++CONFIG_STM32_SDMMC2=y
++CONFIG_DWC_ETH_QOS=y
++CONFIG_PHY=y
++CONFIG_PHY_STM32_USB2PHY=y
++CONFIG_PINCONF=y
++CONFIG_DM_PMIC=y
++CONFIG_DM_REGULATOR_FIXED=y
++CONFIG_DM_REGULATOR_STM32_VREFBUF=y
++CONFIG_RAM=y
++# CONFIG_STM32MP1_DDR is not set
++CONFIG_RNG_STM32=y
++CONFIG_SERIAL_RX_BUFFER=y
++CONFIG_SPI=y
++CONFIG_DM_SPI=y
++CONFIG_STM32_QSPI=y
++CONFIG_SYSRESET_CMD_POWEROFF=y
++# CONFIG_OPTEE_TA_AVB is not set
++CONFIG_USB=y
++CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_XHCI_DWC3=y
++CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS=1
++CONFIG_USB_STM32_USBH=y
++CONFIG_USB_DWC3=y
++CONFIG_USB_DWC3_GENERIC=y
++CONFIG_USB_STORAGE=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="STMicroelectronics"
++CONFIG_USB_GADGET_VENDOR_NUM=0x0483
++CONFIG_USB_GADGET_PRODUCT_NUM=0x5720
++CONFIG_WDT=y
++CONFIG_WDT_STM32MP=y
++CONFIG_UBIFS_SILENCE_MSG=y
++# CONFIG_REGEX is not set
++# CONFIG_EFI_LOADER is not set
++# CONFIG_LMB_USE_MAX_REGIONS is not set
++CONFIG_LMB_MEMORY_REGIONS=2
++CONFIG_LMB_RESERVED_REGIONS=32
+Index: u-boot-txmp-2550/configs/txmp-2550_optee_defconfig
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/configs/txmp-2550_optee_defconfig
+@@ -0,0 +1,148 @@
++CONFIG_ARM=y
++CONFIG_USE_ARCH_MEMCPY=y
++CONFIG_USE_ARCH_MEMSET=y
++CONFIG_ARCH_STM32MP=y
++CONFIG_SYS_MALLOC_F_LEN=0x400000
++CONFIG_ENV_SIZE=0x1000
++CONFIG_ENV_OFFSET=0x1FF000
++CONFIG_DEFAULT_DEVICE_TREE="stm32mp255c-txmp-2550-mb7"
++CONFIG_SYS_PROMPT="TXMP U-Boot > "
++CONFIG_STM32MP25X=y
++CONFIG_TARGET_KARO_STM32MP2=y
++CONFIG_SYS_LOAD_ADDR=0x84000000
++CONFIG_SYS_MEMTEST_START=0x84000000
++CONFIG_SYS_MEMTEST_END=0x88000000
++CONFIG_CHECK_REL_DYN=y
++CONFIG_ENV_VARS_UBOOT_CONFIG=y
++CONFIG_CUSTOM_SYS_INIT_SP_ADDR=0x90000000
++# CONFIG_ANDROID_BOOT_IMAGE is not set
++CONFIG_FIT=y
++# CONFIG_BOOTSTD is not set
++CONFIG_SUPPORT_RAW_INITRD=y
++CONFIG_BOOTDELAY=1
++CONFIG_USE_BOOTCOMMAND=y
++CONFIG_USB_HUB_DEBOUNCE_TIMEOUT=2000
++CONFIG_HUSH_PARSER=y
++CONFIG_SYS_MAXARGS=256
++CONFIG_SYS_CBSIZE=2048
++CONFIG_SYS_PBSIZE=1050
++CONFIG_SYS_BOOTM_LEN=0x02000000
++# CONFIG_CMD_ELF is not set
++# CONFIG_CMD_XIMG is not set
++CONFIG_CMD_ERASEENV=y
++CONFIG_CMD_MEMINFO=y
++CONFIG_CMD_MEMTEST=y
++# CONFIG_CMD_LZMADEC is not set
++# CONFIG_CMD_UNLZ4 is not set
++# CONFIG_CMD_UNZIP is not set
++CONFIG_CMD_CLK=y
++CONFIG_CMD_FUSE=y
++CONFIG_CMD_GPIO=y
++CONFIG_CMD_GPT=y
++CONFIG_CMD_I2C=y
++CONFIG_CMD_LSBLK=y
++CONFIG_CMD_MMC=y
++CONFIG_CMD_BKOPS_ENABLE=y
++CONFIG_CMD_PART=y
++CONFIG_CMD_READ=y
++CONFIG_CMD_USB=y
++CONFIG_CMD_USB_MASS_STORAGE=y
++CONFIG_CMD_DHCP=y
++CONFIG_BOOTP_RANDOM_ID=y
++CONFIG_CMD_MII=y
++CONFIG_CMD_PING=y
++CONFIG_CMD_BMP=y
++CONFIG_CMD_CACHE=y
++CONFIG_CMD_CLS=y
++CONFIG_CMD_TIME=y
++CONFIG_CMD_RNG=y
++CONFIG_CMD_TIMER=y
++CONFIG_CMD_UUID=y
++CONFIG_CMD_REGULATOR=y
++CONFIG_CMD_EXT2=y
++CONFIG_CMD_EXT4=y
++CONFIG_CMD_EXT4_WRITE=y
++CONFIG_CMD_FAT=y
++CONFIG_CMD_FS_GENERIC=y
++CONFIG_PARTITION_TYPE_GUID=y
++CONFIG_OF_LIVE=y
++CONFIG_ENV_OVERWRITE=y
++CONFIG_ENV_IS_IN_MMC=y
++CONFIG_SYS_RELOC_GD_ENV_ADDR=y
++CONFIG_SYS_MMC_ENV_PART=1
++CONFIG_USE_DEFAULT_ENV_FILE=y
++CONFIG_DEFAULT_ENV_FILE="board/$(VENDOR)/$(BOARD)/txmp-2550-mb7.env"
++CONFIG_SYS_64BIT_LBA=y
++CONFIG_USB_FUNCTION_FASTBOOT=y
++CONFIG_FASTBOOT_BUF_ADDR=0x84000000
++CONFIG_FASTBOOT_BUF_SIZE=0x02000000
++CONFIG_FASTBOOT_USB_DEV=1
++CONFIG_FASTBOOT_FLASH=y
++CONFIG_FASTBOOT_UUU_SUPPORT=y
++CONFIG_FASTBOOT_FLASH_MMC_DEV=0
++CONFIG_FASTBOOT_MMC_BOOT_SUPPORT=y
++CONFIG_FASTBOOT_MMC_USER_SUPPORT=y
++CONFIG_FASTBOOT_CMD_OEM_FORMAT=y
++CONFIG_FASTBOOT_CMD_OEM_UCMD=y
++CONFIG_FASTBOOT_CMD_OEM_PARTCONF=y
++# CONFIG_SCMI_AGENT_SMCCC is not set
++CONFIG_GPIO_HOG=y
++CONFIG_DM_HWSPINLOCK=y
++CONFIG_HWSPINLOCK_STM32=y
++CONFIG_DM_I2C=y
++CONFIG_SYS_I2C_STM32F7=y
++# CONFIG_INPUT is not set
++CONFIG_LED=y
++CONFIG_LED_GPIO=y
++CONFIG_SUPPORT_EMMC_BOOT=y
++CONFIG_STM32_SDMMC2=y
++CONFIG_DWC_ETH_QOS=y
++CONFIG_PHY=y
++CONFIG_PHY_STM32_USB2PHY=y
++CONFIG_PINCONF=y
++CONFIG_DM_PMIC=y
++CONFIG_DM_REGULATOR_FIXED=y
++CONFIG_DM_REGULATOR_STM32_VREFBUF=y
++CONFIG_RAM=y
++# CONFIG_STM32MP1_DDR is not set
++CONFIG_RNG_STM32=y
++CONFIG_SERIAL_RX_BUFFER=y
++CONFIG_SPI=y
++CONFIG_DM_SPI=y
++CONFIG_STM32_QSPI=y
++CONFIG_SYSRESET_CMD_POWEROFF=y
++# CONFIG_OPTEE_TA_AVB is not set
++CONFIG_USB=y
++CONFIG_USB_XHCI_HCD=y
++CONFIG_USB_XHCI_DWC3=y
++CONFIG_SYS_USB_OHCI_MAX_ROOT_PORTS=1
++CONFIG_USB_STM32_USBH=y
++CONFIG_USB_DWC3=y
++CONFIG_USB_DWC3_GENERIC=y
++CONFIG_USB_STORAGE=y
++CONFIG_USB_GADGET=y
++CONFIG_USB_GADGET_MANUFACTURER="STMicroelectronics"
++CONFIG_USB_GADGET_VENDOR_NUM=0x0483
++CONFIG_USB_GADGET_PRODUCT_NUM=0x5720
++CONFIG_DM_VIDEO=y
++CONFIG_VIDEO_LOGO=y
++CONFIG_BACKLIGHT_GPIO=y
++# CONFIG_VIDEO_ANSI is not set
++CONFIG_VIDEO_STM32=y
++CONFIG_VIDEO_STM32_DSI=y
++CONFIG_VIDEO_STM32_LVDS=y
++CONFIG_VIDEO_STM32_MAX_XRES=1920
++CONFIG_VIDEO_STM32_MAX_YRES=1200
++CONFIG_SPLASH_SCREEN=y
++CONFIG_SPLASH_SCREEN_ALIGN=y
++CONFIG_BMP_16BPP=y
++CONFIG_BMP_24BPP=y
++CONFIG_BMP_32BPP=y
++CONFIG_WDT=y
++CONFIG_WDT_STM32MP=y
++CONFIG_UBIFS_SILENCE_MSG=y
++# CONFIG_REGEX is not set
++# CONFIG_EFI_LOADER is not set
++# CONFIG_LMB_USE_MAX_REGIONS is not set
++CONFIG_LMB_MEMORY_REGIONS=2
++CONFIG_LMB_RESERVED_REGIONS=32
+Index: u-boot-txmp-2550/board/karo/stm32mp1/stm32mp1.c
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/stm32mp1/stm32mp1.c
++++ u-boot-txmp-2550/board/karo/stm32mp1/stm32mp1.c
+@@ -408,7 +408,7 @@ static void print_mac_from_fuse(void)
+ /* board interface eth init */
+ /* this is a weak define that we are overriding */
+ int board_interface_eth_init(struct udevice *dev,
+-			     phy_interface_t interface_type)
++			     phy_interface_t interface_type, unsigned long rate)
+ {
+ 	u32 value;
+ 	u8 *syscfg = syscon_get_first_range(STM32MP_SYSCON_SYSCFG);
+Index: u-boot-txmp-2550/board/karo/common/fdt.c
+===================================================================
+--- u-boot-txmp-2550.orig/board/karo/common/fdt.c
++++ u-boot-txmp-2550/board/karo/common/fdt.c
+@@ -5,7 +5,6 @@
+  */
+ 
+ #include <common.h>
+-#include <console.h>
+ #include <env.h>
+ #include <fdt_support.h>
+ #include <fs.h>
+@@ -16,8 +15,6 @@
+ #include <ubi_uboot.h>
+ #include <usb.h>
+ #include <asm/cache.h>
+-#include <dm/of_access.h>
+-#include <linux/libfdt.h>
+ #include "karo.h"
+ 
+ #ifdef MAX_DTB_SIZE
+@@ -134,10 +131,13 @@ static void *karo_fdt_load_dtb(unsigned
+ 	return fdt;
+ }
+ 
+-static const char *karo_fdt_overlay_filename(const char *soc_prefix,
+-					     const char *baseboard)
++#ifdef CONFIG_KARO_UBOOT
++static bool fdt_overlay_debug = IS_ENABLED(CONFIG_DEBUG);
++
++static const char *karo_fdt_overlay_filename(const char *prefix,
++					     const char *overlay)
+ {
+-	size_t malloc_size = strlen(soc_prefix) + strlen(baseboard) + 6;
++	size_t malloc_size = strlen(prefix) + strlen(overlay) + 6;
+ 	char *fdtfile = malloc(malloc_size);
+ 	const char *pfx_end;
+ 	size_t pos;
+@@ -145,30 +145,38 @@ static const char *karo_fdt_overlay_file
+ 	if (!fdtfile)
+ 		return NULL;
+ 
+-	strcpy(fdtfile, soc_prefix);
++	strcpy(fdtfile, prefix);
+ 	pfx_end = strchrnul(fdtfile, '-');
+ 	pos = pfx_end - fdtfile;
+ 	snprintf(&fdtfile[pos], malloc_size - pos, "%s%s.dtb",
+-		 *pfx_end == '-' ? "" : "-", baseboard);
++		 *pfx_end == '-' ? "" : "-", overlay);
+ 
+ 	return fdtfile;
+ }
+ 
+-int karo_load_fdt_overlay(void *fdt,
+-			  const char *dev_type, const char *dev_part,
+-			  const char *soc_prefix, const char *baseboard)
++int karo_load_fdt_overlay(void *fdt, const char *dev_type, const char *dev_part,
++			  const char *overlay)
+ {
+ 	int ret;
+ 	loff_t size;
+ 	loff_t read_size;
+ 	void *fdto;
+-	const char *filename = karo_fdt_overlay_filename(soc_prefix, baseboard);
++	const char *soc_prefix = env_get("soc_prefix");
++	const char *soc_family = env_get("soc_family");
++	const char *filename = karo_fdt_overlay_filename(soc_family, overlay);
+ 
+ 	if (!filename)
+ 		return -ENOMEM;
+ 
+-	printf("Loading FDT overlay for '%s' from %s %s '%s'\n", baseboard,
+-	       dev_type, dev_part, filename);
++	if (!file_exists(dev_type, dev_part, filename, FS_TYPE_ANY)) {
++		free(filename);
++		filename = karo_fdt_overlay_filename(soc_prefix, overlay);
++		if (!filename)
++			return -ENOMEM;
++	}
++	if (fdt_overlay_debug)
++		printf("Loading FDT overlay for '%s' from %s %s '%s'\n", overlay,
++		       dev_type, dev_part, filename);
+ 
+ 	if (!file_exists(dev_type, dev_part, filename, FS_TYPE_ANY)) {
+ 		printf("'%s' does not exist\n", filename);
+@@ -181,8 +189,10 @@ int karo_load_fdt_overlay(void *fdt,
+ 	}
+ 
+ 	ret = fs_size(filename, &size);
+-	if (ret)
++	if (ret) {
++		printf("Failed to get size of '%s': %d\n", filename, errno);
+ 		goto free_fn;
++	}
+ 
+ 	fdto = memalign(ARCH_DMA_MINALIGN, size);
+ 	if (!fdto) {
+@@ -216,6 +226,7 @@ int karo_load_fdt_overlay(void *fdt,
+ 	if (ret) {
+ 		printf("Failed to load FDT overlay from '%s': %s\n",
+ 		       filename, fdt_strerror(ret));
++		memset(fdt, 0, sizeof(struct fdt_header));
+ 		ret = -EINVAL;
+ 	}
+ 
+@@ -262,9 +273,10 @@ void karo_fdt_apply_overlays(unsigned lo
+ 	const char *baseboard = env_get("baseboard");
+ 	const char *dev_type = env_get("bootdev");
+ 	const char *dev_part = env_get("bootpart");
+-	const char *soc_prefix = env_get("soc_prefix");
+ 	char *overlays;
+ 
++	fdt_overlay_debug |= env_get_yesno("debug_overlays") == 1;
++
+ 	ret = karo_fdt_get_overlays(baseboard, &overlays);
+ 	if (ret == 0 && overlays) {
+ 		char *overlay_list = strdup(overlays);
+@@ -279,7 +291,7 @@ void karo_fdt_apply_overlays(unsigned lo
+ 			if (!strlen(overlay))
+ 				continue;
+ 			ret = karo_load_fdt_overlay((void *)fdt_addr, dev_type,
+-						    dev_part, soc_prefix, overlay);
++						    dev_part, overlay);
+ 			if (ret) {
+ 				printf("Failed to load '%s' FDT overlay: %d\n",
+ 				       overlay, ret);
+@@ -292,7 +304,14 @@ void karo_fdt_apply_overlays(unsigned lo
+ 	} else {
+ 		printf("No FDT overlays to be loaded\n");
+ 	}
++	if (ret)
++		memset((void *)fdt_addr, 0, sizeof(fdt_addr));
+ }
++#else
++static inline void karo_fdt_apply_overlays(unsigned long fdt_addr)
++{
++}
++#endif
+ 
+ void karo_fdt_move_fdt(void)
+ {
+Index: u-boot-txmp-2550/board/karo/stm32mp2/txmp-2550-mb7.env
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/stm32mp2/txmp-2550-mb7.env
+@@ -0,0 +1,34 @@
++append_bootargs=quiet
++autoload=no
++autostart=no
++baseboard=mb7
++baudrate=115200
++boot_mode=mmc
++bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs} ${dyndbg}
++bootargs_net=run bootargs_nfs
++bootargs_nfs=run default_bootargs;setenv bootargs ${bootargs} root=/dev/nfs nfsroot=${nfs_server}:${nfsroot},nolock,v3 ip=dhcp ${append_bootargs} ${dyndbg}
++bootcmd=setenv autostart no;run bootargs_${boot_mode} load_kernel_${boot_mode} bootm_cmd
++bootdev=mmc
++bootm_cmd=booti ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}
++bootpart=0:2
++default_bootargs=setenv bootargs console=ttySTM0,115200 ro panic=-1
++dtbfile=stm32mp255c-txmp-2550.dtb
++dyndbg=dyndbg='"-p"'
++emmc_boot_ack=1
++emmc_boot_part=1
++fdt_addr_r=8a000000
++fdt_high=8c000000
++fdtaddr=8a000000
++fdto_addr=8a300000
++fdtsave=save ${bootdev} ${bootpart} ${fdt_addr_r} /${dtbfile} ${fdtsize}
++initrd_high=8a400000
++kernel_addr_r=88000000
++linux_kernel=Image
++loadaddr=84000000
++load_dtb_mmc=load ${bootdev} ${bootpart} ${fdt_addr_r} ${dtbfile}
++load_dtb_net=setenv autoload y;bootp ${fdt_addr_r} ${dtbfile}
++load_dtb_nfs=run load_dtb_net
++load_kernel_mmc=load ${bootdev} ${bootpart} ${kernel_addr_r} ${linux_kernel}
++load_kernel_net=setenv autoload y;bootp ${kernel_addr_r} ${linux_kernel}
++load_kernel_nfs=run load_kernel_net
++ramdisk_addr_r=-
+Index: u-boot-txmp-2550/board/karo/stm32mp2/txmp-2550.env
+===================================================================
+--- /dev/null
++++ u-boot-txmp-2550/board/karo/stm32mp2/txmp-2550.env
+@@ -0,0 +1,34 @@
++append_bootargs=quiet
++autoload=no
++autostart=no
++baseboard=
++baudrate=115200
++boot_mode=mmc
++bootargs_mmc=run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rootwait ${append_bootargs} ${dyndbg}
++bootargs_net=run bootargs_nfs
++bootargs_nfs=run default_bootargs;setenv bootargs ${bootargs} root=/dev/nfs nfsroot=${nfs_server}:${nfsroot},nolock,v3 ip=dhcp ${append_bootargs} ${dyndbg}
++bootcmd=setenv autostart no;run bootargs_${boot_mode} load_kernel_${boot_mode} bootm_cmd
++bootdev=mmc
++bootm_cmd=booti ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr_r}
++bootpart=0:2
++default_bootargs=setenv bootargs console=ttySTM0,115200 ro panic=-1
++dtbfile=stm32mp255c-txmp-2550.dtb
++dyndbg=dyndbg='"-p"'
++emmc_boot_ack=1
++emmc_boot_part=1
++fdt_addr_r=8a000000
++fdt_high=8c000000
++fdtaddr=8a000000
++fdto_addr=8a300000
++fdtsave=save ${bootdev} ${bootpart} ${fdt_addr_r} /${dtbfile} ${fdtsize}
++initrd_high=8a400000
++kernel_addr_r=88000000
++linux_kernel=Image
++loadaddr=84000000
++load_dtb_mmc=load ${bootdev} ${bootpart} ${fdt_addr_r} ${dtbfile}
++load_dtb_net=setenv autoload y;bootp ${fdt_addr_r} ${dtbfile}
++load_dtb_nfs=run load_dtb_net
++load_kernel_mmc=load ${bootdev} ${bootpart} ${kernel_addr_r} ${linux_kernel}
++load_kernel_net=setenv autoload y;bootp ${kernel_addr_r} ${linux_kernel}
++load_kernel_nfs=run load_kernel_net
++ramdisk_addr_r=-

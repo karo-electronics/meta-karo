@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include "stm32mp255c-txmp-2550.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH TXMP-2550 module on MB7 baseboard";
+};
+
+&sdmmc1 {
+	cd-gpios = <&gpiob 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	status = "okay";
+};
+
+&sdmmc3 {
+	cd-gpios = <&gpiob 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+};

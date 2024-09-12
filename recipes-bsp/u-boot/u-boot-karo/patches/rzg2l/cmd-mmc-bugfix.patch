@@ -1,0 +1,91 @@
+Index: git/cmd/mmc.c
+===================================================================
+--- git.orig/cmd/mmc.c
++++ git/cmd/mmc.c
+@@ -155,7 +155,7 @@ static int do_mmcinfo(struct cmd_tbl *cm
+ 			curr_device = 0;
+ 		else {
+ 			puts("No MMC device available\n");
+-			return 1;
++			return CMD_RET_FAILURE;
+ 		}
+ 	}
+ 
+@@ -540,7 +540,7 @@ static int do_mmc_dev(struct cmd_tbl *cm
+ 	printf("switch to partitions #%d, %s\n",
+ 	       part, (!ret) ? "OK" : "ERROR");
+ 	if (ret)
+-		return 1;
++		return CMD_RET_FAILURE;
+ 
+ 	curr_device = dev;
+ 	if (mmc->part_config == MMCPART_NOAVAILABLE)
+@@ -821,7 +821,10 @@ static int do_mmc_partconf(struct cmd_tb
+ 	access = simple_strtoul(argv[4], NULL, 10);
+ 
+ 	/* acknowledge to be sent during boot operation */
+-	return mmc_set_part_conf(mmc, ack, part_num, access);
++	if (mmc_set_part_conf(mmc, ack, part_num, access))
++		return CMD_RET_FAILURE;
++
++	return CMD_RET_SUCCESS;
+ }
+ 
+ static int do_mmc_rst_func(struct cmd_tbl *cmdtp, int flag,
+@@ -830,6 +833,7 @@ static int do_mmc_rst_func(struct cmd_tb
+ 	int dev;
+ 	struct mmc *mmc;
+ 	u8 enable;
++	int ret;
+ 
+ 	/*
+ 	 * Set the RST_n_ENABLE bit of RST_n_FUNCTION
+@@ -856,7 +860,12 @@ static int do_mmc_rst_func(struct cmd_tb
+ 		return CMD_RET_FAILURE;
+ 	}
+ 
+-	return mmc_set_rst_n_function(mmc, enable);
++	ret = mmc_set_rst_n_function(mmc, enable);
++	if (ret < 0) {
++		printf("Could not set rst-function to %d\n", enable);
++		return CMD_RET_FAILURE;
++	}
++	return CMD_RET_SUCCESS;
+ }
+ #endif
+ static int do_mmc_setdsr(struct cmd_tbl *cmdtp, int flag,
+@@ -877,14 +886,14 @@ static int do_mmc_setdsr(struct cmd_tbl
+ 	}
+ 	ret = mmc_set_dsr(mmc, val);
+ 	printf("set dsr %s\n", (!ret) ? "OK, force rescan" : "ERROR");
+-	if (!ret) {
+-		mmc->has_init = 0;
+-		if (mmc_init(mmc))
+-			return CMD_RET_FAILURE;
+-		else
+-			return CMD_RET_SUCCESS;
+-	}
+-	return ret;
++	if (ret)
++		return CMD_RET_FAILURE;
++
++	mmc->has_init = 0;
++	if (mmc_init(mmc))
++		return CMD_RET_FAILURE;
++
++	return CMD_RET_SUCCESS;
+ }
+ 
+ #ifdef CONFIG_CMD_BKOPS_ENABLE
+@@ -908,7 +917,10 @@ static int do_mmc_bkops_enable(struct cm
+ 		return CMD_RET_FAILURE;
+ 	}
+ 
+-	return mmc_set_bkops_enable(mmc);
++	if (mmc_set_bkops_enable(mmc))
++		return CMD_RET_FAILURE;
++
++	return CMD_RET_SUCCESS;
+ }
+ #endif
+ 

@@ -1,0 +1,109 @@
+Index: u-boot-txmp-2550/drivers/gpio/gpio-uclass.c
+===================================================================
+--- u-boot-txmp-2550.orig/drivers/gpio/gpio-uclass.c
++++ u-boot-txmp-2550/drivers/gpio/gpio-uclass.c
+@@ -139,15 +139,13 @@ int dm_gpio_lookup_name(const char *name
+ 		len = uc_priv->bank_name ? strlen(uc_priv->bank_name) : 0;
+ 
+ 		if (!strncasecmp(name, uc_priv->bank_name, len)) {
+-			if (!strict_strtoul(name + len, 10, &offset)) {
+-				if (offset >= uc_priv->gpio_count)
+-					return -EINVAL;
+-				break;
+-			}
++			if (!strict_strtoul(name + len, 10, &offset))
++				if (offset < uc_priv->gpio_count)
++					break;
+ 		}
+ 
+ 		/*
+-		 * if we did not found a gpio through its bank
++		 * if we did not find a gpio through its bank
+ 		 * name, we search for a valid gpio label.
+ 		 */
+ 		if (!dm_gpio_lookup_label(name, uc_priv, &offset))
+Index: u-boot-txmp-2550/drivers/misc/nvmem.c
+===================================================================
+--- u-boot-txmp-2550.orig/drivers/misc/nvmem.c
++++ u-boot-txmp-2550/drivers/misc/nvmem.c
+@@ -14,6 +14,16 @@
+ #include <dm/read.h>
+ #include <dm/uclass.h>
+ 
++#if !CONFIG_IS_ENABLED(I2C_EEPROM)
++#define i2c_eeprom_read(dev, offset, buf, size) (-EOPNOTSUPP)
++#define i2c_eeprom_write(dev, offset, buf, size) (-EOPNOTSUPP)
++#endif
++
++#if !CONFIG_IS_ENABLED(DM_RTC)
++#define dm_rtc_read(dev, reg, buf, len) (-EOPNOTSUPP)
++#define dm_rtc_write(dev, reg, buf, len) (-EOPNOTSUPP)
++#endif
++
+ int nvmem_cell_read(struct nvmem_cell *cell, void *buf, size_t size)
+ {
+ 	dev_dbg(cell->nvmem, "%s: off=%u size=%zu\n", __func__, cell->offset, size);
+Index: u-boot-txmp-2550/arch/arm/mach-stm32mp/stm32mp2/cpu.c
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/mach-stm32mp/stm32mp2/cpu.c
++++ u-boot-txmp-2550/arch/arm/mach-stm32mp/stm32mp2/cpu.c
+@@ -180,10 +180,11 @@ static void setup_boot_mode(void)
+ 		break;
+ 	case BOOT_FLASH_NOR:
+ 		env_set("boot_device", "nor");
+-		if (IS_ENABLED(CONFIG_SYS_MAX_FLASH_BANKS))
+-			sprintf(cmd, "%d", CONFIG_SYS_MAX_FLASH_BANKS);
+-		else
+-			sprintf(cmd, "%d", 0);
++#if IS_ENABLED(CONFIG_SYS_MAX_FLASH_BANKS)
++		sprintf(cmd, "%d", CONFIG_SYS_MAX_FLASH_BANKS);
++#else
++		sprintf(cmd, "%d", 0);
++#endif
+ 		env_set("boot_instance", cmd);
+ 		break;
+ 	case BOOT_FLASH_HYPERFLASH:
+Index: u-boot-txmp-2550/arch/arm/mach-stm32mp/stm32mp2/stm32mp25x.c
+===================================================================
+--- u-boot-txmp-2550.orig/arch/arm/mach-stm32mp/stm32mp2/stm32mp25x.c
++++ u-boot-txmp-2550/arch/arm/mach-stm32mp/stm32mp2/stm32mp25x.c
+@@ -64,7 +64,7 @@ u32 get_cpu_package(void)
+ 	return get_otp(BSEC_OTP_PKG, PKG_SHIFT, PKG_MASK);
+ }
+ 
+-int get_eth_nb(void)
++__weak int get_eth_nb(void)
+ {
+ 	int nb_eth;
+ 
+@@ -98,7 +98,6 @@ int get_eth_nb(void)
+ 		break;
+ 	default:
+ 		nb_eth = 0;
+-		break;
+ 	}
+ 
+ 	return nb_eth;
+@@ -173,6 +172,7 @@ void get_soc_name(char name[SOC_NAME_SIZ
+ 		case OTP_REVID_1_1:
+ 			cpu_r = "Z";
+ 			break;
++		case 0:
+ 		case OTP_REVID_2:
+ 			cpu_r = "B";
+ 			break;
+Index: u-boot-txmp-2550/drivers/usb/dwc3/gadget.c
+===================================================================
+--- u-boot-txmp-2550.orig/drivers/usb/dwc3/gadget.c
++++ u-boot-txmp-2550/drivers/usb/dwc3/gadget.c
+@@ -1128,8 +1128,8 @@ static int dwc3_gadget_ep_dequeue(struct
+ 			dwc3_stop_active_transfer(dwc, dep->number, true);
+ 			goto out1;
+ 		}
+-		dev_err(dwc->dev, "request %p was not queued to %s\n",
+-				request, ep->name);
++		dev_dbg(dwc->dev, "request %p was not queued to %s\n",
++			request, ep->name);
+ 		ret = -EINVAL;
+ 		goto out0;
+ 	}
