@@ -23,7 +23,14 @@ require conf/machine/include/${OVERLAY_INC_FILE}
 
 #OVERLAY_SRC_FILES ?= ""
 
-SRC_URI = "${KERNEL_SRC};protocol=https;branch=${SRCBRANCH}"
+KERNEL_SRC ?= "${KERNEL_SRC_DEFAULT}"
+KERNEL_BRANCH ?= "${KERNEL_BRANCH_DEFAULT}"
+KERNEL_REV ?= "${KERNEL_REV_DEFAULT}"
+
+SRCBRANCH = "${KERNEL_BRANCH}"
+SRCREV = "${KERNEL_REV}"
+
+SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"

@@ -6,13 +6,13 @@ require recipes-kernel/linux/linux-karo.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
-SRCBRANCH = "linux-6.1.y"
-SRCREV = "316071de521e96bc0f7e928e3d20508891961fa4"
-KERNEL_SRC = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git"
+KERNEL_SRC_DEFAULT = "git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git;protocol=https"
+KERNEL_BRANCH_DEFAULT = "linux-6.1.y"
+KERNEL_REV_DEFAULT = "316071de521e96bc0f7e928e3d20508891961fa4"
 
-KERNEL_SRC:stm32mp2 = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
-SRCBRANCH:stm32mp2 = "linux-stm32mp-v6.1"
-SRCREV:stm32mp2 = "388441690e1c5cf1e699a2e685ef31fc20b9e7ae"
+KERNEL_SRC_DEFAULT:stm32mp2 = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
+KERNEL_BRANCH_DEFAULT:stm32mp2 = "linux-stm32mp-v6.1"
+KERNEL_REV_DEFAULT:stm32mp2 = "388441690e1c5cf1e699a2e685ef31fc20b9e7ae"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
