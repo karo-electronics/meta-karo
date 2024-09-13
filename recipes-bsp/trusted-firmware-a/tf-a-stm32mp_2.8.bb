@@ -1,7 +1,6 @@
 require tf-a-stm32mp-common.inc
 
 inherit deploy
-inherit external-dt
 
 COMPATIBLE_MACHINE = "(stm32mpcommon)"
 
