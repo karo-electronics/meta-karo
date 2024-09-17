@@ -31,7 +31,6 @@ SRCREV = "${TF_A_REV}"
 
 SRC_URI[fw.sha256sum] = "c87d8a03a8feab1f8a51818a7942deade5d31abb7f4afaa6d6dfa922383e9805"
 
-#SRC_URI += "${@ "file://0001-v2.8-stm32mp-r2.patch" if "${SOC_PREFIX}" == "stm32mp25" else ""}"
 SRC_URI += "${@ "file://tf-a-st-ddr.tar.gz;subdir=git;name=fw" if "${SOC_PREFIX}" == "stm32mp25" else ""}"
 
 TF_A_VERSION ?= "${@ 'v2.8' if get_tfa_machine(d) == 'stm32mp1' else 'v2.8.15'}"
