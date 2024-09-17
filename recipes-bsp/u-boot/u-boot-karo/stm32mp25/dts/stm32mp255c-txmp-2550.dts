@@ -10,7 +10,7 @@
 
 /dts-v1/;
 
-#include "stm32mp257.dtsi"
+#include "stm32mp255.dtsi"
 #include "stm32mp25xf.dtsi"
 #include "stm32mp255c-txmp-2550-resmem.dtsi"
 #include "stm32mp25-pinctrl.dtsi"
@@ -23,7 +23,7 @@
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module";
-	compatible = "karo,stm257f-txmp-2550", "st,stm32mp257";
+	compatible = "karo,stm255c-txmp-2550", "st,stm32mp255";
 
 	aliases {
 		ethernet0 = &eth1;

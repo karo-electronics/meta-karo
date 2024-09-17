@@ -10,7 +10,7 @@
 
 /dts-v1/;
 
-#include "stm32mp257.dtsi"
+#include "stm32mp255.dtsi"
 #include "stm32mp25xf.dtsi"
 #include "stm32mp255c-txmp-2550-rcc.dtsi"
 #include "stm32mp25-mx.h"
@@ -20,7 +20,7 @@
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module";
-	compatible = "st,stm32mp255c-txmp-2550", "st,stm32mp257";
+	compatible = "st,stm32mp255c-txmp-2550", "st,stm32mp255";
 
 	aliases {
 		serial0 = &usart2;

@@ -9,14 +9,14 @@
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/phy/phy.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
-#include "stm32mp257.dtsi"
+#include "stm32mp255.dtsi"
 #include "stm32mp25xc.dtsi"
 #include "stm32mp25xxai-pinctrl.dtsi"
 #include "stm32mp255c-txmp-2550-resmem.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module";
-	compatible = "karo,stm32mp255c-txmp-2550", "karo,txmp", "st,stm32mp257";
+	compatible = "karo,stm32mp255c-txmp-2550", "karo,txmp", "st,stm32mp255";
 
 	aliases {
 		can0 = &m_can1;
@@ -63,11 +63,6 @@
 	pinctrl-1 = <&eth1_mdio_sleep_pins &eth1_rmii_sleep_pins>;
 	phy-mode = "rmii";
 	phy-handle = <&eth1_phy0>;
-#if 0
-	/* reset only on probe */
-	snps,reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
-	snps,reset-delays-us = <25000 100 0>;
-#endif
 	st,ext-phyclk;
 	status = "okay";
 
@@ -75,23 +70,15 @@
 		compatible = "snps,dwmac-mdio";
 		#address-cells = <1>;
 		#size-cells = <0>;
-#if 0
-		/* reset on probe only */
-		reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
-		reset-delay-us = <25000>;
-		reset-post-delay-us = <100>;
-#endif
+
 		eth1_phy0: ethernet-phy@0 {
 			reg = <0>;
 			clocks = <&rcc CK_KER_ETH1>;
 			interrupt-parent = <&gpioa>;
 			interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
-#if 1
-			/* reset on each ifdown/ifup */
 			reset-gpios = <&gpioa 14 GPIO_ACTIVE_LOW>;
 			reset-assert-us = <25000>;
 			reset-deassert-us = <100>;
-#endif
 			smsc,disable-energy-detect;
 		};
 	};
