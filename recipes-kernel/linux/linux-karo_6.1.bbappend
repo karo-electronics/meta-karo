@@ -12,7 +12,6 @@ SRC_URI:append:stm32mpcommon = " \
         file://patches/0006-usbotg_id-bugfix.patch \
         file://patches/0007-usb-phy-bugfix.patch \
         file://patches/0009-dwc2-usbotg-bugfix.patch \
-        file://patches/0012-ltdc-pixclk-pol-bus-flags.patch \
         file://patches/0017-spi-nand-dma-map-bugfix.patch \
         file://patches/0019-fdt5x06-dma-bugfix.patch \
 "

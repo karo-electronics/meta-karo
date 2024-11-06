@@ -12,7 +12,7 @@ KERNEL_REV_DEFAULT = "316071de521e96bc0f7e928e3d20508891961fa4"
 
 KERNEL_SRC_DEFAULT:stm32mpcommon = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
 KERNEL_BRANCH_DEFAULT:stm32mpcommon = "linux-stm32mp-v6.1"
-KERNEL_REV_DEFAULT:stm32mpcommon = "388441690e1c5cf1e699a2e685ef31fc20b9e7ae"
+KERNEL_REV_DEFAULT:stm32mpcommon = "20df9141f899667704ee29cb6de2bddb8338188d"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
