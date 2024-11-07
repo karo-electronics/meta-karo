@@ -189,10 +189,8 @@
 };
 
 &ltdc {
-	default-on;
 	rotation-memory = <&ltdc_sec_rotation>;
-	assigned-clocks = <&rcc CK_KER_LTDC>;
-	assigned-clock-rates = <33264000>;
+	default-on;
 	status = "okay";
 
 	port {
