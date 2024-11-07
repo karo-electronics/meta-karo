@@ -229,6 +229,7 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_ltdc_pins>;
 	pinctrl-1 = <&qsmp_ltdc_sleep_pins>;
+	default-on;
 	status = "okay";
 
 	port {

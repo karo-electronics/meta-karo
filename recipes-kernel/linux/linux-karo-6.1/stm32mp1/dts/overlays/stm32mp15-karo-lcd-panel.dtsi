@@ -191,6 +191,7 @@
 };
 
 &ltdc {
+	default-on;
 	status = "okay";
 
 	port {
