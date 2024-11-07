@@ -153,12 +153,12 @@
 };
 
 &scmi_regu {
-	scmi_vddcpu: voltd-vddcpu {
+	scmi_vddcpu: voltd-vddcpu@14 {
 		reg = <VOLTD_SCMI_REGU0>;
 		regulator-name = "vddcpu";
 	};
 
-	scmi_vddcore: voltd-vddcore {
+	scmi_vddcore: voltd-vddcore@15 {
 		reg = <VOLTD_SCMI_REGU1>;
 		regulator-name = "vdd";
 	};
@@ -242,10 +242,10 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&usb_otg_hs_pins>;
 	pinctrl-1 = <&usb_otg_hs_sleep_pins>;
-	status = "okay";
+	dr_mode = "peripheral";
 	phys = <&usbphyc_port1 0>;
 	phy-names = "usb2-phy";
-	usb-role-switch;
+	status = "okay";
 };
 
 &usbphyc {
