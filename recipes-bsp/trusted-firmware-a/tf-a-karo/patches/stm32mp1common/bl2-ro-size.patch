@@ -1,0 +1,87 @@
+Index: tf-a-txmp-1570/plat/st/stm32mp1/platform.mk
+===================================================================
+--- tf-a-txmp-1570.orig/plat/st/stm32mp1/platform.mk
++++ tf-a-txmp-1570/plat/st/stm32mp1/platform.mk
+@@ -221,6 +221,21 @@ $(eval $(call add_defines,\
+ # Include paths and source files
+ PLAT_INCLUDES		+=	-Iplat/st/stm32mp1/include/
+ 
++ifneq ($(STM32MP_BL32_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL32_SIZE=$(STM32MP_BL32_SIZE)
++endif
++ifneq ($(STM32MP_BL2_RO_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL2_RO_SIZE=$(STM32MP_BL2_RO_SIZE)
++endif
++ifneq ($(STM32MP_BL2_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL2_SIZE=$(STM32MP_BL2_SIZE)
++endif
++TF_CFLAGS		+=	$(STM32MP_CPPFLAGS)
++BL32_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++BL2_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++ASFLAGS			+=	$(STM32MP_CPPFLAGS)
++DTC_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++
+ PLAT_BL_COMMON_SOURCES	+=	plat/st/stm32mp1/stm32mp1_private.c
+ 
+ PLAT_BL_COMMON_SOURCES	+=	drivers/st/uart/aarch32/stm32_console.S
+Index: tf-a-txmp-1570/plat/st/stm32mp1/stm32mp1_fip_def.h
+===================================================================
+--- tf-a-txmp-1570.orig/plat/st/stm32mp1/stm32mp1_fip_def.h
++++ tf-a-txmp-1570/plat/st/stm32mp1/stm32mp1_fip_def.h
+@@ -32,15 +32,31 @@
+ 					 STM32MP_SYSRAM_SIZE - \
+ 					 STM32MP_BL2_RW_BASE)
+ #else /* STM32MP_SSP */
++#ifndef STM32MP_BL2_RO_SIZE
+ #if TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP
+ #if STM32MP15
+ #define STM32MP_BL2_RO_SIZE		U(0x00014000)	/* 80 KB */
+-#define STM32MP_BL2_SIZE		U(0x0001B000)	/* 108 KB for BL2 */
+ #endif /* STM32MP15 */
+ #else /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
+ #if STM32MP13
+ #if BL2_IN_XIP_MEM
+ #define STM32MP_BL2_RO_SIZE		U(0x00015000)	/* 84 KB */
++#endif
++#endif /* STM32MP13 */
++#if STM32MP15
++#define STM32MP_BL2_RO_SIZE		U(0x00011000)	/* 68 KB */
++#endif /* STM32MP15 */
++#endif /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
++#endif /* STM32MP_BL2_RO_SIZE */
++
++#ifndef STM32MP_BL2_SIZE
++#if TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP
++#if STM32MP15
++#define STM32MP_BL2_SIZE		U(0x0001B000)	/* 108 KB for BL2 */
++#endif /* STM32MP15 */
++#else /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
++#if STM32MP13
++#if BL2_IN_XIP_MEM
+ #define STM32MP_BL2_SIZE		U(0x00017000)	/* 92 KB for BL2 */
+ #else
+ /* STM32MP_BL2_RO_SIZE not used if !BL2_IN_XIP_MEM */
+@@ -49,10 +65,10 @@
+ #endif
+ #endif /* STM32MP13 */
+ #if STM32MP15
+-#define STM32MP_BL2_RO_SIZE		U(0x00011000)	/* 68 KB */
+ #define STM32MP_BL2_SIZE		U(0x00016000)	/* 88 KB for BL2 */
+ #endif /* STM32MP15 */
+ #endif /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
++#endif /* STM32MP_BL2_SIZE */
+ 
+ #if STM32MP13
+ #if TRUSTED_BOARD_BOOT
+@@ -64,7 +80,11 @@
+ #if STM32MP15
+ #define STM32MP_BL2_DTB_SIZE		U(0x00007000)	/* 28 KB for DTB */
+ #endif /* STM32MP15 */
++
++#ifndef STM32MP_BL32_SIZE
+ #define STM32MP_BL32_SIZE		U(0x0001B000)	/* 108 KB for BL32 */
++#endif
++
+ #define STM32MP_BL32_DTB_SIZE		U(0x00005000)	/* 20 KB for DTB */
+ #define STM32MP_FW_CONFIG_MAX_SIZE	PAGE_SIZE	/* 4 KB for FCONF DTB */
+ #define STM32MP_HW_CONFIG_MAX_SIZE	U(0x40000)	/* 256 KB for HW config DTB */
