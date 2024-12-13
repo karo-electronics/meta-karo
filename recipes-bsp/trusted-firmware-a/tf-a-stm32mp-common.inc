@@ -19,7 +19,7 @@ TF_A_MACHINE = "${@ get_tfa_machine(d)}"
 TF_A_SRC_DEFAULT = "${@ "git://git.trustedfirmware.org/TF-A/trusted-firmware-a.git;protocol=https" if get_tfa_machine(d) == 'stm32mp1' else \
                         "git://github.com/STMicroelectronics/arm-trusted-firmware.git;protocol=https"}"
 TF_A_BRANCH_DEFAULT = "${@ "lts-v2.8" if get_tfa_machine(d) == 'stm32mp1' else "v2.8-stm32mp"}"
-TF_A_REV_DEFAULT = "${@ "ff0bd5f9bb2ba2f31fb9cec96df917747af9e92d" if get_tfa_machine(d) == 'stm32mp1' else "1568486ae9e1c15c0add1bc80e6fe225fa90714a"}"
+TF_A_REV_DEFAULT = "${@ "ff0bd5f9bb2ba2f31fb9cec96df917747af9e92d" if get_tfa_machine(d) == 'stm32mp1' else "c536182ad385c0a817f712d0084f02b71514a181"}"
 
 
 TF_A_SRC ?= "${TF_A_SRC_DEFAULT}"
