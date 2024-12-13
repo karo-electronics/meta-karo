@@ -1,0 +1,53 @@
+Index: u-boot-qsmp-2550/arch/arm/mach-stm32mp/include/mach/sys_proto.h
+===================================================================
+--- u-boot-qsmp-2550.orig/arch/arm/mach-stm32mp/include/mach/sys_proto.h
++++ u-boot-qsmp-2550/arch/arm/mach-stm32mp/include/mach/sys_proto.h
+@@ -89,8 +89,8 @@ u32 get_cpu_package(void);
+ 
+ /* package used for STM32MP25x */
+ #define STM32MP25_PKG_CUSTOM		0
+-#define STM32MP25_PKG_AL_TBGA361	3
+-#define STM32MP25_PKG_AK_TBGA424	4
++#define STM32MP25_PKG_AL_TBGA361	1
++#define STM32MP25_PKG_AK_TBGA424	3
+ #define STM32MP25_PKG_AI_TBGA436	5
+ #define STM32MP25_PKG_UNKNOWN		7
+ 
+Index: u-boot-qsmp-2550/arch/arm/dts/stm32mp253.dtsi
+===================================================================
+--- u-boot-qsmp-2550.orig/arch/arm/dts/stm32mp253.dtsi
++++ u-boot-qsmp-2550/arch/arm/dts/stm32mp253.dtsi
+@@ -57,16 +57,31 @@
+ 				status = "disabled";
+ 			};
+ 
++			m_can2: can@402e0000 {
++				compatible = "bosch,m_can";
++				reg = <0x402e0000 0x400>, <0x40311400 0x1400>;
++				reg-names = "m_can", "message_ram";
++				interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
++					     <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
++				interrupt-names = "int0", "int1";
++				clocks = <&rcc CK_BUS_FDCAN>, <&rcc CK_KER_FDCAN>;
++				clock-names = "hclk", "cclk";
++				bosch,mram-cfg = <0x0 0 0 32 0 0 2 2>;
++				feature-domains = <&rifsc STM32MP25_RIFSC_FDCAN_ID>;
++				power-domains = <&CLUSTER_PD>;
++				status = "disabled";
++			};
++
+ 			m_can3: can@402f0000 {
+ 				compatible = "bosch,m_can";
+-				reg = <0x402f0000 0x400>, <0x40310000 0x2800>;
++				reg = <0x402f0000 0x400>, <0x40312800 0x1400>;
+ 				reg-names = "m_can", "message_ram";
+ 				interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>,
+ 					     <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
+ 				interrupt-names = "int0", "int1";
+ 				clocks = <&rcc CK_BUS_FDCAN>, <&rcc CK_KER_FDCAN>;
+ 				clock-names = "hclk", "cclk";
+-				bosch,mram-cfg = <0x1400 0 0 32 0 0 2 2>;
++				bosch,mram-cfg = <0x0 0 0 32 0 0 2 2>;
+ 				feature-domains = <&rifsc STM32MP25_RIFSC_FDCAN_ID>;
+ 				power-domains = <&CLUSTER_PD>;
+ 				status = "disabled";

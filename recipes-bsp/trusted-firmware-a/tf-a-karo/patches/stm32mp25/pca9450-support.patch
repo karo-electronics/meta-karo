@@ -1,0 +1,924 @@
+Index: tf-a-qsmp-2550/drivers/st/pmic/pca9450.c
+===================================================================
+--- /dev/null
++++ tf-a-qsmp-2550/drivers/st/pmic/pca9450.c
+@@ -0,0 +1,340 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright 2024 Lothar Waßmann <LW@KARO-electronics.de>
++ * based on:
++ *     drivers/st/pmic/stpmic2.c
++ *         Copyright (C) 2023, STMicroelectronics - All Rights Reserved
++ */
++
++#include <assert.h>
++#include <errno.h>
++#include <string.h>
++#include <common/debug.h>
++#include "pca9450.h"
++
++#define RET_SUCCESS			0
++#define RET_ERROR_NOT_SUPPORTED		-1
++#define RET_ERROR_GENERIC		-2
++#define RET_ERROR_BAD_PARAMETERS	-3
++
++#define I2C_TIMEOUT_MS			25
++
++#define VOLTAGE_INDEX_INVALID		((size_t)~0)
++
++static const struct regulator_limits {
++       uint32_t min;
++       uint32_t max;
++       uint32_t step;
++       uint8_t mask;
++} pca9450_regulator_limits[] = {
++	{  600000, 2187500,  12500, 0x7f, }, /* BUCK[1..3] */
++	{  600000, 3400000,  25000, 0x7f, }, /* BUCK[4..6] */
++	{ 1600000, 3300000, 100000, 0x07, }, /* LDO[1] */
++	{  800000, 1150000,  50000, 0x1f, }, /* LDO[2] */
++	{  800000, 3300000, 100000, 0x1f, }, /* LDO[3..4] */
++	{ 1800000, 3300000, 100000, 0x0f, }, /* LDO[5] */
++};
++
++struct regul_struct {
++	const char *name;
++	size_t limits;
++	uint32_t *volt_table;
++	uint16_t volt_cr;
++	uint16_t en_cr;
++	uint16_t pd_reg;
++	uint8_t en_mask;
++	uint8_t pd_val;
++};
++
++#define DEFINE_BUCK(_index, _limits, _volt_cr) {		\
++	.name			= "buck" # _index,		\
++	.en_cr			= BUCK ## _index ## CTRL,	\
++	.en_mask		= BUCK_ENMODE,			\
++	.volt_cr		= BUCK ## _index ## _volt_cr,	\
++	.limits			= _limits,			\
++	.pd_reg			= BUCK ## _index ## CTRL,	\
++	.pd_val			= BUCK_AD_BIT,			\
++}
++
++#define DEFINE_LDO(_index, _limits) {				\
++	.name			= "ldo" # _index,		\
++	.en_cr			= LDO ## _index ## CTRL,	\
++	.en_mask		= LDO_ENMODE,		\
++	.volt_cr		= LDO ## _index ## CTRL,	\
++	.limits			= _limits,			\
++	.pd_reg			= LDO_AD_CTRL,			\
++	.pd_val			= LDO ## _index ## _AD_BIT,	\
++}
++
++static uint32_t buck123_volt_tables[128];
++static uint32_t buck456_volt_tables[128];
++static uint32_t ldo1_volt_table[8] = {
++	1600000,
++	1700000,
++	1800000,
++	1900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
++};
++
++static uint32_t ldo2_volt_table[32];
++static uint32_t ldo34_volt_table[32];
++static uint32_t ldo5_volt_table[16];
++static uint32_t *volt_tables[] = {
++	buck123_volt_tables,
++	buck456_volt_tables,
++	ldo1_volt_table,
++	ldo2_volt_table,
++	ldo34_volt_table,
++	ldo5_volt_table,
++};
++
++/* Table of Regulators in PMIC SoC */
++static struct regul_struct regul_table[] = {
++	[PCA9450_BUCK1] = DEFINE_BUCK(1, 0, OUT_DVS0),
++	[PCA9450_BUCK2] = DEFINE_BUCK(2, 0, OUT_DVS0),
++	[PCA9450_BUCK3] = DEFINE_BUCK(3, 0, OUT_DVS0),
++	[PCA9450_BUCK4] = DEFINE_BUCK(4, 1, OUT),
++	[PCA9450_BUCK5] = DEFINE_BUCK(5, 1, OUT),
++	[PCA9450_BUCK6] = DEFINE_BUCK(6, 1, OUT),
++	[PCA9450_LDO1] = DEFINE_LDO(1, 2),
++	[PCA9450_LDO2] = DEFINE_LDO(2, 3),
++	[PCA9450_LDO3] = DEFINE_LDO(3, 4),
++	[PCA9450_LDO4] = DEFINE_LDO(4, 4),
++	[PCA9450_LDO5] = DEFINE_LDO(5, 5),
++};
++
++static inline const struct regulator_limits *get_limits(const struct regul_struct *regul)
++{
++	return &pca9450_regulator_limits[regul->limits];
++}
++
++static uint8_t uv_to_regval(const struct regulator_limits *limits, uint32_t uV)
++{
++	return (uV - limits->min) / limits->step;
++}
++
++static uint32_t regval_to_uv(const struct regulator_limits *limits, uint8_t regval)
++{
++	uint32_t uV = (regval & limits->mask) * limits->step + limits->min;
++
++	if (uV > limits->max)
++		uV = limits->max;
++	return uV;
++}
++
++void pca9450_init(void)
++{
++	size_t id;
++
++	for (id = 0; id < ARRAY_SIZE(regul_table); id++) {
++		struct regul_struct *regul = &regul_table[id];
++		const struct regulator_limits *limits = get_limits(regul);
++		size_t num_voltages = limits->mask + 1;
++		size_t idx;
++
++		regul->volt_table = volt_tables[regul->limits];
++
++		for (idx = 0; idx < num_voltages; idx++) {
++			/* skip tables that have already been set up */
++			if (!regul->volt_table[idx]) {
++				int ret;
++
++				ret = regval_to_uv(limits, idx);
++				if (ret < 0) {
++					ERROR("Regulator reg value %08zx out of range 0..%u\n",
++					      idx, limits->mask + 1U);
++					panic();
++				}
++				if ((uint32_t)ret > limits->max)
++					regul->volt_table[idx] = limits->max;
++				else
++					regul->volt_table[idx] = ret;
++			}
++		}
++	}
++}
++
++int pca9450_register_read(struct pmic_handle_s *pmic,
++			  uint16_t register_id, uint8_t *value)
++{
++	int ret = stm32_i2c_mem_read(pmic->i2c_handle,
++				     pmic->i2c_addr,
++				     register_id,
++				     I2C_MEMADD_SIZE_8BIT, value,
++				     1, I2C_TIMEOUT_MS);
++	if (ret)
++		ERROR("Failed to read reg:0x%x\n", register_id);
++
++	return ret;
++}
++
++int pca9450_register_write(struct pmic_handle_s *pmic,
++			   uint16_t register_id, uint8_t value)
++{
++	uint8_t val = value;
++	int ret = stm32_i2c_mem_write(pmic->i2c_handle,
++				      pmic->i2c_addr,
++				      register_id,
++				      I2C_MEMADD_SIZE_8BIT, &val,
++				      1, I2C_TIMEOUT_MS);
++	if (ret)
++		ERROR("Failed to write reg:0x%x\n", register_id);
++
++	return ret;
++}
++
++int pca9450_register_update(struct pmic_handle_s *pmic,
++			    uint16_t register_id, uint8_t newval, uint8_t mask)
++{
++	int status;
++	uint8_t val;
++	uint8_t clr = ~mask;
++
++	status = pca9450_register_read(pmic, register_id, &val);
++	if (status)
++		return status;
++
++	val = (val & clr) | (newval & mask);
++	return pca9450_register_write(pmic, register_id, val);
++}
++
++int pca9450_regulator_set_state(struct pmic_handle_s *pmic,
++				uint8_t id, bool enable)
++{
++	const struct regul_struct *regul = &regul_table[id];
++
++	return pca9450_register_update(pmic, regul->en_cr,
++				       enable ? regul->en_mask : 0,
++				       regul->en_mask);
++}
++
++int pca9450_regulator_get_state(struct pmic_handle_s *pmic,
++				uint8_t id, bool *enabled)
++{
++	const struct regul_struct *regul = &regul_table[id];
++	uint8_t val;
++
++	if (pca9450_register_read(pmic, regul->en_cr, &val))
++		return RET_ERROR_GENERIC;
++
++	*enabled = !!(val & regul->en_mask);
++
++	return RET_SUCCESS;
++}
++
++int pca9450_regulator_levels_uv(struct pmic_handle_s *pmic,
++				uint8_t id, const uint32_t **levels,
++				size_t *levels_count)
++{
++	const struct regul_struct *regul = &regul_table[id];
++	const struct regulator_limits *limits = get_limits(regul);
++	size_t num_voltages = limits->mask + 1;
++
++	if (levels_count)
++		*levels_count = num_voltages;
++
++	if (levels != NULL)
++		*levels = regul->volt_table;
++
++	return RET_SUCCESS;
++}
++
++int pca9450_regulator_get_voltage(struct pmic_handle_s *pmic,
++				  uint8_t id, uint32_t *val)
++{
++	const struct regul_struct *regul = &regul_table[id];
++	const struct regulator_limits *limits = get_limits(regul);
++	uint8_t value;
++
++	if (pca9450_register_read(pmic, regul->volt_cr, &value))
++		return RET_ERROR_GENERIC;
++
++	*val = regval_to_uv(limits, value);
++	return RET_SUCCESS;
++}
++
++int pca9450_regulator_set_voltage(struct pmic_handle_s *pmic,
++				  uint8_t id, uint32_t uV)
++{
++	const struct regul_struct *regul = &regul_table[id];
++	const struct regulator_limits *limits = get_limits(regul);
++	uint8_t regval;
++
++	if (uV > limits->max)
++		return RET_ERROR_GENERIC;
++
++	regval = uv_to_regval(limits, uV);
++	return pca9450_register_update(pmic, regul->volt_cr, regval, limits->mask);
++}
++
++int pca9450_regulator_get_prop(struct pmic_handle_s *pmic, size_t id,
++			       enum pca9450_prop_id prop)
++{
++	int ret;
++	const struct regul_struct *regul = &regul_table[id];
++	uint8_t val;
++
++	VERBOSE("%s: get prop 0x%x\n", regul->name, prop);
++
++	switch (prop) {
++	case PCA9450_PULL_DOWN:
++		ret = pca9450_register_read(pmic, regul->pd_reg, &val);
++		if (ret)
++			return ret;
++		return !!(val & regul->pd_val);
++
++	default:
++		ERROR("%s(%s): Invalid prop %u\n", __func__, regul->name, prop);
++		panic();
++	}
++}
++
++int pca9450_regulator_set_prop(struct pmic_handle_s *pmic, size_t id,
++			       enum pca9450_prop_id prop, uint32_t arg)
++{
++	const struct regul_struct *regul = &regul_table[id];
++
++	VERBOSE("%s: set prop 0x%x arg=%u\n", regul->name, prop, arg);
++
++	switch (prop) {
++	case PCA9450_PULL_DOWN:
++		return pca9450_register_update(pmic, regul->pd_reg,
++					       arg ? regul->pd_val : 0,
++					       regul->pd_val);
++	default:
++		ERROR("Invalid prop %u\n", prop);
++		panic();
++	}
++}
++
++#if EVENT_LOG_LEVEL == LOG_LEVEL_VERBOSE
++void pca9450_dump_regulators(struct pmic_handle_s *pmic)
++{
++	size_t i;
++	char const *name;
++
++	for (i = 0; i < ARRAY_SIZE(regul_table); i++) {
++		uint32_t val;
++		bool state;
++
++		if (!regul_table[i].volt_cr)
++			continue;
++
++		pca9450_regulator_get_voltage(pmic, i, &val);
++		pca9450_regulator_get_state(pmic, i, &state);
++
++		name = regul_table[i].name;
++
++		VERBOSE("PMIC regul %s: %s, %u.%03umV\n",
++			name, state ? "EN" : "DIS", val / 1000U, val % 1000U);
++	}
++}
++#endif
++
++int pca9450_get_chip_id(struct pmic_handle_s *pmic, uint8_t *val)
++{
++	return pca9450_register_read(pmic, DEVICE_ID, val);
++}
+Index: tf-a-qsmp-2550/drivers/st/pmic/pca9450.h
+===================================================================
+--- /dev/null
++++ tf-a-qsmp-2550/drivers/st/pmic/pca9450.h
+@@ -0,0 +1,138 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2024, Lothar Waßmann <LW@KARO-electronics.de>
++ * based on: core/arch/arm/plat-stm32mp2/drivers/stpmic2.h
++ *    Copyright (c) 2022-2023, STMicroelectronics
++ */
++
++#ifndef __PCA9450_H
++#define __PCA9450_H
++
++#include <drivers/st/stm32_i2c.h>
++#include <lib/utils_def.h>
++
++#ifndef SD_VSEL
++#define SD_VSEL 0
++#endif
++
++enum regulator_id {
++	PCA9450_BUCK1,
++	PCA9450_BUCK2,
++	PCA9450_BUCK3,
++	PCA9450_BUCK4,
++	PCA9450_BUCK5,
++	PCA9450_BUCK6,
++	PCA9450_LDO1,
++	PCA9450_LDO2,
++	PCA9450_LDO3,
++	PCA9450_LDO4,
++	PCA9450_LDO5,
++};
++
++enum pca9450_variant {
++	PCA9450A,
++	PCA9450BC,
++};
++
++#define CHIP_ID_MASK		0xf0
++#define CHIP_ID_SHIFT		4
++#define CHIP_ID_PCA9450A	1
++#define CHIP_ID_PCA9450BC	3
++
++/* Status Registers */
++#define DEVICE_ID		0x00
++#define INT1			0x01
++#define RESET_CTRL		0x08
++#define CONFIG1			0x09
++#define CONFIG2			0x0a
++#define BUCK123_DVS		0x0c
++#define BUCK1OUT_LIMIT		0x0d
++#define BUCK2OUT_LIMIT		0x0e
++#define BUCK3OUT_LIMIT		0x0f
++#define BUCK1CTRL		0x10
++#define BUCK1OUT_DVS0		0x11
++#define BUCK1OUT_DVS1		0x12
++#define BUCK2CTRL		0x13
++#define BUCK2OUT_DVS0		0x14
++#define BUCK2OUT_DVS1		0x15
++#define BUCK3CTRL		0x16
++#define BUCK3OUT_DVS0		0x17
++#define BUCK3OUT_DVS1		0x18
++#define BUCK4CTRL		0x19
++#define BUCK4OUT		0x1a
++#define BUCK5CTRL		0x1b
++#define BUCK5OUT		0x1c
++#define BUCK6CTRL		0x1d
++#define BUCK6OUT		0x1e
++#define LDO_AD_CTRL		0x20
++#define LDO1CTRL		0x21
++#define LDO2CTRL		0x22
++#define LDO3CTRL		0x23
++#define LDO4CTRL		0x24
++#if SD_VSEL == 0
++#define LDO5CTRL		0x25
++#else
++#define LDO5CTRL		0x26
++#endif
++#define LOADSW_CTRL		0x2a
++#define VRFLT1_STS		0x2b
++#define VRFLT2_STS		0x2c
++#define VRFLT1_MASK		0x2d
++#define VRFLT2_MASK		0x2e
++
++#define BUCK_ENMODE		(0x3 << 0)
++#define LDO_ENMODE		(0x3 << 6)
++
++#define BUCK_AD_BIT		BIT(3)
++#define LDO1_AD_BIT		BIT(7)
++#define LDO2_AD_BIT		BIT(6)
++#define LDO3_AD_BIT		BIT(5)
++#define LDO4_AD_BIT		BIT(4)
++#define LDO5_AD_BIT		BIT(3)
++
++enum pca9450_prop_id {
++	PCA9450_MASK_RESET,
++	PCA9450_PULL_DOWN,
++};
++
++struct pmic_handle_s {
++	struct i2c_handle_s *i2c_handle;
++	uint16_t i2c_addr;
++	unsigned int pmic_status;
++};
++
++void pca9450_init(void);
++
++int pca9450_register_read(struct pmic_handle_s *pmic,
++			  uint16_t register_id, uint8_t *value);
++int pca9450_register_write(struct pmic_handle_s *pmic,
++			   uint16_t register_id, uint8_t value);
++int pca9450_register_update(struct pmic_handle_s *pmic,
++			    uint16_t register_id, uint8_t value, uint8_t mask);
++
++int pca9450_regulator_set_state(struct pmic_handle_s *pmic,
++				uint8_t id, bool enable);
++int pca9450_regulator_get_state(struct pmic_handle_s *pmic,
++				uint8_t id, bool *enabled);
++
++int pca9450_regulator_levels_uv(struct pmic_handle_s *pmic,
++				uint8_t id, const uint32_t **levels,
++				size_t *levels_count);
++int pca9450_regulator_get_voltage(struct pmic_handle_s *pmic,
++				  uint8_t id, uint32_t *val);
++int pca9450_regulator_set_voltage(struct pmic_handle_s *pmic,
++				  uint8_t id, uint32_t microvolts);
++
++#if EVENT_LOG_LEVEL == LOG_LEVEL_VERBOSE
++void pca9450_dump_regulators(struct pmic_handle_s *pmic);
++#endif
++
++int pca9450_get_chip_id(struct pmic_handle_s *pmic, uint8_t *val);
++
++int pca9450_regulator_get_prop(struct pmic_handle_s *pmic, size_t id,
++			       enum pca9450_prop_id prop);
++
++int pca9450_regulator_set_prop(struct pmic_handle_s *pmic, size_t id,
++			       enum pca9450_prop_id prop, uint32_t arg);
++
++#endif /* __PCA9450_H */
+Index: tf-a-qsmp-2550/plat/st/stm32mp2/platform.mk
+===================================================================
+--- tf-a-qsmp-2550.orig/plat/st/stm32mp2/platform.mk
++++ tf-a-qsmp-2550/plat/st/stm32mp2/platform.mk
+@@ -199,8 +199,14 @@ BL2_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
+ ASFLAGS			+=	$(STM32MP_CPPFLAGS)
+ DTC_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
+ 
++ifeq ($(STM32MP_STPMIC2),1)
+ PLAT_BL_COMMON_SOURCES	+=	drivers/st/pmic/stm32mp_pmic2.c				\
+-				drivers/st/pmic/stpmic2.c				\
++				drivers/st/pmic/stpmic2.c
++endif
++ifeq ($(STM32MP_PCA9450),1)
++PLAT_BL_COMMON_SOURCES	+=	drivers/st/pmic/pca9450.c				\
++				drivers/st/pmic/pmic-pca9450.c
++endif
+ 
+ PLAT_BL_COMMON_SOURCES	+=	drivers/st/i2c/stm32_i2c.c
+ 
+Index: tf-a-qsmp-2550/drivers/st/pmic/pmic-pca9450.c
+===================================================================
+--- /dev/null
++++ tf-a-qsmp-2550/drivers/st/pmic/pmic-pca9450.c
+@@ -0,0 +1,411 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright 2024 Lothar Waßmann <LW@KARO-electronics.de>
++ * based on:
++ *     drivers/st/pmic/stm32mp2_pmic2.c
++ *         Copyright (C) 2023, STMicroelectronics - All Rights Reserved
++ *
++ */
++
++#include <assert.h>
++#include <errno.h>
++#include <libfdt.h>
++#include <platform_def.h>
++#include <common/debug.h>
++#include <drivers/delay_timer.h>
++#include <drivers/st/regulator.h>
++#include <drivers/st/stm32_i2c.h>
++#include <lib/mmio.h>
++#include <lib/spinlock.h>
++#include <lib/utils_def.h>
++#include "pca9450.h"
++
++#define PMIC_NODE_NOT_FOUND	1
++
++static struct pmic_handle_s pca9450_handle;
++static struct i2c_handle_s i2c_handle;
++static enum pca9450_variant chip_variant;
++
++/* This driver is monoinstance */
++static struct pmic_handle_s *pca9450;
++
++static int dt_get_pmic_node(void *fdt)
++{
++	static int node = -FDT_ERR_BADOFFSET;
++
++	if (node == -FDT_ERR_BADOFFSET)
++		node = fdt_node_offset_by_compatible(fdt, -1, "nxp,pca9450");
++
++	return node;
++}
++
++int dt_pmic_status(void)
++{
++	static int status = -FDT_ERR_BADVALUE;
++	int node;
++	void *fdt;
++
++	if (status != -FDT_ERR_BADVALUE)
++		return status;
++
++	if (fdt_get_address(&fdt) == 0)
++		return -ENOENT;
++
++	node = dt_get_pmic_node(fdt);
++	if (node <= 0)
++		return node;
++
++	return DT_SECURE;
++}
++
++/*
++ * Get PMIC and its I2C bus configuration from the device tree.
++ * Return 0 on success, negative on error, 1 if no PMIC node is defined.
++ */
++static int dt_pca9450_i2c_config(struct dt_node_info *i2c_info,
++				 struct stm32_i2c_init_s *init,
++				 uint32_t *i2c_addr)
++{
++	static int i2c_node = -FDT_ERR_NOTFOUND;
++	void *fdt;
++
++	if (fdt_get_address(&fdt) == 0)
++		return -FDT_ERR_NOTFOUND;
++
++	if (i2c_node == -FDT_ERR_NOTFOUND) {
++		int pmic_node;
++		const fdt32_t *cuint;
++
++		pmic_node = dt_get_pmic_node(fdt);
++		if (pmic_node < 0)
++			return PMIC_NODE_NOT_FOUND;
++
++		cuint = fdt_getprop(fdt, pmic_node, "reg", NULL);
++		if (cuint == NULL)
++			return -FDT_ERR_NOTFOUND;
++
++		*i2c_addr = fdt32_to_cpu(*cuint) << 1;
++		if (*i2c_addr > UINT16_MAX)
++			return -FDT_ERR_BADVALUE;
++
++		i2c_node = fdt_parent_offset(fdt, pmic_node);
++		if (i2c_node < 0)
++			return -FDT_ERR_NOTFOUND;
++	}
++
++	dt_fill_device_info(i2c_info, i2c_node);
++	if (i2c_info->base == 0)
++		return -FDT_ERR_NOTFOUND;
++
++	i2c_info->status = DT_SECURE;
++	return stm32_i2c_get_setup_from_fdt(fdt, i2c_node, init);
++}
++
++bool initialize_pmic_i2c(void)
++{
++	int ret;
++	struct dt_node_info i2c_info;
++	struct i2c_handle_s *i2c = &i2c_handle;
++	uint32_t i2c_addr = 0;
++	struct stm32_i2c_init_s i2c_init;
++
++	ret = dt_pca9450_i2c_config(&i2c_info, &i2c_init, &i2c_addr);
++	if (ret < 0) {
++		ERROR("I2C configuration failed %d\n", ret);
++		panic();
++	}
++
++	if (ret)
++		return false;
++
++	/* Initialize PMIC I2C */
++	i2c->i2c_base_addr		= i2c_info.base;
++	i2c->dt_status			= i2c_info.status;
++	i2c->clock			= i2c_info.clock;
++	i2c->i2c_state			= I2C_STATE_RESET;
++	i2c_init.own_address1		= i2c_addr;
++	i2c_init.addressing_mode	= I2C_ADDRESSINGMODE_7BIT;
++	i2c_init.dual_address_mode	= I2C_DUALADDRESS_DISABLE;
++	i2c_init.own_address2		= 0;
++	i2c_init.own_address2_masks	= I2C_OAR2_OA2NOMASK;
++	i2c_init.general_call_mode	= I2C_GENERALCALL_DISABLE;
++	i2c_init.no_stretch_mode	= I2C_NOSTRETCH_DISABLE;
++	i2c_init.analog_filter		= 1;
++	i2c_init.digital_filter_coef	= 0;
++
++	ret = stm32_i2c_init(i2c, &i2c_init);
++	if (ret) {
++		ERROR("Cannot initialize I2C %x (%d)\n",
++		      i2c->i2c_base_addr, ret);
++		panic();
++	}
++
++	if (!stm32_i2c_is_device_ready(i2c, i2c_addr, 1,
++				       I2C_TIMEOUT_BUSY_MS)) {
++		ERROR("I2C device not ready\n");
++		panic();
++	}
++
++	pca9450 = &pca9450_handle;
++	pca9450->i2c_handle = &i2c_handle;
++	pca9450->i2c_addr = i2c_addr;
++
++	return true;
++}
++
++static int pca9450_set_state(const struct regul_description *desc, bool enable)
++{
++	size_t id = (size_t)desc->driver_data;
++
++	VERBOSE("%s: set state to %d\n", desc->node_name, enable);
++
++	return pca9450_regulator_set_state(pca9450, id, enable);
++}
++
++static int pca9450_get_state(const struct regul_description *desc)
++{
++	size_t id = (size_t)desc->driver_data;
++	bool enabled;
++
++	VERBOSE("%s: get state\n", desc->node_name);
++
++	if (pca9450_regulator_get_state(pca9450, id, &enabled) < 0) {
++		panic();
++	}
++
++	return enabled;
++}
++
++static int pca9450_get_voltage(const struct regul_description *desc)
++{
++	size_t id = (size_t)desc->driver_data;
++	uint32_t uv;
++
++	VERBOSE("%s: get volt\n", desc->node_name);
++
++	if (pca9450_regulator_get_voltage(pca9450, id, &uv) < 0)
++		panic();
++
++	return uv;
++}
++
++static int pca9450_set_voltage(const struct regul_description *desc, uint32_t uv)
++{
++	size_t id = (size_t)desc->driver_data;
++
++	VERBOSE("%s: set voltage to %uuV\n", desc->node_name, uv);
++
++	return pca9450_regulator_set_voltage(pca9450, id, uv);
++}
++
++static int pca9450_list_voltages(const struct regul_description *desc,
++			       const uint32_t **levels, size_t *count)
++{
++	size_t id = (size_t)desc->driver_data;
++
++	VERBOSE("%s: list volt\n", desc->node_name);
++
++	return pca9450_regulator_levels_uv(pca9450, id, levels, count);
++}
++
++static int pca9450_set_flag(const struct regul_description *desc, uint16_t flag)
++{
++	size_t id = (size_t)desc->driver_data;
++	int ret;
++
++	VERBOSE("%s: set_flag 0x%x\n", desc->node_name, flag);
++
++	switch (flag) {
++	case REGUL_PULL_DOWN:
++		ret = pca9450_regulator_set_prop(pca9450, id, PCA9450_PULL_DOWN, 1U);
++		return ret;
++
++	default:
++		ERROR("Invalid flag %u", flag);
++		panic();
++	}
++	return 0;
++}
++
++int pca9450_set_prop(const struct regul_description *desc, uint16_t prop, uint32_t value)
++{
++	size_t id = (size_t)desc->driver_data;
++	int ret;
++
++	VERBOSE("%s: set_prop 0x%x val=%u\n", desc->node_name, prop, value);
++
++	ret = pca9450_regulator_set_prop(pca9450, id, prop, value);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static const struct regul_ops pca9450_ops = {
++	.set_state = pca9450_set_state,
++	.get_state = pca9450_get_state,
++	.set_voltage = pca9450_set_voltage,
++	.get_voltage = pca9450_get_voltage,
++	.list_voltages = pca9450_list_voltages,
++	.set_flag = pca9450_set_flag,
++};
++
++#define DEFINE_REGUL(rid, name)			\
++[rid] = {					\
++	.node_name = name,			\
++	.ops = &pca9450_ops,			\
++	.driver_data = (const void *)rid,	\
++}
++
++static const struct regul_description pca9450_descs[] = {
++	DEFINE_REGUL(PCA9450_LDO1, "ldo1"),
++	DEFINE_REGUL(PCA9450_LDO2, "ldo2"),
++	DEFINE_REGUL(PCA9450_LDO3, "ldo3"),
++	DEFINE_REGUL(PCA9450_LDO4, "ldo4"),
++	DEFINE_REGUL(PCA9450_LDO5, "ldo5"),
++	DEFINE_REGUL(PCA9450_BUCK1, "buck1"),
++	DEFINE_REGUL(PCA9450_BUCK2, "buck2"),
++	DEFINE_REGUL(PCA9450_BUCK3, "buck3"),
++	DEFINE_REGUL(PCA9450_BUCK4, "buck4"),
++	DEFINE_REGUL(PCA9450_BUCK5, "buck5"),
++	DEFINE_REGUL(PCA9450_BUCK6, "buck6"),
++};
++
++static int pca9450_init_voltage(const struct regul_description *desc,
++				const void *fdt, int node)
++{
++	const uint32_t *prop;
++	uint32_t min_uv = 0;
++	uint32_t max_uv = 0;
++	uint32_t cur_uv;
++
++	prop = fdt_getprop(fdt, node, "regulator-min-microvolt", NULL);
++	if (prop)
++		min_uv = fdt32_to_cpu(*prop);
++
++	prop = fdt_getprop(fdt, node, "regulator-max-microvolt", NULL);
++	if (prop)
++		max_uv = fdt32_to_cpu(*prop);
++	if (min_uv && max_uv && min_uv > max_uv) {
++		ERROR("%s: regulator-min-microvolt > regulator-max-microvolt\n",
++		      desc->node_name);
++		return -EINVAL;
++	} else if (!min_uv) {
++		min_uv = max_uv;
++	}
++	cur_uv = pca9450_get_voltage(desc);
++	if (min_uv) {
++		if (min_uv != cur_uv) {
++			INFO("%s: changing %s voltage from %u.%03umV to %u.%03umV\n",
++			     __func__, desc->node_name, cur_uv / 1000, cur_uv % 1000,
++			     min_uv / 1000, min_uv % 1000);
++			return pca9450_set_voltage(desc, min_uv);
++		}
++		VERBOSE("%s: leaving %s voltage at %u.%03umV\n",
++			__func__, desc->node_name, cur_uv / 1000, cur_uv % 1000);
++	}
++	return 0;
++}
++
++static int register_pca9450(void)
++{
++	void *fdt;
++	int pmic_node, regulators_node, subnode;
++	size_t i;
++
++	INFO("Register pca9450\n");
++
++	if (fdt_get_address(&fdt) == 0)
++		return -FDT_ERR_NOTFOUND;
++
++	pmic_node = dt_get_pmic_node(fdt);
++	if (pmic_node < 0)
++		return pmic_node;
++
++	regulators_node = fdt_subnode_offset(fdt, pmic_node, "regulators");
++	if (regulators_node < 0)
++		return regulators_node;
++
++	for (i = 0; i < ARRAY_SIZE(pca9450_descs); i++) {
++		const struct regul_description *desc = &pca9450_descs[i];
++
++		fdt_for_each_subnode(subnode, fdt, regulators_node) {
++			const char *reg_name = fdt_get_name(fdt, subnode, NULL);
++			int ret;
++
++			if (strcmp(desc->node_name, reg_name) == 0) {
++				ret = regulator_register(desc, subnode);
++				if (ret) {
++					WARN("%s failed to register %s: %d\n",
++					     __func__, reg_name, ret);
++					return ret;
++				}
++				ret = pca9450_init_voltage(desc, fdt, subnode);
++				if (ret)
++					return ret;
++
++				desc = NULL;
++				break;
++			}
++		}
++		if (!desc)
++			continue;
++
++		/* regulator is not in use */
++		if (chip_variant == PCA9450A && i == PCA9450_LDO2) {
++			/*
++			 * Turning off LDO2 on PCA9450A puts the chip
++			 * into READY mode
++			 */
++			INFO("%s: leaving unused regulator %s on for PCA9450A\n",
++			     __func__, desc->node_name);
++		} else {
++			INFO("%s: disabling unused regulator %s\n",
++			     __func__, desc->node_name);
++			pca9450_set_state(desc, 0);
++		}
++	}
++	return 0;
++}
++
++void initialize_pmic(void)
++{
++	int ret;
++	uint8_t val;
++
++	ret = initialize_pmic_i2c();
++	if (!ret) {
++		INFO("No PCA9450\n");
++		return;
++	}
++
++	if (pca9450_get_chip_id(pca9450, &val)) {
++		ERROR("Failed to access PMIC\n");
++		panic();
++	}
++	switch ((val & CHIP_ID_MASK) >> CHIP_ID_SHIFT) {
++	case CHIP_ID_PCA9450A:
++		chip_variant = PCA9450A;
++		break;
++	case CHIP_ID_PCA9450BC:
++		chip_variant = PCA9450BC;
++		break;
++	default:
++		ERROR("Unsupported PCA9450 chip ID: 0x%02x\n", val);
++		panic();
++	}
++	NOTICE("PCA9450%s chip ID = 0x%02x\n",
++	       chip_variant == PCA9450A ? "A" : "B/C", val);
++
++	pca9450_init();
++
++	ret = register_pca9450();
++	if (ret < 0) {
++		ERROR("Register pca9450 failed: %d\n", ret);
++		panic();
++	}
++
++#if EVENT_LOG_LEVEL == LOG_LEVEL_VERBOSE
++	pca9450_dump_regulators(pca9450);
++#endif
++}

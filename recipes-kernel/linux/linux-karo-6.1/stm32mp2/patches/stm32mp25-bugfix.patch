@@ -1,0 +1,620 @@
+Index: linux-qsmp-2550/arch/arm64/boot/dts/st/stm32mp253.dtsi
+===================================================================
+--- linux-qsmp-2550.orig/arch/arm64/boot/dts/st/stm32mp253.dtsi
++++ linux-qsmp-2550/arch/arm64/boot/dts/st/stm32mp253.dtsi
+@@ -57,16 +57,31 @@
+ 				status = "disabled";
+ 			};
+ 
++			m_can2: can@402e0000 {
++				compatible = "bosch,m_can";
++				reg = <0x402e0000 0x400>, <0x40311400 0x1400>;
++				reg-names = "m_can", "message_ram";
++				interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
++					     <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
++				interrupt-names = "int0", "int1";
++				clocks = <&rcc CK_BUS_FDCAN>, <&rcc CK_KER_FDCAN>;
++				clock-names = "hclk", "cclk";
++				bosch,mram-cfg = <0x0 0 0 32 0 0 2 2>;
++				feature-domains = <&rifsc STM32MP25_RIFSC_FDCAN_ID>;
++				power-domains = <&CLUSTER_PD>;
++				status = "disabled";
++			};
++
+ 			m_can3: can@402f0000 {
+ 				compatible = "bosch,m_can";
+-				reg = <0x402f0000 0x400>, <0x40310000 0x2800>;
++				reg = <0x402f0000 0x400>, <0x40312800 0x1400>;
+ 				reg-names = "m_can", "message_ram";
+ 				interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>,
+ 					     <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
+ 				interrupt-names = "int0", "int1";
+ 				clocks = <&rcc CK_BUS_FDCAN>, <&rcc CK_KER_FDCAN>;
+ 				clock-names = "hclk", "cclk";
+-				bosch,mram-cfg = <0x1400 0 0 32 0 0 2 2>;
++				bosch,mram-cfg = <0x0 0 0 32 0 0 2 2>;
+ 				feature-domains = <&rifsc STM32MP25_RIFSC_FDCAN_ID>;
+ 				power-domains = <&CLUSTER_PD>;
+ 				status = "disabled";
+Index: linux-qsmp-2550/drivers/gpu/drm/stm/lvds.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/gpu/drm/stm/lvds.c
++++ linux-qsmp-2550/drivers/gpu/drm/stm/lvds.c
+@@ -881,9 +881,8 @@ static int lvds_config_mode(struct stm_l
+ 		lvds_cr |= CR_LKPHA;
+ 		break;
+ 	default:
+-		dev_warn(lvds->dev, "No phase precised, setting default\n");
++		dev_warn(lvds->dev, "No LVDS clock phase specified, setting default\n");
+ 		lvds_cr &= ~CR_LKPHA;
+-		break;
+ 	}
+ 
+ 	/* Write config to registers */
+Index: linux-qsmp-2550/drivers/pci/controller/dwc/Kconfig
+===================================================================
+--- linux-qsmp-2550.orig/drivers/pci/controller/dwc/Kconfig
++++ linux-qsmp-2550/drivers/pci/controller/dwc/Kconfig
+@@ -388,7 +388,7 @@ config PCIE_FU740
+ config PCIE_STM32
+ 	tristate "STMicroelectronics PCIe Controller Host Mode for STM32 MP25"
+ 	depends on ARCH_STM32 || COMPILE_TEST
+-	depends on PCI_MSI_IRQ_DOMAIN
++	depends on PCI_MSI_IRQ_DOMAIN && PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Enables support for the DesignWare core based PCIe host controller
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-csi2host.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-csi2host.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-csi2host.c
+@@ -998,16 +998,16 @@ static int csi2host_parse_dt(struct csi2
+ {
+ 	struct v4l2_fwnode_endpoint v4l2_ep = { .bus_type = V4L2_MBUS_CSI2_DPHY };
+ 	struct v4l2_async_subdev *asd;
+-	struct fwnode_handle *fwh;
+ 	struct device_node *ep;
+ 	int ret;
+ 
+-	ep = of_graph_get_endpoint_by_regs(csi2priv->dev->of_node, 0, 0);
+-	if (!ep)
++	ep = of_graph_get_endpoint_by_regs(csi2priv->dev->of_node, 0, -1);
++	if (!ep) {
++		dev_err(csi2priv->dev, "Failed to find endpoint port0\n");
+ 		return -EINVAL;
++	}
+ 
+-	fwh = of_fwnode_handle(ep);
+-	ret = v4l2_fwnode_endpoint_parse(fwh, &v4l2_ep);
++	ret = v4l2_fwnode_endpoint_parse(of_fwnode_handle(ep), &v4l2_ep);
+ 	if (ret) {
+ 		dev_err(csi2priv->dev, "Could not parse v4l2 endpoint\n");
+ 		of_node_put(ep);
+@@ -1026,17 +1026,11 @@ static int csi2host_parse_dt(struct csi2
+ 	memcpy(csi2priv->lanes, v4l2_ep.bus.mipi_csi2.data_lanes,
+ 	       sizeof(csi2priv->lanes));
+ 
+-	ep = of_graph_get_next_endpoint(csi2priv->dev->of_node, NULL);
+-	if (!ep) {
+-		dev_err(csi2priv->dev, "Failed to get next endpoint\n");
+-		return -EINVAL;
+-	}
+-
+ 	v4l2_async_nf_init(&csi2priv->notifier);
+ 
+-	asd = v4l2_async_nf_add_fwnode_remote(&csi2priv->notifier, of_fwnode_handle(ep),
++	asd = v4l2_async_nf_add_fwnode_remote(&csi2priv->notifier,
++					      of_fwnode_handle(ep),
+ 					      struct v4l2_async_subdev);
+-
+ 	of_node_put(ep);
+ 
+ 	if (IS_ERR(asd)) {
+@@ -1078,7 +1072,7 @@ static int csi2host_probe(struct platfor
+ 	csi2priv->subdev.dev = &pdev->dev;
+ 	v4l2_subdev_init(&csi2priv->subdev, &csi2host_subdev_ops);
+ 	v4l2_set_subdevdata(&csi2priv->subdev, &pdev->dev);
+-	snprintf(csi2priv->subdev.name, V4L2_SUBDEV_NAME_SIZE, "%s.%s",
++	snprintf(csi2priv->subdev.name, V4L2_SUBDEV_NAME_SIZE, "%s %s",
+ 		 KBUILD_MODNAME, dev_name(&pdev->dev));
+ 
+ 	/* Create our media pads */
+@@ -1196,7 +1190,7 @@ error_out:
+ 
+ static const struct of_device_id csi2host_of_table[] = {
+ 	{ .compatible = "st,stm32-csi2host" },
+-	{ },
++	{ }
+ };
+ MODULE_DEVICE_TABLE(of, csi2host_of_table);
+ 
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-bytecap.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-bytecap.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-bytecap.c
+@@ -475,7 +475,7 @@ static int dcmipp_pipeline_s_stream(stru
+ out:
+ 	mutex_unlock(&mdev->graph_mutex);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static void dcmipp_start_capture(struct dcmipp_bytecap_device *vcap,
+@@ -642,7 +642,8 @@ static void dcmipp_bytecap_stop_streamin
+ 	ret = readl_relaxed_poll_timeout(vcap->regs + DCMIPP_P0SR,
+ 					 status,
+ 					 !(status & DCMIPP_P0SR_CPTACT),
+-					 20, 1000);
++					 20 * USEC_PER_MSEC,
++					 1000 * USEC_PER_MSEC);
+ 	if (ret)
+ 		dev_warn(vcap->dev, "Timeout when stopping\n");
+ 
+@@ -728,12 +729,7 @@ static void dcmipp_bytecap_buf_queue(str
+ 			buf->vb.vb2_buf.index, buf, &buf->paddr);
+ 
+ 		dcmipp_start_capture(vcap, buf);
+-
+ 		vcap->state = RUNNING;
+-
+-		spin_unlock_irq(&vcap->irqlock);
+-
+-		return;
+ 	}
+ 
+ 	spin_unlock_irq(&vcap->irqlock);
+@@ -789,7 +785,7 @@ static const struct vb2_ops dcmipp_bytec
+ };
+ 
+ static const struct media_entity_operations dcmipp_bytecap_mops = {
+-	.link_validate		= dcmipp_link_validate,
++	.link_validate		= v4l2_subdev_link_validate,
+ };
+ 
+ static void dcmipp_bytecap_release(struct video_device *vdev)
+@@ -967,7 +963,8 @@ struct dcmipp_ent_device *dcmipp_bytecap
+ 	struct v4l2_pix_format *format;
+ 	struct video_device *vdev;
+ 	struct vb2_queue *q;
+-	int ret = 0;
++	const unsigned long pads_flags = MEDIA_PAD_FL_SINK;
++	int ret;
+ 
+ 	/* Allocate the dcmipp_bytecap_device struct */
+ 	vcap = kzalloc(sizeof(*vcap), GFP_KERNEL);
+@@ -975,9 +972,7 @@ struct dcmipp_ent_device *dcmipp_bytecap
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	/* Allocate the pads */
+-	vcap->ved.pads =
+-		dcmipp_pads_init(1,
+-				 (const unsigned long[1]) {MEDIA_PAD_FL_SINK});
++	vcap->ved.pads = dcmipp_pads_init(1, &pads_flags);
+ 	if (IS_ERR(vcap->ved.pads)) {
+ 		ret = PTR_ERR(vcap->ved.pads);
+ 		goto err_free_vcap;
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-byteproc.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-byteproc.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-byteproc.c
+@@ -717,6 +717,10 @@ dcmipp_byteproc_ent_init(struct device *
+ 		.numerator = 1,
+ 		.denominator = 30,
+ 	};
++	const unsigned long pads_flags[2] = {
++		MEDIA_PAD_FL_SINK,
++		MEDIA_PAD_FL_SOURCE,
++	};
+ 	int ret;
+ 
+ 	/* Allocate the byteproc struct */
+@@ -740,11 +744,8 @@ dcmipp_byteproc_ent_init(struct device *
+ 	ret = dcmipp_ent_sd_register(&byteproc->ved, &byteproc->sd,
+ 				     v4l2_dev,
+ 				     entity_name,
+-				     MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER, 2,
+-				     (const unsigned long[2]) {
+-				     MEDIA_PAD_FL_SINK,
+-				     MEDIA_PAD_FL_SOURCE,
+-				     },
++				     MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER,
++				     ARRAY_SIZE(pads_flags), pads_flags,
+ 				     NULL,
+ 				     &dcmipp_byteproc_ops,
+ 				     NULL, NULL);
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp.c
+@@ -687,6 +687,12 @@ struct dcmipp_ent_device *dcmipp_isp_ent
+ 					      void __iomem *regs)
+ {
+ 	struct dcmipp_isp_device *isp;
++	const unsigned long pads_flags[4] = {
++		MEDIA_PAD_FL_SINK,
++		MEDIA_PAD_FL_SOURCE,
++		MEDIA_PAD_FL_SINK,
++		MEDIA_PAD_FL_SOURCE,
++	};
+ 	int ret;
+ 
+ 	/* Allocate the isp struct */
+@@ -710,13 +716,8 @@ struct dcmipp_ent_device *dcmipp_isp_ent
+ 	ret = dcmipp_ent_sd_register(&isp->ved, &isp->sd,
+ 				     v4l2_dev,
+ 				     entity_name,
+-				     MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER, 4,
+-				     (const unsigned long[4]) {
+-				     MEDIA_PAD_FL_SINK,
+-				     MEDIA_PAD_FL_SOURCE,
+-				     MEDIA_PAD_FL_SINK,
+-				     MEDIA_PAD_FL_SOURCE,
+-				     },
++				     MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER,
++				     ARRAY_SIZE(pads_flags), pads_flags,
+ 				     NULL, &dcmipp_isp_ops,
+ 				     NULL, NULL);
+ 	if (ret) {
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-pixelcap.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-pixelcap.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-pixelcap.c
+@@ -904,7 +904,7 @@ static const struct vb2_ops dcmipp_pixel
+ };
+ 
+ static const struct media_entity_operations dcmipp_pixelcap_mops = {
+-	.link_validate		= dcmipp_link_validate,
++	.link_validate		= v4l2_subdev_link_validate,
+ };
+ 
+ static void dcmipp_pixelcap_release(struct video_device *vdev)
+@@ -1081,7 +1081,8 @@ dcmipp_pixelcap_ent_init(struct device *
+ 	struct v4l2_pix_format *format;
+ 	struct video_device *vdev;
+ 	struct vb2_queue *q;
+-	int ret = 0;
++	const unsigned long pads_flags = MEDIA_PAD_FL_SINK;
++	int ret;
+ 
+ 	/* Allocate the dcmipp_cap_device struct */
+ 	vcap = kzalloc(sizeof(*vcap), GFP_KERNEL);
+@@ -1095,8 +1096,7 @@ dcmipp_pixelcap_ent_init(struct device *
+ 		goto err_free_vcap;
+ 	}
+ 	/* Allocate the pads */
+-	vcap->ved.pads =
+-		dcmipp_pads_init(1, (const unsigned long[1]) {MEDIA_PAD_FL_SINK});
++	vcap->ved.pads = dcmipp_pads_init(1, &pads_flags);
+ 	if (IS_ERR(vcap->ved.pads)) {
+ 		ret = PTR_ERR(vcap->ved.pads);
+ 		goto err_free_vcap;
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-pixelproc.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-pixelproc.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-pixelproc.c
+@@ -930,6 +930,11 @@ dcmipp_pixelproc_ent_init(struct device
+ 		.numerator = 1,
+ 		.denominator = 30,
+ 	};
++	const unsigned long pads_flags[2] = {
++		MEDIA_PAD_FL_SINK,
++		MEDIA_PAD_FL_SOURCE,
++	};
++
+ 	int ret, i;
+ 
+ 	/* Allocate the pixelproc struct */
+@@ -989,11 +994,8 @@ dcmipp_pixelproc_ent_init(struct device
+ 	ret = dcmipp_ent_sd_register(&pixelproc->ved, &pixelproc->sd,
+ 				     v4l2_dev,
+ 				     entity_name,
+-				     MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER, 2,
+-				     (const unsigned long[2]) {
+-				     MEDIA_PAD_FL_SINK,
+-				     MEDIA_PAD_FL_SOURCE,
+-				     },
++				     MEDIA_ENT_F_PROC_VIDEO_PIXEL_FORMATTER,
++				     ARRAY_SIZE(pads_flags), pads_flags,
+ 				     NULL, &dcmipp_pixelproc_ops,
+ 				     NULL, NULL);
+ 	if (ret) {
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-statcap.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-statcap.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-statcap.c
+@@ -501,7 +501,7 @@ static const struct vb2_ops dcmipp_statc
+ };
+ 
+ static const struct media_entity_operations dcmipp_statcap_mops = {
+-	.link_validate		= dcmipp_link_validate,
++	.link_validate		= v4l2_subdev_link_validate,
+ };
+ 
+ static int dcmipp_statcap_s_ctrl(struct v4l2_ctrl *ctrl)
+@@ -900,7 +900,8 @@ dcmipp_statcap_ent_init(struct device *d
+ 	struct dcmipp_statcap_device *vcap;
+ 	struct video_device *vdev;
+ 	struct vb2_queue *q;
+-	int i, ret = 0;
++	const unsigned long pads_flags = MEDIA_PAD_FL_SINK;
++	int i, ret;
+ 
+ 	/* Allocate the dcmipp_cap_device struct */
+ 	vcap = kzalloc(sizeof(*vcap), GFP_KERNEL);
+@@ -908,8 +909,7 @@ dcmipp_statcap_ent_init(struct device *d
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	/* Allocate the pad */
+-	vcap->ved.pads =
+-		dcmipp_pads_init(1, (const unsigned long[1]) {MEDIA_PAD_FL_SINK});
++	vcap->ved.pads = dcmipp_pads_init(1, &pads_flags);
+ 	if (IS_ERR(vcap->ved.pads)) {
+ 		ret = PTR_ERR(vcap->ved.pads);
+ 		goto err_free_vcap;
+Index: linux-qsmp-2550/drivers/media/v4l2-core/v4l2-subdev.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/v4l2-core/v4l2-subdev.c
++++ linux-qsmp-2550/drivers/media/v4l2-core/v4l2-subdev.c
+@@ -861,26 +861,26 @@ int v4l2_subdev_link_validate_default(st
+ 
+ 	/* The width, height and code must match. */
+ 	if (source_fmt->format.width != sink_fmt->format.width) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+-			"%s: width does not match (source %u, sink %u)\n",
+-			__func__,
+-			source_fmt->format.width, sink_fmt->format.width);
++		dev_warn(sd->entity.graph_obj.mdev->dev,
++			 "%s: width does not match (source %u, sink %u)\n",
++			 __func__,
++			 source_fmt->format.width, sink_fmt->format.width);
+ 		pass = false;
+ 	}
+ 
+ 	if (source_fmt->format.height != sink_fmt->format.height) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+-			"%s: height does not match (source %u, sink %u)\n",
+-			__func__,
+-			source_fmt->format.height, sink_fmt->format.height);
++		dev_warn(sd->entity.graph_obj.mdev->dev,
++			 "%s: height does not match (source %u, sink %u)\n",
++			 __func__,
++			 source_fmt->format.height, sink_fmt->format.height);
+ 		pass = false;
+ 	}
+ 
+ 	if (source_fmt->format.code != sink_fmt->format.code) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+-			"%s: media bus code does not match (source 0x%8.8x, sink 0x%8.8x)\n",
+-			__func__,
+-			source_fmt->format.code, sink_fmt->format.code);
++		dev_warn(sd->entity.graph_obj.mdev->dev,
++			 "%s: media bus code does not match (source 0x%8.8x, sink 0x%8.8x)\n",
++			 __func__,
++			 source_fmt->format.code, sink_fmt->format.code);
+ 		pass = false;
+ 	}
+ 
+@@ -890,7 +890,7 @@ int v4l2_subdev_link_validate_default(st
+ 	 */
+ 	if (source_fmt->format.field != sink_fmt->format.field &&
+ 	    sink_fmt->format.field != V4L2_FIELD_NONE) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
++		dev_warn(sd->entity.graph_obj.mdev->dev,
+ 			"%s: field does not match (source %u, sink %u)\n",
+ 			__func__,
+ 			source_fmt->format.field, sink_fmt->format.field);
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-common.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-common.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-common.c
+@@ -14,7 +14,7 @@
+ #include "dcmipp-common.h"
+ 
+ /* Helper function to allocate and initialize pads */
+-struct media_pad *dcmipp_pads_init(u16 num_pads, const unsigned long *pads_flag)
++struct media_pad *dcmipp_pads_init(u16 num_pads, const unsigned long *pads_flags)
+ {
+ 	struct media_pad *pads;
+ 	unsigned int i;
+@@ -27,20 +27,14 @@ struct media_pad *dcmipp_pads_init(u16 n
+ 	/* Initialize the pads */
+ 	for (i = 0; i < num_pads; i++) {
+ 		pads[i].index = i;
+-		pads[i].flags = pads_flag[i];
++		pads[i].flags = pads_flags[i];
+ 	}
+ 
+ 	return pads;
+ }
+ 
+-int dcmipp_link_validate(struct media_link *link)
+-{
+-	/* TODO */
+-	return 0;
+-}
+-
+ static const struct media_entity_operations dcmipp_ent_sd_mops = {
+-	.link_validate = dcmipp_link_validate,
++	.link_validate = v4l2_subdev_link_validate,
+ };
+ 
+ int dcmipp_ent_sd_register(struct dcmipp_ent_device *ved,
+@@ -49,7 +43,7 @@ int dcmipp_ent_sd_register(struct dcmipp
+ 			   const char *const name,
+ 			   u32 function,
+ 			   u16 num_pads,
+-			   const unsigned long *pads_flag,
++			   const unsigned long *pads_flags,
+ 			   const struct v4l2_subdev_internal_ops *sd_int_ops,
+ 			   const struct v4l2_subdev_ops *sd_ops,
+ 			   irq_handler_t handler,
+@@ -58,7 +52,7 @@ int dcmipp_ent_sd_register(struct dcmipp
+ 	int ret;
+ 
+ 	/* Allocate the pads. Should be released from the sd_int_op release */
+-	ved->pads = dcmipp_pads_init(num_pads, pads_flag);
++	ved->pads = dcmipp_pads_init(num_pads, pads_flags);
+ 	if (IS_ERR(ved->pads))
+ 		return PTR_ERR(ved->pads);
+ 
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-common.h
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-common.h
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-common.h
+@@ -110,7 +110,7 @@ struct dcmipp_ent_device {
+  * Helper functions to allocate/initialize pads
+  */
+ struct media_pad *dcmipp_pads_init(u16 num_pads,
+-				   const unsigned long *pads_flag);
++				   const unsigned long *pads_flags);
+ 
+ /**
+  * dcmipp_pads_cleanup - free pads
+@@ -134,7 +134,7 @@ static inline void dcmipp_pads_cleanup(s
+  *		unique.
+  * @function:	media entity function defined by MEDIA_ENT_F_* macros
+  * @num_pads:	number of pads to initialize
+- * @pads_flag:	flags to use in each pad
++ * @pads_flags:	flags to use in each pad
+  * @sd_int_ops:	pointer to &struct v4l2_subdev_internal_ops
+  * @sd_ops:	pointer to &struct v4l2_subdev_ops.
+  *
+@@ -147,7 +147,7 @@ int dcmipp_ent_sd_register(struct dcmipp
+ 			   const char *const name,
+ 			   u32 function,
+ 			   u16 num_pads,
+-			   const unsigned long *pads_flag,
++			   const unsigned long *pads_flags,
+ 			   const struct v4l2_subdev_internal_ops *sd_int_ops,
+ 			   const struct v4l2_subdev_ops *sd_ops,
+ 			   irq_handler_t handler,
+@@ -165,15 +165,6 @@ int dcmipp_ent_sd_register(struct dcmipp
+ void dcmipp_ent_sd_unregister(struct dcmipp_ent_device *ved,
+ 			      struct v4l2_subdev *sd);
+ 
+-/**
+- * dcmipp_link_validate - validates a media link
+- *
+- * @link: pointer to &struct media_link
+- *
+- * This function call validates if a media link is valid for streaming.
+- */
+-int dcmipp_link_validate(struct media_link *link);
+-
+ #define reg_write(device, reg, val) \
+ 	(reg_write_dbg((device)->dev, #reg, (device)->regs, (reg), (val)))
+ #define reg_read(device, reg) \
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
+@@ -35,10 +35,10 @@
+ 	.flags = link_flags,					\
+ }
+ 
+-#define DCMIPP_CMHWCFGR (0x200)
+-#define DCMIPP_CMSR2 (0x3F8)
+-#define DCMIPP_P0HWCFGR (0x400)
+-#define DCMIPP_VERR (0xFF4)
++#define DCMIPP_CMHWCFGR		0x200
++#define DCMIPP_CMSR2		0x3F8
++#define DCMIPP_P0HWCFGR		0x400
++#define DCMIPP_VERR		0xFF4
+ 
+ struct dcmipp_device {
+ 	/* The platform device */
+@@ -137,7 +137,7 @@ static const struct dcmipp_pipeline_conf
+ 	.num_ents	= ARRAY_SIZE(stm32mp13_ent_config),
+ 	.links		= stm32mp13_ent_links,
+ 	.num_links	= ARRAY_SIZE(stm32mp13_ent_links),
+-	.hw_revision	= DCMIPP_STM32MP13_VERR
++	.hw_revision	= DCMIPP_STM32MP13_VERR,
+ };
+ 
+ #define	ID_MAIN_ISP 3
+@@ -227,7 +227,7 @@ static const struct dcmipp_pipeline_conf
+ 	.num_ents	= ARRAY_SIZE(stm32mp25_ent_config),
+ 	.links		= stm32mp25_ent_links,
+ 	.num_links	= ARRAY_SIZE(stm32mp25_ent_links),
+-	.hw_revision	= DCMIPP_STM32MP25_VERR
++	.hw_revision	= DCMIPP_STM32MP25_VERR,
+ };
+ 
+ /* -------------------------------------------------------------------------- */
+@@ -305,14 +305,14 @@ static int dcmipp_create_subdevs(struct
+ 
+ err_init_entity:
+ 	while (i-- > 0)
+-		dcmipp->pipe_cfg->ents[i - 1].release(dcmipp->entity[i - 1]);
++		dcmipp->pipe_cfg->ents[i].release(dcmipp->entity[i]);
+ 	return ret;
+ }
+ 
+ static const struct of_device_id dcmipp_of_match[] = {
+ 	{ .compatible = "st,stm32mp13-dcmipp", .data = &stm32mp13_pipe_cfg},
+ 	{ .compatible = "st,stm32mp25-dcmipp", .data = &stm32mp25_pipe_cfg},
+-	{ /* end node */ },
++	{ /* end node */ }
+ };
+ MODULE_DEVICE_TABLE(of, dcmipp_of_match);
+ 
+@@ -446,9 +446,9 @@ static int dcmipp_graph_init(struct dcmi
+ 
+ 	v4l2_async_nf_init(&dcmipp->notifier);
+ 
+-	asd = v4l2_async_nf_add_fwnode_remote
+-		(&dcmipp->notifier, of_fwnode_handle(ep),
+-		 struct v4l2_async_subdev);
++	asd = v4l2_async_nf_add_fwnode_remote(&dcmipp->notifier,
++					      of_fwnode_handle(ep),
++					      struct v4l2_async_subdev);
+ 
+ 	of_node_put(ep);
+ 
+Index: linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp-params.c
+===================================================================
+--- linux-qsmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp-params.c
++++ linux-qsmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp-params.c
+@@ -200,7 +200,7 @@ static const struct vb2_ops dcmipp_isp_p
+ };
+ 
+ static const struct media_entity_operations dcmipp_isp_params_mops = {
+-	.link_validate		= dcmipp_link_validate,
++	.link_validate		= v4l2_subdev_link_validate,
+ };
+ 
+ static void dcmipp_isp_params_release(struct video_device *vdev)
+@@ -551,9 +551,11 @@ out:
+ }
+ 
+ static const struct v4l2_file_operations dcmipp_isp_params_fops = {
++	.owner		= THIS_MODULE,
+ 	.open		= v4l2_fh_open,
+ 	.release	= vb2_fop_release,
+-	.mmap           = vb2_fop_mmap,
++	.read		= vb2_fop_read,
++	.mmap		= vb2_fop_mmap,
+ 	.poll		= vb2_fop_poll,
+ 	.unlocked_ioctl = video_ioctl2,
+ };
+@@ -565,7 +567,8 @@ dcmipp_isp_params_ent_init(struct device
+ 	struct dcmipp_isp_params_device *vout;
+ 	struct video_device *vdev;
+ 	struct vb2_queue *q;
+-	int ret = 0;
++	const unsigned long pads_flags = MEDIA_PAD_FL_SOURCE;
++	int ret;
+ 
+ 	/* Allocate the dcmipp_cap_device struct */
+ 	vout = kzalloc(sizeof(*vout), GFP_KERNEL);
+@@ -573,8 +576,7 @@ dcmipp_isp_params_ent_init(struct device
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	/* Allocate the pad */
+-	vout->ved.pads =
+-		dcmipp_pads_init(1, (const unsigned long[1]) {MEDIA_PAD_FL_SOURCE});
++	vout->ved.pads = dcmipp_pads_init(1, &pads_flags);
+ 	if (IS_ERR(vout->ved.pads)) {
+ 		ret = PTR_ERR(vout->ved.pads);
+ 		goto err_free_vout;

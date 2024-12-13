@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+/dts-v1/;
+
+/plugin/;
+
+&{/chosen} {
+	overlays {
+		qsmp-pcie;
+	};
+};
+
+&combophy {
+	status = "okay";
+};
+
+&pcie_rc {
+	pinctrl-names = "default", "init", "sleep";
+	pinctrl-0 = <&pcie_pins>;
+	pinctrl-1 = <&pcie_init_pins>;
+	pinctrl-2 = <&pcie_sleep_pins>;
+	reset-gpios = <&gpioi 7 GPIO_ACTIVE_LOW>;
+	wake-gpios = <&gpioh 10 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+	wakeup-source;
+	status = "okay";
+};
+
+&gpioc {
+	pcie-pwr-en-hog {
+		gpio-hog;
+		gpios = <9 GPIO_ACTIVE_HIGH>;
+		output-high;
+		line-name = "pcie-pwr_en";
+	};
+};
+
+&pinctrl {
+	pcie_pins: pcie-pins {
+		pins {
+			pinmux = <STM32_PINMUX('B', 8, AF4)>;
+			bias-disable;
+		};
+	};
+
+	pcie_init_pins: pcie-init-pins {
+		pins {
+			pinmux = <STM32_PINMUX('B', 8, GPIO)>;
+			output-low;
+		};
+	};
+
+	pcie_sleep_pins: pcie-sleep-pins {
+		pins {
+			pinmux = <STM32_PINMUX('B', 8, ANALOG)>;
+		};
+	};
+};

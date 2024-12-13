@@ -34,6 +34,10 @@ SRC_URI:append:stm32mp25 = " \
 	file://fdts/stm32mp255c-txmp-2550-rcc.dtsi;subdir=git \
 	file://fdts/stm32mp255c-txmp-2550.dts;subdir=git \
 	file://fdts/stm32mp255c-txmp-2550-fw-config.dts;subdir=git \
+	file://fdts/stm32mp255f-qsmp-2550-rcc.dtsi;subdir=git \
+	file://fdts/stm32mp255f-qsmp-2550.dts;subdir=git \
+	file://fdts/stm32mp255f-qsmp-2550-fw-config.dts;subdir=git \
+	file://fdts/stm32mp255f-qsmp-ddr.h;subdir=git \
 "
 
 SRC_URI:append:stm32mp1common = " \
@@ -55,7 +59,13 @@ SRC_URI:append = " \
         file://bl2-ro-size.patch \
 "
 
-SRC_URI:append:stm32mp2 = "${@ " file://regulator-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
+SRC_URI:append:stm32mp2 = " \
+        file://qsmp-debug-uart.patch \
+"
+
+SRC_URI:append:stm32mp2 = "${@ " file://regulators-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
+
+SRC_URI:append:stm32mp2:qsmp = " ${@ " file://pca9450-support.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else "file://pca9450-mv-support.patch"}"
 
 # Extra make settings
 EXTRA_OEMAKE = "CROSS_COMPILE=${TARGET_PREFIX}"
@@ -72,15 +82,20 @@ EXTRA_OEMAKE:append:stm32mp13 = " STM32MP13=1"
 EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_LPDDR4_TYPE=1"
 EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_EARLY_CONSOLE=1"
 EXTRA_OEMAKE:append:stm32mp25 = " SPD=opteed"
+EXTRA_OEMAKE:append:stm32mp25:txmp = " STM32MP_DEBUG_UART=2"
+EXTRA_OEMAKE:append:stm32mp25:qsmp = " STM32MP_DEBUG_UART=4"
+EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_BL31_SIZE=0x1e000"
+EXTRA_OEMAKE:append:stm32mp2common = " ${@ "STM32MP_%s=1" % "${KARO_BOARD_PMIC}".upper()}"
 
 EXTRA_OEMAKE += "${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
 
+TF_A_CONFIG_usb += 'STM32MP_USB_PROGRAMMER=1'
 TF_A_CONFIG_usb += 'DEBUG=1'
 TF_A_CONFIG_usb += 'LOG_LEVEL=40'
-TF_A_CONFIG_usb += 'STM32MP_USB_PROGRAMMER=1'
-TF_A_CONFIG_usb:stm32mp25 += 'STM32MP_BL2_RO_SIZE=0x00022000'
-TF_A_CONFIG_usb:stm32mp25 += 'STM32MP_BL2_SIZE=0x0002a000'
+TF_A_CONFIG_usb:append:stm32mp25:qsmp = ' LOG_LEVEL=30'
+TF_A_CONFIG_usb:append:stm32mp25 = ' STM32MP_BL2_RO_SIZE=0x00022000'
+TF_A_CONFIG_usb:append:stm32mp25 = ' STM32MP_BL2_SIZE=0x0002a000'
 TF_A_CONFIG_trusted += 'LOG_LEVEL=30'
-TF_A_CONFIG_optee += 'LOG_LEVEL=40'
-TF_A_CONFIG_optee:stm32mp25 += 'STM32MP_BL2_RO_SIZE=0x00023000'
-TF_A_CONFIG_optee:stm32mp25 += 'STM32MP_BL2_SIZE=0x0002b000'
+TF_A_CONFIG_optee += 'LOG_LEVEL=30'
+TF_A_CONFIG_optee:append:stm32mp25 = ' STM32MP_BL2_RO_SIZE=0x00023000'
+TF_A_CONFIG_optee:append:stm32mp25 = ' STM32MP_BL2_SIZE=0x0002b000'

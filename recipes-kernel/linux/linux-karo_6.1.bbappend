@@ -25,3 +25,7 @@ SRC_URI:append:stm32mp15 = " \
         file://patches/0010-attiny-regulator-i2c-retries.patch \
         file://patches/0015-raspberrypi-7inch-touchscreen-support.patch \
 "
+SRC_URI:append:stm32mp25 = " \
+        file://patches/stm32mp25-bugfix.patch \
+        file://patches/qsmp-2550-support.patch \
+"

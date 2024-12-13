@@ -47,6 +47,9 @@ EXTRA_OEMAKE:append:stm32mp13 = " CFG_STM32MP13=y"
 EXTRA_OEMAKE:append:stm32mp25 = " CFG_SCMI_SCPFW=y"
 EXTRA_OEMAKE:append:stm32mp25 = " CFG_SCP_FIRMWARE=${S}/core/lib/scmi-server/SCP-firmware"
 
+EXTRA_OEMAKE:append:stm32mp25:qsmp = " CFG_STPMIC2=n CFG_PMIC_PCA9450=y"
+EXTRA_OEMAKE:append:stm32mp25:qsmp = " CFG_STM32_EARLY_CONSOLE_UART=4"
+
 # debug and trace
 EXTRA_OEMAKE:append:stm32mp25 = " CFG_STM32_PANIC_ON_IAC_EVENT=n"
 EXTRA_OEMAKE += "${@bb.utils.contains('ST_OPTEE_DEBUG_TRACE', '1', 'CFG_TEE_CORE_LOG_LEVEL=${ST_OPTEE_DEBUG_LOG_LEVEL} CFG_TEE_CORE_DEBUG=${ST_OPTEE_CORE_DEBUG}', '', d)}"

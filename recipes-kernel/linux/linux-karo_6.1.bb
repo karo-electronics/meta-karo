@@ -39,6 +39,7 @@ SRC_URI:append:stm32mp1 = " \
 
 SRC_URI:append:stm32mp25 = " \
         file://dts/st/stm32mp255c-txmp-2550-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/st/stm32mp255f-qsmp-2550-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
@@ -54,12 +55,17 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"bluetooth"," b
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.cfg","",d)}"
-KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"pci"," pci.cfg","",d)}"
+KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"pcie"," pci.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"rauc"," rauc.cfg","",d)}"
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"nxp-wifi"," extmod.cfg pci.cfg ipv6.cfg","",d)}"
+KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," lvds.cfg","",d)}"
+
+KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"nvme"," nvme.cfg","",d)}"
+KERNEL_FEATURES:append:stm32mp25:qsmp = "${@bb.utils.contains('DISTRO_FEATURES',"csi-camera"," imx219.cfg csi.cfg","",d)}"
 
 KERNEL_FEATURES:append:stm32mp25 = "${@bb.utils.contains('DISTRO_FEATURES',"flexcan"," fdcan.cfg","",d)}"
+
 
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"

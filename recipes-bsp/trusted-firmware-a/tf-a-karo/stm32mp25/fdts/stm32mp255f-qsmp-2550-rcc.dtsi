@@ -1,0 +1,131 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024, STMicroelectronics - All Rights Reserved
+ * Author: STM32CubeMX code generation for STMicroelectronics.
+ */
+
+/* For more information on Device Tree configuration, please refer to
+ * https://wiki.st.com/stm32mpu/wiki/Category:Device_tree_configuration
+ */
+
+#include <dt-bindings/clock/stm32mp25-clksrc.h>
+
+&clk_hse {
+	clock-frequency = <24000000>;
+	st,bypass;
+};
+
+&clk_hsi {
+	clock-frequency = <64000000>;
+};
+
+&clk_lse {
+	clock-frequency = <32768>;
+};
+
+&clk_lsi {
+	clock-frequency = <32000>;
+};
+
+&clk_msi {
+	clock-frequency = <16000000>;
+};
+
+&rcc {
+	clocks = <&clk_hse>, <&clk_hsi>, <&clk_msi>, <&clk_lse>, <&clk_lsi>;
+	clock-names = "clk-hse", "clk-hsi", "clk-msi", "clk-lse", "clk-lsi";
+	st,busclk = <
+		DIV_CFG(DIV_LSMCU, 1)
+		DIV_CFG(DIV_APB1, 0)
+		DIV_CFG(DIV_APB2, 0)
+		DIV_CFG(DIV_APB3, 0)
+		DIV_CFG(DIV_APB4, 0)
+		DIV_CFG(DIV_APBDBG, 0)
+	>;
+	st,flexgen = <
+		FLEXGEN_CFG(0, XBAR_SRC_PLL4, 0, 2) /* HS_MCU, LS_MCU */
+		FLEXGEN_CFG(1, XBAR_SRC_PLL4, 0, 5) /* ICN_SDMMC */
+		FLEXGEN_CFG(2, XBAR_SRC_PLL4, 0, 1) /* ICN_DDR */
+		FLEXGEN_CFG(3, XBAR_SRC_PLL4, 0, 2) /* ICN_DISPLAY */
+		FLEXGEN_CFG(4, XBAR_SRC_PLL4, 0, 3) /* PCIE, USB3DR, USB2[EO]HCI, ETH[12] */
+		FLEXGEN_CFG(5, XBAR_SRC_PLL4, 0, 2) /* BOOTROM, GIC400 */
+		FLEXGEN_CFG(6, XBAR_SRC_PLL4, 0, 1) /* VDEC, VENC, VID */
+		FLEXGEN_CFG(8, XBAR_SRC_HSI_KER, 0, 0) /* USART2, UART4 */
+		FLEXGEN_CFG(9, XBAR_SRC_HSI_KER, 0, 0) /* USART3, UART5 */
+		FLEXGEN_CFG(12, XBAR_SRC_PLL4, 0, 9) /* I2C[12] */
+		FLEXGEN_CFG(13, XBAR_SRC_PLL4, 0, 9) /* I2C[35] */
+		FLEXGEN_CFG(14, XBAR_SRC_PLL4, 0, 9) /* I2C[46] */
+		FLEXGEN_CFG(15, XBAR_SRC_PLL4, 0, 9) /* I2C7 */
+		FLEXGEN_CFG(19, XBAR_SRC_HSI_KER, 0, 0) /* USART1 */
+		FLEXGEN_CFG(21, XBAR_SRC_HSI_KER, 0, 0) /* UART[78] */
+		FLEXGEN_CFG(22, XBAR_SRC_HSI_KER, 0, 0) /* UART9 */
+		FLEXGEN_CFG(33, XBAR_SRC_PLL4, 0, 23) /* STGEN */
+		FLEXGEN_CFG(34, XBAR_SRC_PLL4, 0, 47) /* USB3PCIEPHY */
+		FLEXGEN_CFG(35, XBAR_SRC_HSI_KER, 0, 0) /* USBTC */
+		FLEXGEN_CFG(43, XBAR_SRC_HSI_KER, 0, 0) /* TSDBG */
+		FLEXGEN_CFG(44, XBAR_SRC_HSI_KER, 0, 0) /* TPIU */
+		FLEXGEN_CFG(45, XBAR_SRC_HSI_KER, 0, 0) /* ATB, ETR */
+		FLEXGEN_CFG(51, XBAR_SRC_PLL4, 0, 5) /* SDMMC1 */
+		FLEXGEN_CFG(52, XBAR_SRC_PLL4, 0, 5) /* SDMMC2 */
+		FLEXGEN_CFG(53, XBAR_SRC_PLL4, 0, 5) /* SDMMC3 */
+		FLEXGEN_CFG(58, XBAR_SRC_HSE_KER, 0, 0) /* USB2PHY2 */
+		FLEXGEN_CFG(59, XBAR_SRC_PLL4, 0, 1) /* GPU */
+		FLEXGEN_CFG(61, XBAR_SRC_HSE_KER, 0, 0) /* MCO1 */
+		FLEXGEN_CFG(62, XBAR_SRC_HSI_KER, 0, 0) /* MCO2 */
+		FLEXGEN_CFG(63, XBAR_SRC_PLL4, 0, 2) /*  */
+	>;
+	st,kerclk = <
+		//MUX_CFG(MUX_LVDSPHY, MUX_LVDSPHY_FLEX32)
+		MUX_CFG(MUX_D3PER, MUX_D3PER_MSI)
+		MUX_CFG(MUX_USB2PHY1, MUX_USB2PHY1_FLEX57)
+		MUX_CFG(MUX_USB2PHY2, MUX_USB2PHY2_FLEX58)
+		MUX_CFG(MUX_USB3PCIEPHY, MUX_USB3PCIEPHY_FLEX34)
+		MUX_CFG(MUX_RTC, MUX_RTC_LSE)
+	>;
+
+	st,pll-1 {
+		st,pll = <&pll1_cfg_1000MHz>;
+
+		pll1_cfg_1000MHz: pll1-cfg-1000MHz {
+			cfg = <125 1 1 3>;
+			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
+		};
+
+		pll1_cfg_1200MHz: pll1-cfg-1200MHz {
+			cfg = <50 1 1 1>;
+			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
+		};
+
+		pll1_cfg_1500MHz: pll1-cfg-1500MHz {
+			cfg = <125 1 1 2>;
+			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
+		};
+	};
+
+	st,pll-2 {
+		st,pll = <&pll2_cfg_600MHz>;
+
+		pll2_cfg_600MHz: pll2-cfg-600MHz {
+			cfg = <15 1 1 1>;
+			src = <MUX_CFG(MUX_MUXSEL6, MUXSEL_HSE)>;
+		};
+	};
+#if 0
+	st,pll-3 {
+		st,pll = <&pll3_cfg_800MHz>;
+
+		pll3_cfg_800MHz: pll3-cfg-800MHz {
+			cfg = <100 1 1 3>;
+			src = <MUX_CFG(MUX_MUXSEL7, MUXSEL_HSE)>;
+		};
+	};
+#endif
+	st,pll-4 {
+		st,pll = <&pll4_cfg_1200MHz>;
+
+		pll4_cfg_1200MHz: pll4-cfg-1200MHz {
+			cfg = <50 1 1 1>;
+			src = <MUX_CFG(MUX_MUXSEL0, MUXSEL_HSE)>;
+		};
+	};
+};
