@@ -949,6 +949,17 @@ Index: optee-os-txmp-2550/core/drivers/regulator/core.c
 ===================================================================
 --- optee-os-txmp-2550.orig/core/drivers/regulator/core.c
 +++ optee-os-txmp-2550/core/drivers/regulator/core.c
+@@ -306,8 +306,8 @@ TEE_Result regulator_set_voltage(struct
+ 	unlock_driver(rdev);
+ 
+ 	if (res) {
+-		EMSG("regul %s set volt failed with %#"PRIx32,
+-		     rdev->desc->node_name, res);
++		EMSG("regul %s set voltage to %umV failed with %#"PRIx32,
++		     rdev->desc->node_name, mvolt, res);
+ 		return res;
+ 	}
+ 
 @@ -791,7 +791,7 @@ static TEE_Result regulator_pm(enum pm_o
  				panic();
  	}
@@ -1058,6 +1069,20 @@ Index: optee-os-txmp-2550/core/drivers/stm32_i2c.c
  
  	mutex_pm_aware_init(&hi2c->mu);
  
+@@ -1058,11 +1058,11 @@ static int i2c_request_mem_read(struct i
+ static int i2c_write(struct i2c_handle_s *hi2c, struct i2c_request *request,
+ 		     uint8_t *p_data, uint16_t size)
+ {
+-	uint64_t timeout_ref = 0;
++	uint64_t timeout_ref;
+ 	vaddr_t base = get_base(hi2c);
+ 	int rc = -1;
+ 	uint8_t *p_buff = p_data;
+-	size_t xfer_size = 0;
++	size_t xfer_size;
+ 	size_t xfer_count = size;
+ 
+ 	if (request->mode != I2C_MODE_MASTER && request->mode != I2C_MODE_MEM)
 @@ -1581,15 +1581,17 @@ TEE_Result i2c_dt_get_by_subnode(const v
  static TEE_Result stm32_i2c_probe(const void *fdt, int node,
  				  const void *compat_data __unused)
@@ -1348,3 +1373,192 @@ Index: optee-os-txmp-2550/core/include/drivers/stm32_tamp.h
  	struct rif_conf_data conf_data;
  	struct stm32_bkpregs_conf *bkpregs_conf;
  	struct stm32_exti_pdata *exti;
+Index: optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
+===================================================================
+--- optee-os-txmp-2550.orig/core/drivers/firewall/stm32_rifsc.c
++++ optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
+@@ -308,23 +308,25 @@ stm32_rifsc_has_access(struct stm32_fire
+ 		       const struct stm32_firewall_cfg *cfg)
+ {
+ 	TEE_Result res = TEE_ERROR_ACCESS_DENIED;
+-	const struct stm32_firewall_cfg *f_cfg = cfg;
++	const struct stm32_firewall_cfg *f_cfg;
+ 	unsigned int reg_id = id / 32;
+-	unsigned int periph_offset = id - (reg_id * 32);
++	unsigned int periph_offset = id % 32;
+ 	uintptr_t rifsc_base = rifsc_pdata.base;
+-	uint32_t sec_reg_value = 0;
+-	uint32_t priv_reg_value = 0;
+-	uint32_t cid_reg_value = 0;
+-	uint32_t mode = 0;
+ 
+ 	DMSG("Check firewall access for peripheral (ID): %u", id);
+ 
+ 	assert(rifsc_base);
+ 
+-	if (!f_cfg)
++	if (!cfg) {
++		EMSG("No cfg given");
+ 		return TEE_ERROR_BAD_PARAMETERS;
++	}
+ 
+ 	for (f_cfg = cfg; f_cfg->access; f_cfg++) {
++		uint32_t sec_reg_value;
++		uint32_t priv_reg_value;
++		uint32_t cid_reg_value;
++		uint32_t mode;
+ 		/* The CID corresponds to the * FWLL_MASTER(ID) + 1 */
+ 		unsigned int master = ((f_cfg->access & FWLL_MASTER_MASK) >>
+ 				      FWLL_MASTER_SHIFT) + 1;
+@@ -343,13 +345,14 @@ stm32_rifsc_has_access(struct stm32_fire
+ 					  0x4 * reg_id);
+ 		priv_reg_value = io_read32(rifsc_base + _RIFSC_RISC_PRIVCFGR0 +
+ 					   0x4 * reg_id);
+-		cid_reg_value = io_read32(rifsc_base +
+-					  _RIFSC_RISC_PER0_CIDCFGR +
++		cid_reg_value = io_read32(rifsc_base + _RIFSC_RISC_PER0_CIDCFGR +
+ 					  0x8 * id);
+ 
+ 		if (!(mode & (FWLL_SEC_PRIV | FWLL_SEC_UNPRIV |
+-			      FWLL_NSEC_PRIV | FWLL_NSEC_UNPRIV)))
++			      FWLL_NSEC_PRIV | FWLL_NSEC_UNPRIV))) {
++			EMSG("Invalid mode: %08x", mode);
+ 			return TEE_ERROR_BAD_PARAMETERS;
++		}
+ 
+ 		/*
+ 		 * First check conditions for semaphore mode, which doesn't
+@@ -360,6 +363,7 @@ stm32_rifsc_has_access(struct stm32_fire
+ 				/* Static CID is irrelevant if semaphore mode */
+ 				goto skip_cid_check;
+ 			} else {
++				DMSG("ACCESS DENIED");
+ 				return TEE_ERROR_ACCESS_DENIED;
+ 			}
+ 		}
+@@ -372,26 +376,34 @@ stm32_rifsc_has_access(struct stm32_fire
+ 		/*
+ 		 * Coherency check with the CID configuration
+ 		 */
+-		if (((cid_reg_value & RIFSC_RISC_SCID_MASK) >>
+-		    RIFSC_RISC_SCID_SHIFT) != master)
++		if ((cid_reg_value & RIFSC_RISC_SCID_MASK) >>
++		    RIFSC_RISC_SCID_SHIFT != master) {
++			DMSG("ACCESS DENIED");
+ 			return TEE_ERROR_ACCESS_DENIED;
++		}
+ 
+ skip_cid_check:
+-		/* Check non-secure, non-privilege configuration */
+-		if (mode & (FWLL_NSEC_UNPRIV) &&
++		/* Check non-secure, non-privileged configuration */
++		if (mode & FWLL_NSEC_UNPRIV &&
+ 		    (sec_reg_value & BIT(periph_offset) ||
+-		     priv_reg_value & BIT(periph_offset)))
++		     priv_reg_value & BIT(periph_offset))) {
++			DMSG("ACCESS DENIED");
+ 			return TEE_ERROR_ACCESS_DENIED;
++		}
+ 
+ 		/* Check secure configuration */
+-		if ((mode & (FWLL_SEC_PRIV) || mode & (FWLL_SEC_UNPRIV)) &&
+-		    !(sec_reg_value & BIT(periph_offset)))
++		if ((mode & FWLL_SEC_PRIV || mode & FWLL_SEC_UNPRIV) &&
++		    !(sec_reg_value & BIT(periph_offset))) {
++			DMSG("ACCESS DENIED");
+ 			return TEE_ERROR_ACCESS_DENIED;
++		}
+ 
+-		/* Check unprivilege configuration */
++		/* Check unprivileged configuration */
+ 		if ((priv_reg_value & BIT(periph_offset)) &&
+-		    (!(mode & FWLL_NSEC_PRIV)) && (!(mode & FWLL_SEC_PRIV)))
++		    (!(mode & FWLL_NSEC_PRIV)) && (!(mode & FWLL_SEC_PRIV))) {
++			DMSG("UNPRIVILEGED ACCESS DENIED");
+ 			return TEE_ERROR_ACCESS_DENIED;
++		}
+ 
+ 		res = TEE_SUCCESS;
+ 	}
+Index: optee-os-txmp-2550/core/drivers/stm32mp_provisioning.c
+===================================================================
+--- optee-os-txmp-2550.orig/core/drivers/stm32mp_provisioning.c
++++ optee-os-txmp-2550/core/drivers/stm32mp_provisioning.c
+@@ -51,8 +51,8 @@ static void provision(struct otp_provis
+ 	uint32_t provis_value = otp_provis->value[index];
+ 	uint32_t provis_lock = otp_provis->otp_lock;
+ 	uint32_t otp_id = otp_provis->otp_id + index;
+-	uint32_t otp_val = 0;
+-	bool otp_lock = false;
++	uint32_t otp_val;
++	bool otp_lock;
+ 
+ 	if (stm32_bsec_read_sw_lock(otp_id, &otp_lock))
+ 		panic();
+@@ -112,19 +112,19 @@ static void load_provisioning(void)
+ 
+ static void provisioning_subnode(const void *fdt, int node)
+ {
+-	struct otp_provis *otp_provis = NULL;
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 	int child = -1;
+ 
+ 	fdt_for_each_subnode(child, fdt, node) {
+-		const uint32_t *cuint = NULL;
+-		int len = 0;
+-		uint32_t phandle = 0;
+-		uint32_t otp_lock = 0;
+-		uint32_t otp_id = 0;
+-		size_t otp_bit_len = 0;
+-		size_t otp_len_word = 0;
+-		unsigned int i = 0;
++		struct otp_provis *otp_provis;
++		const uint32_t *cuint;
++		int len;
++		uint32_t phandle;
++		uint32_t otp_lock;
++		uint32_t otp_id;
++		size_t otp_bit_len;
++		size_t otp_len_word;
++		unsigned int i;
+ 
+ 		cuint = fdt_getprop(fdt, child, "nvmem-cells", NULL);
+ 		if (!cuint)
+@@ -143,7 +143,8 @@ static void provisioning_subnode(const v
+ 		cuint = fdt_getprop(fdt, child, "st,shadow-lock", &len);
+ 		if (cuint && len > 0)
+ 			otp_lock = fdt32_to_cpu(*cuint);
+-
++		else
++			otp_lock = 0;
+ 		cuint = fdt_getprop(fdt, child, "st,shadow-value", &len);
+ 		if (!cuint || len < 0 || (len % sizeof(uint32_t) != 0))
+ 			panic();
+Index: optee-os-txmp-2550/core/arch/arm/dts/stm32mp25xxak-pinctrl.dtsi
+===================================================================
+--- optee-os-txmp-2550.orig/core/arch/arm/dts/stm32mp25xxak-pinctrl.dtsi
++++ optee-os-txmp-2550/core/arch/arm/dts/stm32mp25xxak-pinctrl.dtsi
+@@ -58,6 +58,9 @@
+ 		ngpios = <12>;
+ 		gpio-ranges = <&pinctrl 0 128 12>;
+ 	};
++
++	/delete-node/ gpio@442d0000; /* GPIOJ */
++	/delete-node/ gpio@442e0000; /* GPIOK */
+ };
+ 
+ &pinctrl_z {
+Index: optee-os-txmp-2550/core/arch/arm/dts/stm32mp25xxal-pinctrl.dtsi
+===================================================================
+--- optee-os-txmp-2550.orig/core/arch/arm/dts/stm32mp25xxal-pinctrl.dtsi
++++ optee-os-txmp-2550/core/arch/arm/dts/stm32mp25xxal-pinctrl.dtsi
+@@ -58,6 +58,9 @@
+ 		ngpios = <12>;
+ 		gpio-ranges = <&pinctrl 0 128 12>;
+ 	};
++
++	/delete-node/ gpio@442d0000; /* GPIOJ */
++	/delete-node/ gpio@442e0000; /* GPIOK */
+ };
+ 
+ &pinctrl_z {

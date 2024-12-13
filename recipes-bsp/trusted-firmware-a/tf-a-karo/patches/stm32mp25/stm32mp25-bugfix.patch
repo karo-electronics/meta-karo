@@ -174,6 +174,75 @@ Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
 ===================================================================
 --- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_def.h
 +++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
+@@ -74,7 +74,7 @@
+ #define RETRAM_SIZE			U(0x00020000)
+ #define STM32MP_BACKUP_RAM_BASE		U(0x42000000)
+ 
+-/* the first 4KB of SRAM1 are reserved are for BSEC shadow */
++/* the first 4KiB of SRAM1 are reserved are for BSEC shadow */
+ #define STM32MP_SEC_SRAM1_SIZE		U(0x1000)
+ 
+ #define STM32MP_SEC_SYSRAM_BASE		STM32MP_SYSRAM_BASE
+@@ -123,7 +123,7 @@ enum ddr_type {
+ #endif
+ 
+ /* Section used inside TF binaries */
+-#define STM32MP_PARAM_LOAD_SIZE		U(0x00002400)	/* 9 KB for param */
++#define STM32MP_PARAM_LOAD_SIZE		U(0x00002400)	/* 9 KiB for param */
+ /* 512 Octets reserved for header */
+ #define STM32MP_HEADER_SIZE		U(0x00000200)
+ #define STM32MP_HEADER_BASE		(STM32MP_SEC_SYSRAM_BASE +	\
+@@ -140,23 +140,23 @@ enum ddr_type {
+ 					 (STM32MP_PARAM_LOAD_SIZE +	\
+ 					  STM32MP_HEADER_SIZE))
+ 
+-#define STM32MP_BL31_SIZE		U(0x0001F000)	/* 124 KB for BL31 */
++#define STM32MP_BL31_SIZE		U(0x0001F000)	/* 124 KiB for BL31 */
+ 
+ #if TRUSTED_BOARD_BOOT
+ #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
+-#define STM32MP_BL2_RO_SIZE		U(0x00021000)	/* 132 KB */
+-#define STM32MP_BL2_SIZE		U(0x0002C000)	/* 176 KB for BL2 */
++#define STM32MP_BL2_RO_SIZE		U(0x00021000)	/* 132 KiB */
++#define STM32MP_BL2_SIZE		U(0x0002C000)	/* 176 KiB for BL2 */
+ #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+-#define STM32MP_BL2_RO_SIZE		U(0x00021000)	/* 132 KB */
+-#define STM32MP_BL2_SIZE		U(0x0002D000)	/* 180 KB for BL2 */
++#define STM32MP_BL2_RO_SIZE		U(0x00021000)	/* 132 KiB */
++#define STM32MP_BL2_SIZE		U(0x0002D000)	/* 180 KiB for BL2 */
+ #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #else
+ #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
+-#define STM32MP_BL2_RO_SIZE		U(0x0001F000)	/* 124 KB */
+-#define STM32MP_BL2_SIZE		U(0x00028000)	/* 160 KB for BL2 */
++#define STM32MP_BL2_RO_SIZE		U(0x0001F000)	/* 124 KiB */
++#define STM32MP_BL2_SIZE		U(0x00028000)	/* 160 KiB for BL2 */
+ #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+-#define STM32MP_BL2_RO_SIZE		U(0x00020000)	/* 128 KB */
+-#define STM32MP_BL2_SIZE		U(0x00029000)	/* 164 KB for BL2 */
++#define STM32MP_BL2_RO_SIZE		U(0x00020000)	/* 128 KiB */
++#define STM32MP_BL2_SIZE		U(0x00029000)	/* 164 KiB for BL2 */
+ #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #endif
+ 
+@@ -178,7 +178,7 @@ enum ddr_type {
+ 					 STM32MP_MBEDTLS_HEAP_SIZE)
+ 
+ /* BL2 and BL32/sp_min require 4 tables */
+-#define MAX_XLAT_TABLES			U(4)	/* 16 KB for mapping */
++#define MAX_XLAT_TABLES			U(4)	/* 16 KiB for mapping */
+ 
+ /*
+  * MAX_MMAP_REGIONS is usually:
+@@ -191,7 +191,7 @@ enum ddr_type {
+ #endif
+ 
+ /* DTB initialization value */
+-#define STM32MP_BL2_DTB_SIZE		U(0x00006000)	/* 24 KB for DTB */
++#define STM32MP_BL2_DTB_SIZE		U(0x00006000)	/* 24 KiB for DTB */
+ 
+ #define STM32MP_BL2_DTB_BASE		(STM32MP_BL2_BASE - \
+ 					 STM32MP_BL2_DTB_SIZE)
 @@ -367,17 +367,23 @@ enum ddr_type {
  #define STM32MP2_UPPER_OTP_START	0x100U
  
@@ -404,6 +473,38 @@ Index: tf-a-txmp-2550/plat/st/common/stm32mp_common.c
  	}
  
  	return 0;
+@@ -340,16 +341,14 @@ int stm32mp_uart_console_setup(void)
+ 
+ 	result = dt_get_stdout_uart_info(&dt_uart_info);
+ 
+-	if ((result <= 0) ||
+-	    (dt_uart_info.status == DT_DISABLED)) {
++	if (result <= 0 ||
++	    dt_uart_info.status == DT_DISABLED)
+ 		return -ENODEV;
+-	}
+ 
+ #if defined(IMAGE_BL2)
+-	if ((dt_uart_info.clock < 0) ||
+-	    (dt_uart_info.reset < 0)) {
++	if (dt_uart_info.clock < 0 ||
++	    dt_uart_info.reset < 0)
+ 		return -ENODEV;
+-	}
+ #endif
+ 
+ #if (STM32MP_UART_PROGRAMMER || !defined(IMAGE_BL2)) && !STM32MP_SSP
+@@ -362,9 +361,8 @@ int stm32mp_uart_console_setup(void)
+ #endif
+ 
+ #if defined(IMAGE_BL2)
+-	if (dt_set_stdout_pinctrl() != 0) {
++	if (dt_set_stdout_pinctrl())
+ 		return -ENODEV;
+-	}
+ 
+ 	clk_enable((unsigned long)dt_uart_info.clock);
+ 
 Index: tf-a-txmp-2550/plat/st/common/stm32mp_dt.c
 ===================================================================
 --- tf-a-txmp-2550.orig/plat/st/common/stm32mp_dt.c
@@ -499,13 +600,14 @@ Index: tf-a-txmp-2550/plat/st/common/stm32mp_dt.c
  
 -	node = fdt_subnode_offset(fdt, node, name);
 -	if (node < 0) {
+-		ERROR("nvmem node %s not found\n", name);
+-		return node;
 +	ret = fdt_subnode_offset(fdt, node, name);
 +	if (ret < 0)
 +		ret = find_legacy_node_name(name, node);
 +
 +	if (ret < 0) {
- 		ERROR("nvmem node %s not found\n", name);
--		return node;
++		INFO("nvmem node %s not found\n", name);
 +		return ret;
  	}
 +	node = ret;
@@ -516,19 +618,643 @@ Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_private.c
 ===================================================================
 --- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_private.c
 +++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_private.c
+@@ -167,9 +167,9 @@ static const uintptr_t stm32mp2_uart_add
+ 
+ uintptr_t get_uart_address(uint32_t instance_nb)
+ {
+-	if ((instance_nb == 0U) ||
+-	    (instance_nb > STM32MP_NB_OF_UART)) {
+-		return 0U;
++	if (instance_nb == 0 ||
++	    instance_nb > STM32MP_NB_OF_UART) {
++		return 0;
+ 	}
+ 
+ 	return stm32mp2_uart_addresses[instance_nb - 1U];
 @@ -196,13 +196,11 @@ uint32_t stm32mp_get_chip_version(void)
  {
  	static uint32_t rev;
  
 -	if (rev != 0U) {
-+	if (rev != 0U)
++	if (rev)
  		return rev;
 -	}
  
 -	if (stm32_get_otp_value(REVISION_OTP, &rev) != 0) {
-+	if (stm32_get_otp_value(REVISION_OTP, &rev) != 0)
++	if (stm32_get_otp_value(REVISION_OTP, &rev))
  		panic();
 -	}
  
  	return rev;
  }
+@@ -216,13 +214,11 @@ static uint32_t get_part_number(void)
+ {
+ 	static uint32_t part_number;
+ 
+-	if (part_number != 0U) {
++	if (part_number)
+ 		return part_number;
+-	}
+ 
+-	if (stm32_get_otp_value(PART_NUMBER_OTP, &part_number) != 0) {
++	if (stm32_get_otp_value(PART_NUMBER_OTP, &part_number))
+ 		panic();
+-	}
+ 
+ 	return part_number;
+ }
+@@ -232,7 +228,7 @@ static uint32_t get_cpu_package(void)
+ 	static uint32_t package = UINT32_MAX;
+ 
+ 	if (package == UINT32_MAX) {
+-		if (stm32_get_otp_value(PACKAGE_OTP, &package) != 0) {
++		if (stm32_get_otp_value(PACKAGE_OTP, &package)) {
+ 			panic();
+ 		}
+ 	}
+@@ -354,15 +350,13 @@ void stm32mp_print_cpuinfo(void)
+ 
+ void stm32mp_print_boardinfo(void)
+ {
+-	uint32_t board_id = 0U;
++	uint32_t board_id;
+ 
+-	if (stm32_get_otp_value(BOARD_ID_OTP, &board_id) != 0) {
++	if (stm32_get_otp_value(BOARD_ID_OTP, &board_id))
+ 		return;
+-	}
+ 
+-	if (board_id != 0U) {
++	if (board_id)
+ 		stm32_display_board_info(board_id);
+-	}
+ }
+ 
+ /* Return true when SoC provides a single Cortex-A35 core, and false otherwise */
+@@ -390,35 +384,29 @@ uint32_t stm32mp_check_closed_device(voi
+ 	static uint32_t otp_idx;
+ 	static uint32_t otp_len;
+ 	uint32_t otp_val;
+-	uint32_t status = STM32MP_CHIP_SEC_CLOSED;
+ 
+-	if (otp_len == 0U) {
+-		if (stm32_get_otp_index(LIFECYCLE2_OTP, &otp_idx, &otp_len) != 0) {
++	if (!otp_len) {
++		if (stm32_get_otp_index(LIFECYCLE2_OTP, &otp_idx, &otp_len))
+ 			panic();
+-		}
+ 
+ 		if (otp_len != __WORD_BIT) {
+ 			panic();
+ 		}
+ 	}
+ 
+-	if (stm32_get_otp_value_from_idx(otp_idx, &otp_val) != 0) {
++	if (stm32_get_otp_value_from_idx(otp_idx, &otp_val))
+ 		panic();
+-	}
+ 
+ 	if (!stm32_otp_is_closed_device() ||
+-	    ((otp_val & SECURE_BOOT_CLOSED_SECURE) == 0U)) {
+-		status = STM32MP_CHIP_SEC_OPEN;
+-	}
++	    ((otp_val & SECURE_BOOT_CLOSED_SECURE) == 0))
++		return STM32MP_CHIP_SEC_OPEN;
+ 
+-	return status;
++	return STM32MP_CHIP_SEC_CLOSED;
+ }
+ 
+ /* Return true when device supports secure boot */
+ bool stm32mp_is_auth_supported(void)
+ {
+-	bool supported = false;
+-
+ 	switch (get_part_number()) {
+ 	case STM32MP251C_PART_NB:
+ 	case STM32MP251F_PART_NB:
+@@ -428,18 +416,16 @@ bool stm32mp_is_auth_supported(void)
+ 	case STM32MP255F_PART_NB:
+ 	case STM32MP257C_PART_NB:
+ 	case STM32MP257F_PART_NB:
+-		supported = true;
++		return true;
+ 		break;
+ 	default:
+-		break;
++		return false;
+ 	}
+-
+-	return supported;
+ }
+ 
+ uint32_t stm32_iwdg_get_instance(uintptr_t base)
+ {
+-	uint32_t instance = UINT32_MAX;
++	uint32_t instance;
+ 
+ 	switch (base) {
+ 	case IWDG1_BASE:
+@@ -449,10 +435,6 @@ uint32_t stm32_iwdg_get_instance(uintptr
+ 		instance = IWDG2_INST;
+ 		break;
+ 	default:
+-		break;
+-	}
+-
+-	if (instance == UINT32_MAX) {
+ 		panic();
+ 	}
+ 
+@@ -461,14 +443,14 @@ uint32_t stm32_iwdg_get_instance(uintptr
+ 
+ uint32_t stm32_iwdg_get_otp_config(uint32_t iwdg_inst)
+ {
+-	uint32_t iwdg_cfg = 0U;
++	uint32_t iwdg_cfg = 0;
+ 	uint32_t otp_value;
+ 
+-	if (stm32_get_otp_value(HCONF1_OTP, &otp_value) != 0U) {
++	if (stm32_get_otp_value(HCONF1_OTP, &otp_value)) {
+ 		panic();
+ 	}
+ 
+-	if ((otp_value & HCONF1_OTP_IWDG_HW_MASK(iwdg_inst)) != 0U) {
++	if ((otp_value & HCONF1_OTP_IWDG_HW_MASK(iwdg_inst))) {
+ 		iwdg_cfg |= IWDG_HW_ENABLED;
+ 	}
+ 
+@@ -491,14 +473,13 @@ bool stm32mp_is_wakeup_from_standby(void
+ 	if (standby == -1) {
+ 		rstsr = mmio_read_32(stm32mp_rcc_base() + RCC_C1BOOTRSTSCLRR);
+ 
+-		if ((rstsr & RCC_C1BOOTRSTSCLRR_PADRSTF) != 0U) {
++		if ((rstsr & RCC_C1BOOTRSTSCLRR_PADRSTF))
+ 			return false;
+-		}
+-		if (stm32_pm_context_is_valid()) {
++
++		if (stm32_pm_context_is_valid())
+ 			standby = 1;
+-		} else {
++		else
+ 			standby = 0;
+-		}
+ 	}
+ 
+ 	return standby == 1;
+@@ -525,7 +506,7 @@ uintptr_t stm32_risaf_get_base(int insta
+ 	case RISAF4_INST:
+ 		return (uintptr_t)RISAF4_BASE;
+ 	default:
+-		return 0U;
++		return 0;
+ 	}
+ }
+ 
+@@ -549,7 +530,7 @@ uintptr_t stm32_risaf_get_memory_base(in
+ 	case RISAF4_INST:
+ 		return (uintptr_t)STM32MP_DDR_BASE;
+ 	default:
+-		return 0U;
++		return 0;
+ 	}
+ }
+ 
+@@ -561,7 +542,7 @@ size_t stm32_risaf_get_memory_size(int i
+ 	case RISAF4_INST:
+ 		return dt_get_ddr_size();
+ 	default:
+-		return 0U;
++		return 0;
+ 	}
+ }
+ 
+Index: tf-a-txmp-2550/plat/st/stm32mp2/aarch64/stm32mp2_helper.S
+===================================================================
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/aarch64/stm32mp2_helper.S
++++ tf-a-txmp-2550/plat/st/stm32mp2/aarch64/stm32mp2_helper.S
+@@ -127,17 +127,17 @@ func plat_crash_console_init
+ 	bic	w2, w2, #(GPIO_PULL_MASK << GPIO_TX_SHIFT)
+ 	str	w2, [x1, #GPIO_PUPD_OFFSET]
+ 	/* Set alternate */
++	mov	w0, #DEBUG_UART_TX_GPIO_ALTERNATE
+ #if DEBUG_UART_TX_GPIO_PORT >= GPIO_ALT_LOWER_LIMIT
+ 	ldr	w2, [x1, #GPIO_AFRH_OFFSET]
+ 	bic	w2, w2, #(GPIO_ALTERNATE_MASK << \
+ 				((DEBUG_UART_TX_GPIO_PORT - GPIO_ALT_LOWER_LIMIT) << 2))
+-	orr	w2, w2, #(DEBUG_UART_TX_GPIO_ALTERNATE << \
+-				((DEBUG_UART_TX_GPIO_PORT - GPIO_ALT_LOWER_LIMIT) << 2))
++	orr	w2, w2, w0, lsl ((DEBUG_UART_TX_GPIO_PORT - GPIO_ALT_LOWER_LIMIT) << 2)
+ 	str	w2, [x1, #GPIO_AFRH_OFFSET]
+ #else
+ 	ldr	w2, [x1, #GPIO_AFRL_OFFSET]
+ 	bic	w2, w2, #(GPIO_ALTERNATE_MASK << (DEBUG_UART_TX_GPIO_PORT << 2))
+-	orr	w2, w2, #(DEBUG_UART_TX_GPIO_ALTERNATE << (DEBUG_UART_TX_GPIO_PORT << 2))
++	orr	w2, w2, w0, lsl (DEBUG_UART_TX_GPIO_PORT << 2)
+ 	str	w2, [x1, #GPIO_AFRL_OFFSET]
+ #endif
+ 	/* Clear UART clock flexgen divisors, keep enable bit */
+Index: tf-a-txmp-2550/drivers/st/usb_dwc3/usb_dwc3.c
+===================================================================
+--- tf-a-txmp-2550.orig/drivers/st/usb_dwc3/usb_dwc3.c
++++ tf-a-txmp-2550/drivers/st/usb_dwc3/usb_dwc3.c
+@@ -668,8 +668,8 @@ static enum usb_status dwc3_execute_dep_
+ 	uint64_t timeout;
+ 
+ 	VERBOSE("PHYEP%d: cmd '%s' %08x params %08x %08x %08x\n", phy_epnum,
+-		   dwc3_get_ep_cmd_str(cmd), (uint32_t)cmd, (uint32_t)params->param0,
+-		   (uint32_t)params->param1, (uint32_t)params->param2);
++		dwc3_get_ep_cmd_str(cmd), (uint32_t)cmd, (uint32_t)params->param0,
++		(uint32_t)params->param1, (uint32_t)params->param2);
+ 
+ 	DWC3_regwrite(dwc3_handle->usb_device, DWC3_DEPCMDPAR0(phy_epnum), params->param0);
+ 	DWC3_regwrite(dwc3_handle->usb_device, DWC3_DEPCMDPAR1(phy_epnum), params->param1);
+@@ -683,7 +683,7 @@ static enum usb_status dwc3_execute_dep_
+ 		/* "Command Complete" */
+ 		if ((reg & USB3_DEPCMD_CMDACT) == 0U) {
+ 			VERBOSE("Command Complete --> %u PHYEP%u %x\n", DWC3_DEPCMD_STATUS(reg),
+-				   phy_epnum, reg);
++				phy_epnum, reg);
+ 			if (DWC3_DEPCMD_STATUS(reg) != 0U) {
+ 				return USBD_FAIL;
+ 			}
+@@ -773,10 +773,10 @@ static enum usb_status dwc3_ep_start_xfe
+ 	}
+ 
+ 	VERBOSE("EP%d%s: trb %p:%08x:%08x:%08x:%08x length %u %d\n",
+-		   ep->num, ep->is_in ? "IN" : "OUT", dwc3_ep->trb_addr,
+-		   (uint32_t)dwc3_ep->trb_addr->bph, (uint32_t)dwc3_ep->trb_addr->bpl,
+-		   (uint32_t)dwc3_ep->trb_addr->size, (uint32_t)dwc3_ep->trb_addr->ctrl,
+-		   ep->xfer_len, dwc3_ep->flags);
++		ep->num, ep->is_in ? "IN" : "OUT", dwc3_ep->trb_addr,
++		(uint32_t)dwc3_ep->trb_addr->bph, (uint32_t)dwc3_ep->trb_addr->bpl,
++		(uint32_t)dwc3_ep->trb_addr->size, (uint32_t)dwc3_ep->trb_addr->ctrl,
++		ep->xfer_len, dwc3_ep->flags);
+ 
+ 	ret = dwc3_execute_dep_cmd(dwc3_handle, dwc3_ep->phy_epnum, cmd, &params);
+ 	if (ret != USBD_OK) {
+@@ -933,7 +933,7 @@ static enum usb_status dwc3_ep_stop_xfer
+ 
+ 	dwc3_ep->flags &= ~USB_DWC3_EP_REQ_QUEUED;
+ 
+-        if ((!ep->is_in) && (ep->num == 0U)) {
++	if ((!ep->is_in) && (ep->num == 0U)) {
+ 		dwc3_handle->EP0_State = HAL_PCD_EP0_SETUP_COMPLETED;
+ 	}
+ 
+@@ -1263,11 +1263,11 @@ static enum usb_action dwc3_handle_ep_ev
+ 	switch (type) {
+ 	case USB_DWC3_DEPEVT_XFERCOMPLETE:
+ 		VERBOSE("EP%d%s: Transfer Complete Event=%x\n", ep_num,
+-			   ep->is_in ? "IN" : "OUT", event);
++			ep->is_in ? "IN" : "OUT", event);
+ 
+ 		if (ep->type == EP_TYPE_ISOC) {
+ 			VERBOSE("EP%d%s is an Isochronous endpoint\n", ep_num,
+-				   ep->is_in ? "IN" : "OUT");
++				ep->is_in ? "IN" : "OUT");
+ 			break;
+ 		}
+ 
+@@ -1277,14 +1277,14 @@ static enum usb_action dwc3_handle_ep_ev
+ 		if ((ep_num == 0U) &&
+ 		    (dwc3_get_ep_trbstatus(dwc3_ep) == USB_DWC3_TRBSTS_SETUP_PENDING)) {
+ 			VERBOSE("EP%d%s Setup Pending received\n", ep_num,
+-				   ep->is_in ? "IN" : "OUT");
++				ep->is_in ? "IN" : "OUT");
+ 		}
+ 
+ 		VERBOSE("EP%d%s: Transfer Complete trb %p:%08x:%08x:%08x:%08x TRB-Status %u\n",
+-			   ep_num, ep->is_in ? "IN" : "OUT", dwc3_ep->trb_addr,
+-			   (uint32_t)dwc3_ep->trb_addr->bph, (uint32_t)dwc3_ep->trb_addr->bpl,
+-			   (uint32_t)dwc3_ep->trb_addr->size, (uint32_t)dwc3_ep->trb_addr->ctrl,
+-			   dwc3_get_ep_trbstatus(dwc3_ep));
++			ep_num, ep->is_in ? "IN" : "OUT", dwc3_ep->trb_addr,
++			(uint32_t)dwc3_ep->trb_addr->bph, (uint32_t)dwc3_ep->trb_addr->bpl,
++			(uint32_t)dwc3_ep->trb_addr->size, (uint32_t)dwc3_ep->trb_addr->ctrl,
++			dwc3_get_ep_trbstatus(dwc3_ep));
+ 
+ 		if ((ep_addr & EP_DIR_MASK) == EP_DIR_IN) {  /* IN EP */
+ 			ep->xfer_count = ep->xfer_len - dwc3_get_ep_trblen(dwc3_ep);
+@@ -1341,8 +1341,8 @@ static enum usb_action dwc3_handle_ep_ev
+ 					   ep_num, ep->is_in ? "IN" : "OUT",
+ 					   dwc3_handle->setup_addr[0], dwc3_handle->setup_addr[1],
+ 					   dwc3_handle->setup_addr[2], dwc3_handle->setup_addr[3],
+-					   dwc3_handle->setup_addr[4], dwc3_handle->setup_addr[5],
+-					   dwc3_handle->setup_addr[6], dwc3_handle->setup_addr[7]);
++					dwc3_handle->setup_addr[4], dwc3_handle->setup_addr[5],
++					dwc3_handle->setup_addr[6], dwc3_handle->setup_addr[7]);
+ 
+ 				// if 2-stage then wait for the XFERNOTREADY(control-status)
+ 				if (__HAL_PCD_SETUP_REQ_LEN(dwc3_handle->setup_addr) != 0U) {
+@@ -1391,8 +1391,8 @@ static enum usb_action dwc3_handle_ep_ev
+ 
+ 	case USB_DWC3_DEPEVT_XFERINPROGRESS:
+ 		VERBOSE("EP%d%s: Transfer In-Progress %u Event=%x\n", ep_num,
+-			   ep->is_in ? "IN" : "OUT", dwc3_handle->intbuffers.evtbufferpos[0],
+-			   event);
++			ep->is_in ? "IN" : "OUT", dwc3_handle->intbuffers.evtbufferpos[0],
++			event);
+ 
+ 		if (ep_num == 0U) { // ***ToCheck
+ 			break;
+@@ -1415,7 +1415,7 @@ static enum usb_action dwc3_handle_ep_ev
+ 
+ 	case USB_DWC3_DEPEVT_XFERNOTREADY:
+ 		VERBOSE("EP%d%s: Transfer Not Ready Event=%x\n", ep_num,
+-			   ep->is_in ? "IN" : "OUT", event);
++			ep->is_in ? "IN" : "OUT", event);
+ 		/* For EP0IN or EP0OUT, currently no plan to use xfernotready interrupt */
+ 
+ 		//active = PCD_READ_DEPEVT_STATUS(event);
+@@ -1456,7 +1456,7 @@ static enum usb_action dwc3_handle_ep_ev
+ 		break;
+ 	case USB_DWC3_DEPEVT_EPCMDCMPLT: /* Endpoint Command Complete */
+ 		VERBOSE("EP%d%s: Endpoint Command Complete Event=%x\n", ep_num,
+-			   ep->is_in ? "IN" : "OUT", event);
++			ep->is_in ? "IN" : "OUT", event);
+ 		break;
+ 	default:
+ 		VERBOSE("Invalid type %d: %s: %d\n", type, __func__, __LINE__);
+@@ -1532,27 +1532,27 @@ static uint8_t dwc3_get_dev_speed(dwc3_h
+ 	switch (reg) {
+ 	case DWC3_DSTS_SUPERSPEED:
+ 		ret = USB_DWC3_SPEED_SUPER;
+-		NOTICE("%s = SuperSpeed\n", __func__);
++		VERBOSE("%s = SuperSpeed\n", __func__);
+ 		break;
+ 	case DWC3_DSTS_HIGHSPEED:
+ 		ret = USB_DWC3_SPEED_HIGH;
+-		NOTICE("%s = HighSpeed\n", __func__);
++		VERBOSE("%s = HighSpeed\n", __func__);
+ 		break;
+ 	case DWC3_DSTS_FULLSPEED1:
+ 		ret = USB_DWC3_SPEED_FULL_48;
+-		NOTICE("%s = FullSpeed_48M\n", __func__);
++		VERBOSE("%s = FullSpeed_48M\n", __func__);
+ 		break;
+ 	case DWC3_DSTS_FULLSPEED2:
+ 		ret = USB_DWC3_SPEED_FULL;
+-		NOTICE("%s = FullSpeed\n", __func__);
++		VERBOSE("%s = FullSpeed\n", __func__);
+ 		break;
+ 	case DWC3_DSTS_LOWSPEED:
+ 		ret = USB_DWC3_SPEED_LOW;
+-		NOTICE("%s = LowSpeed\n", __func__);
++		VERBOSE("%s = LowSpeed\n", __func__);
+ 		break;
+ 	default: /* Invalid */
+ 		ret = USB_DWC3_SPEED_INVALID;
+-		NOTICE("%s = Invalid\n", __func__);
++		VERBOSE("%s = Invalid\n", __func__);
+ 		break;
+ 	}
+ 
+@@ -1667,14 +1667,14 @@ static enum usb_action dwc3_handle_dev_e
+ 
+ 	switch (type) {
+ 	case USB_DWC3_DEVICE_EVENT_DISCONNECT:
+-		INFO("Event: Device Disconnect\n");
++		VERBOSE("Event: Device Disconnect\n");
+ 		/* For SuperSpeed, set DCTL[8:5] to 5*/
+ 
+ 		action = USB_DISCONNECT;
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_RESET:
+-		INFO("Event: Device Reset\n");
++		VERBOSE("Event: Device Reset\n");
+ 		/*
+ 		 * Spec says, Wait till EP0 finishes current transfer and reaches Setup-Stage.
+ 		 * But there is no wait in Linux driver which means that Host will take care while
+@@ -1684,13 +1684,11 @@ static enum usb_action dwc3_handle_dev_e
+ 
+ 		if (dwc3_handle->EP0_State != HAL_PCD_EP0_SETUP_QUEUED) {
+ 			ret = dwc3_ep_stop_xfer(dwc3_handle, &dwc3_handle->pcd_handle->out_ep[0]);
+-			if (ret != USBD_OK) {
+-				ERROR("%s: %d\n", __func__, __LINE__);
+-			}
++			if (ret != USBD_OK)
++				INFO("%s: EP0 STOP XFER failed: %u\n", __func__, ret);
+ 			ret = dwc3_epaddr_set_stall(dwc3_handle, EP0_OUT); // OUT EP0
+-			if (ret != USBD_OK) {
+-				ERROR("%s: %d\n", __func__, __LINE__);
+-			}
++			if (ret != USBD_OK)
++				INFO("%s: EP SET STALL failed: %u\n", __func__, ret);
+ 		}
+ 
+ 		/*
+@@ -1756,7 +1754,7 @@ static enum usb_action dwc3_handle_dev_e
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_CONNECT_DONE:
+-		INFO("Event: Device Connection Done\n");
++		VERBOSE("Event: Device Connection Done\n");
+ 
+ 		/*
+ 		 * hpcd->Init.ep0_mps = MaxPacketSize to 512 (SuperSpeed), 64 (High-Speed),
+@@ -1815,52 +1813,52 @@ static enum usb_action dwc3_handle_dev_e
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_LINK_STATUS_CHANGE:
+-		INFO("Event: Link Status Change : %s(%d)\n",
+-			   dwc3_get_linkstate_str(dwc3_read_dev_evt_linkstate(event)),
+-			   dwc3_read_dev_evt_linkstate(event));
++		VERBOSE("Event: Link Status Change : %s(%d)\n",
++			dwc3_get_linkstate_str(dwc3_read_dev_evt_linkstate(event)),
++			dwc3_read_dev_evt_linkstate(event));
+ 		/* Handle link state changes, U0,U1,U2,U3 with suspend/resume functions */
+ 
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_WAKEUP:
+-		INFO("Event: Wake-UP\n");
++		VERBOSE("Event: Wake-UP\n");
+ 		// resume function
+ 		action = USB_RESUME;
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_HIBER_REQ:
+-		INFO("Event: Hibernation Request\n");
++		VERBOSE("Event: Hibernation Request\n");
+ 		/* hibernation function */
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_EOPF: /* End of Periodic Frame */
+-		INFO("Event: Suspend\n");
++		VERBOSE("Event: Suspend\n");
+ 		action = USB_SUSPEND;
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_SOF: /* Start of Periodic Frame */
+-		INFO("Event: Start of Periodic Frame\n");
++		VERBOSE("Event: Start of Periodic Frame\n");
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_L1SUSPEND:
+-		INFO("Event: L1 Suspend\n");
++		VERBOSE("Event: L1 Suspend\n");
+ 		action = USB_LPM;
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_ERRATIC_ERROR: /* Erratic Error */
+-		INFO("Event: Erratic Error\n");
++		VERBOSE("Event: Erratic Error\n");
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_CMD_CMPL: /* Command Complete */
+-		INFO("Event: Command Complete\n");
++		VERBOSE("Event: Command Complete\n");
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_OVERFLOW: /* Overflow */
+-		INFO("Event: Overflow\n");
++		VERBOSE("Event: Overflow\n");
+ 		break;
+ 
+ 	case USB_DWC3_DEVICE_EVENT_L1WAKEUP:
+-		INFO("Event: L1 Wake-UP\n");
++		VERBOSE("Event: L1 Wake-UP\n");
+ 		// resume function
+ 		action = USB_RESUME;
+ 		break;
+@@ -1989,7 +1987,7 @@ static enum usb_status dwc3_core_init(dw
+ {
+ 	enum usb_status ret;
+ 
+-	NOTICE("Core ID %08x\n", (uint32_t)DWC3_regread(dwc3_handle->usb_global, DWC3_GSNPSID));
++	VERBOSE("Core ID %08x\n", DWC3_regread(dwc3_handle->usb_global, DWC3_GSNPSID));
+ 
+ 	/* Set GUSB3PIPECTL for all USB3 ports (1-n), currently doing only for 0 */
+ 	if ((phy_itface & USB3PHY_MASK) != 0U) {
+@@ -2121,23 +2119,23 @@ static enum usb_status dwc3_set_dev_spee
+ 	switch (speed) {
+ 	case USB_DWC3_SPEED_SUPER:
+ 		DWC3_regwrite(dwc3_handle->usb_device, DWC3_DCFG, reg | DWC3_DSTS_SUPERSPEED);
+-		INFO("%s = SuperSpeed\n", __func__);
++		VERBOSE("%s = SuperSpeed\n", __func__);
+ 		break;
+ 	case USB_DWC3_SPEED_HIGH:
+ 		DWC3_regwrite(dwc3_handle->usb_device, DWC3_DCFG, reg |  DWC3_DSTS_HIGHSPEED);
+-		INFO("%s = HighSpeed\n", __func__);
++		VERBOSE("%s = HighSpeed\n", __func__);
+ 		break;
+ 	case USB_DWC3_SPEED_FULL_48:
+ 		DWC3_regwrite(dwc3_handle->usb_device, DWC3_DCFG, reg |  DWC3_DSTS_FULLSPEED1);
+-		INFO("%s = FullSpeed_48M\n", __func__);
++		VERBOSE("%s = FullSpeed_48M\n", __func__);
+ 		break;
+ 	case USB_DWC3_SPEED_FULL:
+ 		DWC3_regwrite(dwc3_handle->usb_device, DWC3_DCFG, reg |  DWC3_DSTS_FULLSPEED2);
+-		INFO("%s = FullSpeed\n", __func__);
++		VERBOSE("%s = FullSpeed\n", __func__);
+ 		break;
+ 	case USB_DWC3_SPEED_LOW:
+ 		DWC3_regwrite(dwc3_handle->usb_device, DWC3_DCFG, reg |  DWC3_DSTS_LOWSPEED);
+-		INFO("%s = LowSpeed\n", __func__);
++		VERBOSE("%s = LowSpeed\n", __func__);
+ 		break;
+ 	default:
+ 		ret = USBD_FAIL;
+@@ -2379,10 +2377,10 @@ void usb_dwc3_init_driver(struct usb_han
+ 
+ 		dwc3_handle->intbuffers.evtbufferpos[i] = 0;
+ 
+-		INFO("EventBuffer%u: BuffArea=%lx DmaAddr=%08x CoherentMapAddr=%p\n", i,
+-			   (PHYS_AREA + EVTBUF_AREA_OFFSET),
+-			   (uint32_t)dwc3_handle->intbuffers.evtbuffer_dma_addr[i],
+-			   dwc3_handle->intbuffers.evtbuffer_addr[i]);
++		VERBOSE("EventBuffer%u: BuffArea=%lx DmaAddr=%08x CoherentMapAddr=%p\n", i,
++			(PHYS_AREA + EVTBUF_AREA_OFFSET),
++			(uint32_t)dwc3_handle->intbuffers.evtbuffer_dma_addr[i],
++			dwc3_handle->intbuffers.evtbuffer_addr[i]);
+ 	}
+ 
+ 	/* MAP TRB Coherent and DMA address for EP0IN and EP0OUT */
+Index: tf-a-txmp-2550/common/bl_common.c
+===================================================================
+--- tf-a-txmp-2550.orig/common/bl_common.c
++++ tf-a-txmp-2550/common/bl_common.c
+@@ -47,18 +47,6 @@ static int dyn_is_auth_disabled(void)
+ }
+ #endif /* TRUSTED_BOARD_BOOT */
+ 
+-uintptr_t page_align(uintptr_t value, unsigned dir)
+-{
+-	/* Round up the limit to the next page boundary */
+-	if ((value & PAGE_SIZE_MASK) != 0U) {
+-		value &= ~PAGE_SIZE_MASK;
+-		if (dir == UP)
+-			value += PAGE_SIZE;
+-	}
+-
+-	return value;
+-}
+-
+ /*******************************************************************************
+  * Internal function to load an image at a specific address given
+  * an image ID and extents of free memory.
+@@ -110,7 +98,9 @@ static int load_image(unsigned int image
+ 
+ 	/* Check that the image size to load is within limit */
+ 	if (image_size > image_data->image_max_size) {
+-		WARN("Image id=%u size out of bounds\n", image_id);
++		WARN("Image id=%u max image size %u exceeded by %zu bytes\n",
++		     image_id, image_data->image_max_size,
++		     image_size - image_data->image_max_size);
+ 		io_result = -EFBIG;
+ 		goto exit;
+ 	}
+Index: tf-a-txmp-2550/include/common/bl_common.h
+===================================================================
+--- tf-a-txmp-2550.orig/include/common/bl_common.h
++++ tf-a-txmp-2550/include/common/bl_common.h
+@@ -18,6 +18,7 @@
+ #endif /* __ASSEMBLER__ */
+ 
+ #include <export/common/bl_common_exp.h>
++#include <lib/xlat_tables/xlat_tables_defs.h>
+ 
+ #define UP	U(1)
+ #define DOWN	U(0)
+@@ -181,7 +182,11 @@ extern const char version_string[];
+ const char *get_version(void);
+ 
+ void print_entry_point_info(const entry_point_info_t *ep_info);
+-uintptr_t page_align(uintptr_t value, unsigned dir);
++
++static inline uintptr_t page_align(uintptr_t value, unsigned dir)
++{
++	return (value + dir == UP ? PAGE_SIZE - 1 : 0) & ~PAGE_SIZE_MASK;
++}
+ 
+ struct mmap_region;
+ 
+Index: tf-a-txmp-2550/drivers/st/ddr/stm32mp1_ram.c
+===================================================================
+--- tf-a-txmp-2550.orig/drivers/st/ddr/stm32mp1_ram.c
++++ tf-a-txmp-2550/drivers/st/ddr/stm32mp1_ram.c
+@@ -147,7 +147,7 @@ static int stm32mp1_ddr_setup(void)
+ 			panic();
+ 		}
+ 
+-		INFO("Memory size = 0x%zx (%zu MB)\n", retsize, retsize / (1024U * 1024U));
++		INFO("Memory size = 0x%zx (%zu MiB)\n", retsize, retsize / (1024U * 1024U));
+ 	}
+ 
+ 	/*
+Index: tf-a-txmp-2550/drivers/st/ddr/stm32mp2_ram.c
+===================================================================
+--- tf-a-txmp-2550.orig/drivers/st/ddr/stm32mp2_ram.c
++++ tf-a-txmp-2550/drivers/st/ddr/stm32mp2_ram.c
+@@ -166,7 +166,7 @@ static int stm32mp2_ddr_setup(void)
+ 			panic();
+ 		}
+ 
+-		INFO("Memory size = 0x%zx (%zu MB)\n", retsize, retsize / (1024U * 1024U));
++		INFO("Memory size = 0x%zx (%zu MiB)\n", retsize, retsize / (1024U * 1024U));
+ 	}
+ 
+ 	/*

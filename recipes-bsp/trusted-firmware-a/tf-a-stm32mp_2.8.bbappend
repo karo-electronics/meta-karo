@@ -48,12 +48,12 @@ SRC_URI:append:qsmp-1510 = " \
 "
 
 SRC_URI:append:stm32mp25 = " \
-        file://bl2-ro-size.patch \
+        file://stm32mp25-bugfix.patch \
+        file://stm32mp25-dtsi-fixups.patch \
 "
 
 SRC_URI:append:stm32mp25 = " \
-        file://stm32mp25-bugfix.patch \
-        file://stm32mp25-dtsi-fixups.patch \
+        file://bl2-ro-size.patch \
 "
 
 # Extra make settings
@@ -69,7 +69,6 @@ EXTRA_OEMAKE:append:stm32mp13 = " STM32MP13=1"
 
 EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_LPDDR4_TYPE=1"
 EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_EARLY_CONSOLE=1"
-#EXTRA_OEMAKE:append:stm32mp25 = " STM32MP25=1"
 EXTRA_OEMAKE:append:stm32mp25 = " SPD=opteed"
 
 EXTRA_OEMAKE += "${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
