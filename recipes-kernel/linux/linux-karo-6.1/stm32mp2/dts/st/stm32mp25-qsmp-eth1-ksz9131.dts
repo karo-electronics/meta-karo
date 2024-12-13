@@ -38,6 +38,20 @@
 			interrupt-parent = <&gpiof>;
 			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
 			micrel,force-master;
+			/* range: -290 .. 985 */
+			txc-skew-psec = <900>;
+			rxc-skew-psec = <0>;
+			/* range: -355 .. 400 */
+			txen-skew-psec = <0>;
+			txd0-skew-psec = <0>;
+			txd1-skew-psec = <0>;
+			txd2-skew-psec = <0>;
+			txd3-skew-psec = <0>;
+			rxdv-skew-psec = <0>;
+			rxd0-skew-psec = <0>;
+			rxd1-skew-psec = <0>;
+			rxd2-skew-psec = <0>;
+			rxd3-skew-psec = <0>;
 		};
 	};
 };

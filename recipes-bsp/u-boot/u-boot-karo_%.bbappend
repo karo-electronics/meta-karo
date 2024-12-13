@@ -67,4 +67,5 @@ SRC_URI:append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
 SRC_URI:append:stm32mp25:qsmp = " \
         file://stm32mp25-bugfix.patch \
         file://qsmp-2550-support.patch \
+        file://ksz9131-skew.patch \
 "

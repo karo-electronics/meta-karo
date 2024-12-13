@@ -28,4 +28,5 @@ SRC_URI:append:stm32mp15 = " \
 SRC_URI:append:stm32mp25 = " \
         file://patches/stm32mp25-bugfix.patch \
         file://patches/qsmp-2550-support.patch \
+        file://patches/ksz-phy-bugfix.patch \
 "
