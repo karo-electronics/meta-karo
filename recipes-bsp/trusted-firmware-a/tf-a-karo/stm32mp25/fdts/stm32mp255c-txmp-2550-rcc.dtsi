@@ -10,29 +10,37 @@
 
 #include <dt-bindings/clock/stm32mp25-clksrc.h>
 
-&clk_lsi {
-	clock-frequency = <32000>;
+&clk_hse {
+	clock-frequency = <40000000>;
 };
 
 &clk_hsi {
 	clock-frequency = <64000000>;
 };
 
-&clk_msi {
-	clock-frequency = <16000000>;
-};
-
 &clk_lse {
 	clock-frequency = <32768>;
 };
 
-&clk_hse {
-	clock-frequency = <40000000>;
+&clk_lsi {
+	clock-frequency = <32000>;
+};
+
+&clk_msi {
+	clock-frequency = <16000000>;
 };
 
 &rcc {
 	clocks = <&clk_hse>, <&clk_hsi>, <&clk_msi>, <&clk_lse>, <&clk_lsi>;
 	clock-names = "clk-hse", "clk-hsi", "clk-msi", "clk-lse", "clk-lsi";
+	st,busclk = <
+		DIV_CFG(DIV_LSMCU, 1)
+		DIV_CFG(DIV_APB1, 0)
+		DIV_CFG(DIV_APB2, 0)
+		DIV_CFG(DIV_APB3, 0)
+		DIV_CFG(DIV_APB4, 0)
+		DIV_CFG(DIV_APBDBG, 0)
+	>;
 	st,flexgen = <
 		FLEXGEN_CFG(0, XBAR_SRC_PLL4, 0, 2)
 		FLEXGEN_CFG(1, XBAR_SRC_PLL4, 0, 5)
@@ -54,24 +62,16 @@
 		FLEXGEN_CFG(59, XBAR_SRC_PLL4, 0, 1)
 		FLEXGEN_CFG(63, XBAR_SRC_PLL4, 0, 2)
 	>;
-	st,busclk = <
-		DIV_CFG(DIV_LSMCU, 1)
-		DIV_CFG(DIV_APB1, 0)
-		DIV_CFG(DIV_APB2, 0)
-		DIV_CFG(DIV_APB3, 0)
-		DIV_CFG(DIV_APB4, 0)
-		DIV_CFG(DIV_APBDBG, 0)
-	>;
 	st,kerclk = <
 		MUX_CFG(MUX_D3PER, MUX_D3PER_LSI)
 		MUX_CFG(MUX_RTC, MUX_RTC_LSE)
 	>;
 
-	pll1:st,pll-1 {
+	st,pll-1 {
 		st,pll = <&pll1_cfg_1200MHz>;
 
-		pll1_cfg_1500MHz: pll1-cfg-1500MHz {
-			cfg = <75 2 1 1>;
+		pll1_cfg_1000MHz: pll1-cfg-1000MHz {
+			cfg = <25 1 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
 		};
 
@@ -80,13 +80,13 @@
 			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
 		};
 
-		pll1_cfg_1000MHz: pll1-cfg-1000MHz {
-			cfg = <25 1 1 1>;
+		pll1_cfg_1500MHz: pll1-cfg-1500MHz {
+			cfg = <75 2 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
 		};
 	};
 
-	pll2:st,pll-2 {
+	st,pll-2 {
 		st,pll = <&pll2_cfg_600MHz>;
 
 		pll2_cfg_600MHz: pll2-cfg-600MHz {
@@ -95,7 +95,7 @@
 		};
 	};
 
-	pll4:st,pll-4 {
+	st,pll-4 {
 		st,pll = <&pll4_cfg_1200MHz>;
 
 		pll4_cfg_1200MHz: pll4-cfg-1200MHz {

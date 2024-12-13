@@ -123,7 +123,7 @@
 		};
 	};
 
-	pll1:st,pll@0 {
+	st,pll@0 {
 		reg = <0>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll1_cfg1>;
@@ -134,7 +134,7 @@
 		};
 	};
 
-	pll2:st,pll@1 {
+	st,pll@1 {
 		reg = <1>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll2_cfg1>;
@@ -145,7 +145,7 @@
 		};
 	};
 
-	pll3:st,pll@2 {
+	st,pll@2 {
 		reg = <2>;
 		compatible = "st,stm32mp1-pll";
 		st,pll = <&pll3_cfg1>;
