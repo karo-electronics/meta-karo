@@ -41,11 +41,20 @@
 		spi0 = &spi2;
 		spi1 = &spi1;
 		usb-host = &usbh;
-		usbotg = &usb3dr;
+		usbotg = &dwc3;
 	};
 
 	chosen {
 		stdout-path = "serial0:115200n8";
+	};
+
+	reg_usbotg_vbus: usbotg-vbus-regulator {
+		compatible = "regulator-fixed";
+		gpios = <&gpiod 2 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-name = "usbotg-vbus";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
 	};
 };
 
@@ -55,6 +64,7 @@
 
 &dwc3 {
 	dr_mode = "peripheral";
+	vbus-supply = <&reg_usbotg_vbus>;
 };
 
 &eth1 {
@@ -243,18 +253,15 @@
 	status = "okay";
 };
 
+&usb3dr {
+	status = "okay";
+};
+
 &usbh {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&usbh_pins>;
 	pinctrl-1 = <&usbh_sleep_pins>;
-	status = "okay";
-};
-
-&usbh_ohci {
-	status = "disabled";
-};
-
-&usb3dr {
+	st,ovrcur-active-low;
 	status = "okay";
 };
 
@@ -826,11 +833,17 @@
 	};
 
 	usbh_pins: usbh-pins {
-		pins {
+		pins1 {
 			pinmux = <
 				  STM32_PINMUX('C', 10, AF9) /* USBH_HS_VBUSEN */
+			>;
+		};
+
+		pins2 {
+			pinmux = <
 				  STM32_PINMUX('C', 9, AF9) /* USBH_HS_OVRCUR */
 			>;
+			bias-pull-up;
 		};
 	};
 
