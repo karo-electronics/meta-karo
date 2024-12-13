@@ -7,6 +7,7 @@
 
 /plugin/;
 
+#include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 
@@ -26,6 +27,10 @@
 };
 
 &mdio0 {
+	reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+	reset-delay-us = <10000>;
+	reset-post-delay-us = <100>;
+
 	phy0: ethernet-phy@3 {
 		reg = <3>;
 		interrupt-parent = <&gpioa>;

@@ -13,15 +13,6 @@
 		serial1 = &usart3;
 		serial2 = &usart2;
 	};
-
-	regulator-etn-3v3 {
-		compatible = "fixed-regulator";
-		regulator-name = "etn-phy";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		enable-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
-		regulator-always-on;
-	};
 };
 
 &adc {
