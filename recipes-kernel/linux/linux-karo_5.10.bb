@@ -6,9 +6,9 @@ require recipes-kernel/linux/linux-karo.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
-SRCBRANCH = "rz-5.10-cip41"
-SRCREV = "7b2ceeb26afb39089e42d55c958f9c0212c07ac1"
-KERNEL_SRC = "git://github.com/renesas-rz/rz_linux-cip.git"
+KERNEL_BRANCH_DEFAULT = "rz-5.10-cip41"
+KERNEL_REV_DEFAULT = "7b2ceeb26afb39089e42d55c958f9c0212c07ac1"
+KERNEL_SRC_DEFAULT = "git://github.com/renesas-rz/rz_linux-cip.git;protocol=https"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
