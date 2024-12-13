@@ -14,8 +14,8 @@
 #include "stm32mp25xf.dtsi"
 #include "stm32mp255c-txmp-2550-rcc.dtsi"
 #include "stm32mp255c-txmp-2550-resmem.dtsi"
-#include "stm32mp255c-txmp-2550-rif.dtsi"
 #include "stm32mp25xxai-pinctrl.dtsi"
+#include "stm32mp255c-txmp-2550-rif.dtsi"
 
 #include <dt-bindings/mfd/st,stpmic2.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
@@ -213,8 +213,7 @@
 				};
 
 				standby {
-					regulator-on-in-suspend;
-					regulator-suspend-microvolt = <1800000>;
+					regulator-off-in-suspend;
 				};
 
 				off {
@@ -293,6 +292,8 @@
 				regulator-max-microvolt = <3300000>;
 				regulator-over-current-protection;
 				regulator-always-on;
+				st,pwrctrl-sel = <3>;
+				st,pwrctrl-reset;
 			};
 
 			vdd3v3_usb: ldo4 {
@@ -309,6 +310,8 @@
 				regulator-max-microvolt = <3300000>;
 				regulator-over-current-protection;
 				st,regulator-bypass-microvolt = <3300000>;
+				st,pwrctrl-sel = <3>;
+				st,pwrctrl-reset;
 			};
 		};
 	};
@@ -503,8 +506,10 @@
 &pinctrl {
 	i2c7_pins: i2c7-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('H', 3, AF10)>, /* I2C7_SCL */
-				 <STM32_PINMUX('D', 14, AF10)>; /* I2C7_SDA */
+			pinmux = <
+			          STM32_PINMUX('H', 3, AF10) /* I2C7_SCL */
+				  STM32_PINMUX('D', 14, AF10) /* I2C7_SDA */
+			>;
 			bias-disable;
 			drive-open-drain;
 			slew-rate = <0>;
@@ -513,8 +518,10 @@
 
 	i2c7_sleep_pins: i2c7-sleep-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('H', 3, ANALOG)>, /* I2C7_SCL */
-				 <STM32_PINMUX('D', 14, ANALOG)>; /* I2C7_SDA */
+			pinmux = <
+			          STM32_PINMUX('H', 3, ANALOG) /* I2C7_SCL */
+				  STM32_PINMUX('D', 14, ANALOG) /* I2C7_SDA */
+			>;
 		};
 	};
 
