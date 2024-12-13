@@ -61,6 +61,7 @@ KARO_BASEBOARDS:qsmp-1510 ?= "\
 # baseboard DTB specific overlays
 KARO_DTB_OVERLAYS[mb7] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
+        ${@ mach_overlay(d, "karo-gpu", "stm32mp157c", "wayland")} \
         txmp-sdcard \
         txmp-sdcard-cd \
         txmp-lcd-panel \
@@ -71,6 +72,7 @@ KARO_DTB_OVERLAYS[mb7] = " \
 
 KARO_DTB_OVERLAYS[qsbase1] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
+        ${@ mach_overlay(d, "karo-gpu", "stm32mp157c", "wayland")} \
         qsmp-qsbase1 \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
@@ -87,6 +89,7 @@ KARO_DTB_OVERLAYS[qsbase2] = " \
 
 KARO_DTB_OVERLAYS[qsbase4] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
+        ${@ mach_overlay(d, "karo-gpu", "stm32mp157c", "wayland")} \
         qsmp-qsbase4 \
         qsmp-ksz9131 \
         ${@ mach_overlay(d, "qsmp-dsi-panel", "stm32mp157c")} \
@@ -95,6 +98,7 @@ KARO_DTB_OVERLAYS[qsbase4] = " \
 
 KARO_DTB_OVERLAYS[qsglyn1] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
+        ${@ mach_overlay(d, "karo-gpu", "stm32mp157c", "wayland")} \
         qsmp-qsglyn1 \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
