@@ -10,16 +10,14 @@
 
 /dts-v1/;
 
-#include "stm32mp255.dtsi"
-#include "stm32mp25xf.dtsi"
-#include "stm32mp255c-txmp-2550-resmem.dtsi"
-#include "stm32mp25-pinctrl.dtsi"
-#include "stm32mp25xxai-pinctrl.dtsi"
-
 #include <dt-bindings/clock/stm32mp25-clks.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include "stm32mp255.dtsi"
+#include "stm32mp25xf.dtsi"
+#include "stm32mp255c-txmp-2550-resmem.dtsi"
+#include "stm32mp25xxai-pinctrl.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module";
@@ -278,14 +276,6 @@
 };
 
 &usb3dr {
-	status = "okay";
-};
-
-&usbh_ohci {
-	status = "okay";
-};
-
-&usbh_ehci {
 	status = "okay";
 };
 
