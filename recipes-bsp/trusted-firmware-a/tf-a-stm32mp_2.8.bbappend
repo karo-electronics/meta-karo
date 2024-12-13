@@ -55,6 +55,8 @@ SRC_URI:append = " \
         file://bl2-ro-size.patch \
 "
 
+SRC_URI:append:stm32mp2 = "${@ " file://regulator-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
+
 # Extra make settings
 EXTRA_OEMAKE = "CROSS_COMPILE=${TARGET_PREFIX}"
 EXTRA_OEMAKE += "PLAT=${TF_A_PLATFORM}"

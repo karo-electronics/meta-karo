@@ -11,7 +11,9 @@ SRC_URI:append:stm32mp1 = " \
 
 SRC_URI:append:stm32mp2 = " \
     file://patches/stm32mp2-bugfix.patch \
+    file://patches/whitespace-cleanup.patch \
 "
+SRC_URI:append:stm32mp2 = "${@ " file://patches/regulator-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
 
 # dts files
 SRC_URI:append = " \
