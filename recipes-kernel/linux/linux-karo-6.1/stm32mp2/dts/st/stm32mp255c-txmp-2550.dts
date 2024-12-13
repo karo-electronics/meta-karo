@@ -395,7 +395,6 @@
 				  STM32_PINMUX('E', 4, AF10) /* SDMMC1_D0 */
 				  STM32_PINMUX('E', 5, AF10) /* SDMMC1_D1 */
 				  STM32_PINMUX('E', 0, AF10) /* SDMMC1_D2 */
-				  STM32_PINMUX('E', 1, AF10) /* SDMMC1_D3 */
 				  STM32_PINMUX('E', 2, AF10) /* SDMMC1_CMD */
 			>;
 			bias-disable;
@@ -404,6 +403,15 @@
 		};
 
 		pins2 {
+			pinmux = <
+				  STM32_PINMUX('E', 1, AF10) /* SDMMC1_D3 */
+			>;
+			bias-pull-up;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins3 {
 			pinmux = <STM32_PINMUX('E', 3, AF10)>; /* SDMMC1_CK */
 			bias-disable;
 			drive-push-pull;
@@ -417,7 +425,6 @@
 				  STM32_PINMUX('E', 4, AF10) /* SDMMC1_D0 */
 				  STM32_PINMUX('E', 5, AF10) /* SDMMC1_D1 */
 			       	  STM32_PINMUX('E', 0, AF10) /* SDMMC1_D2 */
-				  STM32_PINMUX('E', 1, AF10) /* SDMMC1_D3 */
 			>;
 			bias-disable;
 			drive-push-pull;
@@ -425,13 +432,22 @@
 		};
 
 		pins2 {
+			pinmux = <
+				  STM32_PINMUX('E', 1, AF10) /* SDMMC1_D3 */
+			>;
+			bias-pull-up;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins3 {
 			pinmux = <STM32_PINMUX('E', 3, AF10)>; /* SDMMC1_CK */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <1>;
 		};
 
-		pins3 {
+		pins4 {
 			pinmux = <STM32_PINMUX('E', 2, AF10)>; /* SDMMC1_CMD */
 			bias-disable;
 			drive-open-drain;
@@ -533,7 +549,6 @@
 				  STM32_PINMUX('B', 14, AF10) /* SDMMC3_D0 */
 				  STM32_PINMUX('D', 13, AF10) /* SDMMC3_D1 */
 				  STM32_PINMUX('B', 12, AF10) /* SDMMC3_D2 */
-				  STM32_PINMUX('I', 11, AF10) /* SDMMC3_D3 */
 				  STM32_PINMUX('D', 12, AF10) /* SDMMC3_CMD */
 			>;
 			bias-disable;
@@ -542,6 +557,15 @@
 		};
 
 		pins2 {
+			pinmux = <
+				  STM32_PINMUX('I', 11, AF10) /* SDMMC3_D3 */
+			>;
+			bias-pull-up;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins3 {
 			pinmux = <STM32_PINMUX('B', 3, AF10)>; /* SDMMC3_CK */
 			bias-disable;
 			drive-push-pull;
@@ -563,13 +587,22 @@
 		};
 
 		pins2 {
+			pinmux = <
+				  STM32_PINMUX('I', 11, AF10) /* SDMMC3_D3 */
+			>;
+			bias-pull-up;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins3 {
 			pinmux = <STM32_PINMUX('B', 3, AF10)>; /* SDMMC3_CK */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <3>;
 		};
 
-		pins3 {
+		pins4 {
 			pinmux = <STM32_PINMUX('D', 12, AF10)>; /* SDMMC3_CMD */
 			bias-disable;
 			drive-open-drain;

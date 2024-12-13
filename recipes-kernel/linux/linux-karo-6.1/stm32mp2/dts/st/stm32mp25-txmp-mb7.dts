@@ -4,7 +4,6 @@
  */
 
 /dts-v1/;
-
 /plugin/;
 
 #include <dt-bindings/gpio/gpio.h>
@@ -61,15 +60,6 @@
 
 &m_can1 {
 	status = "okay";
-};
-
-&sdmmc1 {
-	cd-gpios = <&gpiob 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-	status = "okay";
-};
-
-&sdmmc3 {
-	cd-gpios = <&gpiob 7 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 };
 
 &uart7 {
