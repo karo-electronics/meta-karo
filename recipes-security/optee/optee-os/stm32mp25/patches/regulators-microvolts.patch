@@ -432,7 +432,42 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  
  	FMSG("%s: set state %u", desc->node_name, enable);
  
-@@ -246,23 +246,23 @@ static TEE_Result pwr_set_low_volt(const
+@@ -228,41 +228,47 @@ static TEE_Result pwr_set_low_volt(const
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+ 	uintptr_t pwr_reg = stm32_pwr_base() + regu->enable_reg;
+ 
+-	if (regu->vrsel_mask) {
+-		FMSG("%s: set speed=%u", desc->node_name, state);
++	if (!regu->vrsel_mask)
++		return TEE_SUCCESS;
+ 
+-		if (state) {
+-			io_setbits32(pwr_reg, regu->vrsel_mask);
++	FMSG("%s: set speed=%u", desc->node_name, state);
+ 
+-			if (!(io_read32(pwr_reg) & regu->vrsel_mask)) {
+-				EMSG("%s: set VRSEL failed", desc->node_name);
+-				panic();
+-			}
+-		} else {
+-			io_clrbits32(pwr_reg, regu->vrsel_mask);
+-		}
++	if (!state) {
++		io_clrbits32(pwr_reg, regu->vrsel_mask);
++		return TEE_SUCCESS;
+ 	}
+ 
++	io_setbits32(pwr_reg, regu->vrsel_mask);
++	if (io_read32(pwr_reg) & regu->vrsel_mask)
++		return TEE_SUCCESS;
++
++	if (regu->comp_idx == SYSFG_VDD_IO_ID)
++		EMSG("%s: failed to set VRSEL; make sure the HSLV_VDD fuse is correctly configured",
++		     desc->node_name);
++	else
++		EMSG("%s: failed to set VRSEL; make sure the HSLV_VDDIO%u fuse is correctly configured",
++		     desc->node_name, regu->comp_idx + 1);
++
  	return TEE_SUCCESS;
  }
  
@@ -460,7 +495,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  
  	res = pwr_get_state(desc, &en);
  	if (res)
-@@ -276,24 +276,24 @@ static TEE_Result pwr_set_voltage(const
+@@ -276,24 +282,24 @@ static TEE_Result pwr_set_voltage(const
  	}
  
  	/* Set IO to high voltage */
@@ -489,7 +524,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  		res = pwr_set_low_volt(desc, true);
  
  	/* De-isolate IOs and enable IOs compensation */
-@@ -310,7 +310,7 @@ static TEE_Result pwr_set_voltage(const
+@@ -310,7 +316,7 @@ static TEE_Result pwr_set_voltage(const
  }
  
  static TEE_Result pwr_list_voltages(const struct regul_desc *desc,
@@ -498,7 +533,16 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  {
  	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
  
-@@ -352,7 +352,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
+@@ -340,7 +346,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
+ {
+ 	struct regul_desc *desc = (struct regul_desc *)hdl->handle;
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	TEE_Result res;
+ 
+ 	assert(op == PM_OP_SUSPEND || op == PM_OP_RESUME);
+ 
+@@ -352,7 +358,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
  			return res;
  
  		if (regu->is_an_iod) {
@@ -507,7 +551,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  			if (res)
  				return res;
  
-@@ -369,7 +369,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
+@@ -369,7 +375,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
  		FMSG("%s: resume", desc->node_name);
  
  		if (regu->is_an_iod) {
@@ -516,7 +560,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  			if (res)
  				return res;
  		}
-@@ -516,11 +516,10 @@ static TEE_Result pwr_regulator_probe(co
+@@ -516,11 +522,10 @@ static TEE_Result pwr_regulator_probe(co
  				      const void *compat_data __unused)
  {
  	TEE_Result res = TEE_ERROR_GENERIC;
@@ -532,7 +576,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  
  	regu_name = fdt_get_name(fdt, node, NULL);
  
-@@ -548,7 +547,7 @@ static TEE_Result pwr_regulator_probe(co
+@@ -548,7 +553,7 @@ static TEE_Result pwr_regulator_probe(co
  		}
  
  		/* If the supply voltage is fixed, do not handle voltage ops */
@@ -541,7 +585,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  			desc->ops = &pwr_regu_fixed_ops;
  	}
  
-@@ -560,11 +559,13 @@ static TEE_Result pwr_regulator_probe(co
+@@ -560,18 +565,20 @@ static TEE_Result pwr_regulator_probe(co
  	}
  
  	if (regu->is_an_iod) {
@@ -557,6 +601,14 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regu
  			res = pwr_set_low_volt(desc, true);
  			if (res)
  				return res;
+ 		}
+ 	}
+ 
+-	register_pm_driver_cb(pwr_regu_pm, (void *)desc, "pwr-regu");
++	register_pm_driver_cb(pwr_regu_pm, desc, "pwr-regu");
+ 
+ 	FMSG("regu_name=%s probed", regu_name);
+ 
 Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp2_pmic.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/drivers/stm32mp2_pmic.c
@@ -811,44 +863,6 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/drivers/regulator/core.c
 +++ optee-os-qsmp-2550/core/drivers/regulator/core.c
-@@ -35,7 +35,7 @@ static void unlock_driver(const struct r
- 
- static struct rdev *regulator_get_by_phandle(int32_t phandle)
- {
--	struct rdev *rdev = NULL;
-+	struct rdev *rdev;
- 
- 	SLIST_FOREACH(rdev, &regulator_device_list, link)
- 		if (rdev->phandle == phandle)
-@@ -53,7 +53,7 @@ static struct rdev *regulator_get_by_pha
-  */
- struct rdev *regulator_get_by_node_name(const char *node_name)
- {
--	struct rdev *rdev = NULL;
-+	struct rdev *rdev;
- 
- 	assert(node_name);
- 
-@@ -73,7 +73,7 @@ struct rdev *regulator_get_by_node_name(
-  */
- struct rdev *regulator_get_by_regulator_name(const char *reg_name)
- {
--	struct rdev *rdev = NULL;
-+	struct rdev *rdev;
- 
- 	assert(reg_name);
- 
-@@ -90,8 +90,8 @@ struct rdev *regulator_get_by_regulator_
- 
- static int32_t get_supply_phandle(const void *fdt, int node, const char *name)
- {
--	const fdt32_t *cuint = NULL;
--	int __maybe_unused len = 0;
-+	const fdt32_t *cuint;
-+	int __maybe_unused len;
- 	int supply_phandle = -FDT_ERR_NOTFOUND;
- 	char prop_name[MAX_PROPERTY_LEN] = { 0 };
- 
 @@ -273,55 +273,86 @@ bool regulator_is_enabled(const struct r
  	return !res && enabled;
  }
@@ -895,9 +909,8 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
 -TEE_Result regulator_set_voltage(struct rdev *rdev, uint16_t mvolt)
 +TEE_Result regulator_set_voltage(struct rdev *rdev, uint32_t uvolt)
  {
--	TEE_Result res = TEE_ERROR_GENERIC;
--	uint16_t cur_mv = 0;
-+	TEE_Result res;
+ 	TEE_Result res;
+-	uint16_t cur_mv;
 +	uint32_t cur_uv;
  
  	assert(rdev);
@@ -933,8 +946,7 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  	}
  
  	if (rdev->ramp_delay_uv_per_us > 0) {
--		unsigned int d = 0;
-+		unsigned int d;
+ 		unsigned int d;
  
 -		if (cur_mv > mvolt)
 -			d = cur_mv - mvolt;
@@ -988,7 +1000,7 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  	unlock_driver(rdev);
  
  	if (res)
-@@ -366,22 +397,22 @@ TEE_Result regulator_get_voltage(const s
+@@ -366,14 +397,14 @@ TEE_Result regulator_get_voltage(const s
   * List regulator voltages
   *
   * @rdev - regulator device
@@ -1001,15 +1013,13 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
 +TEE_Result regulator_list_voltages(struct rdev *rdev, uint32_t **levels,
  				   size_t *count)
  {
- 	TEE_Result res = TEE_SUCCESS;
--	uint16_t *ref = NULL;
--	size_t ref_cnt = 0;
--	size_t n = 0;
+ 	TEE_Result res;
+-	uint16_t *ref;
 +	uint32_t *ref;
-+	size_t ref_cnt;
-+	size_t n;
+ 	size_t ref_cnt;
+ 	size_t n;
  
- 	assert(rdev && count);
+@@ -381,7 +412,7 @@ TEE_Result regulator_list_voltages(struc
  
  	if (!rdev->desc->ops->list_voltages) {
  		if (levels)
@@ -1018,11 +1028,11 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  		*count = 1;
  		return TEE_SUCCESS;
  	}
-@@ -401,17 +432,18 @@ TEE_Result regulator_list_voltages(struc
+@@ -401,17 +432,17 @@ TEE_Result regulator_list_voltages(struc
  
  	/* Reduce the possible values depending on min and max from DT */
  	n = ref_cnt;
--	while ((ref[n - 1U] > rdev->max_mv) && (n > 1))
+-	while (ref[n - 1U] > rdev->max_mv && n > 1)
 +	while (ref[n - 1] > rdev->max_uv && n > 1)
  		n--;
  
@@ -1038,11 +1048,10 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  
 -	while (*ref < rdev->min_mv && n > 1) {
 +	while (*ref < rdev->min_uv && n > 1) {
-+		DMSG("Skipping out of range value %u", *ref);
+ 		DMSG("Skipping out of range value %u", *ref);
  		ref++;
  		n--;
- 	}
-@@ -422,9 +454,9 @@ TEE_Result regulator_list_voltages(struc
+@@ -423,9 +454,9 @@ TEE_Result regulator_list_voltages(struc
  		return TEE_ERROR_GENERIC;
  	}
  
@@ -1054,7 +1063,7 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  		return TEE_ERROR_GENERIC;
  	}
  
-@@ -432,7 +464,7 @@ TEE_Result regulator_list_voltages(struc
+@@ -433,7 +464,7 @@ TEE_Result regulator_list_voltages(struc
  	if (levels)
  		*levels = ref;
  
@@ -1063,7 +1072,7 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  
  	return TEE_SUCCESS;
  }
-@@ -441,18 +473,18 @@ TEE_Result regulator_list_voltages(struc
+@@ -442,18 +473,18 @@ TEE_Result regulator_list_voltages(struc
   * Get regulator voltages range
   *
   * @rdev - regulator device
@@ -1090,54 +1099,16 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  }
  
  /*
-@@ -526,9 +558,9 @@ static struct regul_property flag_prop[]
- 
- static TEE_Result parse_properties(const void *fdt, struct rdev *rdev, int node)
+@@ -594,7 +625,7 @@ static TEE_Result parse_dt(struct rdev *
  {
--	TEE_Result res = TEE_SUCCESS;
--	const fdt32_t *cuint = NULL;
--	struct regul_property *p = NULL;
-+	TEE_Result res;
-+	const fdt32_t *cuint;
-+	struct regul_property *p;
- 
- 	for (p = flag_prop; p < (flag_prop + ARRAY_SIZE(flag_prop)); p++) {
- 		if (fdt_getprop(fdt, node, p->name, NULL)) {
-@@ -542,14 +574,14 @@ static TEE_Result parse_properties(const
- 
- 	cuint = fdt_getprop(fdt, node, "regulator-ramp-delay", NULL);
- 	if (cuint) {
--		rdev->ramp_delay_uv_per_us = (uint32_t)(fdt32_to_cpu(*cuint));
-+		rdev->ramp_delay_uv_per_us = fdt32_to_cpu(*cuint);
- 		FMSG("%s: ramp delay = %"PRIu32" (uV/us)",
- 		     rdev->desc->node_name, rdev->ramp_delay_uv_per_us);
- 	}
- 
- 	cuint = fdt_getprop(fdt, node, "regulator-enable-ramp-delay", NULL);
- 	if (cuint) {
--		rdev->enable_ramp_delay_us = (uint32_t)(fdt32_to_cpu(*cuint));
-+		rdev->enable_ramp_delay_us = fdt32_to_cpu(*cuint);
- 		FMSG("%s: enable ramp delay = %u (us)", rdev->desc->node_name,
- 		     rdev->enable_ramp_delay_us);
- 	}
-@@ -591,11 +623,11 @@ static void parse_supply(const void *fdt
-  */
- static TEE_Result parse_dt(struct rdev *rdev, int node)
- {
--	TEE_Result res = TEE_ERROR_GENERIC;
--	const fdt32_t *cuint = NULL;
--	uint16_t *levels = NULL;
--	void *fdt = NULL;
--	size_t size = 0;
-+	TEE_Result res;
-+	const fdt32_t *cuint;
+ 	TEE_Result res;
+ 	const fdt32_t *cuint;
+-	uint16_t *levels;
 +	uint32_t *levels;
-+	void *fdt;
-+	size_t size;
+ 	void *fdt;
+ 	size_t size;
  
- 	FMSG("%s: parse embedded DTB", rdev->desc->node_name);
- 
-@@ -608,28 +640,28 @@ static TEE_Result parse_dt(struct rdev *
+@@ -609,28 +640,28 @@ static TEE_Result parse_dt(struct rdev *
  
  	cuint = fdt_getprop(fdt, node, "regulator-min-microvolt", NULL);
  	if (cuint) {
@@ -1178,25 +1149,25 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  			return TEE_ERROR_GENERIC;
  		}
  	}
-@@ -665,7 +697,7 @@ TEE_Result regulator_register(const stru
+@@ -666,7 +697,7 @@ TEE_Result regulator_register(const stru
  {
- 	TEE_Result res = TEE_ERROR_OUT_OF_MEMORY;
- 	struct rdev *rdev = NULL;
+ 	TEE_Result res;
+ 	struct rdev *rdev;
 -	uint16_t mv = 0;
 +	uint32_t uv = 0;
  
  	assert(desc);
  
-@@ -680,7 +712,7 @@ TEE_Result regulator_register(const stru
+@@ -681,7 +712,7 @@ TEE_Result regulator_register(const stru
  	rdev->desc = desc;
  
  	if (desc->ops->list_voltages) {
--		uint16_t *levels = NULL;
-+		uint32_t *levels = NULL;
- 		size_t count = 0;
- 		size_t __maybe_unused i = 0;
+-		uint16_t *levels;
++		uint32_t *levels;
+ 		size_t count;
+ 		size_t __maybe_unused i;
  
-@@ -697,22 +729,22 @@ TEE_Result regulator_register(const stru
+@@ -698,22 +729,22 @@ TEE_Result regulator_register(const stru
  		for (i = 0; i < count - 1; i++)
  			assert(levels[i] <= levels[i + 1]);
  
@@ -1227,7 +1198,7 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
  			if (res)
  				goto out;
  		}
-@@ -822,29 +854,29 @@ void regulator_core_dump(void)
+@@ -823,12 +854,12 @@ void regulator_core_dump(void)
  		return;
  
  	FMSG("Dump Regulators\n");
@@ -1235,18 +1206,16 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
 +	FMSG("reg      name     use\ten\tuv\tmin\tmax\tflags\tsupply\n");
  
  	SLIST_FOREACH(rdev, &regulator_device_list, link) {
--		uint16_t mv = 0;
--		uint16_t min_mv = 0;
--		uint16_t max_mv = 0;
--		char reg[9] = "";
--		char name[9] = { 0 };
+-		uint16_t mv;
+-		uint16_t min_mv;
+-		uint16_t max_mv;
 +		uint32_t uv;
 +		uint32_t min_uv;
 +		uint32_t max_uv;
-+		char reg[9];
-+		char name[9];
+ 		char reg[9];
+ 		char name[9];
  		const char __maybe_unused *supply = "";
- 
+@@ -836,16 +867,16 @@ void regulator_core_dump(void)
  		sprint_name(name, rdev->desc->node_name, 8);
  		sprint_name(reg, rdev->reg_name, 8);
  
@@ -1268,31 +1237,6 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
 +		     min_uv, max_uv, rdev->flags, supply);
  	}
  }
- 
-@@ -856,13 +888,13 @@ void regulator_core_dump(void)
- static TEE_Result regulator_core_config(void)
- {
- 	TEE_Result res = TEE_SUCCESS;
--	struct rdev *rdev = NULL;
-+	struct rdev *rdev;
- 
- 	FMSG("");
- 
- 	SLIST_FOREACH(rdev, &regulator_device_list, link) {
- 		if (rdev->supply_phandle >= 0) {
--			struct rdev *s = NULL;
-+			struct rdev *s;
- 
- 			FMSG("%s: connect supply", rdev->desc->node_name);
- 
-@@ -907,7 +939,7 @@ driver_init_late(regulator_core_init);
-  */
- static TEE_Result regulator_core_cleanup(void)
- {
--	struct rdev *rdev = NULL;
-+	struct rdev *rdev;
- 
- 	FMSG("");
  
 Index: optee-os-qsmp-2550/core/drivers/regulator/stm32_regulator_gpio.c
 ===================================================================
@@ -1481,6 +1425,15 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/stm32_vrefbuf.c
  
  	FMSG("vrefbuf init");
  
+@@ -313,7 +313,7 @@ static TEE_Result stm32_vrefbuf_regulato
+ 		return res;
+ 	}
+ 
+-	register_pm_driver_cb(vrefbuf_pm, (void *)vr, "vrefbuf-driver");
++	register_pm_driver_cb(vrefbuf_pm, vr, "vrefbuf-driver");
+ 
+ 	return TEE_SUCCESS;
+ }
 Index: optee-os-qsmp-2550/core/drivers/regulator/stm32mp1_regulator_iod.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/drivers/regulator/stm32mp1_regulator_iod.c
@@ -1613,7 +1566,7 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/stm32mp1_regulator_iod.c
  		desc->ops = &iod_fixed_ops;
  
  	res = regulator_register(desc, node);
-@@ -320,11 +320,11 @@ static TEE_Result iod_regulator_probe(co
+@@ -320,17 +320,17 @@ static TEE_Result iod_regulator_probe(co
  		return res;
  	}
  
@@ -1627,6 +1580,13 @@ Index: optee-os-qsmp-2550/core/drivers/regulator/stm32mp1_regulator_iod.c
  		res = iod_set_speed(desc, true);
  		if (res)
  			return res;
+ 	}
+ 
+-	register_pm_driver_cb(iod_pm, (void *)desc, "iod-regu");
++	register_pm_driver_cb(iod_pm, desc, "iod-regu");
+ 
+ 	FMSG("regu_name=%s probed", regu_name);
+ 
 Index: optee-os-qsmp-2550/core/drivers/scmi-msg/regulator_consumer.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/drivers/scmi-msg/regulator_consumer.c
@@ -1719,8 +1679,7 @@ Index: optee-os-qsmp-2550/core/drivers/scmi-msg/regulator_consumer.c
 +		paddr_t reg;
  
  		/* Get an ID for the domain */
--		reg = _fdt_reg_base_address(fdt, subnode);
-+ä		reg = _fdt_reg_base_address(fdt, subnode);
+ 		reg = _fdt_reg_base_address(fdt, subnode);
  		assert(reg != DT_INFO_INVALID_REG);
  
 -		if ((uint32_t)reg >= chan->voltd_count)
@@ -1811,8 +1770,8 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
 -static bool opp_voltage_is_supported(struct rdev *rdev, uint16_t volt_mv)
 +static bool opp_voltage_is_supported(struct rdev *rdev, uint32_t volt_uv)
  {
--	uint16_t min_mv = 0;
--	uint16_t max_mv = 0;
+-	uint16_t min_mv;
+-	uint16_t max_mv;
 +	uint32_t min_uv;
 +	uint32_t max_uv;
  
@@ -1824,15 +1783,6 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  		return false;
  
  	return true;
-@@ -115,7 +115,7 @@ static bool opp_voltage_is_supported(str
- 
- static TEE_Result set_clock_then_voltage(unsigned int opp)
- {
--	TEE_Result res = TEE_ERROR_GENERIC;
-+	TEE_Result res;
- 
- 	if (_set_opp_clk_rate(opp)) {
- 		EMSG("Failed to set clock to %ukHz",
 @@ -124,11 +124,11 @@ static TEE_Result set_clock_then_voltage
  	}
  
@@ -1847,12 +1797,9 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  	if (res) {
  		unsigned int current_opp = cpu_opp.current_opp;
  
-@@ -146,27 +146,27 @@ static TEE_Result set_clock_then_voltage
- 
- static TEE_Result set_voltage_then_clock(unsigned int opp)
+@@ -148,25 +148,25 @@ static TEE_Result set_voltage_then_clock
  {
--	TEE_Result res = TEE_ERROR_GENERIC;
-+	TEE_Result res;
+ 	TEE_Result res;
  
 -	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_mv);
 +	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_uv);
@@ -1867,7 +1814,7 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  
  	if (_set_opp_clk_rate(opp)) {
  		unsigned int current_opp = cpu_opp.current_opp;
--		unsigned int previous_volt = 0U;
+-		unsigned int previous_volt;
 +		uint32_t previous_volt;
  
  		EMSG("Failed to set clock");
@@ -1880,15 +1827,6 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  
  		opp_set_voltage(cpu_opp.rdev, previous_volt);
  
-@@ -206,7 +206,7 @@ static TEE_Result get_cpu_rates_array(st
- 				      size_t *nb_elts)
- {
- 	size_t rates_cells = *nb_elts;
--	size_t opp = 0;
-+	size_t opp;
- 
- 	if (start_index >= cpu_opp.opp_count)
- 		return TEE_ERROR_BAD_PARAMETERS;
 @@ -247,31 +247,31 @@ static TEE_Result read_regu_state(const
  }
  
@@ -1896,9 +1834,8 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
 -				   uint16_t mv)
 +				   uint32_t uv)
  {
--	TEE_Result res = TEE_ERROR_GENERIC;
--	uint16_t cur_mv = 0;
-+	TEE_Result res;
+ 	TEE_Result res;
+-	uint16_t cur_mv;
 +	uint32_t cur_uv;
  
 -	res = regulator_get_voltage(cpu_opp.rdev, &cur_mv);
@@ -1952,7 +1889,7 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  	if (count)
  		*count = cpu_opp.opp_count;
  
-@@ -313,42 +313,41 @@ static int cmp_cpu_opp_by_freq(const voi
+@@ -313,40 +313,39 @@ static int cmp_cpu_opp_by_freq(const voi
  	const struct cpu_dvfs *opp_b = b;
  
  	if (opp_a->freq_khz == opp_b->freq_khz)
@@ -1966,9 +1903,8 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
 +static uint32_t min_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
  {
 -	unsigned int min_mv = UINT_MAX;
--	size_t n = 0;
 +	uint32_t min_uv = UINT32_MAX;
-+	size_t n;
+ 	size_t n;
  
  	for (n = 0; n < count; n++)
 -		min_mv = MIN(min_mv, dvfs[n].volt_mv);
@@ -1983,9 +1919,8 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
 +static uint32_t max_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
  {
 -	unsigned int max_mv = 0;
--	size_t n = 0;
 +	unsigned int max_uv = 0;
-+	size_t n;
+ 	size_t n;
  
  	for (n = 0; n < count; n++)
 -		max_mv = MAX(max_mv, dvfs[n].volt_mv);
@@ -1999,19 +1934,13 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  
  static void setup_scmi_server_resources(void)
  {
--	TEE_Result res = TEE_ERROR_GENERIC;
--	unsigned int *dvfs_khz = NULL;
--	unsigned int *dvfs_mv = NULL;
--	size_t opp = 0;
--	struct cpu_dvfs *sorted_dvfs = NULL;
-+	TEE_Result res;
-+	unsigned int *dvfs_khz;
+ 	TEE_Result res;
+ 	unsigned int *dvfs_khz;
+-	unsigned int *dvfs_mv;
 +	unsigned int *dvfs_uv;
-+	size_t opp;
-+	struct cpu_dvfs *sorted_dvfs;
+ 	size_t opp;
+ 	struct cpu_dvfs *sorted_dvfs;
  	unsigned int scpfw_default_opp_index = UINT_MAX;
- 
- 	/*
 @@ -381,26 +380,23 @@ static void setup_scmi_server_resources(
  	/* Setup a regulator for scp-firmare DVFS module PSU instance */
  	cpu_opp.scp_rdev = (struct rdev){
@@ -2066,9 +1995,9 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
 @@ -490,17 +486,17 @@ static TEE_Result cpu_opp_pm(enum pm_op
  		 * OPP state, fallback to default OPP at PM resume.
  		 */
- 		unsigned int cur_khz = 0;
--		uint16_t cur_mv = 0;
-+		uint32_t cur_uv = 0;
+ 		unsigned int cur_khz;
+-		uint16_t cur_mv;
++		uint32_t cur_uv;
  
  		cur_khz = clk_get_rate(cpu_opp.clock) / 1000;
  
@@ -2084,31 +2013,15 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  				break;
  		}
  		if (opp >= cpu_opp.opp_count) {
-@@ -554,7 +550,7 @@ static TEE_Result stm32_cpu_opp_is_suppo
- 
- 	opp = fdt32_to_cpu(*cuint32);
- 	if (!stm32mp_supports_cpu_opp(opp)) {
--		EMSG("Not supported opp-supported-hw %#"PRIx32, opp);
-+		EMSG("Unsupported opp-supported-hw %#"PRIx32, opp);
- 		return TEE_ERROR_GENERIC;
- 	}
- 
-@@ -567,11 +563,11 @@ static TEE_Result stm32_cpu_opp_get_dt_s
+@@ -567,7 +563,7 @@ static TEE_Result stm32_cpu_opp_get_dt_s
  	const fdt32_t *cuint32;
  	uint64_t freq_khz;
  	uint64_t freq_khz_opp_def = 0;
--	uint32_t volt_mv = 0;
--	unsigned long clk_cpu = 0;
+-	uint32_t volt_mv;
 +	uint32_t volt_uv;
-+	unsigned long clk_cpu;
+ 	unsigned long clk_cpu;
  	unsigned int i = 0;
--	int subnode = -1;
--	TEE_Result res = TEE_ERROR_GENERIC;
-+	int subnode;
-+	TEE_Result res;
- 	bool opp_default = false;
- 
- 	fdt_for_each_subnode(subnode, fdt, node) {
+ 	int subnode;
 @@ -606,21 +602,21 @@ static TEE_Result stm32_cpu_opp_get_dt_s
  			return TEE_ERROR_GENERIC;
  		}
@@ -2138,22 +2051,11 @@ Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
  
  		if (fdt_getprop(fdt, subnode, "st,opp-default", NULL) &&
  		    freq_khz > freq_khz_opp_def) {
-@@ -632,7 +628,7 @@ static TEE_Result stm32_cpu_opp_get_dt_s
- 		i++;
- 	}
- 
--	/* Erreur when "st,opp-default" is not present */
-+	/* Error when "st,opp-default" is not present */
- 	if (!opp_default) {
- 		EMSG("No 'st,opp-default' property found");
- 		return TEE_ERROR_GENERIC;
-@@ -690,8 +686,8 @@ static TEE_Result get_cpu_parent(const v
- static TEE_Result
+@@ -691,7 +687,7 @@ static TEE_Result
  stm32_cpu_opp_init(const void *fdt, int node, const void *compat_data __unused)
  {
--	TEE_Result res = TEE_SUCCESS;
--	uint16_t cpu_voltage __maybe_unused = 0;
-+	TEE_Result res;
+ 	TEE_Result res;
+-	uint16_t cpu_voltage __maybe_unused;
 +	uint32_t cpu_voltage __maybe_unused;
  
  	res = get_cpu_parent(fdt);
@@ -3646,19 +3548,6 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
-@@ -37,10 +37,10 @@ struct stm32_regu_consumer_ctx {
- /* A single instance handles all voltage regulators abstracted by regulator.h */
- static struct stm32_regu_consumer_ctx module_ctx;
- 
--static char *regu_name(struct rdev *rdev)
-+static const char *regu_name(struct rdev *rdev)
- {
-     if (rdev)
--	return (char *)rdev->reg_name;
-+	return rdev->reg_name;
- 
-     return NULL;
- }
 @@ -134,17 +134,17 @@ static int stm32_regu_consumer_set_confi
  static int stm32_regu_consumer_get_level(fwk_id_t dev_id, int *level_uv)
  {
@@ -3680,19 +3569,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      DEBUG_MSG("SCMI voltd %u: get level PMIC %s = %d",
  	      fwk_id_get_element_idx(dev_id), regu_name(ctx->rdev), *level_uv);
-@@ -155,18 +155,13 @@ static int stm32_regu_consumer_get_level
- static int stm32_regu_consumer_set_level(fwk_id_t dev_id, int level_uv)
- {
-     struct stm32_regu_consumer_dev_ctx *ctx = NULL;
--    int ret = FWK_E_PANIC;
--
--    if (level_uv / 1000 > UINT16_MAX) {
--	FWK_LOG_ERR("Volatge level too high (mV shall fit in 16 bits)");
--	return FWK_E_PARAM;
--    }
-+    int ret;
- 
-     ret = find_ctx(dev_id, &ctx);
+@@ -161,7 +161,7 @@ static int stm32_regu_consumer_set_level
      if (ret)
  	return ret;
  
@@ -3701,7 +3578,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  	return FWK_E_DEVICE;
  
      DEBUG_MSG("SCMI voltd %u: set level PMIC %s to %d",
-@@ -175,13 +170,13 @@ static int stm32_regu_consumer_set_level
+@@ -170,13 +170,13 @@ static int stm32_regu_consumer_set_level
      return FWK_SUCCESS;
  }
  
@@ -3710,8 +3587,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +static void find_bound_uv(const uint32_t *levels, size_t count,
 +			  uint32_t *min, uint32_t *max)
  {
--    size_t n = 0;
-+    size_t n;
+     size_t n;
  
 -    *min = INT32_MAX;
 -    *max = INT32_MIN;
@@ -3720,7 +3596,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      for (n = 0; n < count; n++) {
  	if (*min > levels[n]) {
-@@ -191,17 +186,13 @@ static void find_bound_uv(const uint16_t
+@@ -186,17 +186,13 @@ static void find_bound_uv(const uint16_t
  	    *max = levels[n];
  	}
      }
@@ -3739,7 +3615,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
      size_t full_count;
      int ret;
  
-@@ -244,7 +235,7 @@ static int stm32_regu_consumer_level_fro
+@@ -239,7 +235,7 @@ static int stm32_regu_consumer_level_fro
  						int32_t *level_uv)
  {
      struct stm32_regu_consumer_dev_ctx *ctx;
@@ -3748,7 +3624,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
      size_t full_count;
      int ret;
  
-@@ -267,7 +258,7 @@ static int stm32_regu_consumer_level_fro
+@@ -262,7 +258,7 @@ static int stm32_regu_consumer_level_fro
      if (index >= full_count)
  	return FWK_E_RANGE;
  
@@ -3761,77 +3637,15 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
-@@ -32,10 +32,10 @@ struct psu_optee_regulator_ctx {
- /* A single instance handles all voltage regulators abstracted by regulator.h */
- static struct psu_optee_regulator_ctx module_ctx;
- 
--static char __maybe_unused *regulator_name(struct rdev *rdev)
-+static const char __maybe_unused *regulator_name(struct rdev *rdev)
+@@ -93,16 +93,15 @@ static int psu_optee_regulator_set_volta
  {
-     if (rdev)
--	return (char *)rdev->reg_name;
-+	return rdev->reg_name;
- 
-     return NULL;
- }
-@@ -60,36 +60,29 @@ static int psu_optee_regulator_set_enabl
-     struct rdev *regulator;
- 
-     regulator = get_regulator(id);
--    if (!regulator) {
-+    if (!regulator)
- 	return FWK_E_PARAM;
--    }
- 
-     DEBUG_MSG("PSU set %s %s", regulator_name(regulator),
- 	  enabled ? "ON" : "OFF");
- 
--    if (enabled) {
-+    if (enabled)
- 	res = regulator_enable(regulator);
--    } else {
-+    else
- 	res = regulator_disable(regulator);
--    }
- 
--    if (res) {
--	return FWK_E_HANDLER;
--    } else {
--	return FWK_SUCCESS;
--    }
-+    return res ? FWK_E_HANDLER : FWK_SUCCESS;
- }
- 
- static int psu_optee_regulator_get_enabled(fwk_id_t id, bool *enabled)
- {
-     struct rdev *regulator;
- 
--   regulator = get_regulator(id);
--   if (!regulator || (enabled == NULL)) {
-+    regulator = get_regulator(id);
-+    if (!regulator || !enabled)
- 	return FWK_E_PARAM;
--    }
- 
--    *enabled = regulator_is_enabled((const struct rdev *)regulator);
-+    *enabled = regulator_is_enabled(regulator);
-     DEBUG_MSG("PSU get %s state: %s", regulator_name(regulator),
- 	      enabled ? "ON" : "OFF");
- 
-@@ -98,51 +91,36 @@ static int psu_optee_regulator_get_enabl
- 
- static int psu_optee_regulator_set_voltage(fwk_id_t id, uint32_t voltage)
- {
--    TEE_Result res = TEE_ERROR_GENERIC;
-+    TEE_Result res;
+     TEE_Result res;
      struct rdev *regulator;
 -    uint16_t level_mv = voltage;
  
      regulator = get_regulator(id);
--    if (!regulator) {
-+    if (!regulator)
+     if (!regulator)
  	return FWK_E_PARAM;
--    }
  
 -    DEBUG_MSG("PSU set regulator %s level: %"PRIu32"mV",
 -	      regulator_name(regulator), (uint32_t)level_mv);
@@ -3841,27 +3655,17 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -    res = regulator_set_voltage(regulator, level_mv);
 +    res = regulator_set_voltage(regulator, voltage);
  
--    if (res) {
--	return FWK_E_HANDLER;
--    } else {
--
--	return FWK_SUCCESS;
--    }
-+    return res ? FWK_E_HANDLER : FWK_SUCCESS;
+     return res ? FWK_E_HANDLER : FWK_SUCCESS;
  }
- 
- static int psu_optee_regulator_get_voltage(fwk_id_t id, uint32_t *voltage)
+@@ -111,23 +110,17 @@ static int psu_optee_regulator_get_volta
  {
--    TEE_Result res = TEE_ERROR_GENERIC;
-+    TEE_Result res;
+     TEE_Result res;
      struct rdev *regulator;
 -    uint16_t level_mv;
  
      regulator = get_regulator(id);
--    if (!regulator || (voltage == NULL)) {
-+    if (!regulator || !voltage)
+     if (!regulator || !voltage)
  	return FWK_E_PARAM;
--    }
  
 -    res = regulator_get_voltage(regulator, &level_mv);
 +    res = regulator_get_voltage(regulator, voltage);
@@ -3871,9 +3675,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +    DEBUG_MSG("PSU get regulator %s level: %"PRIu32"uV (res %#"PRIx32")",
 +	      regulator_name(regulator), *voltage, res);
  
--    if (res) {
+-    if (res)
 -	return FWK_E_HANDLER;
--    }
 -
 -    *voltage = level_mv;
 -
@@ -4176,7 +3979,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
 +++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
-@@ -611,17 +611,15 @@ driver_init_late(scmi_scpfw_cfg_init);
+@@ -612,17 +612,15 @@ driver_init_late(scmi_scpfw_cfg_init);
  
  void scmi_scpfw_release_configuration(void)
  {
@@ -4199,7 +4002,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  
  			free(channel_cfg->clock);
  			free(channel_cfg->reset);
-@@ -629,7 +627,7 @@ void scmi_scpfw_release_configuration(vo
+@@ -630,7 +628,7 @@ void scmi_scpfw_release_configuration(vo
  
  			for (k = 0; k < channel_cfg->perfd_count; k++) {
  				free(channel_cfg->perfd[k].dvfs_opp_khz);
@@ -4208,7 +4011,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  			}
  
  			free(channel_cfg->perfd);
-@@ -646,7 +644,7 @@ static unsigned int voltd_id_count(struc
+@@ -647,7 +645,7 @@ static unsigned int voltd_id_count(struc
  				   size_t regu_count)
  {
  	unsigned int max_id = 0;
@@ -4217,7 +4020,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  
  	for (i = 0; i < regu_count; i++)
  		max_id = MAX(max_id, regu[i].domain_id);
-@@ -661,7 +659,7 @@ TEE_Result scmi_scpfw_cfg_add_regu(unsig
+@@ -662,7 +660,7 @@ TEE_Result scmi_scpfw_cfg_add_regu(unsig
  {
  	struct scpfw_channel_config *channel_cfg = NULL;
  	struct scpfw_agent_config *agent_cfg = NULL;
@@ -4226,7 +4029,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  
  	agent_cfg = scpfw_cfg.agent_config + agent_id;
  	channel_cfg = agent_cfg->channel_config + channel_id;
-@@ -704,13 +702,13 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+@@ -705,13 +703,13 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
  				   unsigned int domain_id,
  				   struct rdev *regulator, struct clk *clk,
  				   unsigned int *dvfs_khz,
@@ -4245,7 +4048,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  
  	agent_cfg = scpfw_cfg.agent_config + agent_id;
  	channel_cfg = agent_cfg->channel_config + channel_id;
-@@ -720,15 +718,15 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+@@ -721,15 +719,15 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
  		return TEE_ERROR_BAD_PARAMETERS;
  
  	dvfs_opp_khz = calloc(dvfs_count, sizeof(*dvfs_opp_khz));
@@ -4265,7 +4068,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  
  	if (channel_cfg->perfd_count <= domain_id) {
  		void *ptr = realloc(channel_cfg->perfd,
-@@ -737,7 +735,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+@@ -738,7 +736,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
  
  		if (!ptr) {
  			free(dvfs_opp_khz);
@@ -4274,7 +4077,7 @@ Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
  			return TEE_ERROR_OUT_OF_MEMORY;
  		}
  
-@@ -760,7 +758,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+@@ -761,7 +759,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
  		.initial_opp = initial_index,
  		.dvfs_opp_count = dvfs_count,
  		.dvfs_opp_khz = dvfs_opp_khz,
@@ -4287,12 +4090,17 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/fw/config_all.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/fw/config_all.c
-@@ -723,35 +723,35 @@ static void set_resources(struct scpfw_c
- 				      sizeof(struct mod_dvfs_opp));
+@@ -611,7 +611,6 @@ static void set_resources(struct scpfw_c
+ 		    optee_reset_elt[reset_index].name = reset_cfg->name;
+ 		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
  
+-
+ 		    reset_data[reset_index] = (struct mod_reset_domain_dev_config){
+ 			.driver_id =
+ 			    (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_RESET,
+@@ -725,16 +724,16 @@ static void set_resources(struct scpfw_c
  		    for (l = 0; l < perfd_cfg->dvfs_opp_count; l++) {
--			uint64_t power = 0;
-+			uint64_t power;
+ 			uint64_t power;
  
 -			/* Quick estimation of power consumpsion */
 +			/* Quick estimation of power consumption */
@@ -4307,208 +4115,23 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  			    .level = perfd_cfg->dvfs_opp_khz[l] * 1000UL,
  			    .frequency = perfd_cfg->dvfs_opp_khz[l],
 -			    .voltage = perfd_cfg->dvfs_opp_mv[l],
--			    .power = (uint32_t)power,
 +			    .voltage = perfd_cfg->dvfs_opp_uv[l],
-+			    .power = power,
+ 			    .power = power,
  			};
  		    }
- 
- 		    dvfs_elt[dvfs_index].name = perfd_cfg->name;
--		    dvfs_elt[dvfs_index].data = (void *)(dvfs_data + dvfs_index);
-+		    dvfs_elt[dvfs_index].data = &dvfs_data[dvfs_index]);
- 
- 		    /* Module psu_optee module (elements and  configuration data) */
- 		    psu_optee_regu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
- 		    psu_optee_regu_elt[psu_index].sub_element_count = scpfw_resource_counter.psu_count;
--		    psu_optee_regu_elt[psu_index].data = (void *)(psu_optee_regu_data + psu_index);
-+		    psu_optee_regu_elt[psu_index].data = &psu_optee_regu_data[psu_index]);
- 
- 		    psu_optee_regu_data[psu_index].rdev = perfd_cfg->rdev;
- 
- 		    /* Module psu (elements and  configuration data) */
- 		    psu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
--		    psu_elt[psu_index].data = (void *)(psu_data + psu_index);
-+		    psu_elt[psu_index].data = psu_data[psu_index]);
- 		    psu_data[psu_index].driver_id =
- 			(fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_PSU_OPTEE_REGULATOR, psu_index);
- 		    psu_data[psu_index].driver_api_id =
-@@ -761,7 +761,7 @@ static void set_resources(struct scpfw_c
- 		    fwk_assert(!clock_elt[clock_index].data);
- 
- 		    clock_elt[clock_index].name = perfd_cfg->clk->name;
--		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
-+		    clock_elt[clock_index].data = &clock_data[clock_index]);
- 
- 		    clock_data[clock_index] = (struct mod_clock_dev_config){
- 			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
-@@ -775,7 +775,7 @@ static void set_resources(struct scpfw_c
- 		    optee_clock_cfg[clock_index].default_enabled = false;
- 
- 		    optee_clock_elt[clock_index].name = perfd_cfg->clk->name;
--		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
-+		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index]);
- 
- 		    clock_index++;
- 		    psu_index++;
 Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
-@@ -112,14 +112,14 @@ static const struct fwk_element *get_scm
- }
- 
- struct fwk_module_config config_scmi = {
--    .data = (void *)&scmi_data, /* scmi_data filled during initialization */
-+    .data = &scmi_data, /* scmi_data filled during initialization */
-     .elements = FWK_MODULE_DYNAMIC_ELEMENTS(get_scmi_service_table),
- };
- 
- /* Config data for optee_mbx module */
- static const struct fwk_element *optee_mbx_get_element_table(fwk_id_t module_id)
- {
--    return (const struct fwk_element *)optee_mbx_elt;
-+    return optee_mbx_elt;
- }
- 
- struct fwk_module_config config_optee_mbx = {
-@@ -288,11 +288,11 @@ static const uint32_t pd_allowed_state_m
-     [MOD_PD_STATE_ON] = MOD_PD_STATE_OFF_MASK | MOD_PD_STATE_ON_MASK,
- };
- 
--static const struct mod_power_domain_config power_domain_config = { 0 };
-+static const struct mod_power_domain_config power_domain_config;
- 
- static const struct fwk_element *pd_get_element_table(fwk_id_t module_id)
- {
--    return (const struct fwk_element *)pd_elt;
-+    return pd_elt;
- }
- 
- struct fwk_module_config config_power_domain = {
-@@ -304,7 +304,7 @@ struct fwk_module_config config_power_do
- static const struct fwk_element *stm32_pd_get_element_table(fwk_id_t module_id)
- {
-     fwk_assert(fwk_id_get_module_idx(module_id) == FWK_MODULE_IDX_STM32_PD);
--    return (const struct fwk_element *)stm32_pd_elt;
-+    return stm32_pd_elt;
- }
- 
- struct fwk_module_config config_stm32_pd = {
-@@ -558,7 +558,7 @@ static void set_scmi_comm_resources(stru
- 	    scmi_service_elt[channel_index].data = service_data;
- 
- 	    msg_smt_elt[channel_index].name = channel_cfg->name;
--	    msg_smt_elt[channel_index].data = (void *)(msg_smt_data + channel_index);
-+	    msg_smt_elt[channel_index].data = &msg_smt_data[channel_index];
- 
- 	    msg_smt_data[channel_index] = (struct mod_msg_smt_channel_config){
- 		.type = MOD_MSG_SMT_CHANNEL_TYPE_REQUESTER,
-@@ -569,7 +569,7 @@ static void set_scmi_comm_resources(stru
- 	    };
- 
- 	    optee_mbx_elt[channel_index].name = channel_cfg->name;
--	    optee_mbx_elt[channel_index].data = (void *)(optee_mbx_data + channel_index);
-+	    optee_mbx_elt[channel_index].data = &optee_mbx_data[channel_index];
- 
- 	    optee_mbx_data[channel_index] = (struct mod_optee_mbx_channel_config){
- 		.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, channel_index),
-@@ -601,7 +601,7 @@ static void set_resources(struct scpfw_c
- 	    /* Add first SCMI clock. We will add later the clocks used for DVFS */
- 	    if (channel_cfg->clock_count) {
- 		size_t clock_index = scpfw_resource_counter.clock_index;
--		struct mod_scmi_clock_device *dev = NULL;
-+		struct mod_scmi_clock_device *dev;
- 
- 		/* Set SCMI clocks array for the SCMI agent */
- 		dev = fwk_mm_calloc(channel_cfg->clock_count,
-@@ -622,7 +622,7 @@ static void set_resources(struct scpfw_c
- 		    optee_clock_cfg[clock_index].default_enabled = clock_cfg->enabled;
- 
- 		    optee_clock_elt[clock_index].name = clock_cfg->name;
--		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
-+		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index];
- 
- 		    clock_data[clock_index] = (struct mod_clock_dev_config){
- 			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
-@@ -633,7 +633,7 @@ static void set_resources(struct scpfw_c
- 		   };
- 
- 		    clock_elt[clock_index].name = clock_cfg->name;
--		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
-+		    clock_elt[clock_index].data = &clock_data[clock_index];
- 
- 		    clock_index++;
- 		}
-@@ -644,7 +644,7 @@ static void set_resources(struct scpfw_c
- 
- #ifdef CFG_SCPFW_MOD_RESET_DOMAIN
- 	    if (channel_cfg->reset_count) {
--		struct mod_scmi_reset_domain_device *dev = NULL;
-+		struct mod_scmi_reset_domain_device *dev;
- 		size_t reset_index = scpfw_resource_counter.reset_index;
- 
- 		/* Set SCMI reset domains array for the SCMI agent */
-@@ -665,8 +665,7 @@ static void set_resources(struct scpfw_c
- 		    optee_reset_data[reset_index].rstctrl = reset_cfg->rstctrl;
- 
+@@ -665,7 +665,6 @@ static void set_resources(struct scpfw_c
  		    optee_reset_elt[reset_index].name = reset_cfg->name;
--		    optee_reset_elt[reset_index].data =
--			(void *)(optee_reset_data + reset_index);
-+		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
+ 		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
  
+-
  		    reset_data[reset_index] = (struct mod_reset_domain_dev_config){
  			.driver_id =
-@@ -680,7 +679,7 @@ static void set_resources(struct scpfw_c
- 		    };
- 
- 		    reset_elt[reset_index].name = reset_cfg->name;
--		    reset_elt[reset_index].data = (void *)(reset_data + reset_index);
-+		    reset_elt[reset_index].data = &reset_data[reset_index];
- 
- 		    reset_index++;
- 		}
-@@ -692,7 +691,7 @@ static void set_resources(struct scpfw_c
- #ifdef CFG_SCPFW_MOD_VOLTAGE_DOMAIN
- 	    if (channel_cfg->voltd_count) {
- 		size_t regu_index = scpfw_resource_counter.regu_index;
--		struct mod_scmi_voltd_device *dev = NULL;
-+		struct mod_scmi_voltd_device *dev;
- 
- 		/* Set SCMI voltage domains array for the SCMI agent */
- 		dev = fwk_mm_calloc(channel_cfg->voltd_count,
-@@ -718,7 +717,7 @@ static void set_resources(struct scpfw_c
- 		       (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_VOLTAGE_DOMAIN, k);
- 
- 		    optee_regu_elt[regu_index].name = name;
--		    optee_regu_elt[regu_index].data = (void *)(optee_regu_data + regu_index);
-+		    optee_regu_elt[regu_index].data = &optee_regu_data[regu_index];
- 		    optee_regu_data[regu_index].rdev = voltd_cfg->rdev;
- 		    optee_regu_data[regu_index].default_enabled = voltd_cfg->enabled;
- 
-@@ -729,7 +728,7 @@ static void set_resources(struct scpfw_c
- 			(fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_REGU_CONSUMER, 0);
- 
- 		    voltd_elt[regu_index].name = name;
--		    voltd_elt[regu_index].data = (void *)(voltd_data + regu_index);
-+		    voltd_elt[regu_index].data = &voltd_data[regu_index];
- 		    regu_index++;
- 		}
- 
-@@ -744,7 +743,7 @@ static void set_resources(struct scpfw_c
- 		size_t dvfs_index = scpfw_resource_counter.dvfs_index;
- 
- 		for (k = 0; k < channel_cfg->perfd_count; k++) {
--		    struct mod_scmi_perf_config *scmi_perf_data = NULL;
-+		    struct mod_scmi_perf_config *scmi_perf_data;
- 		    struct scmi_perfd *perfd_cfg = channel_cfg->perfd + k;
- 
- 		    /*
-@@ -779,35 +778,35 @@ static void set_resources(struct scpfw_c
- 				      sizeof(struct mod_dvfs_opp));
- 
- 		    for (l = 0; l < perfd_cfg->dvfs_opp_count; l++) {
--			uint64_t power = 0;
-+			uint64_t power;
+ 			    (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_RESET,
+@@ -781,15 +780,15 @@ static void set_resources(struct scpfw_c
  
  			/* Quick estimation of power consumpsion */
  			power = perfd_cfg->dvfs_opp_khz[l];
@@ -4528,132 +4151,19 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  			};
  		    }
  
- 		    dvfs_elt[dvfs_index].name = perfd_cfg->name;
--		    dvfs_elt[dvfs_index].data = (void *)(dvfs_data + dvfs_index);
-+		    dvfs_elt[dvfs_index].data = &dvfs_data[dvfs_index];
- 
- 		    /* Module psu_optee module (elements and  configuration data) */
- 		    psu_optee_regu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
- 		    psu_optee_regu_elt[psu_index].sub_element_count = scpfw_resource_counter.psu_count;
--		    psu_optee_regu_elt[psu_index].data = (void *)(psu_optee_regu_data + psu_index);
-+		    psu_optee_regu_elt[psu_index].data = &psu_optee_regu_data[psu_index];
- 
- 		    psu_optee_regu_data[psu_index].rdev = perfd_cfg->rdev;
- 
- 		    /* Module psu (elements and  configuration data) */
- 		    psu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
--		    psu_elt[psu_index].data = (void *)(psu_data + psu_index);
-+		    psu_elt[psu_index].data = &psu_data[psu_index];
- 		    psu_data[psu_index].driver_id =
- 			(fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_PSU_OPTEE_REGULATOR, psu_index);
- 		    psu_data[psu_index].driver_api_id =
-@@ -817,7 +816,7 @@ static void set_resources(struct scpfw_c
- 		    fwk_assert(!clock_elt[clock_index].data);
- 
- 		    clock_elt[clock_index].name = perfd_cfg->clk->name;
--		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
-+		    clock_elt[clock_index].data = &clock_data[clock_index];
- 
- 		    clock_data[clock_index] = (struct mod_clock_dev_config){
- 			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
-@@ -831,7 +830,7 @@ static void set_resources(struct scpfw_c
- 		    optee_clock_cfg[clock_index].default_enabled = false;
- 
- 		    optee_clock_elt[clock_index].name = perfd_cfg->clk->name;
--		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
-+		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index];
- 
- 		    clock_index++;
- 		    psu_index++;
-@@ -881,7 +880,7 @@ static void set_resources(struct scpfw_c
- 		    struct scmi_pd *scmi_pd = channel_cfg->pd + k;
- 
- 		    stm32_pd_elt_k->name = scmi_pd->name;
--		    stm32_pd_elt_k->data = (void *)scmi_pd;
-+		    stm32_pd_elt_k->data = scmi_pd;
- 
- 		    pd_elt_k->name = scmi_pd->name;
- 
 Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
-@@ -32,10 +32,10 @@ struct psu_optee_regulator_ctx {
- /* A single instance handles all voltage regulators abstracted by regulator.h */
- static struct psu_optee_regulator_ctx module_ctx;
- 
--static char __maybe_unused *regulator_name(struct rdev *rdev)
-+static const char __maybe_unused *regulator_name(struct rdev *rdev)
+@@ -96,16 +96,15 @@ static int psu_optee_regulator_set_volta
  {
- 	if (rdev)
--		return (char *)rdev->reg_name;
-+		return rdev->reg_name;
- 
- 	return NULL;
- }
-@@ -56,28 +56,25 @@ static struct rdev *get_regulator(fwk_id
-  */
- static int psu_optee_regulator_set_enabled(fwk_id_t id, bool enabled)
- {
--    TEE_Result res = TEE_ERROR_GENERIC;
-+    TEE_Result res;
-     struct rdev *regulator;
- 
-     regulator = get_regulator(id);
--    if (!regulator) {
-+    if (!regulator)
- 	return FWK_E_PARAM;
--    }
- 
-     DEBUG_MSG("PSU set %s %s", regulator_name(regulator),
- 	      enabled ? "ON" : "OFF");
- 
--    if (enabled) {
-+    if (enabled)
- 	    res = regulator_enable(regulator);
--    } else {
-+    else
- 	    res = regulator_disable(regulator);
--    }
- 
--    if (res) {
-+    if (res)
- 	return FWK_E_HANDLER;
--    } else {
-+    else
- 	return FWK_SUCCESS;
--    }
- }
- 
- static int psu_optee_regulator_get_enabled(fwk_id_t id, bool *enabled)
-@@ -85,11 +82,10 @@ static int psu_optee_regulator_get_enabl
-     struct rdev *regulator;
- 
-    regulator = get_regulator(id);
--   if (!regulator || (enabled == NULL)) {
-+   if (!regulator || !enabled)
- 	return FWK_E_PARAM;
--    }
- 
--    *enabled = regulator_is_enabled((const struct rdev *)regulator);
-+    *enabled = regulator_is_enabled(regulator);
-     DEBUG_MSG("PSU get %s state: %s", regulator_name(regulator),
- 	      enabled ? "ON" : "OFF");
- 
-@@ -98,49 +94,39 @@ static int psu_optee_regulator_get_enabl
- 
- static int psu_optee_regulator_set_voltage(fwk_id_t id, uint32_t voltage)
- {
--    TEE_Result res = TEE_ERROR_GENERIC;
-+    TEE_Result res;
+     TEE_Result res;
      struct rdev *regulator;
 -    uint16_t level_mv = voltage;
  
      regulator = get_regulator(id);
--    if (!regulator) {
-+    if (!regulator)
+     if (!regulator)
  	return FWK_E_PARAM;
--    }
  
 -    DEBUG_MSG("PSU set regulator %s level: %"PRIu32"mV",
 -	      regulator_name(regulator), (uint32_t)level_mv);
@@ -4661,30 +4171,19 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	      regulator_name(regulator), voltage);
  
 -    res = regulator_set_voltage(regulator, level_mv);
--
--    if (res) {
 +    res = regulator_set_voltage(regulator, voltage);
-+    if (res)
+     if (res)
  	return FWK_E_HANDLER;
--    } else {
  
--	return FWK_SUCCESS;
--    }
-+    return FWK_SUCCESS;
- }
- 
- static int psu_optee_regulator_get_voltage(fwk_id_t id, uint32_t *voltage)
+@@ -116,20 +115,18 @@ static int psu_optee_regulator_get_volta
  {
--    TEE_Result res = TEE_ERROR_GENERIC;
-+    TEE_Result res;
+     TEE_Result res;
      struct rdev *regulator;
 -    uint16_t level_mv;
  
      regulator = get_regulator(id);
--    if (!regulator || (voltage == NULL)) {
-+    if (!regulator || !voltage)
+     if (!regulator || !voltage)
  	return FWK_E_PARAM;
--    }
  
 -    res = regulator_get_voltage(regulator, &level_mv);
 +    res = regulator_get_voltage(regulator, voltage);
@@ -4694,11 +4193,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +    DEBUG_MSG("PSU get regulator %s level: %"PRIu32"uV (res %#"PRIx32")",
 +	      regulator_name(regulator), *voltage, res);
  
--    if (res) {
-+    if (res)
+     if (res)
  	return FWK_E_HANDLER;
--    }
--
 -    *voltage = level_mv;
  
      return FWK_SUCCESS;
@@ -4707,21 +4203,18 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_dvfs.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_dvfs.c
-@@ -162,11 +162,10 @@ static size_t count_opps(const struct mo
+@@ -162,9 +162,8 @@ static size_t count_opps(const struct mo
  {
      const struct mod_dvfs_opp *opp = &opps[0];
  
--    while ((opp->level != 0) && (opp->voltage != 0) && (opp->frequency != 0)) {
+-    while (opp->level && opp->voltage && opp->frequency) {
 -        opp++;
 -    }
-+    while (opp->level != 0 && opp->voltage != 0 && opp->frequency != 0)
++    while (opp->level && opp->voltage && opp->frequency)
 +	opp++;
  
--    return (size_t)(opp - &opps[0]);
-+    return opp - &opps[0];
+     return opp - &opps[0];
  }
- 
- static const struct mod_dvfs_opp *get_opp_for_level(
 Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/scmi_server_scpfw.c
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp1/scmi_server_scpfw.c

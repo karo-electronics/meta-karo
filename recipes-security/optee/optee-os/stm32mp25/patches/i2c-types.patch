@@ -184,7 +184,7 @@ Index: optee-os-txmp-2550/core/drivers/stm32_i2c.c
  {
  	TEE_Result res;
  	int subnode;
-@@ -1611,7 +1611,7 @@ static TEE_Result stm32_i2c_probe(const
+@@ -1611,7 +1609,7 @@ static TEE_Result stm32_i2c_probe(const
  	i2c_pdata.analog_filter = true;
  	i2c_pdata.digital_filter_coef = 0;
  
@@ -193,7 +193,7 @@ Index: optee-os-txmp-2550/core/drivers/stm32_i2c.c
  		i2c_handle_p->secure_i2c = true;
  		res = stm32_pinctrl_set_secure_cfg(pinctrl_l, true);
  		if (res)
-@@ -1644,19 +1644,18 @@ out:
+@@ -1644,19 +1642,18 @@ out:
  static const struct dt_device_match stm32_i2c_match_table[] = {
  	{
  		.compatible = "st,stm32mp15-i2c",

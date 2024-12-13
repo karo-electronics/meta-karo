@@ -31148,6 +31148,20 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_
      }
  }
  
+@@ -162,11 +162,11 @@ static size_t count_opps(const struct mo
+ {
+     const struct mod_dvfs_opp *opp = &opps[0];
+ 
+-    while ((opp->level != 0) && (opp->voltage != 0) && (opp->frequency != 0)) {
++    while (opp->level && opp->voltage && opp->frequency) {
+         opp++;
+     }
+ 
+-    return (size_t)(opp - &opps[0]);
++    return opp - &opps[0];
+ }
+ 
+ static const struct mod_dvfs_opp *get_opp_for_level(
 @@ -177,13 +177,13 @@ static const struct mod_dvfs_opp *get_op
      size_t opp_idx;
  
@@ -76973,7 +76987,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	    scmi_service_elt[channel_index].data = service_data;
 +
 +	    msg_smt_elt[channel_index].name = channel_cfg->name;
-+	    msg_smt_elt[channel_index].data = (void *)(msg_smt_data + channel_index);
++	    msg_smt_elt[channel_index].data = &msg_smt_data[channel_index];
 +
 +	    msg_smt_data[channel_index] = (struct mod_msg_smt_channel_config){
 +		.type = MOD_MSG_SMT_CHANNEL_TYPE_REQUESTER,
@@ -76984,7 +76998,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	    };
 +
 +	    optee_mbx_elt[channel_index].name = channel_cfg->name;
-+	    optee_mbx_elt[channel_index].data = (void *)(optee_mbx_data + channel_index);
++	    optee_mbx_elt[channel_index].data = &optee_mbx_data[channel_index];
 +
 +	    optee_mbx_data[channel_index] = (struct mod_optee_mbx_channel_config){
 +		.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, channel_index),
@@ -77078,7 +77092,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    optee_clock_cfg[clock_index].default_enabled = clock_cfg->enabled;
 +
 +		    optee_clock_elt[clock_index].name = clock_cfg->name;
-+		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
++		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index];
 +
 +		    clock_data[clock_index] = (struct mod_clock_dev_config){
 +			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
@@ -77091,7 +77105,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                    clock_elt[clock_index].name = clock_cfg->name;
 -                    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
 +		    clock_elt[clock_index].name = clock_cfg->name;
-+		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
++		    clock_elt[clock_index].data = &clock_data[clock_index];
  
 -                    clock_index++;
 -                }
@@ -77162,8 +77176,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    optee_reset_data[reset_index].rstctrl = reset_cfg->rstctrl;
 +
 +		    optee_reset_elt[reset_index].name = reset_cfg->name;
-+		    optee_reset_elt[reset_index].data =
-+			(void *)(optee_reset_data + reset_index);
++		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
++
 +
 +		    reset_data[reset_index] = (struct mod_reset_domain_dev_config){
 +			.driver_id =
@@ -77179,7 +77193,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                    reset_elt[reset_index].name = reset_cfg->name;
 -                    reset_elt[reset_index].data = (void *)(reset_data + reset_index);
 +		    reset_elt[reset_index].name = reset_cfg->name;
-+		    reset_elt[reset_index].data = (void *)(reset_data + reset_index);
++		    reset_elt[reset_index].data = &reset_data[reset_index];
  
 -                    reset_index++;
 -                }
@@ -77263,7 +77277,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		       (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_VOLTAGE_DOMAIN, k);
 +
 +		    optee_regu_elt[regu_index].name = name;
-+		    optee_regu_elt[regu_index].data = (void *)(optee_regu_data + regu_index);
++		    optee_regu_elt[regu_index].data = &optee_regu_data[regu_index];
 +		    optee_regu_data[regu_index].rdev = voltd_cfg->rdev;
 +		    optee_regu_data[regu_index].default_enabled = voltd_cfg->enabled;
 +
@@ -77274,7 +77288,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +			(fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_REGU_CONSUMER, 0);
 +
 +		    voltd_elt[regu_index].name = name;
-+		    voltd_elt[regu_index].data = (void *)(voltd_data + regu_index);
++		    voltd_elt[regu_index].data = &voltd_data[regu_index];
 +		    regu_index++;
 +		}
  
@@ -77427,7 +77441,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +				      sizeof(struct mod_dvfs_opp));
 +
 +		    for (l = 0; l < perfd_cfg->dvfs_opp_count; l++) {
-+			uint64_t power = 0;
++			uint64_t power;
 +
 +			/* Quick estimation of power consumpsion */
 +			power = perfd_cfg->dvfs_opp_khz[l];
@@ -77439,23 +77453,23 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +			    .level = perfd_cfg->dvfs_opp_khz[l] * 1000UL,
 +			    .frequency = perfd_cfg->dvfs_opp_khz[l],
 +			    .voltage = perfd_cfg->dvfs_opp_mv[l],
-+			    .power = (uint32_t)power,
++			    .power = power,
 +			};
 +		    }
 +
 +		    dvfs_elt[dvfs_index].name = perfd_cfg->name;
-+		    dvfs_elt[dvfs_index].data = (void *)(dvfs_data + dvfs_index);
++		    dvfs_elt[dvfs_index].data = &dvfs_data[dvfs_index];
 +
 +		    /* Module psu_optee module (elements and  configuration data) */
 +		    psu_optee_regu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
 +		    psu_optee_regu_elt[psu_index].sub_element_count = scpfw_resource_counter.psu_count;
-+		    psu_optee_regu_elt[psu_index].data = (void *)(psu_optee_regu_data + psu_index);
++		    psu_optee_regu_elt[psu_index].data = &psu_optee_regu_data[psu_index];
 +
 +		    psu_optee_regu_data[psu_index].rdev = perfd_cfg->rdev;
 +
 +		    /* Module psu (elements and  configuration data) */
 +		    psu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
-+		    psu_elt[psu_index].data = (void *)(psu_data + psu_index);
++		    psu_elt[psu_index].data = &psu_data[psu_index];
 +		    psu_data[psu_index].driver_id =
 +			(fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_PSU_OPTEE_REGULATOR, psu_index);
 +		    psu_data[psu_index].driver_api_id =
@@ -77465,7 +77479,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    fwk_assert(!clock_elt[clock_index].data);
 +
 +		    clock_elt[clock_index].name = perfd_cfg->clk->name;
-+		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
++		    clock_elt[clock_index].data = &clock_data[clock_index];
 +
 +		    clock_data[clock_index] = (struct mod_clock_dev_config){
 +			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
@@ -77479,7 +77493,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    optee_clock_cfg[clock_index].default_enabled = false;
 +
 +		    optee_clock_elt[clock_index].name = perfd_cfg->clk->name;
-+		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
++		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index];
 +
 +		    clock_index++;
 +		    psu_index++;
@@ -77515,6 +77529,19 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
+@@ -32,10 +32,10 @@ struct psu_optee_regulator_ctx {
+ /* A single instance handles all voltage regulators abstracted by regulator.h */
+ static struct psu_optee_regulator_ctx module_ctx;
+ 
+-static char __maybe_unused *regulator_name(struct rdev *rdev)
++static const char __maybe_unused *regulator_name(struct rdev *rdev)
+ {
+ 	if (rdev)
+-		return (char *)rdev->reg_name;
++		return rdev->reg_name;
+ 
+ 	return NULL;
+ }
 @@ -46,7 +46,7 @@ static struct rdev *get_regulator(fwk_id
  
      elt_index = fwk_id_get_element_idx(id);
@@ -77524,77 +77551,120 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      return module_ctx.config[elt_index].rdev;
  }
-@@ -61,7 +61,7 @@ static int psu_optee_regulator_set_enabl
+@@ -56,28 +56,25 @@ static struct rdev *get_regulator(fwk_id
+  */
+ static int psu_optee_regulator_set_enabled(fwk_id_t id, bool enabled)
+ {
+-    TEE_Result res = TEE_ERROR_GENERIC;
++    TEE_Result res;
+     struct rdev *regulator;
  
      regulator = get_regulator(id);
-     if (!regulator) {
+-    if (!regulator) {
 -        return FWK_E_PARAM;
+-    }
++    if (!regulator)
 +	return FWK_E_PARAM;
-     }
  
      DEBUG_MSG("PSU set %s %s", regulator_name(regulator),
-@@ -74,9 +74,9 @@ static int psu_optee_regulator_set_enabl
-     }
+ 	      enabled ? "ON" : "OFF");
  
-     if (res) {
+-    if (enabled) {
++    if (enabled)
+ 	    res = regulator_enable(regulator);
+-    } else {
++    else
+ 	    res = regulator_disable(regulator);
+-    }
+ 
+-    if (res) {
 -        return FWK_E_HANDLER;
-+	return FWK_E_HANDLER;
-     } else {
+-    } else {
 -        return FWK_SUCCESS;
+-    }
++    if (res)
++	return FWK_E_HANDLER;
++    else
 +	return FWK_SUCCESS;
-     }
  }
  
-@@ -86,7 +86,7 @@ static int psu_optee_regulator_get_enabl
+ static int psu_optee_regulator_get_enabled(fwk_id_t id, bool *enabled)
+@@ -85,11 +82,10 @@ static int psu_optee_regulator_get_enabl
+     struct rdev *regulator;
  
     regulator = get_regulator(id);
-    if (!regulator || (enabled == NULL)) {
+-   if (!regulator || (enabled == NULL)) {
 -        return FWK_E_PARAM;
+-    }
++   if (!regulator || !enabled)
 +	return FWK_E_PARAM;
-     }
  
-     *enabled = regulator_is_enabled((const struct rdev *)regulator);
-@@ -104,7 +104,7 @@ static int psu_optee_regulator_set_volta
+-    *enabled = regulator_is_enabled((const struct rdev *)regulator);
++    *enabled = regulator_is_enabled(regulator);
+     DEBUG_MSG("PSU get %s state: %s", regulator_name(regulator),
+ 	      enabled ? "ON" : "OFF");
+ 
+@@ -98,48 +94,41 @@ static int psu_optee_regulator_get_enabl
+ 
+ static int psu_optee_regulator_set_voltage(fwk_id_t id, uint32_t voltage)
+ {
+-    TEE_Result res = TEE_ERROR_GENERIC;
++    TEE_Result res;
+     struct rdev *regulator;
+     uint16_t level_mv = voltage;
  
      regulator = get_regulator(id);
-     if (!regulator) {
+-    if (!regulator) {
 -        return FWK_E_PARAM;
+-    }
++    if (!regulator)
 +	return FWK_E_PARAM;
-     }
  
      DEBUG_MSG("PSU set regulator %s level: %"PRIu32"mV",
-@@ -113,10 +113,10 @@ static int psu_optee_regulator_set_volta
+ 	      regulator_name(regulator), (uint32_t)level_mv);
+ 
      res = regulator_set_voltage(regulator, level_mv);
- 
-     if (res) {
--        return FWK_E_HANDLER;
++    if (res)
 +	return FWK_E_HANDLER;
-     } else {
  
+-    if (res) {
+-        return FWK_E_HANDLER;
+-    } else {
+-
 -        return FWK_SUCCESS;
-+	return FWK_SUCCESS;
-     }
+-    }
++    return FWK_SUCCESS;
  }
  
-@@ -128,7 +128,7 @@ static int psu_optee_regulator_get_volta
+ static int psu_optee_regulator_get_voltage(fwk_id_t id, uint32_t *voltage)
+ {
+-    TEE_Result res = TEE_ERROR_GENERIC;
++    TEE_Result res;
+     struct rdev *regulator;
+     uint16_t level_mv;
  
      regulator = get_regulator(id);
-     if (!regulator || (voltage == NULL)) {
+-    if (!regulator || (voltage == NULL)) {
 -        return FWK_E_PARAM;
+-    }
++    if (!regulator || !voltage)
 +	return FWK_E_PARAM;
-     }
  
      res = regulator_get_voltage(regulator, &level_mv);
-@@ -137,7 +137,7 @@ static int psu_optee_regulator_get_volta
+ 
+     DEBUG_MSG("PSU get regulator %s level: %"PRIu32"mV (res %#"PRIx32")",
  	      regulator_name(regulator), (uint32_t)level_mv, res);
  
-     if (res) {
+-    if (res) {
 -        return FWK_E_HANDLER;
+-    }
+-
++    if (res)
 +	return FWK_E_HANDLER;
-     }
- 
      *voltage = level_mv;
-@@ -153,8 +153,8 @@ static struct mod_psu_driver_api psu_dri
+ 
+     return FWK_SUCCESS;
+@@ -153,8 +142,8 @@ static struct mod_psu_driver_api psu_dri
  };
  
  static int psu_optee_regulator_init(fwk_id_t module_id,
@@ -77605,7 +77675,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  {
      return FWK_SUCCESS;
  }
-@@ -172,9 +172,9 @@ static int psu_optee_regulator_element_i
+@@ -172,9 +161,9 @@ static int psu_optee_regulator_element_i
  }
  
  static int psu_optee_regulator_process_bind_request(fwk_id_t source_id,
@@ -77867,6 +77937,23 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
+@@ -112,14 +112,14 @@ static const struct fwk_element *get_scm
+ }
+ 
+ struct fwk_module_config config_scmi = {
+-    .data = (void *)&scmi_data, /* scmi_data filled during initialization */
++    .data = &scmi_data, /* scmi_data filled during initialization */
+     .elements = FWK_MODULE_DYNAMIC_ELEMENTS(get_scmi_service_table),
+ };
+ 
+ /* Config data for optee_mbx module */
+ static const struct fwk_element *optee_mbx_get_element_table(fwk_id_t module_id)
+ {
+-    return (const struct fwk_element *)optee_mbx_elt;
++    return optee_mbx_elt;
+ }
+ 
+ struct fwk_module_config config_optee_mbx = {
 @@ -141,8 +141,8 @@ struct fwk_module_config config_msg_smt
  #ifdef CFG_SCPFW_MOD_SCMI_CLOCK
  struct fwk_module_config config_scmi_clock = {
@@ -77916,12 +78003,35 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  #endif
      }),
  };
+@@ -288,11 +288,11 @@ static const uint32_t pd_allowed_state_m
+     [MOD_PD_STATE_ON] = MOD_PD_STATE_OFF_MASK | MOD_PD_STATE_ON_MASK,
+ };
+ 
+-static const struct mod_power_domain_config power_domain_config = { 0 };
++static const struct mod_power_domain_config power_domain_config;
+ 
+ static const struct fwk_element *pd_get_element_table(fwk_id_t module_id)
+ {
+-    return (const struct fwk_element *)pd_elt;
++    return pd_elt;
+ }
+ 
+ struct fwk_module_config config_power_domain = {
+@@ -304,7 +304,7 @@ struct fwk_module_config config_power_do
+ static const struct fwk_element *stm32_pd_get_element_table(fwk_id_t module_id)
+ {
+     fwk_assert(fwk_id_get_module_idx(module_id) == FWK_MODULE_IDX_STM32_PD);
+-    return (const struct fwk_element *)stm32_pd_elt;
++    return stm32_pd_elt;
+ }
+ 
+ struct fwk_module_config config_stm32_pd = {
 @@ -352,26 +352,26 @@ static void count_resources(struct scpfw
      size_t i, j;
  
      for (i = 0; i < cfg->agent_count; i++) {
 -        struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
-+	struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
++	struct scpfw_agent_config *agent_cfg = &cfg->agent_config[i];
  
 -        scpfw_resource_counter.channel_count += agent_cfg->channel_count;
 +	scpfw_resource_counter.channel_count += agent_cfg->channel_count;
@@ -77929,7 +78039,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -        for (j = 0; j < agent_cfg->channel_count; j++) {
 -            struct scpfw_channel_config *channel_cfg = agent_cfg->channel_config + j;
 +	for (j = 0; j < agent_cfg->channel_count; j++) {
-+	    struct scpfw_channel_config *channel_cfg = agent_cfg->channel_config + j;
++	    struct scpfw_channel_config *channel_cfg = &agent_cfg->channel_config[j];
  
 -            /* Clocks for scmi_clock and for DVFS */
 -            scpfw_resource_counter.clock_count += channel_cfg->clock_count;
@@ -78075,7 +78185,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  #endif
  }
  
-@@ -505,80 +505,80 @@ static void set_scmi_comm_resources(stru
+@@ -505,79 +505,79 @@ static void set_scmi_comm_resources(stru
      size_t scmi_agent_count = cfg->agent_count + 1;
  
      scmi_agent_table = fwk_mm_calloc(scmi_agent_count,
@@ -78114,12 +78224,10 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	.sub_vendor_identifier = "ST",
      };
  
-     channel_index = 0;
- 
      for (i = 0; i < cfg->agent_count; i++) {
 -        struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
 -        size_t agent_index = i + 1;
-+	struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
++	struct scpfw_agent_config *agent_cfg = &cfg->agent_config[i];
 +	size_t agent_index = i + 1;
  
 -        scmi_agent_table[agent_index].type = SCMI_AGENT_TYPE_OSPM;
@@ -78133,7 +78241,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -
 -            service_data = fwk_mm_calloc(1, sizeof(*service_data));
 -            *service_data = (struct mod_scmi_service_config){
--                .transport_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, 0),
+-                .transport_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT,
+-                                                              channel_index),
 -                .transport_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_MSG_SMT,
 -                                                              MOD_MSG_SMT_API_IDX_SCMI_TRANSPORT),
 -                .scmi_agent_id = agent_cfg->agent_id,
@@ -78166,12 +78275,13 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                                                           MOD_MSG_SMT_API_IDX_DRIVER_INPUT),
 -            };
 +	for (j = 0; j < agent_cfg->channel_count; j++) {
-+	    struct scpfw_channel_config *channel_cfg = agent_cfg->channel_config + j;
++	    struct scpfw_channel_config *channel_cfg = &agent_cfg->channel_config[j];
 +	    struct mod_scmi_service_config *service_data;
 +
 +	    service_data = fwk_mm_calloc(1, sizeof(*service_data));
 +	    *service_data = (struct mod_scmi_service_config){
-+		.transport_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, 0),
++		.transport_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT,
++							       channel_index),
 +		.transport_api_id = (fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_MSG_SMT,
 +							      MOD_MSG_SMT_API_IDX_SCMI_TRANSPORT),
 +		.scmi_agent_id = agent_cfg->agent_id,
@@ -78185,7 +78295,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	    scmi_service_elt[channel_index].data = service_data;
 +
 +	    msg_smt_elt[channel_index].name = channel_cfg->name;
-+	    msg_smt_elt[channel_index].data = (void *)(msg_smt_data + channel_index);
++	    msg_smt_elt[channel_index].data = &msg_smt_data[channel_index];
 +
 +	    msg_smt_data[channel_index] = (struct mod_msg_smt_channel_config){
 +		.type = MOD_MSG_SMT_CHANNEL_TYPE_REQUESTER,
@@ -78196,7 +78306,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	    };
 +
 +	    optee_mbx_elt[channel_index].name = channel_cfg->name;
-+	    optee_mbx_elt[channel_index].data = (void *)(optee_mbx_data + channel_index);
++	    optee_mbx_elt[channel_index].data = &optee_mbx_data[channel_index];
 +
 +	    optee_mbx_data[channel_index] = (struct mod_optee_mbx_channel_config){
 +		.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_MSG_SMT, channel_index),
@@ -78211,26 +78321,25 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
      }
  };
  
-@@ -587,319 +587,319 @@ static void set_resources(struct scpfw_c
+@@ -586,319 +586,318 @@ static void set_resources(struct scpfw_c
      size_t i, j, k, l;
  
      for (i = 0; i < cfg->agent_count; i++) {
 -        struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
 -        size_t agent_index = i + 1;
-+	struct scpfw_agent_config *agent_cfg = cfg->agent_config + i;
++	struct scpfw_agent_config *agent_cfg = &cfg->agent_config[i];
 +	size_t agent_index = i + 1;
  
 -        if (agent_index != agent_cfg->agent_id) {
 -            panic("scpfw config expects agent ID is agent index");
 -        }
-+	if (agent_index != agent_cfg->agent_id) {
++	if (agent_index != agent_cfg->agent_id)
 +	    panic("scpfw config expects agent ID is agent index");
-+	}
  
 -        for (j = 0; j < agent_cfg->channel_count; j++) {
 -            struct scpfw_channel_config *channel_cfg = agent_cfg->channel_config + j;
 +	for (j = 0; j < agent_cfg->channel_count; j++) {
-+	    struct scpfw_channel_config *channel_cfg = agent_cfg->channel_config + j;
++	    struct scpfw_channel_config *channel_cfg = &agent_cfg->channel_config[j];
  
  #ifdef CFG_SCPFW_MOD_SCMI_CLOCK
 -            /* Add first SCMI clock. We will add later the clocks used for DVFS */
@@ -78269,7 +78378,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +	    /* Add first SCMI clock. We will add later the clocks used for DVFS */
 +	    if (channel_cfg->clock_count) {
 +		size_t clock_index = scpfw_resource_counter.clock_index;
-+		struct mod_scmi_clock_device *dev = NULL;
++		struct mod_scmi_clock_device *dev;
 +
 +		/* Set SCMI clocks array for the SCMI agent */
 +		dev = fwk_mm_calloc(channel_cfg->clock_count,
@@ -78281,7 +78390,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +
 +		/* Set clock and optee/clock elements and config data */
 +		for (k = 0; k < channel_cfg->clock_count; k++) {
-+		    struct scmi_clock *clock_cfg = channel_cfg->clock + k;
++		    struct scmi_clock *clock_cfg = &channel_cfg->clock[k];
 +
 +		    dev[k].element_id =
 +			(fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_CLOCK, clock_index);
@@ -78290,7 +78399,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    optee_clock_cfg[clock_index].default_enabled = clock_cfg->enabled;
 +
 +		    optee_clock_elt[clock_index].name = clock_cfg->name;
-+		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
++		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index];
 +
 +		    clock_data[clock_index] = (struct mod_clock_dev_config){
 +			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
@@ -78303,7 +78412,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                    clock_elt[clock_index].name = clock_cfg->name;
 -                    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
 +		    clock_elt[clock_index].name = clock_cfg->name;
-+		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
++		    clock_elt[clock_index].data = &clock_data[clock_index];
  
 -                    clock_index++;
 -                }
@@ -78353,7 +78462,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                                 MOD_RESET_DOMAIN_MODE_EXPLICIT_DEASSERT,
 -                    };
 +	    if (channel_cfg->reset_count) {
-+		struct mod_scmi_reset_domain_device *dev = NULL;
++		struct mod_scmi_reset_domain_device *dev;
 +		size_t reset_index = scpfw_resource_counter.reset_index;
 +
 +		/* Set SCMI reset domains array for the SCMI agent */
@@ -78365,7 +78474,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +
 +		/* Set reset_domain and optee/reset elements and config data */
 +		for (k = 0; k < channel_cfg->reset_count; k++) {
-+		    struct scmi_reset *reset_cfg = channel_cfg->reset + k;
++		    struct scmi_reset *reset_cfg = &channel_cfg->reset[k];
 +
 +		    dev[k].element_id =
 +			(fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_RESET_DOMAIN,
@@ -78374,8 +78483,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    optee_reset_data[reset_index].rstctrl = reset_cfg->rstctrl;
 +
 +		    optee_reset_elt[reset_index].name = reset_cfg->name;
-+		    optee_reset_elt[reset_index].data =
-+			(void *)(optee_reset_data + reset_index);
++		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
++
 +
 +		    reset_data[reset_index] = (struct mod_reset_domain_dev_config){
 +			.driver_id =
@@ -78391,7 +78500,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                    reset_elt[reset_index].name = reset_cfg->name;
 -                    reset_elt[reset_index].data = (void *)(reset_data + reset_index);
 +		    reset_elt[reset_index].name = reset_cfg->name;
-+		    reset_elt[reset_index].data = (void *)(reset_data + reset_index);
++		    reset_elt[reset_index].data = &reset_data[reset_index];
  
 -                    reset_index++;
 -                }
@@ -78429,8 +78538,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                        name = reserved;
 -                    }
 -
--                    dev[regu_index].element_id =
--                       (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_VOLTAGE_DOMAIN, k);
+-                    dev[k].element_id =
+-                       (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_VOLTAGE_DOMAIN, regu_index);
 -
 -                    optee_regu_elt[regu_index].name = name;
 -                    optee_regu_elt[regu_index].data = (void *)(optee_regu_data + regu_index);
@@ -78449,7 +78558,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                }
 +	    if (channel_cfg->voltd_count) {
 +		size_t regu_index = scpfw_resource_counter.regu_index;
-+		struct mod_scmi_voltd_device *dev = NULL;
++		struct mod_scmi_voltd_device *dev;
 +
 +		/* Set SCMI voltage domains array for the SCMI agent */
 +		dev = fwk_mm_calloc(channel_cfg->voltd_count,
@@ -78461,7 +78570,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +
 +		/* Set voltage_domain and optee/regu elements and config data */
 +		for (k = 0; k < channel_cfg->voltd_count; k++) {
-+		    struct scmi_voltd *voltd_cfg = channel_cfg->voltd + k;
++		    struct scmi_voltd *voltd_cfg = &channel_cfg->voltd[k];
 +		    static const char reserved[] = "reserved";
 +		    const char *name = NULL;
 +
@@ -78471,11 +78580,11 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +			name = reserved;
 +		    }
 +
-+		    dev[regu_index].element_id =
-+		       (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_VOLTAGE_DOMAIN, k);
++		    dev[k].element_id =
++		       (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_VOLTAGE_DOMAIN, regu_index);
 +
 +		    optee_regu_elt[regu_index].name = name;
-+		    optee_regu_elt[regu_index].data = (void *)(optee_regu_data + regu_index);
++		    optee_regu_elt[regu_index].data = &optee_regu_data[regu_index];
 +		    optee_regu_data[regu_index].rdev = voltd_cfg->rdev;
 +		    optee_regu_data[regu_index].default_enabled = voltd_cfg->enabled;
 +
@@ -78486,7 +78595,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +			(fwk_id_t)FWK_ID_API_INIT(FWK_MODULE_IDX_STM32_REGU_CONSUMER, 0);
 +
 +		    voltd_elt[regu_index].name = name;
-+		    voltd_elt[regu_index].data = (void *)(voltd_data + regu_index);
++		    voltd_elt[regu_index].data = &voltd_data[regu_index];
 +		    regu_index++;
 +		}
  
@@ -78528,8 +78637,8 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		size_t dvfs_index = scpfw_resource_counter.dvfs_index;
 +
 +		for (k = 0; k < channel_cfg->perfd_count; k++) {
-+		    struct mod_scmi_perf_config *scmi_perf_data = NULL;
-+		    struct scmi_perfd *perfd_cfg = channel_cfg->perfd + k;
++		    struct mod_scmi_perf_config *scmi_perf_data;
++		    struct scmi_perfd *perfd_cfg = &channel_cfg->perfd[k];
 +
 +		    /*
 +		     * DVFS with SCMI performance management domains
@@ -78639,7 +78748,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +				      sizeof(struct mod_dvfs_opp));
 +
 +		    for (l = 0; l < perfd_cfg->dvfs_opp_count; l++) {
-+			uint64_t power = 0;
++			uint64_t power;
 +
 +			/* Quick estimation of power consumpsion */
 +			power = perfd_cfg->dvfs_opp_khz[l];
@@ -78656,18 +78765,18 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    }
 +
 +		    dvfs_elt[dvfs_index].name = perfd_cfg->name;
-+		    dvfs_elt[dvfs_index].data = (void *)(dvfs_data + dvfs_index);
++		    dvfs_elt[dvfs_index].data = &dvfs_data[dvfs_index];
 +
 +		    /* Module psu_optee module (elements and  configuration data) */
 +		    psu_optee_regu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
 +		    psu_optee_regu_elt[psu_index].sub_element_count = scpfw_resource_counter.psu_count;
-+		    psu_optee_regu_elt[psu_index].data = (void *)(psu_optee_regu_data + psu_index);
++		    psu_optee_regu_elt[psu_index].data = &psu_optee_regu_data[psu_index];
 +
 +		    psu_optee_regu_data[psu_index].rdev = perfd_cfg->rdev;
 +
 +		    /* Module psu (elements and  configuration data) */
 +		    psu_elt[psu_index].name = perfd_cfg->rdev->reg_name;
-+		    psu_elt[psu_index].data = (void *)(psu_data + psu_index);
++		    psu_elt[psu_index].data = &psu_data[psu_index];
 +		    psu_data[psu_index].driver_id =
 +			(fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_PSU_OPTEE_REGULATOR, psu_index);
 +		    psu_data[psu_index].driver_api_id =
@@ -78677,7 +78786,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    fwk_assert(!clock_elt[clock_index].data);
 +
 +		    clock_elt[clock_index].name = perfd_cfg->clk->name;
-+		    clock_elt[clock_index].data = (void *)(clock_data + clock_index);
++		    clock_elt[clock_index].data = &clock_data[clock_index];
 +
 +		    clock_data[clock_index] = (struct mod_clock_dev_config){
 +			.driver_id = (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_CLOCK,
@@ -78691,7 +78800,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    optee_clock_cfg[clock_index].default_enabled = false;
 +
 +		    optee_clock_elt[clock_index].name = perfd_cfg->clk->name;
-+		    optee_clock_elt[clock_index].data = (void *)(optee_clock_cfg + clock_index);
++		    optee_clock_elt[clock_index].data = &optee_clock_cfg[clock_index];
 +
 +		    clock_index++;
 +		    psu_index++;
@@ -78794,7 +78903,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 +		    struct scmi_pd *scmi_pd = channel_cfg->pd + k;
 +
 +		    stm32_pd_elt_k->name = scmi_pd->name;
-+		    stm32_pd_elt_k->data = (void *)scmi_pd;
++		    stm32_pd_elt_k->data = scmi_pd;
 +
 +		    pd_elt_k->name = scmi_pd->name;
 +
@@ -78836,12 +78945,16 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
-@@ -35,7 +35,7 @@ static struct psu_optee_regulator_ctx mo
- static char __maybe_unused *regulator_name(struct rdev *rdev)
+@@ -32,10 +32,10 @@ struct psu_optee_regulator_ctx {
+ /* A single instance handles all voltage regulators abstracted by regulator.h */
+ static struct psu_optee_regulator_ctx module_ctx;
+ 
+-static char __maybe_unused *regulator_name(struct rdev *rdev)
++static const char __maybe_unused *regulator_name(struct rdev *rdev)
  {
      if (rdev)
 -        return (char *)rdev->reg_name;
-+	return (char *)rdev->reg_name;
++	return rdev->reg_name;
  
      return NULL;
  }
@@ -78854,57 +78967,73 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      return module_ctx.config[elt_index].rdev;
  }
-@@ -61,22 +61,22 @@ static int psu_optee_regulator_set_enabl
+@@ -60,85 +60,70 @@ static int psu_optee_regulator_set_enabl
+     struct rdev *regulator;
  
      regulator = get_regulator(id);
-     if (!regulator) {
+-    if (!regulator) {
 -        return FWK_E_PARAM;
+-    }
++    if (!regulator)
 +	return FWK_E_PARAM;
-     }
  
      DEBUG_MSG("PSU set %s %s", regulator_name(regulator),
 -          enabled ? "ON" : "OFF");
 +	  enabled ? "ON" : "OFF");
  
-     if (enabled) {
+-    if (enabled) {
 -        res = regulator_enable(regulator);
-+	res = regulator_enable(regulator);
-     } else {
+-    } else {
 -        res = regulator_disable(regulator);
-+	res = regulator_disable(regulator);
-     }
- 
-     if (res) {
+-    }
+-
+-    if (res) {
 -        return FWK_E_HANDLER;
-+	return FWK_E_HANDLER;
-     } else {
+-    } else {
 -        return FWK_SUCCESS;
-+	return FWK_SUCCESS;
-     }
+-    }
++    if (enabled)
++	res = regulator_enable(regulator);
++    else
++	res = regulator_disable(regulator);
++
++    return res ? FWK_E_HANDLER : FWK_SUCCESS;
  }
  
-@@ -86,12 +86,12 @@ static int psu_optee_regulator_get_enabl
+ static int psu_optee_regulator_get_enabled(fwk_id_t id, bool *enabled)
+ {
+     struct rdev *regulator;
  
-    regulator = get_regulator(id);
-    if (!regulator || (enabled == NULL)) {
+-   regulator = get_regulator(id);
+-   if (!regulator || (enabled == NULL)) {
 -        return FWK_E_PARAM;
+-    }
++    regulator = get_regulator(id);
++    if (!regulator || !enabled)
 +	return FWK_E_PARAM;
-     }
  
-     *enabled = regulator_is_enabled((const struct rdev *)regulator);
+-    *enabled = regulator_is_enabled((const struct rdev *)regulator);
++    *enabled = regulator_is_enabled(regulator);
      DEBUG_MSG("PSU get %s state: %s", regulator_name(regulator),
 -              enabled ? "ON" : "OFF");
 +	      enabled ? "ON" : "OFF");
  
      return FWK_SUCCESS;
  }
-@@ -104,19 +104,19 @@ static int psu_optee_regulator_set_volta
+ 
+ static int psu_optee_regulator_set_voltage(fwk_id_t id, uint32_t voltage)
+ {
+-    TEE_Result res = TEE_ERROR_GENERIC;
++    TEE_Result res;
+     struct rdev *regulator;
+     uint16_t level_mv = voltage;
  
      regulator = get_regulator(id);
-     if (!regulator) {
+-    if (!regulator) {
 -        return FWK_E_PARAM;
+-    }
++    if (!regulator)
 +	return FWK_E_PARAM;
-     }
  
      DEBUG_MSG("PSU set regulator %s level: %"PRIu32"mV",
 -              regulator_name(regulator), (uint32_t)level_mv);
@@ -78912,23 +79041,28 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      res = regulator_set_voltage(regulator, level_mv);
  
-     if (res) {
+-    if (res) {
 -        return FWK_E_HANDLER;
-+	return FWK_E_HANDLER;
-     } else {
- 
+-    } else {
+-
 -        return FWK_SUCCESS;
-+	return FWK_SUCCESS;
-     }
+-    }
++    return res ? FWK_E_HANDLER : FWK_SUCCESS;
  }
  
-@@ -128,16 +128,16 @@ static int psu_optee_regulator_get_volta
+ static int psu_optee_regulator_get_voltage(fwk_id_t id, uint32_t *voltage)
+ {
+-    TEE_Result res = TEE_ERROR_GENERIC;
++    TEE_Result res;
+     struct rdev *regulator;
+     uint16_t level_mv;
  
      regulator = get_regulator(id);
-     if (!regulator || (voltage == NULL)) {
+-    if (!regulator || (voltage == NULL)) {
 -        return FWK_E_PARAM;
+-    }
++    if (!regulator || !voltage)
 +	return FWK_E_PARAM;
-     }
  
      res = regulator_get_voltage(regulator, &level_mv);
  
@@ -78936,13 +79070,15 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -              regulator_name(regulator), (uint32_t)level_mv, res);
 +	      regulator_name(regulator), (uint32_t)level_mv, res);
  
-     if (res) {
+-    if (res) {
 -        return FWK_E_HANDLER;
+-    }
++    if (res)
 +	return FWK_E_HANDLER;
-     }
  
      *voltage = level_mv;
-@@ -153,15 +153,15 @@ static struct mod_psu_driver_api psu_dri
+ 
+@@ -153,15 +138,15 @@ static struct mod_psu_driver_api psu_dri
  };
  
  static int psu_optee_regulator_init(fwk_id_t module_id,
@@ -78962,7 +79098,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  {
      fwk_assert(data != NULL);
  
-@@ -172,9 +172,9 @@ static int psu_optee_regulator_element_i
+@@ -172,9 +157,9 @@ static int psu_optee_regulator_element_i
  }
  
  static int psu_optee_regulator_process_bind_request(fwk_id_t source_id,
@@ -79196,12 +79332,16 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 ===================================================================
 --- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
 +++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
-@@ -40,23 +40,23 @@ static struct stm32_regu_consumer_ctx mo
- static char *regu_name(struct rdev *rdev)
+@@ -37,26 +37,26 @@ struct stm32_regu_consumer_ctx {
+ /* A single instance handles all voltage regulators abstracted by regulator.h */
+ static struct stm32_regu_consumer_ctx module_ctx;
+ 
+-static char *regu_name(struct rdev *rdev)
++static const char *regu_name(struct rdev *rdev)
  {
      if (rdev)
 -        return (char *)rdev->reg_name;
-+	return (char *)rdev->reg_name;
++	return rdev->reg_name;
  
      return NULL;
  }
@@ -79339,15 +79479,17 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      return FWK_SUCCESS;
  }
-@@ -158,25 +158,25 @@ static int stm32_regu_consumer_set_level
-     int ret = FWK_E_PANIC;
- 
-     if (level_uv / 1000 > UINT16_MAX) {
+@@ -155,41 +155,36 @@ static int stm32_regu_consumer_get_level
+ static int stm32_regu_consumer_set_level(fwk_id_t dev_id, int level_uv)
+ {
+     struct stm32_regu_consumer_dev_ctx *ctx = NULL;
+-    int ret = FWK_E_PANIC;
+-
+-    if (level_uv / 1000 > UINT16_MAX) {
 -        FWK_LOG_ERR("Volatge level too high (mV shall fit in 16 bits)");
 -        return FWK_E_PARAM;
-+	FWK_LOG_ERR("Volatge level too high (mV shall fit in 16 bits)");
-+	return FWK_E_PARAM;
-     }
+-    }
++    int ret;
  
      ret = find_ctx(dev_id, &ctx);
      if (ret)
@@ -79369,9 +79511,10 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
 -                          int32_t *min, int32_t *max)
 +			  int32_t *min, int32_t *max)
  {
-     size_t n = 0;
+-    size_t n = 0;
++    size_t n;
  
-@@ -184,12 +184,12 @@ static void find_bound_uv(const uint16_t
+     *min = INT32_MAX;
      *max = INT32_MIN;
  
      for (n = 0; n < count; n++) {
@@ -79390,7 +79533,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
      }
  
      /* Convert from mV to uV */
-@@ -198,7 +198,7 @@ static void find_bound_uv(const uint16_t
+@@ -198,7 +193,7 @@ static void find_bound_uv(const uint16_t
  }
  
  static int stm32_regu_consumer_get_info(fwk_id_t dev_id,
@@ -79399,7 +79542,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  {
      struct stm32_regu_consumer_dev_ctx *ctx;
      uint16_t *levels;
-@@ -207,22 +207,22 @@ static int stm32_regu_consumer_get_info(
+@@ -207,22 +202,22 @@ static int stm32_regu_consumer_get_info(
  
      ret = find_ctx(dev_id, &ctx);
      if (ret == FWK_E_ACCESS) {
@@ -79432,7 +79575,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
      }
  
      memset(info, 0, sizeof(*info));
-@@ -230,18 +230,18 @@ static int stm32_regu_consumer_get_info(
+@@ -230,18 +225,18 @@ static int stm32_regu_consumer_get_info(
      info->level_range.level_type = MOD_VOLTD_VOLTAGE_LEVEL_DISCRETE;
      info->level_range.level_count = full_count;
      find_bound_uv(levels, full_count,
@@ -79456,7 +79599,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  {
      struct stm32_regu_consumer_dev_ctx *ctx;
      uint16_t *levels;
-@@ -250,27 +250,27 @@ static int stm32_regu_consumer_level_fro
+@@ -250,27 +245,27 @@ static int stm32_regu_consumer_level_fro
  
      ret = find_ctx(dev_id, &ctx);
      if (ret == FWK_E_ACCESS) {
@@ -79493,7 +79636,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      return FWK_SUCCESS;
  }
-@@ -289,27 +289,27 @@ static const struct mod_voltd_drv_api ap
+@@ -289,27 +284,27 @@ static const struct mod_voltd_drv_api ap
   */
  
  static int stm32_regu_consumer_init(fwk_id_t module_id,
@@ -79528,7 +79671,7 @@ Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32m
  
      ctx = module_ctx.dev_ctx_table + fwk_id_get_element_idx(element_id);
  
-@@ -317,19 +317,19 @@ static int stm32_regu_consumer_element_i
+@@ -317,19 +312,19 @@ static int stm32_regu_consumer_element_i
      ctx->enabled = dev_config->default_enabled;
  
      if (ctx->enabled) {

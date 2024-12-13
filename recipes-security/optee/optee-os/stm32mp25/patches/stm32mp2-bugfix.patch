@@ -949,7 +949,56 @@ Index: optee-os-txmp-2550/core/drivers/regulator/core.c
 ===================================================================
 --- optee-os-txmp-2550.orig/core/drivers/regulator/core.c
 +++ optee-os-txmp-2550/core/drivers/regulator/core.c
-@@ -306,8 +306,8 @@ TEE_Result regulator_set_voltage(struct
+@@ -35,7 +35,7 @@ static void unlock_driver(const struct r
+ 
+ static struct rdev *regulator_get_by_phandle(int32_t phandle)
+ {
+-	struct rdev *rdev = NULL;
++	struct rdev *rdev;
+ 
+ 	SLIST_FOREACH(rdev, &regulator_device_list, link)
+ 		if (rdev->phandle == phandle)
+@@ -53,7 +53,7 @@ static struct rdev *regulator_get_by_pha
+  */
+ struct rdev *regulator_get_by_node_name(const char *node_name)
+ {
+-	struct rdev *rdev = NULL;
++	struct rdev *rdev;
+ 
+ 	assert(node_name);
+ 
+@@ -73,7 +73,7 @@ struct rdev *regulator_get_by_node_name(
+  */
+ struct rdev *regulator_get_by_regulator_name(const char *reg_name)
+ {
+-	struct rdev *rdev = NULL;
++	struct rdev *rdev;
+ 
+ 	assert(reg_name);
+ 
+@@ -90,8 +90,8 @@ struct rdev *regulator_get_by_regulator_
+ 
+ static int32_t get_supply_phandle(const void *fdt, int node, const char *name)
+ {
+-	const fdt32_t *cuint = NULL;
+-	int __maybe_unused len = 0;
++	const fdt32_t *cuint;
++	int __maybe_unused len;
+ 	int supply_phandle = -FDT_ERR_NOTFOUND;
+ 	char prop_name[MAX_PROPERTY_LEN] = { 0 };
+ 
+@@ -282,8 +282,8 @@ bool regulator_is_enabled(const struct r
+  */
+ TEE_Result regulator_set_voltage(struct rdev *rdev, uint16_t mvolt)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint16_t cur_mv = 0;
++	TEE_Result res;
++	uint16_t cur_mv;
+ 
+ 	assert(rdev);
+ 
+@@ -306,13 +306,13 @@ TEE_Result regulator_set_voltage(struct
  	unlock_driver(rdev);
  
  	if (res) {
@@ -960,7 +1009,116 @@ Index: optee-os-txmp-2550/core/drivers/regulator/core.c
  		return res;
  	}
  
-@@ -791,7 +791,7 @@ static TEE_Result regulator_pm(enum pm_o
+ 	if (rdev->ramp_delay_uv_per_us > 0) {
+-		unsigned int d = 0;
++		unsigned int d;
+ 
+ 		if (cur_mv > mvolt)
+ 			d = cur_mv - mvolt;
+@@ -372,10 +372,10 @@ TEE_Result regulator_get_voltage(const s
+ TEE_Result regulator_list_voltages(struct rdev *rdev, uint16_t **levels,
+ 				   size_t *count)
+ {
+-	TEE_Result res = TEE_SUCCESS;
+-	uint16_t *ref = NULL;
+-	size_t ref_cnt = 0;
+-	size_t n = 0;
++	TEE_Result res;
++	uint16_t *ref;
++	size_t ref_cnt;
++	size_t n;
+ 
+ 	assert(rdev && count);
+ 
+@@ -401,7 +401,7 @@ TEE_Result regulator_list_voltages(struc
+ 
+ 	/* Reduce the possible values depending on min and max from DT */
+ 	n = ref_cnt;
+-	while ((ref[n - 1U] > rdev->max_mv) && (n > 1))
++	while (ref[n - 1U] > rdev->max_mv && n > 1)
+ 		n--;
+ 
+ 	/* Verify that max val is a valid value */
+@@ -412,6 +412,7 @@ TEE_Result regulator_list_voltages(struc
+ 	}
+ 
+ 	while (*ref < rdev->min_mv && n > 1) {
++		DMSG("Skipping out of range value %u", *ref);
+ 		ref++;
+ 		n--;
+ 	}
+@@ -526,9 +527,9 @@ static struct regul_property flag_prop[]
+ 
+ static TEE_Result parse_properties(const void *fdt, struct rdev *rdev, int node)
+ {
+-	TEE_Result res = TEE_SUCCESS;
+-	const fdt32_t *cuint = NULL;
+-	struct regul_property *p = NULL;
++	TEE_Result res;
++	const fdt32_t *cuint;
++	struct regul_property *p;
+ 
+ 	for (p = flag_prop; p < (flag_prop + ARRAY_SIZE(flag_prop)); p++) {
+ 		if (fdt_getprop(fdt, node, p->name, NULL)) {
+@@ -542,14 +543,14 @@ static TEE_Result parse_properties(const
+ 
+ 	cuint = fdt_getprop(fdt, node, "regulator-ramp-delay", NULL);
+ 	if (cuint) {
+-		rdev->ramp_delay_uv_per_us = (uint32_t)(fdt32_to_cpu(*cuint));
++		rdev->ramp_delay_uv_per_us = fdt32_to_cpu(*cuint);
+ 		FMSG("%s: ramp delay = %"PRIu32" (uV/us)",
+ 		     rdev->desc->node_name, rdev->ramp_delay_uv_per_us);
+ 	}
+ 
+ 	cuint = fdt_getprop(fdt, node, "regulator-enable-ramp-delay", NULL);
+ 	if (cuint) {
+-		rdev->enable_ramp_delay_us = (uint32_t)(fdt32_to_cpu(*cuint));
++		rdev->enable_ramp_delay_us = fdt32_to_cpu(*cuint);
+ 		FMSG("%s: enable ramp delay = %u (us)", rdev->desc->node_name,
+ 		     rdev->enable_ramp_delay_us);
+ 	}
+@@ -591,11 +592,11 @@ static void parse_supply(const void *fdt
+  */
+ static TEE_Result parse_dt(struct rdev *rdev, int node)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	const fdt32_t *cuint = NULL;
+-	uint16_t *levels = NULL;
+-	void *fdt = NULL;
+-	size_t size = 0;
++	TEE_Result res;
++	const fdt32_t *cuint;
++	uint16_t *levels;
++	void *fdt;
++	size_t size;
+ 
+ 	FMSG("%s: parse embedded DTB", rdev->desc->node_name);
+ 
+@@ -663,8 +664,8 @@ static TEE_Result parse_dt(struct rdev *
+  */
+ TEE_Result regulator_register(const struct regul_desc *desc, int node)
+ {
+-	TEE_Result res = TEE_ERROR_OUT_OF_MEMORY;
+-	struct rdev *rdev = NULL;
++	TEE_Result res;
++	struct rdev *rdev;
+ 	uint16_t mv = 0;
+ 
+ 	assert(desc);
+@@ -680,9 +681,9 @@ TEE_Result regulator_register(const stru
+ 	rdev->desc = desc;
+ 
+ 	if (desc->ops->list_voltages) {
+-		uint16_t *levels = NULL;
+-		size_t count = 0;
+-		size_t __maybe_unused i = 0;
++		uint16_t *levels;
++		size_t count;
++		size_t __maybe_unused i;
+ 
+ 		lock_driver(rdev);
+ 		res = desc->ops->list_voltages(desc, &levels, &count);
+@@ -791,13 +792,13 @@ static TEE_Result regulator_pm(enum pm_o
  				panic();
  	}
  
@@ -969,11 +1127,69 @@ Index: optee-os-txmp-2550/core/drivers/regulator/core.c
  }
  DECLARE_KEEP_PAGER(regulator_pm);
  
+ static void __maybe_unused sprint_name(char *dest, const char *src, int len)
+ {
+-	int l = 0;
++	int l;
+ 
+ 	if (!src)
+ 		src = "";
+@@ -816,7 +817,7 @@ static void __maybe_unused sprint_name(c
+  */
+ void regulator_core_dump(void)
+ {
+-	struct rdev *rdev = NULL;
++	struct rdev *rdev;
+ 
+ 	if (TRACE_LEVEL < TRACE_FLOW)
+ 		return;
+@@ -825,11 +826,11 @@ void regulator_core_dump(void)
+ 	FMSG("reg      name     use\ten\tmV\tmin\tmax\tflags\tsupply\n");
+ 
+ 	SLIST_FOREACH(rdev, &regulator_device_list, link) {
+-		uint16_t mv = 0;
+-		uint16_t min_mv = 0;
+-		uint16_t max_mv = 0;
+-		char reg[9] = "";
+-		char name[9] = { 0 };
++		uint16_t mv;
++		uint16_t min_mv;
++		uint16_t max_mv;
++		char reg[9];
++		char name[9];
+ 		const char __maybe_unused *supply = "";
+ 
+ 		sprint_name(name, rdev->desc->node_name, 8);
+@@ -856,13 +857,13 @@ void regulator_core_dump(void)
+ static TEE_Result regulator_core_config(void)
+ {
+ 	TEE_Result res = TEE_SUCCESS;
+-	struct rdev *rdev = NULL;
++	struct rdev *rdev;
+ 
+ 	FMSG("");
+ 
+ 	SLIST_FOREACH(rdev, &regulator_device_list, link) {
+ 		if (rdev->supply_phandle >= 0) {
+-			struct rdev *s = NULL;
++			struct rdev *s;
+ 
+ 			FMSG("%s: connect supply", rdev->desc->node_name);
+ 
+@@ -907,7 +908,7 @@ driver_init_late(regulator_core_init);
+  */
+ static TEE_Result regulator_core_cleanup(void)
+ {
+-	struct rdev *rdev = NULL;
++	struct rdev *rdev;
+ 
+ 	FMSG("");
+ 
 Index: optee-os-txmp-2550/core/drivers/stm32_bsec3.c
 ===================================================================
 --- optee-os-txmp-2550.orig/core/drivers/stm32_bsec3.c
 +++ optee-os-txmp-2550/core/drivers/stm32_bsec3.c
-@@ -1016,8 +1016,8 @@ static void initialize_nvmem_layout_from
+@@ -1011,8 +1011,8 @@ static void initialize_nvmem_layout_from
  {
  	int cell_max = 0;
  	int cell_cnt = 0;
@@ -988,6 +1204,110 @@ Index: optee-os-txmp-2550/core/drivers/stm32_cpu_opp.c
 ===================================================================
 --- optee-os-txmp-2550.orig/core/drivers/stm32_cpu_opp.c
 +++ optee-os-txmp-2550/core/drivers/stm32_cpu_opp.c
+@@ -102,8 +102,8 @@ static TEE_Result opp_set_voltage(struct
+ 
+ static bool opp_voltage_is_supported(struct rdev *rdev, uint16_t volt_mv)
+ {
+-	uint16_t min_mv = 0;
+-	uint16_t max_mv = 0;
++	uint16_t min_mv;
++	uint16_t max_mv;
+ 
+ 	regulator_get_range(rdev, &min_mv, &max_mv);
+ 
+@@ -115,7 +115,7 @@ static bool opp_voltage_is_supported(str
+ 
+ static TEE_Result set_clock_then_voltage(unsigned int opp)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	TEE_Result res;
+ 
+ 	if (_set_opp_clk_rate(opp)) {
+ 		EMSG("Failed to set clock to %ukHz",
+@@ -146,7 +146,7 @@ static TEE_Result set_clock_then_voltage
+ 
+ static TEE_Result set_voltage_then_clock(unsigned int opp)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	TEE_Result res;
+ 
+ 	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_mv);
+ 	if (res)
+@@ -159,7 +159,7 @@ static TEE_Result set_voltage_then_clock
+ 
+ 	if (_set_opp_clk_rate(opp)) {
+ 		unsigned int current_opp = cpu_opp.current_opp;
+-		unsigned int previous_volt = 0U;
++		unsigned int previous_volt;
+ 
+ 		EMSG("Failed to set clock");
+ 
+@@ -206,7 +206,7 @@ static TEE_Result get_cpu_rates_array(st
+ 				      size_t *nb_elts)
+ {
+ 	size_t rates_cells = *nb_elts;
+-	size_t opp = 0;
++	size_t opp;
+ 
+ 	if (start_index >= cpu_opp.opp_count)
+ 		return TEE_ERROR_BAD_PARAMETERS;
+@@ -249,8 +249,8 @@ static TEE_Result read_regu_state(const
+ static TEE_Result set_regu_voltage(const struct regul_desc *desc __unused,
+ 				   uint16_t mv)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint16_t cur_mv = 0;
++	TEE_Result res;
++	uint16_t cur_mv;
+ 
+ 	res = regulator_get_voltage(cpu_opp.rdev, &cur_mv);
+ 	if (res)
+@@ -321,7 +321,7 @@ static int cmp_cpu_opp_by_freq(const voi
+ static uint16_t min_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
+ {
+ 	unsigned int min_mv = UINT_MAX;
+-	size_t n = 0;
++	size_t n;
+ 
+ 	for (n = 0; n < count; n++)
+ 		min_mv = MIN(min_mv, dvfs[n].volt_mv);
+@@ -333,7 +333,7 @@ static uint16_t min_cpu_voltage(struct c
+ static uint16_t max_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
+ {
+ 	unsigned int max_mv = 0;
+-	size_t n = 0;
++	size_t n;
+ 
+ 	for (n = 0; n < count; n++)
+ 		max_mv = MAX(max_mv, dvfs[n].volt_mv);
+@@ -344,11 +344,11 @@ static uint16_t max_cpu_voltage(struct c
+ 
+ static void setup_scmi_server_resources(void)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	unsigned int *dvfs_khz = NULL;
+-	unsigned int *dvfs_mv = NULL;
+-	size_t opp = 0;
+-	struct cpu_dvfs *sorted_dvfs = NULL;
++	TEE_Result res;
++	unsigned int *dvfs_khz;
++	unsigned int *dvfs_mv;
++	size_t opp;
++	struct cpu_dvfs *sorted_dvfs;
+ 	unsigned int scpfw_default_opp_index = UINT_MAX;
+ 
+ 	/*
+@@ -489,8 +489,8 @@ static TEE_Result cpu_opp_pm(enum pm_op
+ 		 * for restoration at resmue. If CPU is not in an expected
+ 		 * OPP state, fallback to default OPP at PM resume.
+ 		 */
+-		unsigned int cur_khz = 0;
+-		uint16_t cur_mv = 0;
++		unsigned int cur_khz;
++		uint16_t cur_mv;
+ 
+ 		cur_khz = clk_get_rate(cpu_opp.clock) / 1000;
+ 
 @@ -542,19 +542,19 @@ DECLARE_KEEP_PAGER(cpu_opp_pm);
  
  static TEE_Result stm32_cpu_opp_is_supported(const void *fdt, int subnode)
@@ -1008,11 +1328,11 @@ Index: optee-os-txmp-2550/core/drivers/stm32_cpu_opp.c
  	opp = fdt32_to_cpu(*cuint32);
  	if (!stm32mp_supports_cpu_opp(opp)) {
 -		DMSG("Not supported opp-supported-hw %#"PRIx32, opp);
-+		EMSG("Not supported opp-supported-hw %#"PRIx32, opp);
++		EMSG("Unsupported opp-supported-hw %#"PRIx32, opp);
  		return TEE_ERROR_GENERIC;
  	}
  
-@@ -563,9 +563,9 @@ static TEE_Result stm32_cpu_opp_is_suppo
+@@ -563,21 +563,21 @@ static TEE_Result stm32_cpu_opp_is_suppo
  
  static TEE_Result stm32_cpu_opp_get_dt_subnode(const void *fdt, int node)
  {
@@ -1023,10 +1343,15 @@ Index: optee-os-txmp-2550/core/drivers/stm32_cpu_opp.c
 +	const fdt32_t *cuint32;
 +	uint64_t freq_khz;
  	uint64_t freq_khz_opp_def = 0;
- 	uint32_t volt_mv = 0;
- 	unsigned long clk_cpu = 0;
-@@ -574,10 +574,10 @@ static TEE_Result stm32_cpu_opp_get_dt_s
- 	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint32_t volt_mv = 0;
+-	unsigned long clk_cpu = 0;
++	uint32_t volt_mv;
++	unsigned long clk_cpu;
+ 	unsigned int i = 0;
+-	int subnode = -1;
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	int subnode;
++	TEE_Result res;
  	bool opp_default = false;
  
 -	fdt_for_each_subnode(subnode, fdt, node)
@@ -1038,11 +1363,13 @@ Index: optee-os-txmp-2550/core/drivers/stm32_cpu_opp.c
  	cpu_opp.dvfs = calloc(1, cpu_opp.opp_count * sizeof(*cpu_opp.dvfs));
  	if (!cpu_opp.dvfs)
  		return TEE_ERROR_OUT_OF_MEMORY;
-@@ -633,8 +633,10 @@ static TEE_Result stm32_cpu_opp_get_dt_s
+@@ -632,9 +632,11 @@ static TEE_Result stm32_cpu_opp_get_dt_s
+ 		i++;
  	}
  
- 	/* Erreur when "st,opp-default" is not present */
+-	/* Erreur when "st,opp-default" is not present */
 -	if (!opp_default)
++	/* Error when "st,opp-default" is not present */
 +	if (!opp_default) {
 +		EMSG("No 'st,opp-default' property found");
  		return TEE_ERROR_GENERIC;
@@ -1050,6 +1377,17 @@ Index: optee-os-txmp-2550/core/drivers/stm32_cpu_opp.c
  
  	/* Select the max "st,opp-default" node as current OPP */
  #ifdef CFG_SCPFW_MOD_DVFS
+@@ -688,8 +690,8 @@ static TEE_Result get_cpu_parent(const v
+ static TEE_Result
+ stm32_cpu_opp_init(const void *fdt, int node, const void *compat_data __unused)
+ {
+-	TEE_Result res = TEE_SUCCESS;
+-	uint16_t cpu_voltage __maybe_unused = 0;
++	TEE_Result res;
++	uint16_t cpu_voltage __maybe_unused;
+ 
+ 	res = get_cpu_parent(fdt);
+ 	if (res)
 Index: optee-os-txmp-2550/core/drivers/stm32_i2c.c
 ===================================================================
 --- optee-os-txmp-2550.orig/core/drivers/stm32_i2c.c
@@ -1377,7 +1715,7 @@ Index: optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
 ===================================================================
 --- optee-os-txmp-2550.orig/core/drivers/firewall/stm32_rifsc.c
 +++ optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
-@@ -308,23 +308,25 @@ stm32_rifsc_has_access(struct stm32_fire
+@@ -385,23 +385,25 @@ stm32_rifsc_has_access(struct stm32_fire
  		       const struct stm32_firewall_cfg *cfg)
  {
  	TEE_Result res = TEE_ERROR_ACCESS_DENIED;
@@ -1410,7 +1748,7 @@ Index: optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
  		/* The CID corresponds to the * FWLL_MASTER(ID) + 1 */
  		unsigned int master = ((f_cfg->access & FWLL_MASTER_MASK) >>
  				      FWLL_MASTER_SHIFT) + 1;
-@@ -343,13 +345,14 @@ stm32_rifsc_has_access(struct stm32_fire
+@@ -420,13 +422,14 @@ stm32_rifsc_has_access(struct stm32_fire
  					  0x4 * reg_id);
  		priv_reg_value = io_read32(rifsc_base + _RIFSC_RISC_PRIVCFGR0 +
  					   0x4 * reg_id);
@@ -1428,7 +1766,7 @@ Index: optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
  
  		/*
  		 * First check conditions for semaphore mode, which doesn't
-@@ -360,6 +363,7 @@ stm32_rifsc_has_access(struct stm32_fire
+@@ -437,6 +440,7 @@ stm32_rifsc_has_access(struct stm32_fire
  				/* Static CID is irrelevant if semaphore mode */
  				goto skip_cid_check;
  			} else {
@@ -1436,7 +1774,7 @@ Index: optee-os-txmp-2550/core/drivers/firewall/stm32_rifsc.c
  				return TEE_ERROR_ACCESS_DENIED;
  			}
  		}
-@@ -372,26 +376,34 @@ stm32_rifsc_has_access(struct stm32_fire
+@@ -449,26 +453,34 @@ stm32_rifsc_has_access(struct stm32_fire
  		/*
  		 * Coherency check with the CID configuration
  		 */
