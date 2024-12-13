@@ -1,0 +1,42 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/gpio-keys.h>
+#include <dt-bindings/input/input.h>
+
+&{/} {
+	chosen {
+		overlays {
+			txmp-mb7-wakeup-btn;
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		user_button: user-button {
+			label = "USER";
+
+			gpios = <&gpioc 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			linux,code = <KEY_WAKEUP>;
+			linux,input-type = <EV_KEY>;
+			wakeup-event-action = <EV_ACT_DEASSERTED>;
+			wakeup-source;
+		};
+	};
+};
+
+&gpiog {
+	wakeup-btn-drv {
+		gpio-hog;
+		gpios = <0 GPIO_ACTIVE_LOW>;
+		output-high;
+		line-name = "wakeup-btn-drv";
+	};
+};

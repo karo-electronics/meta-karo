@@ -4,6 +4,7 @@
  */
 
 #include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
 
 /dts-v1/;
 
@@ -20,19 +21,21 @@
 		compatible = "gpio-matrix-keypad";
 		debounce-delay-ms = <5>;
 		col-scan-delay-us = <2>;
-		row-gpios = <
-			     &gpiog 0 GPIO_ACTIVE_HIGH
-			     &gpioc 3  GPIO_ACTIVE_HIGH
-			     &gpioc 8 GPIO_ACTIVE_HIGH
-			     &gpiof 4 GPIO_ACTIVE_HIGH
-		>;
 		col-gpios = <
 			     &gpioc 12 GPIO_ACTIVE_HIGH
 			     &gpioc 7 GPIO_ACTIVE_HIGH
 			     &gpioc 4 GPIO_ACTIVE_HIGH
 			     &gpioz 8 GPIO_ACTIVE_HIGH
 		>;
-		linux,keymap = <
+		row-gpios = <
+			     &gpiog 0 GPIO_ACTIVE_HIGH
+			     &gpioc 3 GPIO_ACTIVE_HIGH
+			     &gpioc 8 GPIO_ACTIVE_HIGH
+			     &gpiof 4 GPIO_ACTIVE_HIGH
 		>;
+		linux,keymap = <
+			        MATRIX_KEY(0, 0, KEY_POWER)
+		>;
+		wakeup-source;
 	};
 };

@@ -16,15 +16,16 @@ DTB_OVERLAYS_generic:append:stm32mp2 = " \
         karo-gpu \
         karo-rtc \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
-        txmp-keypad \
-        txmp-mb7 \
 "
 
 DTB_OVERLAYS_generic:append:txmp = " \
         txmp-fdcan1 \
         txmp-fdcan2 \
         txmp-ft5x06 \
+        txmp-keypad \
         txmp-lcd-panel \
+        txmp-mb7 \
+        txmp-mb7-wakeup-btn \
         txmp-sdcard1-cd \
         txmp-sdcard2-cd \
         txmp-sound \
@@ -41,7 +42,7 @@ KARO_DTB_OVERLAYS[mb7] = " \
         txmp-mb7 \
         txmp-fdcan1 \
         txmp-ft5x06 \
-        txmp-keypad \
+        txmp-keypad,txmp-mb7-wakeup-btn \
         txmp-lcd-panel \
         txmp-sound \
         txmp-spidev \
