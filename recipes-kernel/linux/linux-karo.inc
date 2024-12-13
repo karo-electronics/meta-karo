@@ -42,13 +42,9 @@ SRC_URI:append:stm32mp2 = "${@ "".join(map(lambda f: " file://dts/st/includes/%s
 KERNEL_DTC_FLAGS += "-@"
 
 do_symlink_kernsrc:append () {
-    b = d.getVar("B")
-    bb.note("s=%s b=%s\n" % (s, b))
-    bb.note("S=%s B=%s\n" % (os.path.realpath(s), os.path.realpath(b)))
     s = os.path.realpath(s)
-    bb.note("Creating symlink %s -> %s (wd=%s)\n" % \
-    	    (os.path.relpath(b, s), os.path.join(s, 'build'), os.environ.get('PWD')))
-    os.symlink(os.path.relpath(b, s), os.path.join(s, 'build'))
+    b = os.path.relpath(d.getVar("B"), s)
+    os.symlink(b, os.path.join(s, 'build'))
 }
 
 def get_overlays(d):
