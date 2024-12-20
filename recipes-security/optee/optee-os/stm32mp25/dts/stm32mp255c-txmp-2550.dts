@@ -213,7 +213,8 @@
 				};
 
 				standby {
-					regulator-off-in-suspend;
+					regulator-on-in-suspend;
+					regulator-suspend-microvolt = <1800000>;
 				};
 
 				off {
@@ -292,8 +293,6 @@
 				regulator-max-microvolt = <3300000>;
 				regulator-over-current-protection;
 				regulator-always-on;
-				st,pwrctrl-sel = <3>;
-				st,pwrctrl-reset;
 			};
 
 			vdd3v3_usb: ldo4 {
@@ -310,8 +309,6 @@
 				regulator-max-microvolt = <3300000>;
 				regulator-over-current-protection;
 				st,regulator-bypass-microvolt = <3300000>;
-				st,pwrctrl-sel = <3>;
-				st,pwrctrl-reset;
 			};
 		};
 	};
