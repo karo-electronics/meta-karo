@@ -15,6 +15,7 @@ SRC_URI:append:stm32mpcommon = " \
         file://patches/0011-stm-drv-preferred-depth.patch \
         file://patches/0017-spi-nand-dma-map-bugfix.patch \
         file://patches/0019-fdt5x06-dma-bugfix.patch \
+        file://patches/stm32-lvds-jeida-18.patch \
 "
 
 SRC_URI:append:stm32mp1 = " \
