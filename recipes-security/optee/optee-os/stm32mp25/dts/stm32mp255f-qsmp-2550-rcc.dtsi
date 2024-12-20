@@ -11,8 +11,7 @@
 #include <dt-bindings/clock/stm32mp25-clksrc.h>
 
 &clk_hse {
-	clock-frequency = <24000000>;
-	st,bypass;
+	clock-frequency = <40000000>;
 };
 
 &clk_hsi {
@@ -99,8 +98,8 @@
 		FLEXGEN_CFG(54, XBAR_SRC_PLL6, 0, 9) /* ETH1, ETHSW */
 		FLEXGEN_CFG(55, XBAR_SRC_PLL6, 0, 9) /* ETH2 */
 		FLEXGEN_CFG(56, XBAR_SRC_PLL4, 0, 5) /* ETH1PTP, ETH2PTP */
-		FLEXGEN_CFG(57, XBAR_SRC_HSE_KER, 0, 0) /* USB2PHY1 */
-		FLEXGEN_CFG(58, XBAR_SRC_HSE_KER, 0, 0) /* USB2PHY2 */
+		FLEXGEN_CFG(57, XBAR_SRC_HSE_KER, 0, 1) /* USB2PHY1 */
+		FLEXGEN_CFG(58, XBAR_SRC_HSE_KER, 0, 1) /* USB2PHY2 */
 		FLEXGEN_CFG(59, XBAR_SRC_PLL4, 0, 1) /* GPU */
 		FLEXGEN_CFG(60, XBAR_SRC_PLL4, 0, 23) /* ETHSWREF */
 		FLEXGEN_CFG(61, XBAR_SRC_HSE_KER, 0, 0) /* MCO1 */
@@ -112,7 +111,7 @@
 		MUX_CFG(MUX_D3PER, MUX_D3PER_MSI)
 		MUX_CFG(MUX_USB2PHY1, MUX_USB2PHY1_FLEX57)
 		MUX_CFG(MUX_USB2PHY2, MUX_USB2PHY2_FLEX58)
-		MUX_CFG(MUX_USB3PCIEPHY, MUX_USB3PCIEPHY_FLEX34)
+		MUX_CFG(MUX_USB3PCIEPHY, MUX_USB3PCIEPHY_HSE)
 		MUX_CFG(MUX_RTC, MUX_RTC_LSE)
 	>;
 
@@ -120,17 +119,17 @@
 		st,pll = <&pll1_cfg_1000MHz>;
 
 		pll1_cfg_1000MHz: pll1-cfg-1000MHz {
-			cfg = <125 1 1 3>;
+			cfg = <25 1 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
 		};
 
 		pll1_cfg_1200MHz: pll1-cfg-1200MHz {
-			cfg = <50 1 1 1>;
+			cfg = <30 1 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
 		};
 
 		pll1_cfg_1500MHz: pll1-cfg-1500MHz {
-			cfg = <125 1 1 2>;
+			cfg = <75 2 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL5, MUXSEL_HSE)>;
 		};
 	};
@@ -139,7 +138,7 @@
 		st,pll = <&pll2_cfg_600MHz>;
 
 		pll2_cfg_600MHz: pll2-cfg-600MHz {
-			cfg = <50 1 1 2>;
+			cfg = <30 1 1 2>;
 			src = <MUX_CFG(MUX_MUXSEL6, MUXSEL_HSE)>;
 		};
 	};
@@ -148,12 +147,12 @@
 		st,pll = <&pll3_cfg_800MHz>;
 
 		pll3_cfg_800MHz: pll3-cfg-800MHz {
-			cfg = <100 1 1 3>;
+			cfg = <20 1 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL7, MUXSEL_HSE)>;
 		};
 
 		pll3_cfg_900MHz: pll3-cfg-900MHz {
-			cfg = <75 1 1 2>;
+			cfg = <45 2 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL7, MUXSEL_HSE)>;
 		};
 	};
@@ -162,7 +161,7 @@
 		st,pll = <&pll4_cfg_1200MHz>;
 
 		pll4_cfg_1200MHz: pll4-cfg-1200MHz {
-			cfg = <50 1 1 1>;
+			cfg = <30 1 1 1>;
 			src = <MUX_CFG(MUX_MUXSEL0, MUXSEL_HSE)>;
 		};
 	};
@@ -171,7 +170,7 @@
 		st,pll = <&pll5_cfg_532MHz>;
 
 		pll5_cfg_532MHz: pll5-cfg-532MHz {
-			cfg = <133 1 1 6>;
+			cfg = <133 5 1 2>;
 			src = <MUX_CFG(MUX_MUXSEL1, MUXSEL_HSE)>;
 		};
 	};
@@ -180,7 +179,7 @@
 		st,pll = <&pll6_cfg_500MHz>;
 
 		pll6_cfg_500MHz: pll6-cfg-500MHz {
-			cfg = <125 1 1 6>;
+			cfg = <25 1 1 2>;
 			src = <MUX_CFG(MUX_MUXSEL2, MUXSEL_HSE)>;
 		};
 	};
@@ -190,9 +189,9 @@
 		st,pll = <&pll7_cfg_496_74240MHz>;
 
 		pll7_cfg_496_74240MHz: pll7-cfg-496_74240MHz {
-			cfg = <20 1 1 1>;
+			cfg = <62 1 1 5>;
 			src = <MUX_CFG(MUX_MUXSEL3, MUXSEL_HSE)>;
-			frac = <11703786>;
+			frac = <1556926>;
 		};
 	};
 
@@ -200,7 +199,7 @@
 		st,pll = <&pll8_cfg_594MHz>;
 
 		pll8_cfg_594MHz: pll8-cfg-594MHz {
-			cfg = <99 1 1 4>;
+			cfg = <74 1 1 5>;
 			src = <MUX_CFG(MUX_MUXSEL4, MUXSEL_HSE)>;
 		};
 	};
