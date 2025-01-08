@@ -60,6 +60,12 @@
 			no-map;
 		};
 
+		/* PCIe reserved memory declaration */
+		pcie_device: pcie-device@10000000 {
+			reg = <0x0 0x10000000 0x0 0x10000000>;
+			no-map;
+		};
+
 		/* Backup RAM reserved memory declaration */
 		bl31_lowpower: bl31-lowpower@42000000 {
 			reg = <0x0 0x42000000 0x0 0x1000>;
