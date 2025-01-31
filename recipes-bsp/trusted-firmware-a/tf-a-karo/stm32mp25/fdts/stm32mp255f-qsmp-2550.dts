@@ -48,15 +48,6 @@
 		regulator-max-microvolt = <3300000>;
 		regulator-always-on;
 	};
-
-	shadow-prov {
-		compatible = "st,provisioning";
-
-		hconf1_prov {
-			nvmem-cells = <&hconf1_otp>;
-			st,shadow-value = <0x00008006>;
-		};
-	};
 };
 
 &bsec {
