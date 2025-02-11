@@ -18,7 +18,6 @@ KERNEL_EXTRA_ARGS:stm32mp1 += "LOADADDR=${UBOOT_ENTRYPOINT}"
 EXTRA_OEMAKE:append = " V=0"
 
 OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
-OVERLAY_INC_FILE:rzg2 = "rzg2-overlays.inc"
 require conf/machine/include/${OVERLAY_INC_FILE}
 
 #OVERLAY_SRC_FILES ?= ""
@@ -35,7 +34,6 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
 
-SRC_URI:append:rzg2 = "${@ "".join(map(lambda f: " file://dts/renesas/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 SRC_URI:append:stm32mp1 = "${@ "".join(map(lambda f: " file://dts/overlays/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 SRC_URI:append:stm32mp2 = "${@ "".join(map(lambda f: " file://dts/st/includes/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 
@@ -183,8 +181,6 @@ addtask do_configure before do_devshell
 
 dtb_ext = "dtb"
 dtb_vendordir = ""
-dtb_ext:rzg2 = "dtbo"
-dtb_vendordir:rzg2 = "renesas"
 dtb_vendordir:stm32mp2 = "st"
 
 python do_check_dtbs () {

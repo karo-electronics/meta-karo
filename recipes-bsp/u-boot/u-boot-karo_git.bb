@@ -1,13 +1,11 @@
 require recipes-bsp/u-boot/u-boot.inc
 
 OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
-OVERLAY_INC_FILE:rzg2 = "rzg2-overlays.inc"
 require conf/machine/include/${OVERLAY_INC_FILE}
 
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
-LIC_FILES_CHKSUM:rzg2l = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
 PROVIDES += "u-boot"
 
@@ -18,7 +16,8 @@ DEPENDS:append = " \
     python3-setuptools-native \
 "
 
-fiptool = "${@ "tf-a-tools-native" if "stm32mp2" in d.getVar('MACHINEOVERRIDES').split(':') else "fiptool-native"}"
+#fiptool = "${@ "tf-a-tools-native" if "stm32mp2" in d.getVar('MACHINEOVERRIDES').split(':') else "fiptool-native"}"
+fiptool = "tf-a-tools-native"
 DEPENDS:append = " ${fiptool}"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
@@ -27,9 +26,6 @@ UBOOT_SRC_DEFAULT ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protoc
 
 UBOOT_BRANCH_DEFAULT = "karo-stm32mp2-v2022.10"
 UBOOT_REV_DEFAULT = "712876e9bde25af8653d5911c79f252d595f8976"
-
-UBOOT_BRANCH_DEFAULT:rzg2 = "karo-txrz"
-UBOOT_REV_DEFAULT:rzg2 = "6369729a31bd80e062f7bc0d93f1f3380d3e3b2c"
 
 UBOOT_BRANCH ?= "${UBOOT_BRANCH_DEFAULT}"
 UBOOT_SRC ?= "${UBOOT_SRC_DEFAULT}"
@@ -50,7 +46,6 @@ LOCALVERSION ??= "-karo"
 
 UBOOT_BOARD_DIR:stm32mp1 = "board/karo/stm32mp1"
 UBOOT_BOARD_DIR:stm32mp2 = "board/karo/stm32mp2"
-UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
 
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = "${@ bb.utils.contains('IMAGE_INSTALL', 'u-boot-fw-utils', "u-boot-initial-env", "", d)}"
@@ -424,32 +419,6 @@ EOF
     done
 }
 
-do_deploy:rzg2l() {
-    # Create fip.bin
-    install -v -d "${DEPLOYDIR}/${FIPTOOL_DIR}"
-    if [ -n "${UBOOT_CONFIG}" ];then
-        i=0
-        for config in ${UBOOT_MACHINE};do
-            i=$(expr $i + 1)
-            j=0
-            for type in ${UBOOT_CONFIG};do
-                j=$(expr $j + 1)
-                [ $j -lt $i ] && continue
-                fiptool create --align 16 \
-                    --soc-fw "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
-                    --nt-fw "${B}/${config}/u-boot-${type}.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin"
-                if [ $i = 1 ];then
-                    ln -s ${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin "${DEPLOYDIR}/fip-${MACHINE}.bin"
-                fi
-                break
-            done
-        done
-    else
-        fiptool create --align 16 --soc-fw "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
-            --nt-fw "${B}/u-boot.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}.bin"
-    fi
-}
-
 python do_env_overlays () {
     import os
     import shutil
@@ -501,13 +470,6 @@ python do_env_overlays () {
 addtask do_env_overlays before do_compile after do_configure
 do_env_overlays[vardeps] += "KARO_BASEBOARDS KARO_DTB_OVERLAYS"
 
-# ---------------------------------------------------------------------
-# Avoid QA Issue: No GNU_HASH in the elf binary
-# ---------------------------------------------------------------------
-# Avoid QA Issue: ELF binary has relocations in .text
-# (uboot no need -fPIC option : remove check)
-
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"
 COMPATIBLE_MACHINE:stm32mpcommon = "(txmp-.*|qsmp-.*)"
