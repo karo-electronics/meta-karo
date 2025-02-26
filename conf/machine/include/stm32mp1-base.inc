@@ -15,6 +15,7 @@ UBOOT_FEATURES ?= "${@ "emmc fastboot" if 'emmc' in d.getVar('MACHINE_FEATURES')
 UBOOT_ENTRYPOINT = "0xc0008000"
 
 KERNEL_IMAGETYPE ?= "uImage"
+PREFERRED_VERSION_linux-karo = "6.6"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
@@ -37,6 +38,8 @@ EXTRA_IMAGEDEPENDS += "optee-os"
 TF_A_CONFIG = "usb"
 TF_A_CONFIG:prepend = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', 'trusted ', '', d)}"
 TF_A_CONFIG:prepend = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', 'optee ', '', d)}"
+
+TF_A_TOOLS_PLATFORM ?= "stm32mp1"
 
 # link TF_A_CONFIG to UBOOT_CONFIG
 TF_A_CONFIG[mfg] = "usb"

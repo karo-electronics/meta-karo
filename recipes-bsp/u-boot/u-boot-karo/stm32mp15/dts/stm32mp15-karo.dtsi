@@ -46,9 +46,9 @@
 		};
 
 		display-timings {
-			native-mode = <&ETV570>;
+			native-mode = <&ET0700>;
 
-			VGA {
+			VGA: VGA {
 				clock-frequency = <25200000>;
 				hactive = <640>;
 				vactive = <480>;
@@ -81,7 +81,7 @@
 				pixelclk-active = <0>;
 			};
 
-			ET0350 {
+			ET0350: ET0350 {
 				u-boot,panel-name = "edt,et0350g0dh6";
 				clock-frequency = <6413760>;
 				hactive = <320>;
@@ -98,7 +98,7 @@
 				pixelclk-active = <0>;
 			};
 
-			ET0430 {
+			ET0430: ET0430 {
 				u-boot,panel-name = "edt,et0430g0dh6";
 				clock-frequency = <9009000>;
 				hactive = <480>;
@@ -115,7 +115,7 @@
 				pixelclk-active = <1>;
 			};
 
-			ET0500 {
+			ET0500: ET0500 {
 				clock-frequency = <33264000>;
 				hactive = <800>;
 				vactive = <480>;
@@ -131,7 +131,7 @@
 				pixelclk-active = <0>;
 			};
 
-			ET0700 { /* same as ET0500 */
+			ET0700: ET0700 { /* same as ET0500 */
 				u-boot,panel-name = "edt,etm0700g0dh6";
 				clock-frequency = <33264000>;
 				hactive = <800>;
@@ -148,7 +148,7 @@
 				pixelclk-active = <0>;
 			};
 
-			ETQ570 {
+			ETQ570: ETQ570 {
 				clock-frequency = <6596040>;
 				hactive = <320>;
 				vactive = <240>;

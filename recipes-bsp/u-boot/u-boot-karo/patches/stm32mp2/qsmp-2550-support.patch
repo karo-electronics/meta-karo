@@ -41,7 +41,7 @@ Index: u-boot-qsmp-2550/include/configs/txmp.h
 ===================================================================
 --- u-boot-qsmp-2550.orig/include/configs/txmp.h
 +++ u-boot-qsmp-2550/include/configs/txmp.h
-@@ -44,6 +44,8 @@
+@@ -45,6 +45,8 @@
  #define SOC_FAMILY "stm32mp157c"
  #elif defined(CONFIG_KARO_TXMP_1571)
  #define SOC_FAMILY "stm32mp157c"

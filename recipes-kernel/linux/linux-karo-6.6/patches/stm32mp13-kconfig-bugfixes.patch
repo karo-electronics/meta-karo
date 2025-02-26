@@ -1,0 +1,60 @@
+Index: linux-qsmp-1351/arch/arm/Kconfig.debug
+===================================================================
+--- linux-qsmp-1351.orig/arch/arm/Kconfig.debug
++++ linux-qsmp-1351/arch/arm/Kconfig.debug
+@@ -1203,7 +1203,7 @@ choice
+ 
+ 	config STM32MP1_DEBUG_UART
+ 		bool "Use STM32MP1 UART for low-level debug"
+-		depends on MACH_STM32MP157
++		depends on MACH_STM32MP157 || MACH_STM32MP13
+ 		select DEBUG_STM32_UART
+ 		help
+ 		  Say Y here if you want kernel low-level debugging support on
+Index: linux-qsmp-1351/drivers/thermal/st/Kconfig
+===================================================================
+--- linux-qsmp-1351.orig/drivers/thermal/st/Kconfig
++++ linux-qsmp-1351/drivers/thermal/st/Kconfig
+@@ -14,7 +14,7 @@ config ST_THERMAL_MEMMAP
+ 
+ config STM32_THERMAL
+ 	tristate "Thermal framework support on STMicroelectronics STM32 series of SoCs"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  Support for thermal framework on STMicroelectronics STM32 series of
+Index: linux-qsmp-1351/drivers/cpufreq/Kconfig.arm
+===================================================================
+--- linux-qsmp-1351.orig/drivers/cpufreq/Kconfig.arm
++++ linux-qsmp-1351/drivers/cpufreq/Kconfig.arm
+@@ -242,7 +242,7 @@ config ARM_STI_CPUFREQ
+ 
+ config ARM_STM32_CPUFREQ
+ 	tristate "STM32 CPUFreq support"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  This adds the CPUFreq driver support for STM32 MPU SOCs.
+Index: linux-qsmp-1351/drivers/clk/stm32/Kconfig
+===================================================================
+--- linux-qsmp-1351.orig/drivers/clk/stm32/Kconfig
++++ linux-qsmp-1351/drivers/clk/stm32/Kconfig
+@@ -13,14 +13,14 @@ if COMMON_CLK_STM32MP
+ 
+ config COMMON_CLK_STM32MP135
+ 	bool "Clock driver for stm32mp13x clocks"
+-	depends on ARM || COMPILE_TEST
++	depends on MACH_STM32MP13 || COMPILE_TEST
+ 	default y
+ 	help
+ 	  Support for stm32mp13x SoC family clocks.
+ 
+ config COMMON_CLK_STM32MP157
+ 	bool "Clock driver for stm32mp15x clocks"
+-	depends on ARM || COMPILE_TEST
++	depends on MACH_STM32MP157 || COMPILE_TEST
+ 	default y
+ 	help
+ 	  Support for stm32mp15x SoC family clocks.

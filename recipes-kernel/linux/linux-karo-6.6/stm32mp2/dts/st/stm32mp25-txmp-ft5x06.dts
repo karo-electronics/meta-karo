@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include "includes/stm32mp25-karo-ft5x06.dtsi"
+
+&{/chosen} {
+	overlays {
+		txmp-ft5x06;
+	};
+};
+
+&touchpanel0 {
+	interrupt-parent = <&gpioh>;
+	interrupts = <9 IRQ_TYPE_EDGE_FALLING>; /* Pin 148 */
+	reset-gpios = <&gpioh 13 GPIO_ACTIVE_LOW>; /* Pin 149 */
+	wake-gpios = <&gpioz 1 GPIO_ACTIVE_HIGH>; /* Pin 152 */
+};

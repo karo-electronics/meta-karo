@@ -2,29 +2,25 @@ Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
 ===================================================================
 --- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_def.h
 +++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
-@@ -140,25 +140,41 @@ enum ddr_type {
- 					 (STM32MP_PARAM_LOAD_SIZE +	\
- 					  STM32MP_HEADER_SIZE))
- 
-+#ifndef STM32MP_BL31_SIZE
- #define STM32MP_BL31_SIZE		U(0x0001F000)	/* 124 KiB for BL31 */
-+#endif
+@@ -215,27 +215,43 @@ enum ddr_type {
+ 						 (STM32MP_PARAM_LOAD_SIZE +	\
+ 						  STM32MP_HEADER_SIZE))
  
 +#ifndef STM32MP_BL2_RO_SIZE
  #if TRUSTED_BOARD_BOOT
  #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
- #define STM32MP_BL2_RO_SIZE		U(0x00021000)	/* 132 KiB */
--#define STM32MP_BL2_SIZE		U(0x0002C000)	/* 176 KiB for BL2 */
+ #define STM32MP_BL2_RO_SIZE			U(0x00021000)	/* 132 KiB */
+-#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
  #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
- #define STM32MP_BL2_RO_SIZE		U(0x00021000)	/* 132 KiB */
--#define STM32MP_BL2_SIZE		U(0x0002D000)	/* 180 KiB for BL2 */
+ #define STM32MP_BL2_RO_SIZE			U(0x00021000)	/* 132 KiB */
+-#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
  #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
  #else
  #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
- #define STM32MP_BL2_RO_SIZE		U(0x0001F000)	/* 124 KiB */
--#define STM32MP_BL2_SIZE		U(0x00028000)	/* 160 KiB for BL2 */
+ #define STM32MP_BL2_RO_SIZE			U(0x0001F000)	/* 124 KiB */
+-#define STM32MP_BL2_SIZE			U(0x00028000)	/* 160 KiB for BL2 */
  #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
- #define STM32MP_BL2_RO_SIZE		U(0x00020000)	/* 128 KiB */
+ #define STM32MP_BL2_RO_SIZE			U(0x00020000)	/* 128 KiB */
 +#endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
 +#endif /* TRUSTED_BOARD_BOOT */
 +#endif /* STM32MP_BL2_RO_SIZE */
@@ -32,29 +28,34 @@ Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_def.h
 +#ifndef STM32MP_BL2_SIZE
 +#if TRUSTED_BOARD_BOOT
 +#if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
-+#define STM32MP_BL2_SIZE		U(0x0002C000)	/* 176 KiB for BL2 */
++#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
 +#else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
-+#define STM32MP_BL2_SIZE		U(0x0002D000)	/* 180 KiB for BL2 */
++#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
 +#endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
 +#else
 +#if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
-+#define STM32MP_BL2_SIZE		U(0x00028000)	/* 160 KiB for BL2 */
++#define STM32MP_BL2_SIZE			U(0x00028000)	/* 160 KiB for BL2 */
 +#else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
- #define STM32MP_BL2_SIZE		U(0x00029000)	/* 164 KiB for BL2 */
+ #define STM32MP_BL2_SIZE			U(0x00029000)	/* 164 KiB for BL2 */
  #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
--#endif
-+#endif /* TRUSTED_BOARD_BOOT */
+ #endif /* TRUSTED_BOARD_BOOT */
 +#endif /* STM32MP_BL2_SIZE */
  
- #define STM32MP_BL2_BASE		(STM32MP_SEC_SYSRAM_BASE + \
- 					 STM32MP_SEC_SYSRAM_SIZE - \
+ /* Allocate remaining sysram to BL31 Binary only */
++#ifndef STM32MP_BL31_SIZE
+ #define STM32MP_BL31_SIZE			(STM32MP_SEC_SYSRAM_SIZE - \
+ 						 STM32MP_BL2_SIZE)
++#endif
+ 
+ #define BL31_PROGBITS_LIMIT		STM32MP_BL31_SIZE
+ 
 Index: tf-a-txmp-2550/plat/st/stm32mp2/platform.mk
 ===================================================================
 --- tf-a-txmp-2550.orig/plat/st/stm32mp2/platform.mk
 +++ tf-a-txmp-2550/plat/st/stm32mp2/platform.mk
-@@ -181,6 +181,21 @@ PLAT_INCLUDES		+=	-Iplat/st/stm32mp2/inc
- PLAT_INCLUDES		+=	-Idrivers/st/ddr/phy/phyinit/include/
- PLAT_INCLUDES		+=	-Idrivers/st/ddr/phy/firmware/include/
+@@ -236,6 +236,21 @@ PLAT_INCLUDES			+=	-Iplat/st/stm32mp2/in
+ PLAT_INCLUDES			+=	-Idrivers/st/ddr/phy/phyinit/include/
+ PLAT_INCLUDES			+=	-Idrivers/st/ddr/phy/firmware/include/
  
 +ifneq ($(STM32MP_BL31_SIZE),)
 +STM32MP_CPPFLAGS	+=	-DSTM32MP_BL31_SIZE=$(STM32MP_BL31_SIZE)
@@ -71,6 +72,6 @@ Index: tf-a-txmp-2550/plat/st/stm32mp2/platform.mk
 +ASFLAGS			+=	$(STM32MP_CPPFLAGS)
 +DTC_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
 +
- PLAT_BL_COMMON_SOURCES	+=	drivers/st/pmic/stm32mp_pmic2.c				\
- 				drivers/st/pmic/stpmic2.c				\
- 
+ PLAT_BL_COMMON_SOURCES		+=	lib/cpus/${ARCH}/cortex_a35.S
+ PLAT_BL_COMMON_SOURCES		+=	drivers/st/uart/${ARCH}/stm32_console.S
+ PLAT_BL_COMMON_SOURCES		+=	plat/st/stm32mp2/${ARCH}/stm32mp2_helper.S

@@ -1,7 +1,7 @@
-Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic1.c
+Index: tf-a-txmp-2550/drivers/st/pmic/stpmic1.c
 ===================================================================
---- tf-a-qsmp-2550.orig/drivers/st/pmic/stpmic1.c
-+++ tf-a-qsmp-2550/drivers/st/pmic/stpmic1.c
+--- tf-a-txmp-2550.orig/drivers/st/pmic/stpmic1.c
++++ tf-a-txmp-2550/drivers/st/pmic/stpmic1.c
 @@ -14,16 +14,16 @@
  
  struct regul_struct {
@@ -899,10 +899,10 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic1.c
  			name,
  			stpmic1_is_regulator_enabled(name) ? "en" : "dis",
  			stpmic1_regulator_voltage_get(name));
-Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
+Index: tf-a-txmp-2550/drivers/st/pmic/stpmic2.c
 ===================================================================
---- tf-a-qsmp-2550.orig/drivers/st/pmic/stpmic2.c
-+++ tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
+--- tf-a-txmp-2550.orig/drivers/st/pmic/stpmic2.c
++++ tf-a-txmp-2550/drivers/st/pmic/stpmic2.c
 @@ -22,69 +22,69 @@
  
  struct regul_struct {
@@ -929,7 +929,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  };
  
 -/* Voltage tables in mV */
--static const uint16_t buck1236_volt_table[] = {
+-static const uint16_t buck_low_volt_table[] = {
 -	500U, 510U, 520U, 530U, 540U, 550U, 560U, 570U, 580U, 590U,
 -	600U, 610U, 620U, 630U, 640U, 650U, 660U, 670U, 680U, 690U,
 -	700U, 710U, 720U, 730U, 740U, 750U, 760U, 770U, 780U, 790U,
@@ -944,7 +944,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
 -	1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U,
 -	1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U
 +/* Voltage tables in uv */
-+static const uint32_t buck1236_volt_table[] = {
++static const uint32_t buck_low_volt_table[] = {
 +	500000U, 510000U, 520000U, 530000U, 540000U, 550000U, 560000U, 570000U, 580000U, 590000U,
 +	600000U, 610000U, 620000U, 630000U, 640000U, 650000U, 660000U, 670000U, 680000U, 690000U,
 +	700000U, 710000U, 720000U, 730000U, 740000U, 750000U, 760000U, 770000U, 780000U, 790000U,
@@ -960,7 +960,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
 +	1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U,
  };
  
--static const uint16_t buck457_volt_table[] = {
+-static const uint16_t buck_high_volt_table[] = {
 -	1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U,
 -	1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U,
 -	1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U, 1500U,
@@ -974,7 +974,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
 -	1500U, 1600U, 1700U, 1800U, 1900U, 2000U, 2100U, 2200U, 2300U, 2400U,
 -	2500U, 2600U, 2700U, 2800U, 2900U, 3000U, 3100U, 3200U, 3300U, 3400U,
 -	3500U, 3600U, 3700U, 3800U, 3900U, 4000U, 4100U, 4200U
-+static const uint32_t buck457_volt_table[] = {
++static const uint32_t buck_high_volt_table[] = {
 +	1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U,
 +	1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U,
 +	1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U, 1500000U,
@@ -1019,7 +1019,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  	0,
  };
  
-@@ -165,14 +165,14 @@ static const struct regul_struct regul_t
+@@ -181,14 +181,14 @@ static const struct regul_struct regul_t
  };
  
  int stpmic2_register_read(struct pmic_handle_s *pmic,
@@ -1037,7 +1037,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  		ERROR("Failed to read reg:0x%x\n", register_id);
  	}
  
-@@ -180,15 +180,15 @@ int stpmic2_register_read(struct pmic_ha
+@@ -196,15 +196,15 @@ int stpmic2_register_read(struct pmic_ha
  }
  
  int stpmic2_register_write(struct pmic_handle_s *pmic,
@@ -1056,7 +1056,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  		ERROR("Failed to write reg:0x%x\n", register_id);
  	}
  
-@@ -196,17 +196,16 @@ int stpmic2_register_write(struct pmic_h
+@@ -212,17 +212,16 @@ int stpmic2_register_write(struct pmic_h
  }
  
  int stpmic2_register_update(struct pmic_handle_s *pmic,
@@ -1078,7 +1078,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  
  	VERBOSE("REG:0x%x v=0x%x mask=0x%x -> 0x%x\n",
  		register_id, value, mask, val);
-@@ -219,11 +218,10 @@ int stpmic2_regulator_set_state(struct p
+@@ -235,11 +234,10 @@ int stpmic2_regulator_set_state(struct p
  {
  	const struct regul_struct *regul = &regul_table[id];
  
@@ -1092,7 +1092,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  }
  
  int stpmic2_regulator_get_state(struct pmic_handle_s *pmic,
-@@ -232,7 +230,7 @@ int stpmic2_regulator_get_state(struct p
+@@ -248,7 +246,7 @@ int stpmic2_regulator_get_state(struct p
  	const struct regul_struct *regul = &regul_table[id];
  	uint8_t val;
  
@@ -1101,7 +1101,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  		return RET_ERROR_GENERIC;
  	}
  
-@@ -241,8 +239,8 @@ int stpmic2_regulator_get_state(struct p
+@@ -257,8 +255,8 @@ int stpmic2_regulator_get_state(struct p
  	return RET_SUCCESS;
  }
  
@@ -1112,7 +1112,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  				size_t *levels_count)
  {
  	const struct regul_struct *regul = &regul_table[id];
-@@ -262,7 +260,7 @@ int stpmic2_regulator_levels_mv(struct p
+@@ -278,7 +276,7 @@ int stpmic2_regulator_levels_mv(struct p
  }
  
  int stpmic2_regulator_get_voltage(struct pmic_handle_s *pmic,
@@ -1121,7 +1121,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  {
  	const struct regul_struct *regul = &regul_table[id];
  	uint8_t value = 0U;
-@@ -273,8 +271,8 @@ int stpmic2_regulator_get_voltage(struct
+@@ -289,8 +287,8 @@ int stpmic2_regulator_get_voltage(struct
  	}
  
  	mask = regul->volt_table_size - 1U;
@@ -1132,7 +1132,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  			return RET_ERROR_GENERIC;
  		}
  
-@@ -291,34 +289,32 @@ int stpmic2_regulator_get_voltage(struct
+@@ -307,34 +305,32 @@ int stpmic2_regulator_get_voltage(struct
  }
  
  static size_t voltage_to_index(const struct regul_struct *regul,
@@ -1172,7 +1172,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  	if (index == VOLTAGE_INDEX_INVALID) {
  		return RET_ERROR_GENERIC;
  	}
-@@ -334,13 +330,11 @@ static int stpmic2_update_en_crs(struct
+@@ -350,13 +346,11 @@ static int stpmic2_update_en_crs(struct
  {
  	const struct regul_struct *regul = &regul_table[id];
  
@@ -1188,14 +1188,16 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  
  	return RET_SUCCESS;
  }
-@@ -355,26 +349,19 @@ int stpmic2_regulator_get_prop(struct pm
+@@ -371,27 +365,20 @@ int stpmic2_regulator_get_prop(struct pm
  
  	switch (prop) {
  	case STPMIC2_BYPASS:
 -		if ((id <= STPMIC2_BUCK7) || (id == STPMIC2_LDO1) ||
--		    (id == STPMIC2_LDO4) || (id == STPMIC2_REFDDR)) {
+-		    (id == STPMIC2_LDO4) || (id == STPMIC2_REFDDR) ||
+-		    (pmic->ref_id != PMIC_REF_ID_STPMIC25)) {
 +		if (id <= STPMIC2_BUCK7 || id == STPMIC2_LDO1 ||
-+		    id == STPMIC2_LDO4 || id == STPMIC2_REFDDR)
++		    id == STPMIC2_LDO4 || id == STPMIC2_REFDDR ||
++		    pmic->ref_id != PMIC_REF_ID_STPMIC25)
  			return 0;
 -		}
  
@@ -1219,7 +1221,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  }
  
  int stpmic2_regulator_set_prop(struct pmic_handle_s *pmic, uint8_t id,
-@@ -390,29 +377,28 @@ int stpmic2_regulator_set_prop(struct pm
+@@ -407,30 +394,28 @@ int stpmic2_regulator_set_prop(struct pm
  					       regul->pd_val,
  					       regul->pd_val);
  	case STPMIC2_MASK_RESET:
@@ -1234,11 +1236,13 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  					       regul->msrt_mask);
  	case STPMIC2_BYPASS:
 -		if ((id <= STPMIC2_BUCK7) || (id == STPMIC2_LDO1) ||
--		    (id == STPMIC2_LDO4) || (id == STPMIC2_REFDDR)) {
+-		    (id == STPMIC2_LDO4) || (id == STPMIC2_REFDDR) ||
+-		    (pmic->ref_id != PMIC_REF_ID_STPMIC25)) {
 +		if (id <= STPMIC2_BUCK7 || id == STPMIC2_LDO1 ||
-+		    id == STPMIC2_LDO4 || id == STPMIC2_REFDDR) {
++		    id == STPMIC2_LDO4 || id == STPMIC2_REFDDR ||
++		    pmic->ref_id != PMIC_REF_ID_STPMIC25)
  			return RET_ERROR_NOT_SUPPORTED;
- 		}
+-		}
  
  		/* clear sink source mode */
 -		if ((id == STPMIC2_LDO3) && (arg != 0U)) {
@@ -1256,7 +1260,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  					     LDO_BYPASS);
  	case STPMIC2_SINK_SOURCE:
  		if (id != STPMIC2_LDO3) {
-@@ -420,7 +406,7 @@ int stpmic2_regulator_set_prop(struct pm
+@@ -438,7 +423,7 @@ int stpmic2_regulator_set_prop(struct pm
  		}
  
  		/* clear bypass mode */
@@ -1265,7 +1269,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  			return RET_ERROR_GENERIC;
  		}
  
-@@ -445,7 +431,7 @@ void stpmic2_dump_regulators(struct pmic
+@@ -468,7 +453,7 @@ void stpmic2_dump_regulators(struct pmic
  	char const *name;
  
  	for (i = 0U; i < ARRAY_SIZE(regul_table); i++) {
@@ -1274,7 +1278,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  		bool state;
  
  		if (!regul_table[i].volt_cr) {
-@@ -457,7 +443,7 @@ void stpmic2_dump_regulators(struct pmic
+@@ -480,7 +465,7 @@ void stpmic2_dump_regulators(struct pmic
  
  		name = regul_table[i].name;
  
@@ -1283,10 +1287,10 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stpmic2.c
  			name, state ? "EN" : "DIS", val);
  	}
  }
-Index: tf-a-qsmp-2550/drivers/st/regulator/regulator_core.c
+Index: tf-a-txmp-2550/drivers/st/regulator/regulator_core.c
 ===================================================================
---- tf-a-qsmp-2550.orig/drivers/st/regulator/regulator_core.c
-+++ tf-a-qsmp-2550/drivers/st/regulator/regulator_core.c
+--- tf-a-txmp-2550.orig/drivers/st/regulator/regulator_core.c
++++ tf-a-txmp-2550/drivers/st/regulator/regulator_core.c
 @@ -204,23 +204,23 @@ int regulator_is_enabled(const struct rd
   * Set regulator voltage
   *
@@ -1549,10 +1553,10 @@ Index: tf-a-qsmp-2550/drivers/st/regulator/regulator_core.c
  	}
  
  	return parse_dt(rdev, node);
-Index: tf-a-qsmp-2550/include/drivers/st/regulator.h
+Index: tf-a-txmp-2550/include/drivers/st/regulator.h
 ===================================================================
---- tf-a-qsmp-2550.orig/include/drivers/st/regulator.h
-+++ tf-a-qsmp-2550/include/drivers/st/regulator.h
+--- tf-a-txmp-2550.orig/include/drivers/st/regulator.h
++++ tf-a-txmp-2550/include/drivers/st/regulator.h
 @@ -49,12 +49,12 @@ int regulator_enable(struct rdev *rdev);
  int regulator_disable(struct rdev *rdev);
  int regulator_is_enabled(const struct rdev *rdev);
@@ -1599,10 +1603,10 @@ Index: tf-a-qsmp-2550/include/drivers/st/regulator.h
  };
  
  #endif /* REGULATOR_H */
-Index: tf-a-qsmp-2550/include/drivers/st/stpmic1.h
+Index: tf-a-txmp-2550/include/drivers/st/stpmic1.h
 ===================================================================
---- tf-a-qsmp-2550.orig/include/drivers/st/stpmic1.h
-+++ tf-a-qsmp-2550/include/drivers/st/stpmic1.h
+--- tf-a-txmp-2550.orig/include/drivers/st/stpmic1.h
++++ tf-a-txmp-2550/include/drivers/st/stpmic1.h
 @@ -174,14 +174,14 @@
  
  int stpmic1_powerctrl_on(void);
@@ -1623,11 +1627,11 @@ Index: tf-a-qsmp-2550/include/drivers/st/stpmic1.h
  				size_t *levels_count);
  int stpmic1_regulator_voltage_get(const char *name);
  int stpmic1_regulator_pull_down_set(const char *name);
-Index: tf-a-qsmp-2550/include/drivers/st/stpmic2.h
+Index: tf-a-txmp-2550/include/drivers/st/stpmic2.h
 ===================================================================
---- tf-a-qsmp-2550.orig/include/drivers/st/stpmic2.h
-+++ tf-a-qsmp-2550/include/drivers/st/stpmic2.h
-@@ -275,24 +275,24 @@ struct pmic_handle_s {
+--- tf-a-txmp-2550.orig/include/drivers/st/stpmic2.h
++++ tf-a-txmp-2550/include/drivers/st/stpmic2.h
+@@ -322,24 +322,24 @@ struct pmic_handle_s {
  };
  
  int stpmic2_register_read(struct pmic_handle_s *pmic,
@@ -1659,10 +1663,10 @@ Index: tf-a-qsmp-2550/include/drivers/st/stpmic2.h
  
  #if EVENT_LOG_LEVEL == LOG_LEVEL_VERBOSE
  void stpmic2_dump_regulators(struct pmic_handle_s *pmic);
-Index: tf-a-qsmp-2550/plat/st/common/stm32mp_dt.c
+Index: tf-a-txmp-2550/plat/st/common/stm32mp_dt.c
 ===================================================================
---- tf-a-qsmp-2550.orig/plat/st/common/stm32mp_dt.c
-+++ tf-a-qsmp-2550/plat/st/common/stm32mp_dt.c
+--- tf-a-txmp-2550.orig/plat/st/common/stm32mp_dt.c
++++ tf-a-txmp-2550/plat/st/common/stm32mp_dt.c
 @@ -258,7 +258,7 @@ size_t dt_get_ddr_size(void)
  uint32_t dt_get_pwr_vdd_voltage(void)
  {
@@ -1681,10 +1685,10 @@ Index: tf-a-qsmp-2550/plat/st/common/stm32mp_dt.c
  }
  
  /*******************************************************************************
-Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic2.c
+Index: tf-a-txmp-2550/drivers/st/pmic/stm32mp_pmic2.c
 ===================================================================
---- tf-a-qsmp-2550.orig/drivers/st/pmic/stm32mp_pmic2.c
-+++ tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic2.c
+--- tf-a-txmp-2550.orig/drivers/st/pmic/stm32mp_pmic2.c
++++ tf-a-txmp-2550/drivers/st/pmic/stm32mp_pmic2.c
 @@ -24,7 +24,7 @@
  
  struct regul_handle_s {
@@ -1694,7 +1698,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic2.c
  };
  
  static struct pmic_handle_s pmic2_handle;
-@@ -199,89 +199,83 @@ static int pmic2_get_state(const struct
+@@ -228,89 +228,83 @@ static int pmic2_get_state(const struct
  static int pmic2_get_voltage(const struct regul_description *desc)
  {
  	struct regul_handle_s *regul = (struct regul_handle_s *)desc->driver_data;
@@ -1811,7 +1815,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic2.c
  
  	VERBOSE("%s: set_flag 0x%x\n", desc->node_name, flag);
  
-@@ -306,11 +300,7 @@ static int pmic2_set_flag(const struct r
+@@ -335,11 +329,7 @@ static int pmic2_set_flag(const struct r
  		panic();
  	}
  
@@ -1824,7 +1828,7 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic2.c
  }
  
  int stpmic2_set_prop(const struct regul_description *desc, uint16_t prop, uint32_t value)
-@@ -437,9 +427,9 @@ static int register_pmic2(void)
+@@ -502,9 +492,9 @@ static int register_pmic2(void)
  		if (cuint != NULL) {
  			struct regul_handle_s *regul = (struct regul_handle_s *)desc->driver_data;
  
@@ -1837,10 +1841,10 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic2.c
  		}
  
  		if (fdt_getprop(fdt, subnode, "st,mask-reset", NULL)  != NULL) {
-Index: tf-a-qsmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
+Index: tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
 ===================================================================
---- tf-a-qsmp-2550.orig/plat/st/stm32mp2/stm32mp2_pwr.c
-+++ tf-a-qsmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
+--- tf-a-txmp-2550.orig/plat/st/stm32mp2/stm32mp2_pwr.c
++++ tf-a-txmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
 @@ -13,7 +13,7 @@
  #include <platform_def.h>
  #include <stm32mp2_private.h>
@@ -1850,7 +1854,7 @@ Index: tf-a-qsmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
  
  struct pwr_regu {
  	const char *node_name;
-@@ -89,7 +89,7 @@ static bool stm32mp2_pwr_domain_is_enabl
+@@ -93,7 +93,7 @@ static bool stm32mp2_pwr_domain_is_enabl
  static int stm32mp2_pwr_handle_vrsel(void *fdt, int node, const struct pwr_regu *regu)
  {
  	struct rdev *supply;
@@ -1859,7 +1863,7 @@ Index: tf-a-qsmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
  
  	VERBOSE("Check VRSEL for %s\n", regu->node_name);
  
-@@ -100,12 +100,12 @@ static int stm32mp2_pwr_handle_vrsel(voi
+@@ -104,12 +104,12 @@ static int stm32mp2_pwr_handle_vrsel(voi
  		return 0;
  	}
  
@@ -1876,10 +1880,10 @@ Index: tf-a-qsmp-2550/plat/st/stm32mp2/stm32mp2_pwr.c
  		VERBOSE("Enable VRSEL for %s\n", regu->node_name);
  
  		mmio_setbits_32(stm32mp_pwr_base() + regu->enable_reg, regu->vrsel_mask);
-Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic.c
+Index: tf-a-txmp-2550/drivers/st/pmic/stm32mp_pmic.c
 ===================================================================
---- tf-a-qsmp-2550.orig/drivers/st/pmic/stm32mp_pmic.c
-+++ tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic.c
+--- tf-a-txmp-2550.orig/drivers/st/pmic/stm32mp_pmic.c
++++ tf-a-txmp-2550/drivers/st/pmic/stm32mp_pmic.c
 @@ -306,19 +306,19 @@ static int pmic_get_voltage(const struct
  	return stpmic1_regulator_voltage_get(desc->node_name);
  }
@@ -1904,28 +1908,3 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/stm32mp_pmic.c
  }
  
  static int pmic_set_flag(const struct regul_description *desc, uint16_t flag)
-Index: tf-a-qsmp-2550/plat/st/stm32mp1/plat_ddr.c
-===================================================================
---- tf-a-qsmp-2550.orig/plat/st/stm32mp1/plat_ddr.c
-+++ tf-a-qsmp-2550/plat/st/stm32mp1/plat_ddr.c
-@@ -14,7 +14,7 @@
- static int pmic_ddr_power_init(enum ddr_type ddr_type)
- {
- 	int status;
--	uint16_t buck3_min_mv __unused;
-+	uint32_t buck3_min_uv __unused;
- 	struct rdev *buck2, *buck3 __unused, *vref;
- 	struct rdev *ldo3 __unused;
- 
-@@ -80,9 +80,9 @@ static int pmic_ddr_power_init(enum ddr_
- 			return -ENOENT;
- 		}
- 
--		regulator_get_range(buck3, &buck3_min_mv, NULL);
-+		regulator_get_range(buck3, &buck3_min_uv, NULL);
- 
--		if (buck3_min_mv != 1800) {
-+		if (buck3_min_uv != 1800000) {
- 			status = regulator_set_min_voltage(ldo3);
- 			if (status != 0) {
- 				return status;

@@ -1,0 +1,51 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+&{/} {
+	model = "Ka-Ro electronics GmbH TXMP-2550 module on MB7 baseboard";
+
+	chosen {
+		overlays {
+			txmp-mb7;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		module_led: module-led {
+			label = "Heartbeat";
+			gpios = <&gpioz 2 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+};
+
+&i2c3 {
+	status = "okay";
+};
+
+&m_can1 {
+	status = "okay";
+};
+
+&uart7 {
+	uart-has-rts-cts;
+};
+
+&usart1 {
+	uart-has-rts-cts;
+};
+
+&usart2 {
+	uart-has-rts-cts;
+};

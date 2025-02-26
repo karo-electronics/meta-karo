@@ -5,12 +5,12 @@
 
 /dts-v1/;
 
-#include "stm32mp153.dtsi"
+#include "stm32mp157.dtsi"
 #include "stm32mp15-txmp.dtsi"
 
 / {
-	model = "Ka-Ro electronics GmbH TXMP-1570 module";
-	compatible = "karo,stm32mp157c-txmp-1570", "st,stm32mp157";
+	model = "Ka-Ro electronics GmbH TXMP-1530 module";
+	compatible = "karo,stm32mp157c-txmp-1530", "st,stm32mp157";
 
 	memory@c0000000 {
 		device_type = "memory";

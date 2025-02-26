@@ -34,8 +34,9 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
 
-SRC_URI:append:stm32mp1 = "${@ "".join(map(lambda f: " file://dts/overlays/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
-SRC_URI:append:stm32mp2 = "${@ "".join(map(lambda f: " file://dts/st/includes/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % (d.getVar('SOC_PREFIX'), f), d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
+SRC_URI:append = "${@ "".join(map(lambda f: " file://dts%s/includes/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % \
+                  (("/" + d.getVar('dtb_vendordir') if d.getVar('dtb_vendordir') != "" else ""), d.getVar('SOC_PREFIX'), f), \
+		  d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 
 KERNEL_DTC_FLAGS += "-@"
 
@@ -181,7 +182,7 @@ addtask do_configure before do_devshell
 
 dtb_ext = "dtb"
 dtb_vendordir = ""
-dtb_vendordir:stm32mp2 = "st"
+dtb_vendordir:stm32mpcommon = "st"
 
 python do_check_dtbs () {
     import os
@@ -288,6 +289,7 @@ python do_check_overlays() {
                         bb.debug(1, "%s referenced in %s is defined in %s" % (s, f, sf))
                         break
 
-    return ok
+    if not ok:
+        bb.fatal("check_overlays failed")
 }
 addtask do_check_overlays after do_compile_dtbs before do_compile

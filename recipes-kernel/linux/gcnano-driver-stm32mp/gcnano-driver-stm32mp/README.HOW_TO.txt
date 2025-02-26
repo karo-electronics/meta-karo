@@ -17,11 +17,15 @@ Compilation of the gcnano kernel module:
 2. Initialize cross-compilation via SDK
 ---------------------------------------
 Source SDK environment:
-    $ source <path to SDK>/environment-setup-cortexa7t2hf-neon-vfpv4-ostl-linux-gnueabi
+    $ source <path to SDK>/environment-setup
 
-To verify if your cross-compilation environment have put in place:
-    $ set | grep CROSS
-    CROSS_COMPILE=arm-ostl-linux-gnueabi-
+To verify that your cross-compilation environment is set-up correctly:
+    $ set | grep CROSS_COMPILE
+
+  If the variable CROSS_COMPILE has a value:
+   - arm-ostl-linux-gnueabi- for 32 bits architecture (for example STM32MP1)
+   - aarch64-ostl-linux- for 64 bits architecture (for example STM32MP2)
+  Then everything is set-up correctly
 
 Warning: the environment variables are valid only on the shell session where you have
 sourced the sdk environment.
@@ -76,7 +80,7 @@ OpenSTLinux SDK must be installed.
 
 * Compile and install the gcnano kernel module
     * First define KERNEL_BUILDDIR variable to expose kernel source code
-    $> KERNEL_BUILDDIR="../../linux-stm32mp-<KERNELVERSION>-stm32mp2-alpha-<RELEASE>/build"
+    $> KERNEL_BUILDDIR="../../linux-stm32mp-<KERNELVERSION>-stm32mp-<RELEASE>/build"
     * Select the platform between "st-mp1" or "st-mp2"
     $> SOC_PLATFORM=st-mp<X>
     * Build kernel module
@@ -100,7 +104,7 @@ OpenSTLinux SDK must be installed.
     $ ssh root@<ip of board> reboot
 
 ---------------------------
-7. Update Starter Package with gcnano kernel module compilation outputs
+7. Generate new Starter Package with gcnano kernel module compilation outputs
 ---------------------------
 
 If not already done, extract the artifacts from Starter Package tarball, for example:
@@ -109,12 +113,12 @@ If not already done, extract the artifacts from Starter Package tarball, for exa
 Update Starter package with just compiled kernel module galcore.ko:
     #> mkdir -p <your_starter_package_dir_path>/rootfs_mounted
     #> sudo mount -o loop <your_starter_package_dir_path>/images/stm32mp*/st-image-weston-openstlinux-weston-stm32mp*.ext4 <your_starter_package_dir_path>/rootfs_mounted
-    #> sudo mkdir -p <your_starter_package_dir_path>/rootfs_mounted/lib/modules/*/extra
+    #> sudo mkdir -p <your_starter_package_dir_path>/rootfs_mounted/lib/modules/##KERNEL_VERSION##/updates
 
 Cleanup Starter Package from original gcnano kernel module artifacts first
-    #> sudo rm -vf <your_starter_package_dir_path>/rootfs_mounted/lib/modules/*/extra/galcore.ko
+    #> sudo rm -vf <your_starter_package_dir_path>/rootfs_mounted/lib/modules/##KERNEL_VERSION##/updates/galcore.ko
 
-    #> sudo cp -vf */galcore.ko  <your_starter_package_dir_path>/rootfs_mounted/lib/modules/*/extra
+    #> sudo cp -vf */galcore.ko  <your_starter_package_dir_path>/rootfs_mounted/lib/modules/##KERNEL_VERSION##/updates/
     #> sudo depmod -a -b <your_starter_package_dir_path>/rootfs_mounted $(\ls <your_starter_package_dir_path>/rootfs_mounted/lib/modules)
     #> sudo umount <your_starter_package_dir_path>/rootfs_mounted
     #> rmdir <your_starter_package_dir_path>/rootfs_mounted

@@ -105,29 +105,116 @@ function usage() {
     echo "    -d | --use-ddr: add ddr firmware on FIP binary"
     echo "    -I <INPUT_DIR>| --input <INPUT_DIR>: directory prefix for search input binaries and fip output dir"
     echo "    -O <FIP_DEPLOYDIR_FIP>| --output <FIP_DEPLOYDIR_FIP>: FIP output directory"
+    echo "    Search parameters:"
     echo "    -C <configuration>| --search-configuration <configuration>: configuration name for finding file"
     echo "    -D <devicetree>| --search-devicetree <devicetree>: devicetree name for finding file"
     echo "    -S <storage>| --search-storage <storage>: storage name for finding file"
     echo "    -T <soc name>| --search-soc-name <soc name>: soc name for finding file"
     echo "    -U <configuration>| --search-secondary-config <configuration>: second configuration name for finding file"
-    echo "     ddr:"
+    echo "         configuration: list of configuration separated by ':'"
+    echo "            ex.: --search-secondary-config default:optee"
+    echo "                 --search-secondary-config fastboot-emmc:optee"
+    echo "                 --search-secondary-config dafault:opteemin"
+    echo "    DDR parameters:"
     echo "    -g | --generate-only-ddr: generate only FIP ddr firmware"
-    echo "    signature:"
+    echo "    Signature parameters:"
     echo "    -s | --sign: sign binaries"
     echo "    -K <signature key file>| --signature-key <signature key file>: signature key file for signature"
     echo "    -P <signature pass>| --signature-key-pass <signature pass>: signature key pass for signature"
-    echo "    encryption:"
+    echo "    Encryption parameters:"
     echo "    -E <encrypt file key name>| --encrypt <encrypt file key name>: use encryption and use specific key file"
     echo ""
     echo "Examples:"
     echo "  Generate only fip ddr binary for stm32mp257f-dk"
-    echo "  $0    -O deploy/images/stm32mp2/fip --use-ddr --generate-only-ddr -C optee -D stm32mp257f-dk"
+    echo "  $0 -O deploy/images/stm32mp2/fip --use-ddr --generate-only-ddr -C optee-emmc -D stm32mp257f-dk --search-secondary-config default:optee"
     echo "  Generate fip binary for stm32mp257f-dk and sdcard storage"
-    echo "  $0    -O deploy/images/stm32mp2/fip --use-ddr -C optee -D stm32mp257f-dk -S sdcard"
+    echo "  $0 -O deploy/images/stm32mp2/fip --use-ddr -C optee-sdcard -D stm32mp257f-dk -T stm32mp25 --search-secondary-config default:optee"
     echo "  Generate fip binary for stm32mp157f-ev1 and emmc storage (no ddr used with stm32mp1)"
-    echo "  $0    -O deploy/images/stm32mp2/fip -C optee -D stm32mp157f-ev1 -S emmc"
+    echo "  $0 -O deploy/images/stm32mp2/fip -C optee-emmc -D stm32mp157f-ev1 -T stm32mp15 --search-secondary-config default:opteemin"
     echo "  Generate fip binary for stm32mp257f-dk and sdcard storage and signed and encrypted"
-    echo "  $0    -O deploy/images/stm32mp2/fip --use-ddr -C optee -D stm32mp257f-dk -S sdcard -s -K key/stm32mp25/privateKey00.pem -P <my pass> -E key/stm32mp25/edmk-fip.bin"
+    echo "  $0 -O deploy/images/stm32mp2/fip --use-ddr -C optee-sdcard -D stm32mp257f-dk -T stm32mp25 --search-secondary-config default:optee \\"
+    echo "               -s -K key/stm32mp25/privateKey00.pem -P <my pass> -E key/stm32mp25/edmk-fip.bin"
+    echo ""
+    echo "Examples per boards and use cases:"
+
+    echo "STM32MP157F-EV1 opteemin sdcard" 
+    echo "$0 --search-configuration opteemin-sdcard --search-secondary-config default:opteemin --search-devicetree stm32mp157f-ev1 \\"
+    echo "   --search-soc-name stm32mp15 \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP157F-EV1 opteemin emmc" 
+    echo "$0 --search-configuration opteemin-sdcard --search-secondary-config default:opteemin --search-devicetree stm32mp157f-ev1 \\"
+    echo "   --search-soc-name stm32mp15 \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP137F-EV1 opteemin sdcard signed"
+    echo "$0 --search-configuration opteemin-sdcard --search-secondary-config default:opteemin--search-devicetree stm32mp157f-ev1 \\"
+    echo "   --search-soc-name stm32mp15 \\"
+    echo "    -s -K key/stm32mp15/privateKey00.pem -P <my pass> \\"
+    echo "   --output deploy-dir/fip"
+    echo ""
+    echo "STM32MP135F-DK optee sdcard" 
+    echo "$0 --search-configuration optee-sdcard --search-secondary-config default:optee --search-devicetree stm32mp135f-dk \\"
+    echo "   --search-soc-name stm32mp13  \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP135F-DK optee sdcard signed" 
+    echo "$0 --search-configuration optee-sdcard --search-secondary-config default:optee --search-devicetree stm32mp135f-dk \\"
+    echo "   --search-soc-name stm32mp13 \\"
+    echo "   -s -K key/stm32mp13/privateKey00.pem -P <my pass>  \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP135F-DK optee sdcard signed encrypted" 
+    echo "$0 --search-configuration optee-sdcard --search-secondary-config default:optee --search-devicetree stm32mp135f-dk \\"
+    echo "   --search-soc-name stm32mp13 \\"
+    echo "   -s -K key/stm32mp13/privateKey00.pem -P <my pass> -E key/stm32mp13/encryption_key.bin \\"
+    echo "   --output deploy-dir/fip"
+    echo ""
+    echo "STM32MP257F-EV1 optee sdcard" 
+    echo "$0 --use-ddr --generate-only-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-sdcard --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --output deploy-dir/fip"
+    echo "$0 --use-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-sdcard --search-secondary-config default:optee --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP257F-EV1 optee emmc" 
+    echo "$0 --use-ddr --generate-only-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-emmc --search-storage optee-emmc --search-storage optee-emmc \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --output deploy-dir/fip"
+    echo "$0 --use-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-emmc --search-secondary-config default:optee \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP257F-EV1 optee sdcard signed" 
+    echo "$0 --use-ddr --generate-only-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-sdcard --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --sign --signature-key key/stm32mp25/edmk-fip.bin \\"
+    echo "   --output deploy-dir/fip"
+    echo "$0 --use-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-sdcard --search-secondary-config default:optee --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25\\"
+    echo "   --sign --signature-key key/stm32mp25/edmk-fip.bin \\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP257F-EV1 optee sdcard signed encrypted" 
+    echo "$0 --use-ddr --generate-only-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-sdcard --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --sign --signature-key key/stm32mp25/edmk-fip.bin -E key/stm32mp25/edmk.bin \\"
+    echo "   --output deploy-dir/fip"
+    echo "$0 --use-ddr --use-bl31 \\"
+    echo "   --search-configuration optee-sdcard --search-secondary-config default:optee --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --sign --signature-key key/stm32mp25/edmk-fip.bin -E key/stm32mp25/edmk.bin\\"
+    echo "   --output deploy-dir/fip"
+    echo "STM32MP257F-EV1 fastboot sdcard" 
+    echo "$0 --use-ddr --generate-only-ddr --use-bl31 \\"
+    echo "   --search-configuration fastboot-sdcard --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --output deploy-dir/fip"
+    echo "$0 --use-ddr --use-bl31 \\"
+    echo "   --search-configuration fastboot-sdcard --search-secondary-config fastboot-sdcard:optee --search-storage optee-sdcard \\"
+    echo "   --search-devicetree stm32mp257f-ev1 --search-soc-name stm32mp25 \\"
+    echo "   --output deploy-dir/fip"
 
     exit $ret
 }
@@ -270,9 +357,12 @@ function found_file(){
     # Strategy:
     # file_prefix-<DTB>-<STORAGE>.extension
     # file_prefix-<DTB>-<CONFIG>.extension
+    # file_prefix-<DTB>-<SECONDARY_CONFIG>-<STORAGE>.extension
+    # file_prefix-<DTB>-<SECONDARY_CONFIG>.extension
     # file_prefix-<DTB>.extension
     # file_prefix-<STORAGE>.extension
     # file_prefix-<CONFIG>.extension
+    # file_prefix-<SECONDARY_CONFIG>.extension
     # file_prefix-<SOC NAME>-<STORAGE>.extension
     # file_prefix-<SOC NAME>-<CONFIG>.extension
     # file_prefix-<SOC NAME>-<SECONDARY_CONFIG>-<STORAGE>.extension
@@ -281,13 +371,22 @@ function found_file(){
 
     [ -e "$path_search/$file_prefix-$SEARCH_DTB-$SEARCH_STORAGE.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_DTB-$SEARCH_STORAGE.$file_extension" && return
     [ -e "$path_search/$file_prefix-$SEARCH_DTB-$SEARCH_CONFIG.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_DTB-$SEARCH_CONFIG.$file_extension" && return
+    for item in $(echo ${SEARCH_SECONDARY_CONF} | tr ':' ' '); do
+        [ -e "$path_search/$file_prefix-$SEARCH_DTB-$item-$SEARCH_STORAGE.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_DTB-$item-$SEARCH_STORAGE.$file_extension" && return
+        [ -e "$path_search/$file_prefix-$SEARCH_DTB-$item.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_DTB-$item.$file_extension" && return
+    done
     [ -e "$path_search/$file_prefix-$SEARCH_DTB.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_DTB.$file_extension" && return
     [ -e "$path_search/$file_prefix-$SEARCH_STORAGE.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_STORAGE.$file_extension" && return
     [ -e "$path_search/$file_prefix-$SEARCH_CONFIG.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_CONFIG.$file_extension" && return
+    for item in $(echo ${SEARCH_SECONDARY_CONF} | tr ':' ' '); do
+        [ -e "$path_search/$file_prefix-$item.$file_extension" ] && echo "$path_search/$file_prefix-$item.$file_extension" && return
+    done
     [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_STORAGE.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_STORAGE.$file_extension" && return
     [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_CONFIG.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_CONFIG.$file_extension" && return
-    [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_SECONDARY_CONF-$SEARCH_STORAGE.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_SECONDARY_CONF-$SEARCH_STORAGE.$file_extension" && return
-    [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_SECONDARY_CONF.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME-$SEARCH_SECONDARY_CONF.$file_extension" && return
+    for item in $(echo ${SEARCH_SECONDARY_CONF} | tr ':' ' '); do
+        [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME-$item-$SEARCH_STORAGE.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME-$item-$SEARCH_STORAGE.$file_extension" && return
+        [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME-$item.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME-$item.$file_extension" && return
+    done
     [ -e "$path_search/$file_prefix-$SEARCH_SOC_NAME.$file_extension" ] && echo "$path_search/$file_prefix-$SEARCH_SOC_NAME.$file_extension" && return
 
     echo "NOTFOUND"
@@ -423,6 +522,7 @@ fip_certconf_opt_addons=""
 
 # TF-A firmware: FW config
 fw_config_file=$(found_file "${FIP_DEPLOYDIR_FWCONF}" "$SEARCH_DTB-fw-config" "dtb")
+fw_config_file_light=$(echo $fw_config_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 [ "$fw_config_file" = "NOTFOUND" ] && file_error=1
 [ $file_error -eq 0 ] && fiptool_opt="$fiptool_opt --fw-config $fw_config_file"
 [ $file_error -eq 0 ] && certool_opt="$certool_opt --fw-config $fw_config_file"
@@ -433,6 +533,8 @@ store=$(search_specific_storage_in_name $fw_config_file)
 if [ $USE_BL31 -eq 1 ]; then
     bl3x_fw_file=$(found_file "${FIP_DEPLOYDIR_BL31}" "tf-a-bl31" "bin")
     bl3x_dtb_file=$(found_file "${FIP_DEPLOYDIR_BL31}" "$SEARCH_DTB-bl31" "dtb")
+    bl3x_fw_file_light=$(echo $bl3x_fw_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
+    bl3x_dtb_file_light=$(echo $bl3x_dtb_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
     [ "$bl3x_fw_file" = "NOTFOUND" ] && file_error=1
     [ "$bl3x_dtb_file" = "NOTFOUND" ] && file_error=1
     store=$(search_specific_storage_in_name $bl3x_dtb_file)
@@ -441,6 +543,8 @@ if [ $USE_BL31 -eq 1 ]; then
         if [ $file_error -eq 0 ]; then
             bl3x_fw_encrypted_file=$(echo $bl3x_fw_file | sed "s|.bin|$DEFAULT_ENCRYPT_SUFFIX.bin|")
             bl3x_dtb_encrypted_file=$(echo $bl3x_dtb_file | sed "s|.dtb|$DEFAULT_ENCRYPT_SUFFIX.dtb|")
+            bl3x_fw_encrypted_file_light=$(echo $bl3x_fw_encrypted_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
+            bl3x_dtb_encrypted_file_light=$(echo $bl3x_dtb_encrypted_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 
             fiptool_opt="$fiptool_opt --soc-fw $bl3x_fw_encrypted_file"
             fiptool_opt="$fiptool_opt --soc-fw-config $bl3x_dtb_encrypted_file"
@@ -466,16 +570,20 @@ if [ $USE_DDR -eq 1 ]; then
     [ $file_error -eq 0 ] && certool_opt="$certool_opt --ddr-fw $ddr_fw_file"
     store=$(search_specific_storage_in_name $ddr_fw_file)
     [ $store -eq 0 ] && file_contains_storage=1
+    ddr_fw_file_light=$(echo $ddr_fw_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 fi
 
 # OPTEE: header
 optee_header_file=$(found_file "${FIP_DEPLOYDIR_OPTEE}" "tee-header_v2" "bin")
+optee_header_file_light=$(echo $optee_header_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 [ "$optee_header_file" = "NOTFOUND" ] && file_error=1
 # OPTEE: pager
 optee_pager_file=$(found_file "${FIP_DEPLOYDIR_OPTEE}" "tee-pager_v2" "bin")
+optee_pager_file_light=$(echo $optee_pager_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 [ "$optee_pager_file" = "NOTFOUND" ] && file_error=1
 # OPTEE: pageable
 optee_pageable_file=$(found_file "${FIP_DEPLOYDIR_OPTEE}" "tee-pageable_v2" "bin")
+optee_pageable_file_light=$(echo $optee_pageable_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 [ "$optee_pageable_file" = "NOTFOUND" ] && file_error=1
 store=$(search_specific_storage_in_name $optee_pager_file)
 [ $store -eq 0 ] && file_contains_storage=1
@@ -483,8 +591,10 @@ store=$(search_specific_storage_in_name $optee_pager_file)
 if [ $USE_BL32 -eq 1 ]; then
     # TF-A: BL32
     bl3x_fw_file=$(found_file "${FIP_DEPLOYDIR_TFA}" "tf-a-bl32" "bin")
+    bl3x_fw_file_light=$(echo $bl3x_fw_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
     [ "$bl3x_fw_file" = "NOTFOUND" ] && file_error=1
     bl3x_dtb_file=$(found_file "${FIP_DEPLOYDIR_TFA}" "$SEARCH_DTB-bl32" "dtb")
+    bl3x_dtb_file_light=$(echo $bl3x_dtb_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
     [ "$bl3x_fw_file" = "NOTFOUND" ] && file_error=1
     [ $file_error -eq 0 ] && fiptool_opt="$fiptool_opt --tos-fw $bl3x_fw_file"
     [ $file_error -eq 0 ] && fiptool_opt="$fiptool_opt --tos-fw-config $bl3x_dtb_file"
@@ -494,6 +604,9 @@ else
             optee_header_encrypted_file=$(echo $optee_header_file | sed "s|.bin|$DEFAULT_ENCRYPT_SUFFIX.bin|")
             optee_pager_encrypted_file=$(echo $optee_pager_file | sed "s|.bin|$DEFAULT_ENCRYPT_SUFFIX.bin|")
             optee_pageable_encrypted_file=$(echo $optee_pageable_file | sed "s|.bin|$DEFAULT_ENCRYPT_SUFFIX.bin|")
+            optee_header_encrypted_file_light=$(echo $optee_header_encrypted_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
+            optee_pager_encrypted_file_light=$(echo $optee_pager_encrypted_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
+            optee_pageable_encrypted_file_light=$(echo $optee_pageable_encrypted_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 
             fiptool_opt="$fiptool_opt --tos-fw $optee_header_encrypted_file"
             fiptool_opt="$fiptool_opt --tos-fw-extra1 $optee_pager_encrypted_file"
@@ -516,6 +629,7 @@ fi
 
 # U-BOOT: no-dtb.bin
 u_boot_fw_file=$(found_file "${FIP_DEPLOYDIR_UBOOT}" "u-boot-nodtb" "bin")
+u_boot_fw_file_light=$(echo $u_boot_fw_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 [ "$u_boot_fw_file" = "NOTFOUND" ] && file_error=1
 [ $file_error -eq 0 ] && fiptool_opt="$fiptool_opt --nt-fw $u_boot_fw_file"
 [ $file_error -eq 0 ] && certool_opt="$certool_opt --nt-fw $u_boot_fw_file"
@@ -524,6 +638,7 @@ store=$(search_specific_storage_in_name $u_boot_fw_file)
 
 # U-BOOT:dtb
 u_boot_dtb_file=$(found_file "${FIP_DEPLOYDIR_UBOOT}" "u-boot" "dtb")
+u_boot_dtb_file_light=$(echo $u_boot_dtb_file | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|")
 [ "$u_boot_dtb_file" = "NOTFOUND" ] && file_error=1
 [ $file_error -eq 0 ] && fiptool_opt="$fiptool_opt --hw-config $u_boot_dtb_file"
 [ $file_error -eq 0 ] && certool_opt="$certool_opt --hw-config $u_boot_dtb_file"
@@ -539,7 +654,7 @@ if [ $USE_ONLY_DDR -eq 1 ]; then
     fiptool_opt=" "
     [ $file_ddr_error -eq 0 ] && fiptool_opt="$fiptool_opt --ddr-fw $ddr_fw_file"
     if [ $file_ddr_error -gt 0 ]; then
-        echo "[ERROR] some files are not present, please provide it or change the paremeters"
+        echo "[ERROR] some files are not present, please provide it or change the parameters"
         echo ""
         exit 100
     fi
@@ -560,7 +675,7 @@ else
     printf "%16s : %s\n" U-BOOT_FW $u_boot_fw_file
     printf "%16s : %s\n" U-BOOT_dtb $u_boot_dtb_file
     if [ $file_error -gt 0 ]; then
-        echo "[ERROR] some files are not present, please provide it or change the paremeters"
+        echo "[ERROR] some files are not present, please provide it or change the parameters"
         echo ""
         exit 100
     fi
@@ -692,25 +807,42 @@ fi
 
 echo "------------------------------------"
 fiptool_output_file="${FIP_DEPLOYDIR_FIP}/fip-$SEARCH_DTB${fip_addons_name}$fiptool_output_file_suffix.bin"
+fiptool_output_file_dump="${FIP_DEPLOYDIR_FIP}/fip-$SEARCH_DTB${fip_addons_name}$fiptool_output_file_suffix.txt"
+
+# dump information about files
+echo "------------------------------------"
+echo "List of files: " > $fiptool_output_file_dump
+if [ $USE_ONLY_DDR -eq 1 ]; then
+    printf " %-8s\n" "arm-trusted-firmware" >> $fiptool_output_file_dump
+    [ $USE_DDR -eq 1 ]  && printf "%16s : %s\n" DDR_fw $ddr_fw_file_light >> $fiptool_output_file_dump
+else
+    printf " %-8s\n" "arm-trusted-firmware" >> $fiptool_output_file_dump
+    printf "%16s : %s\n" FW_config $fw_config_file_light >> $fiptool_output_file_dump
+    [ $USE_BL31 -eq 1 ] && printf "%16s : %s\n" BL31_fw $bl3x_fw_file_light >> $fiptool_output_file_dump
+    [ $USE_BL31 -eq 1 ] && printf "%16s : %s\n" BL31_dtb $bl3x_dtb_file_light >> $fiptool_output_file_dump
+    [ $USE_BL32 -eq 1 ] && printf "%16s : %s\n" BL32_fw $bl3x_fw_file_light >> $fiptool_output_file_dump
+    [ $USE_BL32 -eq 1 ] && printf "%16s : %s\n" BL32_dtb $bl3x_dtb_file_light >> $fiptool_output_file_dump
+    [ $USE_DDR -eq 1 ]  && printf "%16s : %s\n" DDR_fw $ddr_fw_file_light >> $fiptool_output_file_dump
+    [ $USE_BL32 -eq 0 ] && printf " %-8s\n" "optee-os" >> $fiptool_output_file_dump
+    [ $USE_BL32 -eq 0 ] && printf "%16s : %s\n" Optee_header $optee_header_file_light >> $fiptool_output_file_dump
+    [ $USE_BL32 -eq 0 ] && printf "%16s : %s\n" Optee_pager $optee_pager_file_light >> $fiptool_output_file_dump
+    [ $USE_BL32 -eq 0 ] && printf "%16s : %s\n" Optee_pageable $optee_pageable_file_light >> $fiptool_output_file_dump
+    printf " %-8s\n" "U-Boot" >> $fiptool_output_file_dump
+    printf "%16s : %s\n" U-BOOT_FW $u_boot_fw_file_light >> $fiptool_output_file_dump
+    printf "%16s : %s\n" U-BOOT_dtb $u_boot_dtb_file_light >> $fiptool_output_file_dump
+fi
+
 echo "Fip tool command:"
+echo "Fip tool command:"  >> $fiptool_output_file_dump
 [ -d "${FIP_DEPLOYDIR_FIP}" ] || mkdir -p "${FIP_DEPLOYDIR_FIP}"
 echo "CMD> $TOOLS_FIPTOOL create $fiptool_opt $fip_certconf_opt_addons $fip_certconf_opt \\ " | sed "s|--|\\\ \n\t--|g"
 echo -e "\t$fiptool_output_file"
+echo "CMD> $TOOLS_FIPTOOL create $fiptool_opt $fip_certconf_opt_addons $fip_certconf_opt \\ " | sed "s|--|\\\ \n\t--|g" | sed "s|${FIP_DEPLOYDIR_ROOT}|<PATH>|g" >> $fiptool_output_file_dump
+echo -e "\t$fiptool_output_file" | sed "s|${FIP_DEPLOYDIR_FIP}|<PATH>/fip|g" >> $fiptool_output_file_dump
+
 if [ $DRY_RUN -eq 0 ]; then
     $TOOLS_FIPTOOL create $fiptool_opt  $fip_certconf_opt $fip_certconf_opt_addons $fiptool_output_file || die "FIPTOOL error"
 fi
-
-#if [ $file_contains_storage -eq 0 ]; then
-#    # if there is no specific firwmare for a specific storage, generate file without this suffix storage name
-#    fiptool_output_file="${FIP_DEPLOYDIR_FIP}/fip-$SEARCH_DTB${fip_addons_name}$fiptool_output_file_suffix.bin"
-#    echo "Fip tool command:"
-#    [ -d "${FIP_DEPLOYDIR_FIP}" ] || mkdir -p "${FIP_DEPLOYDIR_FIP}"
-#    echo "CMD> $TOOLS_FIPTOOL create $fiptool_opt $fip_certconf_opt $fip_certconf_opt_addons \\ " | sed "s|--|\\\ \n\t--|g"
-#    echo -e "\t$fiptool_output_file"
-#    if [ $DRY_RUN -eq 0 ]; then
-#        $TOOLS_FIPTOOL create $fiptool_opt  $fip_certconf_opt $fip_certconf_opt_addons $fiptool_output_file  || die "FIPTOOL error"
-#    fi
-#fi
 
 if [ $NEED_TO_SIGN -eq 1 ]; then
     # cleanup

@@ -13,8 +13,8 @@
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 #include <dt-bindings/regulator/nxp,pca9450-regulator.h>
 #include "stm32mp255.dtsi"
+#include "stm32mp25-karo-resmem.dtsi"
 #include "stm32mp255f-qsmp-2550-rcc.dtsi"
-#include "stm32mp255f-qsmp-2550-resmem.dtsi"
 #include "stm32mp25xf.dtsi"
 #include "stm32mp25xxak-pinctrl.dtsi"
 #include "stm32mp255f-qsmp-2550-rif.dtsi"
@@ -267,11 +267,11 @@
 };
 
 &m33_rproc {
-	status = "okay";
 	compatible = "st,stm32mp2-m33-tee";
 	memory-region = <&cm33_cube_fw>, <&cm33_cube_data>,
 			<&ipc_shmem>, <&tfm_code>, <&tfm_data>,
 			<&cm33_sram2>;
+//	status = "okay";
 };
 
 &pka {
@@ -279,8 +279,6 @@
 };
 
 &pwr {
-	pinctrl-names = "default";
-	pinctrl-0 = <&wakeup_pins>;
 	status = "okay";
 };
 
@@ -351,6 +349,7 @@
 };
 
 &uart4 {
+	/* U-Boot console */
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart4_pins>;
 	status = "okay";
@@ -359,13 +358,11 @@
 &uart5 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart5_pins>;
-	status = "okay";
 };
 
 &usart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&usart3_pins>;
-	status = "okay";
 };
 
 /* PWR regulators */
@@ -444,49 +441,43 @@
 
 	uart4_pins: uart4-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('B', 7, AF3)>;	/* UART4_TX */
+			pinmux = <STM32_PINMUX_NSEC('B', 7, AF3)>;	/* UART4_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 
 		pins2 {
-			pinmux = <STM32_PINMUX('B', 6, AF3)>;	/* UART4_RX */
+			pinmux = <STM32_PINMUX_NSEC('B', 6, AF3)>;	/* UART4_RX */
 			bias-pull-up;
 		};
 	};
 
 	uart5_pins: uart5-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('G', 9, AF6)>;	/* UART5_TX */
+			pinmux = <STM32_PINMUX_NSEC('G', 9, AF6)>;	/* UART5_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 
 		pins2 {
-			pinmux = <STM32_PINMUX('G', 10, AF6)>;	/* UART5_RX */
+			pinmux = <STM32_PINMUX_NSEC('G', 10, AF6)>;	/* UART5_RX */
 			bias-pull-up;
 		};
 	};
 
 	usart3_pins: usart3-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('I', 6, AF6)>;	/* USART3_TX */
+			pinmux = <STM32_PINMUX_NSEC('I', 6, AF6)>;	/* USART3_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 
 		pins2 {
-			pinmux = <STM32_PINMUX('I', 7, AF6)>;	/* USART3_RX */
+			pinmux = <STM32_PINMUX_NSEC('I', 7, AF6)>;	/* USART3_RX */
 			bias-pull-up;
-		};
-	};
-
-	wakeup_pins: wakeup-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('A', 0, GPIO)>;
 		};
 	};
 };

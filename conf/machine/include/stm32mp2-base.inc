@@ -16,6 +16,7 @@ UBOOT_FEATURES ?= "${@ "emmc fastboot" if 'emmc' in d.getVar('MACHINE_FEATURES')
 UBOOT_ENTRYPOINT = "0xc4000000"
 
 KERNEL_IMAGETYPE ?= "Image"
+PREFERRED_VERSION_linux-karo = "6.6"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySTM0 ${@ " 115200;ttySTM1" if d.getVar('KARO_BASEBOARD') != "qsbase5" else ""} 115200;ttySTM2"
@@ -45,11 +46,6 @@ TF_A_TOOLS_PLATFORM ?= "stm32mp2"
 # link TF_A_CONFIG to UBOOT_CONFIG
 TF_A_CONFIG[mfg] = "usb"
 TF_A_CONFIG[noenv] = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', "optee", "trusted", d)}"
-
-# Manage proper update for TF_A_CONFIG_* var
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONFIG_usb', '', d)}"
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'optee', 'TF_A_CONFIG_optee', '', d)}"
 
 DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
 KARO_BOARD_PMIC ??= "stpmic2"

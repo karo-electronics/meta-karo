@@ -45,11 +45,6 @@
 	status = "okay";
 };
 
-&iwdg2 {
-	timeout-sec = <0>;
-	status = "okay";
-};
-
 &pwr_regulators {
 	system_suspend_supported_soc_modes = <
 		STM32_PM_CSLEEP_RUN

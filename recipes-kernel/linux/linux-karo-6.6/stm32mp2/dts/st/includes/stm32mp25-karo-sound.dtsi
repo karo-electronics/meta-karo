@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+
+#include <dt-bindings/clock/st,stm32mp25-rcc.h>
+
+&{/} {
+	mclk: codec-mclk {
+		compatible = "fixed-clock";
+		#clock-cells = <0>;
+		clock-frequency = <26000000>;
+	};
+
+	reg_2v5: regulator-2v5 {
+		compatible = "regulator-fixed";
+		regulator-name = "2v5";
+		regulator-min-microvolt = <2500000>;
+		regulator-max-microvolt = <2500000>;
+		regulator-always-on;
+	};
+
+	sound {
+		compatible = "karo,stm32mp25-sgtl5000",
+			     "audio-graph-card";
+		label = "TXMP-SGTL5000";
+		widgets =
+			"Microphone", "Mic Jack",
+			"Line", "Line In",
+			"Line", "Line Out",
+			"Headphone", "Headphone Jack";
+		routing =
+			"MIC_IN", "Mic Jack",
+			"Mic Jack", "Mic Bias",
+			"Headphone Jack", "HP_OUT";
+		dais = <&sai1a_port &sai1b_port>;
+		status = "okay";
+	};
+};
+
+&i2c3 {
+	status = "okay";
+
+	sgtl5000: codec@a {
+		compatible = "fsl,sgtl5000";
+		#sound-dai-cells = <0>;
+		reg = <0xa>;
+		VDDA-supply = <&reg_2v5>;
+		VDDIO-supply = <&scmi_v3v3>;
+		clocks = <&sai1a>;
+		status = "okay";
+
+		port {
+			sgtl5000_in: tx_endpoint {
+				remote-endpoint = <&sai1_out>;
+			};
+
+			sgtl5000_out: rx_endpoint {
+				remote-endpoint = <&sai1_in>;
+			};
+		};
+	};
+};
+
+&sai1 {
+	status = "okay";
+};
+
+&sai1a {
+	#clock-cells = <0>;
+	dma-names = "tx";
+	status = "okay";
+
+	sai1a_port: port {
+		sai1_out: endpoint {
+			remote-endpoint = <&sgtl5000_in>;
+			dai-format = "i2s";
+			bitclock-master = <&sgtl5000>;
+			frame-master = <&sgtl5000>;
+			mclk-fs = <256>;
+		};
+	};
+};
+
+&sai1b {
+	dma-names = "rx";
+	clocks = <&rcc CK_KER_SAI1>, <&sai1a>;
+	clock-names = "sai_ck", "MCLK";
+	st,sync = <&sai1a 2>;
+	status = "okay";
+
+	sai1b_port: port {
+		sai1_in: endpoint {
+			remote-endpoint = <&sgtl5000_out>;
+			dai-format = "i2s";
+			bitclock-master = <&sgtl5000>;
+			frame-master = <&sgtl5000>;
+			mclk-fs = <256>;
+		};
+	};
+};

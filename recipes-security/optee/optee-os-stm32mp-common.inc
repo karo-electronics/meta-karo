@@ -2,8 +2,11 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/optee-os:"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-PROVIDES += "virtual/optee-os"
-RPROVIDES:${PN} += "virtual/optee-os virtual/systemd-bootconf"
+PROVIDES += "virtual-optee-os virtual-optee-os-ta-pkcs11"
+PROVIDES += "virtual-optee-os-ta-pkcs11 virtual-optee-os-ta-avb"
+PROVIDES += "virtual-optee-os-ta-remoteproc virtual-optee-os-ta-stm32mp-nvmem"
+PROVIDES += "virtual-optee-os-ta-trusted-keys"
+RPROVIDES:${PN} += "virtual-optee-os virtual-systemd-bootconf"
 
 CVE_PRODUCT = "op-tee:op-tee_os"
 

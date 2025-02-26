@@ -19,8 +19,6 @@
 	compatible = "karo,stm32mp255f-qsmp-2550", "karo,qsmp", "st,stm32mp255";
 
 	aliases {
-		can0 = &m_can1;
-		can1 = &m_can2;
 		ethernet0 = &eth1;
 		ethernet1 = &eth2;
 		i2c0 = &i2c2;
@@ -205,6 +203,7 @@
 	vqmmc-supply = <&scmi_vddio2>;
 	mmc-ddr-1_8v;
 	mmc-hs200-1_8v;
+//	mmc-hs400-1_8v;
 	no-sd;
 	no-sdio;
 	st,neg-edge;

@@ -1,0 +1,99 @@
+Index: linux-txmp-2550/drivers/net/phy/micrel.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/net/phy/micrel.c
++++ linux-txmp-2550/drivers/net/phy/micrel.c
+@@ -965,8 +965,8 @@ static int ksz9031_of_load_skew_values(s
+ 			mask = 0xffff;
+ 			mask ^= maxval << (field_sz * i);
+ 			newval = (newval & mask) |
+-				(((val[i] / KSZ9031_PS_TO_REG) & maxval)
+-					<< (field_sz * i));
++				(((val[i] / KSZ9031_PS_TO_REG) & maxval) <<
++				 (field_sz * i));
+ 		}
+ 
+ 	return phy_write_mmd(phydev, 2, reg, newval);
+@@ -1157,8 +1157,8 @@ err_force_master:
+ 	return result;
+ }
+ 
+-#define KSZ9131_SKEW_5BIT_MAX	2400
+-#define KSZ9131_SKEW_4BIT_MAX	800
++#define KSZ9131_SKEW_5BIT_MAX	985
++#define KSZ9131_SKEW_4BIT_MAX	400
+ #define KSZ9131_OFFSET		700
+ #define KSZ9131_STEP		100
+ 
+@@ -1167,32 +1167,35 @@ static int ksz9131_of_load_skew_values(s
+ 				       u16 reg, size_t field_sz,
+ 				       char *field[], u8 numfields)
+ {
+-	int val[4] = {-(1 + KSZ9131_OFFSET), -(2 + KSZ9131_OFFSET),
+-		      -(3 + KSZ9131_OFFSET), -(4 + KSZ9131_OFFSET)};
+-	int skewval, skewmax = 0;
++	int val[4] = { INT_MAX, };
+ 	int matches = 0;
+-	u16 maxval;
++	u16 maxval = (1 << field_sz) - 1;
+ 	u16 newval;
+-	u16 mask;
++	int step;
++	int offset;
+ 	int i;
+ 
+ 	/* psec properties in dts should mean x pico seconds */
+-	if (field_sz == 5)
+-		skewmax = KSZ9131_SKEW_5BIT_MAX;
+-	else
+-		skewmax = KSZ9131_SKEW_4BIT_MAX;
++	if (field_sz == 5) {
++		step = 41;
++		offset = 290;
++	} else {
++		step = 50;
++		offset = 355;
++	}
++	for (i = 0; i < numfields; i++) {
++		int skewval;
+ 
+-	for (i = 0; i < numfields; i++)
+ 		if (!of_property_read_s32(of_node, field[i], &skewval)) {
+-			if (skewval < -KSZ9131_OFFSET)
+-				skewval = -KSZ9131_OFFSET;
+-			else if (skewval > skewmax)
+-				skewval = skewmax;
+-
+-			val[i] = skewval + KSZ9131_OFFSET;
++			skewval = (skewval + offset) / step;
++			if (skewval > maxval)
++				skewval = maxval;
++			else if (skewval < 0)
++				skewval = 0;
++			val[i] = skewval;
+ 			matches++;
+ 		}
+-
++	}
+ 	if (!matches)
+ 		return 0;
+ 
+@@ -1201,14 +1204,12 @@ static int ksz9131_of_load_skew_values(s
+ 	else
+ 		newval = 0;
+ 
+-	maxval = (field_sz == 4) ? 0xf : 0x1f;
+ 	for (i = 0; i < numfields; i++)
+-		if (val[i] != -(i + 1 + KSZ9131_OFFSET)) {
+-			mask = 0xffff;
+-			mask ^= maxval << (field_sz * i);
+-			newval = (newval & mask) |
+-				(((val[i] / KSZ9131_STEP) & maxval)
+-					<< (field_sz * i));
++		if (val[i] != INT_MAX) {
++			u16 mask = maxval << (field_sz * i);
++
++			newval = (newval & ~mask) |
++				(val[i] << (field_sz * i));
+ 		}
+ 
+ 	return phy_write_mmd(phydev, 2, reg, newval);

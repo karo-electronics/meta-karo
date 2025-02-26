@@ -6,6 +6,10 @@ ARCHIVER_MODE[src] = "original"
 # Source code directory relative path inside archive
 AR_ORIGINAL_SET_SUBDIR ?= "${BPN}"
 
+# KERNEL_VERSION is needed for the file README.HOW_TO.txt and is variable is
+# set during kernel compilation
+do_ar_original[depends] += "gcnano-driver-stm32mp:do_compile"
+
 # Keep only gcnano-driver source code in generated tarball
 # Original archiver driver tarball:
 # + gcnano-driver-stm32mp-${GCNANO_VERSION}-${PR}/

@@ -12,7 +12,6 @@
 #include <dt-bindings/soc/stm32mp13-etzpc.h>
 #include <dt-bindings/gpio/stm32mp_gpio.h>
 #include <dt-bindings/power/stm32mp1-power.h>
-#include <dt-bindings/random/stm32mp-rng.h>
 #include <dt-bindings/regulator/st,stm32mp13-regulator.h>
 #include <dt-bindings/soc/stm32mp13-tzc400.h>
 #include <dt-bindings/soc/stm32mp-tzc400-macro.h>
@@ -24,6 +23,14 @@
 	model = "Ka-Ro electronics GmbH QSMP-1351 solder-in module";
 	compatible = "karo,stm32mp135c-qsmp-1351", "st,stm32mp135";
 
+	aliases {
+		serial0 = &uart4;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
 	memory@c0000000 {
 		device_type = "memory";
 		reg = <0xc0000000 0x10000000>;
@@ -33,14 +40,6 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
-	};
-
-	aliases {
-		serial0 = &uart4;
-	};
-
-	chosen {
-		stdout-path = "serial0:115200n8";
 	};
 
 	vdd: regulator-3v3 {
@@ -57,32 +56,6 @@
 		regulator-min-microvolt = <1250000>;
 		regulator-max-microvolt = <1250000>;
 		regulator-always-on;
-	};
-
-	clocks {
-		clk_hsi: clk-hsi {
-			clock-frequency = <32000000>;
-		};
-		
-		clk_lse: clk-lse {
-			clock-frequency = <32768>;
-			st,drive = <LSEDRV_MEDIUM_HIGH>;
-		};
-
-		clk_hse: clk-hse {
-			clock-frequency = <24000000>;
-		};
-
-		clk_i2sin: clk-i2sin {
-			status = "disabled";
-		};
-	};
-};
-
-&bsec {
-	board_id: board_id@f0 {
-		reg = <0xf0 0x4>;
-		st,non-secure-otp;
 	};
 };
 
@@ -335,13 +308,13 @@
 &pinctrl {
 	uart4_pins: uart4-pinctrl {
 		pins1 {
-			pinmux = <STM32_PINMUX('D', 6, AF8)>; /* UART4_TX */
+			pinmux = <STM32_PINMUX_NSEC('D', 6, AF8)>; /* UART4_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 		pins2 {
-			pinmux = <STM32_PINMUX('D', 8, AF8)>; /* UART4_RX */
+			pinmux = <STM32_PINMUX_NSEC('D', 8, AF8)>; /* UART4_RX */
 			bias-disable;
 		};
 	};

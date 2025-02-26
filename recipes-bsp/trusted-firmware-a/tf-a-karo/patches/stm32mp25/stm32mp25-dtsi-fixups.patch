@@ -2,19 +2,10 @@ Index: tf-a-txmp-2550/fdts/stm32mp25-bl2.dtsi
 ===================================================================
 --- tf-a-txmp-2550.orig/fdts/stm32mp25-bl2.dtsi
 +++ tf-a-txmp-2550/fdts/stm32mp25-bl2.dtsi
-@@ -5,40 +5,25 @@
+@@ -5,31 +5,25 @@
  
  #include <platform_def.h>
  
--/omit-if-no-ref/ &i2c7_pins_a;
--/omit-if-no-ref/ &ospi_port1_clk_pins_a;
--/omit-if-no-ref/ &ospi_port1_cs0_pins_a;
--/omit-if-no-ref/ &ospi_port1_io03_pins_a;
--/omit-if-no-ref/ &sdmmc1_b4_pins_a;
--/omit-if-no-ref/ &sdmmc2_b4_pins_a;
--/omit-if-no-ref/ &sdmmc2_d47_pins_a;
--/omit-if-no-ref/ &usart2_pins_a;
--
 -/ {
 -	soc@0 {
  #if !STM32MP_SPI_NAND && !STM32MP_SPI_NOR && !STM32MP_HYPERFLASH
@@ -51,7 +42,7 @@ Index: tf-a-txmp-2550/fdts/stm32mp25-bl2.dtsi
  	 * network order (big endian)
  	 */
  
-@@ -84,5 +69,4 @@
+@@ -75,5 +69,4 @@
  
  #include "stm32mp2-cot-descriptors.dtsi"
  #endif
@@ -61,19 +52,10 @@ Index: tf-a-txmp-2550/fdts/stm32mp25-bl31.dtsi
 ===================================================================
 --- tf-a-txmp-2550.orig/fdts/stm32mp25-bl31.dtsi
 +++ tf-a-txmp-2550/fdts/stm32mp25-bl31.dtsi
-@@ -3,22 +3,7 @@
-  * Copyright (C) STMicroelectronics 2023 - All Rights Reserved
+@@ -3,13 +3,7 @@
+  * Copyright (C) STMicroelectronics 2024 - All Rights Reserved
   */
  
--/omit-if-no-ref/ &i2c7_pins_a;
--/omit-if-no-ref/ &ospi_port1_clk_pins_a;
--/omit-if-no-ref/ &ospi_port1_cs0_pins_a;
--/omit-if-no-ref/ &ospi_port1_io03_pins_a;
--/omit-if-no-ref/ &sdmmc1_b4_pins_a;
--/omit-if-no-ref/ &sdmmc2_b4_pins_a;
--/omit-if-no-ref/ &sdmmc2_d47_pins_a;
--/omit-if-no-ref/ &usart2_pins_a;
--
 -/ {
 -	soc@0 {
 -		/delete-node/ ommanager@40500000;

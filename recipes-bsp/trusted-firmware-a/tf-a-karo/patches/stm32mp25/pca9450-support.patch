@@ -1,7 +1,7 @@
-Index: tf-a-qsmp-2550/drivers/st/pmic/pca9450.c
+Index: git/drivers/st/pmic/pca9450.c
 ===================================================================
 --- /dev/null
-+++ tf-a-qsmp-2550/drivers/st/pmic/pca9450.c
++++ git/drivers/st/pmic/pca9450.c
 @@ -0,0 +1,340 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -343,10 +343,10 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/pca9450.c
 +{
 +	return pca9450_register_read(pmic, DEVICE_ID, val);
 +}
-Index: tf-a-qsmp-2550/drivers/st/pmic/pca9450.h
+Index: git/drivers/st/pmic/pca9450.h
 ===================================================================
 --- /dev/null
-+++ tf-a-qsmp-2550/drivers/st/pmic/pca9450.h
++++ git/drivers/st/pmic/pca9450.h
 @@ -0,0 +1,138 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -486,30 +486,30 @@ Index: tf-a-qsmp-2550/drivers/st/pmic/pca9450.h
 +			       enum pca9450_prop_id prop, uint32_t arg);
 +
 +#endif /* __PCA9450_H */
-Index: tf-a-qsmp-2550/plat/st/stm32mp2/platform.mk
+Index: git/plat/st/stm32mp2/platform.mk
 ===================================================================
---- tf-a-qsmp-2550.orig/plat/st/stm32mp2/platform.mk
-+++ tf-a-qsmp-2550/plat/st/stm32mp2/platform.mk
-@@ -199,8 +199,14 @@ BL2_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
- ASFLAGS			+=	$(STM32MP_CPPFLAGS)
- DTC_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
+--- git.orig/plat/st/stm32mp2/platform.mk
++++ git/plat/st/stm32mp2/platform.mk
+@@ -258,8 +258,14 @@ PLAT_BL_COMMON_SOURCES		+=	lib/cpus/${AR
+ PLAT_BL_COMMON_SOURCES		+=	drivers/st/uart/${ARCH}/stm32_console.S
+ PLAT_BL_COMMON_SOURCES		+=	plat/st/stm32mp2/${ARCH}/stm32mp2_helper.S
  
 +ifeq ($(STM32MP_STPMIC2),1)
- PLAT_BL_COMMON_SOURCES	+=	drivers/st/pmic/stm32mp_pmic2.c				\
--				drivers/st/pmic/stpmic2.c				\
-+				drivers/st/pmic/stpmic2.c
+ PLAT_BL_COMMON_SOURCES		+=	drivers/st/pmic/stm32mp_pmic2.c				\
+-					drivers/st/pmic/stpmic2.c				\
++					drivers/st/pmic/stpmic2.c
 +endif
 +ifeq ($(STM32MP_PCA9450),1)
-+PLAT_BL_COMMON_SOURCES	+=	drivers/st/pmic/pca9450.c				\
-+				drivers/st/pmic/pmic-pca9450.c
++PLAT_BL_COMMON_SOURCES		+=	drivers/st/pmic/pca9450.c				\
++					drivers/st/pmic/pmic-pca9450.c
 +endif
  
- PLAT_BL_COMMON_SOURCES	+=	drivers/st/i2c/stm32_i2c.c
+ PLAT_BL_COMMON_SOURCES		+=	drivers/st/i2c/stm32_i2c.c
  
-Index: tf-a-qsmp-2550/drivers/st/pmic/pmic-pca9450.c
+Index: git/drivers/st/pmic/pmic-pca9450.c
 ===================================================================
 --- /dev/null
-+++ tf-a-qsmp-2550/drivers/st/pmic/pmic-pca9450.c
++++ git/drivers/st/pmic/pmic-pca9450.c
 @@ -0,0 +1,411 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*

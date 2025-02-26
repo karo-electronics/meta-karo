@@ -1,20 +1,8 @@
-Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/sub.mk
-===================================================================
---- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/drivers/sub.mk
-+++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/sub.mk
-@@ -1,6 +1,5 @@
- srcs-$(CFG_STM32_PWR) += stm32mp25_pwr_regul.c
--srcs-$(CFG_STPMIC2) += stm32mp2_pmic.c
--srcs-$(CFG_STPMIC2) += stpmic2.c
-+srcs-$(CFG_STPMIC2) += stm32mp2_pmic.c stpmic2.c
- srcs-y += stm32mp25_syscfg.c
- srcs-$(CFG_STM32_PWR) += stm32mp25_pwr.c
- srcs-$(CFG_STM32_PWR_IRQ) += stm32mp25_pwr_irq.c
-Index: optee-os-qsmp-2550/core/drivers/pca9450.c
+Index: optee-qsmp-2550/core/drivers/pca9450.c
 ===================================================================
 --- /dev/null
-+++ optee-os-qsmp-2550/core/drivers/pca9450.c
-@@ -0,0 +1,491 @@
++++ optee-qsmp-2550/core/drivers/pca9450.c
+@@ -0,0 +1,516 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright 2024 Lothar Waßmann <LW@KARO-electronics.de>
@@ -36,9 +24,9 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +#define VOLTAGE_INDEX_INVALID		((size_t)~0)
 +
 +static const struct regulator_limits {
-+       uint32_t min;
-+       uint32_t max;
-+       uint32_t step;
++       int min;
++       int max;
++       int step;
 +       uint8_t mask;
 +} pca9450_regulator_limits[] = {
 +	{  600000, 2187500,  12500, 0x7f, }, /* BUCK[1..3] */
@@ -52,7 +40,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +struct regul_struct {
 +	const char *name;
 +	size_t limits;
-+	uint32_t *volt_table;
++	int *volt_table;
 +	size_t volt_table_size;
 +	uint16_t volt_cr;
 +	uint16_t alt_volt_cr;
@@ -93,7 +81,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	.pd_val			= LDO ## _index ## _AD_BIT,	\
 +}
 +
-+static uint32_t ldo1_volt_table[8] = {
++static int ldo1_volt_table[8] = {
 +	1600000,
 +	1700000,
 +	1800000,
@@ -104,7 +92,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	3300000,
 +};
 +
-+static uint32_t *volt_tables[] = {
++static int *volt_tables[] = {
 +	NULL,
 +	NULL,
 +	ldo1_volt_table,
@@ -133,21 +121,34 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return &pca9450_regulator_limits[regul->limits];
 +}
 +
-+static inline uint8_t uv_to_regval(const struct regulator_limits *limits, uint32_t uV)
++static inline uint8_t uv_to_regval(const struct regulator_limits *limits, int uV)
 +{
 +	return (uV - limits->min) / limits->step;
 +}
 +
-+static inline uint32_t regval_to_uv(const struct regulator_limits *limits, uint8_t regval)
++static inline int regval_to_uv(const struct regulator_limits *limits, uint8_t regval)
 +{
-+	uint32_t uV = (regval & limits->mask) * limits->step + limits->min;
++	int uV = (regval & limits->mask) * limits->step + limits->min;
 +
 +	if (uV > limits->max)
 +		uV = limits->max;
 +	return uV;
 +}
 +
-+TEE_Result pca9450_register_read(struct pmic_handle_s *pmic,
++TEE_Result pca9450_regulator_get_id(const char *regu_name, uint8_t *id)
++{
++	uint8_t i;
++
++	for (i = 0; i < ARRAY_SIZE(regul_table); i++)
++		if (!strcmp(regul_table[i].name, regu_name)) {
++			*id = i;
++			return TEE_SUCCESS;
++		}
++
++	return TEE_ERROR_ITEM_NOT_FOUND;
++}
++
++TEE_Result pca9450_register_read(struct pca9450_pmic *pmic,
 +				 uint16_t register_id, uint8_t *value)
 +{
 +	int res = stm32_i2c_read_write_membyte(pmic->pmic_i2c_handle,
@@ -164,7 +165,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+TEE_Result pca9450_register_write(struct pmic_handle_s *pmic,
++TEE_Result pca9450_register_write(struct pca9450_pmic *pmic,
 +				  uint16_t register_id, uint8_t value)
 +{
 +	int ret;
@@ -183,7 +184,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+TEE_Result pca9450_register_update(struct pmic_handle_s *pmic,
++TEE_Result pca9450_register_update(struct pca9450_pmic *pmic,
 +				   uint16_t register_id, uint8_t value,
 +				   uint8_t mask)
 +{
@@ -202,7 +203,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return pca9450_register_write(pmic, register_id, val);
 +}
 +
-+TEE_Result pca9450_regulator_set_state(struct pmic_handle_s *pmic,
++TEE_Result pca9450_regulator_set_state(struct pca9450_pmic *pmic,
 +				       uint8_t id, bool enable)
 +{
 +	const struct regul_struct *regul = &regul_table[id];
@@ -212,7 +213,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return pca9450_register_update(pmic, regul->en_cr, en_val, en_mask);
 +}
 +
-+TEE_Result pca9450_regulator_get_state(struct pmic_handle_s *pmic,
++TEE_Result pca9450_regulator_get_state(struct pca9450_pmic *pmic,
 +				       uint8_t id, bool *enabled)
 +{
 +	TEE_Result res;
@@ -228,8 +229,8 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+TEE_Result pca9450_regulator_levels_uv(struct pmic_handle_s *pmic __unused,
-+				       uint8_t id, const uint32_t **levels,
++TEE_Result pca9450_regulator_levels_uv(struct pca9450_pmic *pmic __unused,
++				       uint8_t id, const int **levels,
 +				       size_t *levels_count)
 +{
 +	const struct regul_struct *regul = &regul_table[id];
@@ -245,8 +246,8 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+TEE_Result pca9450_regulator_get_voltage(struct pmic_handle_s *pmic,
-+					 uint8_t id, uint32_t *val)
++TEE_Result pca9450_regulator_get_voltage(struct pca9450_pmic *pmic,
++					 uint8_t id, int *val)
 +{
 +	TEE_Result res;
 +	const struct regul_struct *regul = &regul_table[id];
@@ -270,7 +271,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +}
 +
 +static size_t voltage_to_index(const struct regul_struct *regul,
-+			       uint32_t microvolts)
++			       int microvolts)
 +{
 +	size_t i;
 +
@@ -279,16 +280,25 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +		if (regul->volt_table[i] == microvolts)
 +			return i;
 +
++	EMSG("Failed to find voltage %u in volt_table: %u..%u",
++	     microvolts, regul->volt_table[0], regul->volt_table[i - 1]);
++
++	for (i = 0; i < regul->volt_table_size; i++)
++		EMSG("[%zu]=%6u", i, regul->volt_table[i]);
++
 +	return VOLTAGE_INDEX_INVALID;
 +}
 +
-+TEE_Result pca9450_regulator_set_voltage(struct pmic_handle_s *pmic,
-+					 uint8_t id, uint32_t microvolts)
++TEE_Result pca9450_regulator_set_voltage(struct pca9450_pmic *pmic,
++					 uint8_t id, int microvolts)
 +{
 +	const struct regul_struct *regul = &regul_table[id];
 +	const struct regulator_limits *limits = get_limits(regul);
 +	size_t index;
 +	uint8_t mask = limits->mask;
++
++	DMSG("Trying to set voltage [%u..%u] to %u uV",
++	     limits->min, limits->max, microvolts);
 +
 +	if (microvolts > limits->max || microvolts < limits->min)
 +		return TEE_ERROR_BAD_PARAMETERS;
@@ -301,7 +311,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +				       index, mask);
 +}
 +
-+TEE_Result pca9450_regulator_get_prop(struct pmic_handle_s *pmic, uint8_t id,
++TEE_Result pca9450_regulator_get_prop(struct pca9450_pmic *pmic, uint8_t id,
 +				      enum pca9450_prop_id prop, uint8_t *arg)
 +{
 +	TEE_Result res;
@@ -325,7 +335,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return res;
 +}
 +
-+TEE_Result pca9450_regulator_set_prop(struct pmic_handle_s *pmic, uint8_t id,
++TEE_Result pca9450_regulator_set_prop(struct pca9450_pmic *pmic, uint8_t id,
 +				      enum pca9450_prop_id prop, uint8_t arg)
 +{
 +	const struct regul_struct *regul = &regul_table[id];
@@ -345,14 +355,14 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+void pca9450_dump_regulators(struct pmic_handle_s *pmic)
++void pca9450_dump_regulators(struct pca9450_pmic *pmic)
 +{
 +	size_t i;
 +
 +	assert(pmic);
 +
 +	for (i = 0; i < ARRAY_SIZE(regul_table); i++) {
-+		uint32_t val;
++		int val;
 +		bool state;
 +		char __maybe_unused const *name;
 +
@@ -368,7 +378,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	}
 +}
 +
-+TEE_Result pca9450_get_chip_id(struct pmic_handle_s *pmic, uint8_t *val)
++TEE_Result pca9450_get_chip_id(struct pca9450_pmic *pmic, uint8_t *val)
 +{
 +	return pca9450_register_read(pmic, DEVICE_ID, val);
 +}
@@ -378,7 +388,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 + * Low Power
 + *
 + */
-+TEE_Result pca9450_lp_set_state(struct pmic_handle_s *pmic, uint8_t id,
++TEE_Result pca9450_lp_set_state(struct pca9450_pmic *pmic, uint8_t id,
 +				bool enable)
 +{
 +	const struct regul_struct *regul = &regul_table[id];
@@ -388,8 +398,8 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return pca9450_register_update(pmic, regul->en_cr, en_val, en_mask);
 +}
 +
-+TEE_Result pca9450_lp_set_voltage(struct pmic_handle_s *pmic, uint8_t id,
-+				  uint32_t uv)
++TEE_Result pca9450_lp_set_voltage(struct pca9450_pmic *pmic, uint8_t id,
++				  int uv)
 +{
 +	TEE_Result res;
 +	const struct regul_struct *regul = &regul_table[id];
@@ -419,7 +429,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 + * Interrupt handling
 + *
 + */
-+TEE_Result pca9450_set_irq_mask(struct pmic_handle_s *pmic, uint8_t num,
++TEE_Result pca9450_set_irq_mask(struct pca9450_pmic *pmic, uint8_t num,
 +				bool state)
 +{
 +	uint8_t mask = BIT(num);
@@ -428,7 +438,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +	return pca9450_register_update(pmic, INT1_MSK, val, mask);
 +}
 +
-+enum itr_return pca9450_handle_irq(struct pmic_handle_s *pmic)
++enum itr_return pca9450_handle_irq(struct pca9450_pmic *pmic)
 +{
 +	enum itr_return res = ITRR_NONE;
 +	uint8_t val;
@@ -437,6 +447,9 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +
 +	if (pca9450_register_read(pmic, INT1, &val))
 +		panic();
++
++	if (!val)
++		return ITRR_NONE;
 +
 +	if (val) {
 +		int it_id;
@@ -465,7 +478,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +		const struct regulator_limits *limits = get_limits(regul);
 +		size_t num_voltages = limits->mask + 1;
 +		size_t idx;
-+		uint32_t *volt_table = volt_tables[regul->limits];
++		int *volt_table = volt_tables[regul->limits];
 +
 +		if (!volt_table)
 +			volt_table = calloc(num_voltages, sizeof(*volt_table));
@@ -489,7 +502,7 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +					     idx, limits->mask + 1U);
 +					panic();
 +				}
-+				if ((uint32_t)ret > limits->max)
++				if (ret > limits->max)
 +					break;
 +				volt_table[idx] = ret;
 +			}
@@ -506,11 +519,11 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.c
 +		     volt_table[idx - 1] / 1000, volt_table[idx - 1] / 100 % 10);
 +	}
 +}
-Index: optee-os-qsmp-2550/core/drivers/pca9450.h
+Index: optee-qsmp-2550/core/drivers/pca9450.h
 ===================================================================
 --- /dev/null
-+++ optee-os-qsmp-2550/core/drivers/pca9450.h
-@@ -0,0 +1,176 @@
++++ optee-qsmp-2550/core/drivers/pca9450.h
+@@ -0,0 +1,179 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2024, Lothar Waßmann <LW@KARO-electronics.de>
@@ -633,65 +646,68 @@ Index: optee-os-qsmp-2550/core/drivers/pca9450.h
 +};
 +#endif
 +
-+struct pmic_handle_s {
++struct pca9450_pmic {
 +	struct i2c_handle_s *pmic_i2c_handle;
 +	uint16_t pmic_i2c_addr;
 +	uint16_t irq_count;
 +#ifdef CFG_STM32_PWR_IRQ
 +	SLIST_HEAD(, pmic_it_handle_s) it_list;
 +#endif
++	uint8_t ref_id;
 +};
 +
-+TEE_Result pca9450_register_read(struct pmic_handle_s *pmic,
++TEE_Result pca9450_regulator_get_id(const char *regu_name, uint8_t *id);
++
++TEE_Result pca9450_register_read(struct pca9450_pmic *pmic,
 +				 uint16_t register_id, uint8_t *value);
-+TEE_Result pca9450_register_write(struct pmic_handle_s *pmic,
++TEE_Result pca9450_register_write(struct pca9450_pmic *pmic,
 +				  uint16_t register_id, uint8_t value);
-+TEE_Result pca9450_register_update(struct pmic_handle_s *pmic,
++TEE_Result pca9450_register_update(struct pca9450_pmic *pmic,
 +				   uint16_t register_id, uint8_t value,
 +				   uint8_t mask);
 +
-+TEE_Result pca9450_regulator_set_state(struct pmic_handle_s *pmic,
++TEE_Result pca9450_regulator_set_state(struct pca9450_pmic *pmic,
 +				       uint8_t id, bool enable);
-+TEE_Result pca9450_regulator_get_state(struct pmic_handle_s *pmic,
++TEE_Result pca9450_regulator_get_state(struct pca9450_pmic *pmic,
 +				       uint8_t id, bool *enabled);
 +
-+TEE_Result pca9450_regulator_levels_uv(struct pmic_handle_s *pmic,
-+				       uint8_t id, const uint32_t **levels,
++TEE_Result pca9450_regulator_levels_uv(struct pca9450_pmic *pmic,
++				       uint8_t id, const int **levels,
 +				       size_t *levels_count);
-+TEE_Result pca9450_regulator_get_voltage(struct pmic_handle_s *pmic,
-+					 uint8_t id, uint32_t *val);
-+TEE_Result pca9450_regulator_set_voltage(struct pmic_handle_s *pmic,
-+					 uint8_t id, uint32_t microvolts);
++TEE_Result pca9450_regulator_get_voltage(struct pca9450_pmic *pmic,
++					 uint8_t id, int *microvolts);
++TEE_Result pca9450_regulator_set_voltage(struct pca9450_pmic *pmic,
++					 uint8_t id, int microvolts);
 +
-+TEE_Result pca9450_regulator_get_prop(struct pmic_handle_s *pmic, uint8_t id,
++TEE_Result pca9450_regulator_get_prop(struct pca9450_pmic *pmic, uint8_t id,
 +				      enum pca9450_prop_id prop, uint8_t *arg);
-+TEE_Result pca9450_regulator_set_prop(struct pmic_handle_s *pmic, uint8_t id,
++TEE_Result pca9450_regulator_set_prop(struct pca9450_pmic *pmic, uint8_t id,
 +				      enum pca9450_prop_id prop, uint8_t arg);
 +
-+void pca9450_dump_regulators(struct pmic_handle_s *pmic);
-+TEE_Result pca9450_get_chip_id(struct pmic_handle_s *pmic, uint8_t *val);
-+TEE_Result pca9450_get_product_id(struct pmic_handle_s *pmic, uint8_t *val);
++void pca9450_dump_regulators(struct pca9450_pmic *pmic);
++TEE_Result pca9450_get_chip_id(struct pca9450_pmic *pmic, uint8_t *val);
++TEE_Result pca9450_get_product_id(struct pca9450_pmic *pmic, uint8_t *val);
 +
 +/* Low Power handling */
-+TEE_Result pca9450_lp_set_state(struct pmic_handle_s *pmic, uint8_t id,
++TEE_Result pca9450_lp_set_state(struct pca9450_pmic *pmic, uint8_t id,
 +				bool enable);
-+TEE_Result pca9450_lp_set_voltage(struct pmic_handle_s *pmic, uint8_t id,
-+				  uint32_t uv);
++TEE_Result pca9450_lp_set_voltage(struct pca9450_pmic *pmic, uint8_t id,
++				  int uv);
 +
 +/* Interrupt Handling */
-+enum itr_return pca9450_irq_callback(struct pmic_handle_s *pmic, uint8_t it_id);
-+TEE_Result pca9450_set_irq_mask(struct pmic_handle_s *pmic, uint8_t num,
++enum itr_return pca9450_irq_callback(struct pca9450_pmic *pmic, uint8_t it_id);
++TEE_Result pca9450_set_irq_mask(struct pca9450_pmic *pmic, uint8_t num,
 +				bool state);
-+TEE_Result pca9450_irq_gen(struct pmic_handle_s *pmic, uint8_t num);
-+enum itr_return pca9450_handle_irq(struct pmic_handle_s *pmic);
++TEE_Result pca9450_irq_gen(struct pca9450_pmic *pmic, uint8_t num);
++enum itr_return pca9450_handle_irq(struct pca9450_pmic *pmic);
 +
 +void pca9450_init(void);
 +#endif /* __PCA9450_H */
-Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
+Index: optee-qsmp-2550/core/drivers/pmic-pca9450.c
 ===================================================================
 --- /dev/null
-+++ optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
-@@ -0,0 +1,778 @@
++++ optee-qsmp-2550/core/drivers/pmic-pca9450.c
+@@ -0,0 +1,918 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright 2024 Lothar Waßmann <LW@KARO-electronics.de>
@@ -722,6 +738,8 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +
 +#define PMIC_I2C_TRIALS			1
 +#define PMIC_I2C_TIMEOUT_BUSY_MS	5
++
++#define PMIC_REF_ID_PCA9450B		0x11
 +
 +/* Mutex for protecting PMIC accesses */
 +static struct mutex pmic_mu = MUTEX_INITIALIZER;
@@ -755,6 +773,37 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +#define STM32_PM_OFF			3
 +#define STM32_PM_NB_SOC_MODES		4
 +
++#define PCA9450_LP_STATE_OFF		BIT(0)
++#define PCA9450_LP_STATE_ON		BIT(1)
++#define PCA9450_LP_STATE_UNMODIFIED	BIT(2)
++#define PCA9450_LP_STATE_SET_VOLT	BIT(3)
++
++struct pca9450_regu {
++	struct pca9450_pmic *pmic;
++	uint32_t id;
++	int lp_uv[STM32_PM_NB_SOC_MODES];
++	int last_lp_mode;
++	int *levels;
++	struct regulator_voltages_desc levels_desc;
++	uint8_t lp_state[STM32_PM_NB_SOC_MODES];
++};
++
++struct regul_property {
++	const char *name;
++	uint16_t prop;
++};
++
++static const struct regul_property prop_table[] = {
++	{
++		.name = "wdog-b-reset",
++		.prop = PCA9450_WDOG_B_RESET,
++	},
++	{
++		.name = "pmic-rst-b",
++		.prop = PCA9450_PMIC_RST_B,
++	},
++};
++
 +static const char *plat_get_lp_mode_name(int mode __unused)
 +{
 +	switch (mode) {
@@ -772,159 +821,215 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	}
 +}
 +
-+#define PCA9450_LP_STATE_OFF		BIT(0)
-+#define PCA9450_LP_STATE_ON		BIT(1)
-+#define PCA9450_LP_STATE_UNMODIFIED	BIT(2)
-+#define PCA9450_LP_STATE_SET_VOLT	BIT(3)
-+
-+struct regu_handle_s {
-+	struct pmic_handle_s *pmic;
-+	struct regul_desc desc;
-+	uint32_t id;
-+	uint32_t lp_uv[STM32_PM_NB_SOC_MODES];
-+	uint8_t lp_state[STM32_PM_NB_SOC_MODES];
-+};
-+
-+static TEE_Result pmic_set_state(const struct regul_desc *desc, bool enable)
-+{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+
-+	FMSG("%u:%s: set state to %u", id, desc->node_name, enable);
-+
-+	return pca9450_regulator_set_state(pmic, id, enable);
-+}
-+
-+static TEE_Result pmic_get_state(const struct regul_desc *desc, bool *enabled)
-+{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+
-+	FMSG("%u:%s: get state\n", id, desc->node_name);
-+
-+	return pca9450_regulator_get_state(pmic, id, enabled);
-+}
-+
-+static TEE_Result pmic_get_voltage(const struct regul_desc *desc, uint32_t *uv)
-+{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+	uint32_t val;
-+	TEE_Result res;
-+
-+	res = pca9450_regulator_get_voltage(pmic, id, &val);
-+	if (res)
-+		return res;
-+
-+	*uv = val;
-+
-+	FMSG("%s: get volt %u.%umV", desc->node_name, val / 1000, val / 100 % 10);
-+
-+	return TEE_SUCCESS;
-+}
-+
-+static TEE_Result pmic_verify_voltage(const struct regul_desc *desc, uint32_t uv)
-+{
-+	TEE_Result res;
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+	const uint32_t *levels;
-+	size_t count;
-+	size_t n;
-+
-+	res = pca9450_regulator_levels_uv(pmic, id, &levels,
-+					  &count);
-+	if (res)
-+		return res;
-+
-+	for (n = 0; n < count; n++)
-+		if (levels[n] == uv)
-+			return TEE_SUCCESS;
-+
-+	return TEE_ERROR_GENERIC;
-+
-+}
-+
-+static TEE_Result pmic_set_voltage(const struct regul_desc *desc, uint32_t uv)
-+{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+	TEE_Result res;
-+
-+	FMSG("%s: set volt to %u.%u mV", desc->node_name,
-+	     uv / 1000, uv / 100 % 10);
-+
-+	res = pca9450_regulator_set_voltage(pmic, id, uv);
-+	return res;
-+}
-+
-+static TEE_Result pmic_list_voltages(const struct regul_desc *desc,
-+				     uint32_t **levels, size_t *count)
-+{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+
-+	FMSG("%s: list volt", desc->node_name);
-+
-+	return pca9450_regulator_levels_uv(pmic, id, (const uint32_t **)levels,
-+					   count);
-+}
-+
-+/*
-+ * Set flag from regulator framework.
-+ * Only handle regultor standard flags
-+ */
-+static TEE_Result pmic_set_flag(const struct regul_desc *desc, uint16_t flag)
-+{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
-+	uint32_t id = regu->id;
-+	TEE_Result res = TEE_SUCCESS;
-+
-+	FMSG("%s: set_flag 0x%04x", desc->node_name, flag);
-+
-+	switch (flag) {
-+	case REGUL_PULL_DOWN:
-+		res = pca9450_regulator_set_prop(pmic, id,
-+						 PCA9450_PULL_DOWN, 0);
-+		break;
-+	default:
-+		EMSG("Invalid flag 0x%04x", flag);
-+		panic();
-+	}
-+
-+	return res;
-+}
-+
-+static void driver_lock(const struct regul_desc *desc __unused)
++static void driver_lock(void)
 +{
 +	if (thread_get_id_may_fail() != THREAD_ID_INVALID)
 +		mutex_lock(&pmic_mu);
 +}
 +
-+static void driver_unlock(const struct regul_desc *desc __unused)
++static void driver_unlock(void)
 +{
 +	if (thread_get_id_may_fail() != THREAD_ID_INVALID)
 +		mutex_unlock(&pmic_mu);
 +}
 +
-+static TEE_Result __maybe_unused
-+regu_prepare_suspend(const struct regul_desc *desc, uint8_t mode)
++static TEE_Result pmic_set_state(struct regulator *regulator, bool enable)
 +{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
++	TEE_Result res;
++	const struct pca9450_regu *regu = regulator->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
 +	uint32_t id = regu->id;
-+	uint8_t state = regu->lp_state[mode];
-+	uint32_t uv = regu->lp_uv[mode];
++
++	FMSG("%u:%s: set state to %u", id, regulator_name(regulator), enable);
++	driver_lock();
++	res = pca9450_regulator_set_state(pmic, id, enable);
++	driver_unlock();
++	return res;
++}
++
++static TEE_Result pmic_get_state(struct regulator *regulator, bool *enabled)
++{
++	TEE_Result res;
++	const struct pca9450_regu *regu = regulator->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
++	uint32_t id = regu->id;
++
++	FMSG("%u:%s: get state\n", id, regulator_name(regulator));
++
++	driver_lock();
++	res = pca9450_regulator_get_state(pmic, id, enabled);
++	driver_unlock();
++	return res;
++}
++
++static TEE_Result pmic_get_voltage(struct regulator *regulator, int *uv)
++{
++	TEE_Result res;
++	const struct pca9450_regu *regu = regulator->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
++	uint32_t id = regu->id;
++	int val;
++
++	driver_lock();
++	res = pca9450_regulator_get_voltage(pmic, id, &val);
++	if (res)
++		goto out;
++
++	*uv = val;
++
++	FMSG("%s: get volt %u.%umV", regulator_name(regulator), val / 1000, val / 100 % 10);
++out:
++	driver_unlock();
++	return TEE_SUCCESS;
++}
++
++static TEE_Result pmic_verify_voltage(const struct regu_dt_desc *desc, int uv)
++{
++	TEE_Result res;
++	const struct pca9450_regu *regu = desc->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
++	uint32_t id = regu->id;
++	const int *levels;
++	size_t count;
++	size_t n;
++
++	driver_lock();
++	res = pca9450_regulator_levels_uv(pmic, id, &levels, &count);
++	if (res)
++		return res;
++
++	res = TEE_ERROR_GENERIC;
++	for (n = 0; n < count; n++)
++		if (levels[n] == uv) {
++			res = TEE_SUCCESS;
++			goto out;
++		}
++
++out:
++	driver_unlock();
++	return res;
++
++}
++
++static TEE_Result pmic_set_voltage(struct regulator *regulator, int uv)
++{
++	const struct pca9450_regu *regu = regulator->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
++	uint32_t id = regu->id;
 +	TEE_Result res;
 +
-+	FMSG("%s: suspend state:%#08x %u uV", desc->node_name,
++	FMSG("%s: set volt to %u.%u mV", regulator_name(regulator),
++	     uv / 1000, uv / 100 % 10);
++
++	driver_lock();
++	res = pca9450_regulator_set_voltage(pmic, id, uv);
++	driver_unlock();
++	return res;
++}
++
++static size_t refine_levels_array(size_t count, int *levels_uv,
++				  int min_uv, int max_uv)
++{
++	size_t n;
++	size_t m;
++
++	FMSG("refining %zu voltages between %u and %u\n",
++	     count, min_uv, max_uv);
++	qsort_int(levels_uv, count);
++
++	/* Remove duplicates and return optimized count */
++	for (m = 0, n = 1; n < count; n++) {
++		if (levels_uv[m] != levels_uv[n]) {
++			if (m + 1 != n)
++				levels_uv[m + 1] = levels_uv[n];
++			m++;
++		}
++	}
++	count = m + 1;
++
++	/* Find max voltage index */
++	for (n = count; n; n--)
++		if (levels_uv[n - 1] <= max_uv)
++			break;
++	count = n;
++
++	for (n = 0; n < count; n++)
++		if (levels_uv[n] >= min_uv)
++			break;
++	count -= n;
++
++	memmove(levels_uv, levels_uv + n, count * sizeof(*levels_uv));
++
++	FMSG("returning %zu voltages between %u and %u\n",
++	     count, levels_uv[0], levels_uv[count - 1]);
++	return count;
++}
++
++static TEE_Result pmic_list_voltages(struct regulator *regulator,
++				     struct regulator_voltages_desc **out_desc,
++				     const int **out_levels)
++{
++	struct pca9450_regu *regu = regulator->priv;
++
++	if (!regu->levels) {
++		TEE_Result res;
++		const int *level_ref;
++		size_t level_count;
++		size_t count_ref;
++		int *levels2;
++		int *levels;
++		size_t n;
++
++		/*
++		 * Allocate and build a concise and ordered voltage list
++		 * based on the voltage list provided by pca9450 driver.
++		 */
++		res = pca9450_regulator_levels_uv(regu->pmic, regu->id,
++						  &level_ref, &count_ref);
++		if (res)
++			return res;
++
++		level_count = count_ref;
++
++		levels = calloc(level_count, sizeof(*levels));
++		if (!levels)
++			return TEE_ERROR_OUT_OF_MEMORY;
++
++		for (n = 0; n < count_ref; n++)
++			levels[n] = level_ref[n];
++
++		level_count = refine_levels_array(level_count, levels,
++						  regulator->min_uv,
++						  regulator->max_uv);
++		/* Shrink levels array to not waste heap memory */
++		levels2 = realloc(levels, sizeof(*levels) * level_count);
++		if (!levels2) {
++			free(levels);
++			return TEE_ERROR_OUT_OF_MEMORY;
++		}
++
++		regu->levels_desc.type = VOLTAGE_TYPE_FULL_LIST;
++		regu->levels_desc.num_levels = level_count;
++		regu->levels = levels2;
++	}
++
++	*out_desc = &regu->levels_desc;
++	*out_levels = regu->levels;
++
++	return TEE_SUCCESS;
++}
++
++static TEE_Result __maybe_unused
++regu_prepare_suspend(struct regulator *regulator, uint8_t mode)
++{
++	const struct pca9450_regu *regu = regulator->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
++	uint32_t id = regu->id;
++	uint8_t state = regu->lp_state[mode];
++	int uv = regu->lp_uv[mode];
++	TEE_Result res;
++
++	FMSG("%s: suspend state:%#08x %u uV", regulator_name(regulator),
 +	     state, uv);
 +
 +	if (state & PCA9450_LP_STATE_UNMODIFIED)
@@ -951,72 +1056,105 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+static const struct regul_ops pmic_ops = {
++static TEE_Result pmic_init(struct regulator *regulator)
++{
++	regulator->ramp_delay_uv_per_us = 2200;
++	regulator->enable_ramp_delay_us = 1000;
++
++	return TEE_SUCCESS;
++}
++
++static TEE_Result pmic_supplied_init(struct regulator *regulator,
++				     const void *fdt, int node)
++{
++	struct pca9450_regu *regu = regulator->priv;
++	const struct regul_property *p;
++	TEE_Result res;
++
++	if (regulator->flags & REGULATOR_PULL_DOWN) {
++		res = pca9450_regulator_set_prop(regu->pmic, regu->id,
++						 PCA9450_PULL_DOWN, 0);
++		if (res)
++			return res;
++	}
++
++	for (p = prop_table; p < (prop_table + ARRAY_SIZE(prop_table)); p++) {
++		const fdt32_t *cuint = NULL;
++		uint32_t value = 0;
++
++		cuint = fdt_getprop(fdt, node, p->name, NULL);
++		if (!cuint)
++			continue;
++
++		value = fdt32_to_cpu(*cuint);
++		FMSG("%s: %d, %#"PRIx32, regulator_name(regulator), p->prop,
++		     value);
++
++		res = pca9450_regulator_set_prop(regu->pmic, regu->id,
++						 p->prop, value);
++		if (res)
++			return res;
++	}
++
++	res = regu_prepare_suspend(regulator, STM32_PM_DEFAULT);
++	if (res) {
++		EMSG("Failed to prepare suspend mode for %s",
++		     regulator_name(regulator));
++		return res;
++	}
++#ifdef CFG_PM
++	register_pm_core_service_cb(pca9450_regu_pm, regulator,
++				    regulator_name(regulator));
++#endif
++	return res;
++}
++
++static const struct regulator_ops pmic_ops = {
 +	.set_state = pmic_set_state,
 +	.get_state = pmic_get_state,
 +	.set_voltage = pmic_set_voltage,
 +	.get_voltage = pmic_get_voltage,
-+	.list_voltages = pmic_list_voltages,
-+	.set_flag = pmic_set_flag,
-+	.lock = driver_lock,
-+	.unlock = driver_unlock,
++	.supported_voltages = pmic_list_voltages,
++	.init = pmic_init,
++	.supplied_init = pmic_supplied_init,
 +};
 +
-+#define DEFINE_REGU(name) { \
-+	.node_name = name, \
-+	.driver_data = NULL, \
++#define DEFINE_REGU(_name) { \
++	.name = _name, \
 +	.ops = &pmic_ops, \
-+	.ramp_delay_uv_per_us = 2200, \
-+	.enable_ramp_delay_us = 1000, \
 +}
 +
-+static const struct regul_desc pmic_reguls[] = {
-+	[PCA9450_BUCK1] = DEFINE_REGU("buck1"),
-+	[PCA9450_BUCK2] = DEFINE_REGU("buck2"),
-+	[PCA9450_BUCK3] = DEFINE_REGU("buck3"),
-+	[PCA9450_BUCK4] = DEFINE_REGU("buck4"),
-+	[PCA9450_BUCK5] = DEFINE_REGU("buck5"),
-+	[PCA9450_BUCK6] = DEFINE_REGU("buck6"),
-+	[PCA9450_LDO1] = DEFINE_REGU("ldo1"),
-+	[PCA9450_LDO2] = DEFINE_REGU("ldo2"),
-+	[PCA9450_LDO3] = DEFINE_REGU("ldo3"),
-+	[PCA9450_LDO4] = DEFINE_REGU("ldo4"),
-+	[PCA9450_LDO5] = DEFINE_REGU("ldo5"),
++static const struct regu_dt_desc pca9450_regulators[] = {
++	DEFINE_REGU("buck1"),
++	DEFINE_REGU("buck2"),
++	DEFINE_REGU("buck3"),
++	DEFINE_REGU("buck4"),
++	DEFINE_REGU("buck5"),
++	DEFINE_REGU("buck6"),
++	DEFINE_REGU("ldo1"),
++	DEFINE_REGU("ldo2"),
++	DEFINE_REGU("ldo3"),
++	DEFINE_REGU("ldo4"),
++	DEFINE_REGU("ldo5"),
 +};
-+DECLARE_KEEP_PAGER(pmic_reguls);
++DECLARE_KEEP_PAGER(pca9450_regulators);
 +
-+struct regul_property {
-+	const char *name;
-+	uint16_t prop;
-+};
-+
-+static const struct regul_property prop_table[] = {
-+	{
-+		.name = "wdog-b-reset",
-+		.prop = PCA9450_WDOG_B_RESET,
-+	},
-+	{
-+		.name = "pmic-rst-b",
-+		.prop = PCA9450_PMIC_RST_B,
-+	},
-+};
-+
-+static TEE_Result __unused pca9450_set_prop(const struct regul_desc *desc,
++static TEE_Result __unused pca9450_set_prop(const struct regu_dt_desc *desc,
 +					    enum pca9450_prop_id prop, uint32_t value)
 +{
-+	const struct regu_handle_s *regu = desc->driver_data;
-+	struct pmic_handle_s *pmic = regu->pmic;
++	struct pca9450_regu *regu = desc->priv;
++	struct pca9450_pmic *pmic = regu->pmic;
 +	uint32_t id = regu->id;
 +
 +	assert(desc);
 +
-+	FMSG("%s: set_prop 0x%x val=%u\n", desc->node_name, prop, value);
++	FMSG("%s: set_prop 0x%x val=%u\n", desc->name, prop, value);
 +
 +	return pca9450_regulator_set_prop(pmic, id, prop, value);
 +}
 +
 +static TEE_Result parse_properties(const void *fdt, int node,
-+				   struct pmic_handle_s *pmic)
++				   struct pca9450_pmic *pmic)
 +
 +{
 +	const struct regul_property *p;
@@ -1069,31 +1207,32 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+static TEE_Result parse_low_power_mode(const void *fdt,
-+				 const struct regul_desc *desc,
-+				 int node, int mode)
++static TEE_Result parse_low_power_mode(const void *fdt, int node,
++				       const struct regu_dt_desc *desc,
++				       int mode)
 +{
-+	struct regu_handle_s *regu = (void *)desc->driver_data;
++	struct pca9450_regu *regu = desc->priv;
 +	const fdt32_t *cuint;
 +
-+	regu->lp_state[mode] = 0;
++	regu->lp_state[mode] = PCA9450_LP_STATE_UNMODIFIED;
 +
 +	if (fdt_getprop(fdt, node, "regulator-off-in-suspend", NULL)) {
-+		FMSG("%s: mode:%d OFF", desc->node_name, mode);
-+		regu->lp_state[mode] |= PCA9450_LP_STATE_OFF;
-+	} else if (fdt_getprop(fdt, node, "regulator-on-in-suspend", NULL)) {
-+		FMSG("%s: mode:%d ON", desc->node_name, mode);
-+		regu->lp_state[mode] |= PCA9450_LP_STATE_ON;
-+	} else {
-+		regu->lp_state[mode] |= PCA9450_LP_STATE_UNMODIFIED;
++		FMSG("%s: mode:%d OFF", desc->name, mode);
++		regu->lp_state[mode] = PCA9450_LP_STATE_OFF;
++	}
++	if (fdt_getprop(fdt, node, "regulator-on-in-suspend", NULL)) {
++		FMSG("%s: mode:%d ON", desc->name, mode);
++		if (regu->lp_state[mode] != PCA9450_LP_STATE_UNMODIFIED)
++			EMSG("regulator cannot be off and on in suspend at the same time");
++		regu->lp_state[mode] = PCA9450_LP_STATE_ON;
 +	}
 +
 +	cuint = fdt_getprop(fdt, node, "regulator-suspend-microvolt", NULL);
 +	if (cuint) {
-+		uint32_t uv = fdt32_to_cpu(*cuint);
++		int uv = fdt32_to_cpu(*cuint);
 +		TEE_Result res;
 +
-+		FMSG("%s: mode:%d suspend uV=%u", desc->node_name,
++		FMSG("%s: mode:%d suspend uV=%u", desc->name,
 +		     mode, uv);
 +
 +		res = pmic_verify_voltage(desc, uv);
@@ -1107,8 +1246,8 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	return TEE_SUCCESS;
 +}
 +
-+static TEE_Result parse_low_power_modes(const void *fdt,
-+					const struct regul_desc *desc, int node)
++static TEE_Result parse_low_power_modes(const void *fdt, int node,
++					const struct regu_dt_desc *desc)
 +{
 +	int mode;
 +
@@ -1122,7 +1261,7 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +			/* Get the configs from regulator_state_node subnode */
 +			n = fdt_subnode_offset(fdt, node, lp_mode_name);
 +			if (n >= 0) {
-+				res = parse_low_power_mode(fdt, desc, n, mode);
++				res = parse_low_power_mode(fdt, n, desc, mode);
 +				if (res)
 +					return res;
 +			}
@@ -1135,8 +1274,8 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +static TEE_Result pca9450_regu_pm(enum pm_op op, uint32_t pm_hint,
 +				  const struct pm_callback_handle *pm_handle)
 +{
-+	struct regul_desc *desc = (struct regul_desc *)pm_handle->handle;
 +	TEE_Result res;
++	struct regulator *regulator = handle->handle;
 +	unsigned int pwrlvl = PM_HINT_PLATFORM_STATE(pm_hint);
 +	uint8_t mode;
 +
@@ -1164,27 +1303,37 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +		panic();
 +	}
 +
-+	res = regu_prepare_suspend(desc, mode);
++	res = regu_prepare_suspend(regulator, mode);
 +	return res;
 +}
 +#endif
 +
 +static TEE_Result register_pmic_regulator(const void *fdt,
-+					  struct pmic_handle_s *pmic,
-+					  const char *regu_name, int node)
++					  struct pca9450_pmic *pmic,
++					  const char *regu_name, int node,
++					  int parent_node)
 +{
 +	TEE_Result res;
-+	struct regu_handle_s *regu;
-+	struct regul_desc *desc;
-+	size_t id;
++	struct regu_dt_desc desc;
++	struct pca9450_regu *regu;
++	size_t index;
++	uint8_t id;
 +
 +	DMSG("PCA9450 register %s", regu_name);
 +
-+	for (id = 0; id < ARRAY_SIZE(pmic_reguls); id++)
-+		if (!strcmp(pmic_reguls[id].node_name, regu_name))
++	for (index = 0; index < ARRAY_SIZE(pca9450_regulators); index++)
++		if (!strcmp(pca9450_regulators[index].name, regu_name))
 +			break;
 +
-+	assert(id < ARRAY_SIZE(pmic_reguls));
++	assert(index < ARRAY_SIZE(pca9450_regulators));
++
++	desc = pca9450_regulators[index];
++
++	res = pca9450_regulator_get_id(regu_name, &id);
++	if (res) {
++		EMSG("Failed to get %s id", regu_name);
++		return res;
++	}
 +
 +	regu = calloc(1, sizeof(*regu));
 +	if (!regu)
@@ -1192,32 +1341,20 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +
 +	regu->pmic = pmic;
 +	regu->id = id;
-+	desc = &regu->desc;
 +
-+	memcpy(desc, pmic_reguls + id, sizeof(*desc));
-+	desc->driver_data = regu;
++	desc.priv = regu;
 +
-+	res = regulator_register(desc, node);
++	res = regulator_dt_register(fdt, node, parent_node, &desc);
 +	if (res) {
 +		EMSG("Failed to register %s", regu_name);
 +		goto out;
 +	}
 +
-+	res = parse_low_power_modes(fdt, desc, node);
++	res = parse_low_power_modes(fdt, node, &desc);
 +	if (res) {
 +		EMSG("Failed to parse low power modes for %s", regu_name);
 +		goto out;
 +	}
-+
-+	res = regu_prepare_suspend(desc, STM32_PM_DEFAULT);
-+	if (res) {
-+		EMSG("Failed to prepare suspend mode for %s", regu_name);
-+		goto out;
-+	}
-+
-+#ifdef CFG_PM
-+	register_pm_core_service_cb(pca9450_regu_pm, desc, desc->node_name);
-+#endif
 +
 +	return TEE_SUCCESS;
 +
@@ -1226,7 +1363,7 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	return res;}
 +
 +static TEE_Result parse_regulator_fdt_nodes(const void *fdt, int node,
-+					    struct pmic_handle_s *pmic)
++					    struct pca9450_pmic *pmic)
 +{
 +	int regulators_node;
 +	int regu_node;
@@ -1236,8 +1373,8 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +		panic();
 +
 +	fdt_for_each_subnode(regu_node, fdt, regulators_node) {
-+		TEE_Result res = TEE_ERROR_GENERIC;
-+		int status = _fdt_get_status(fdt, regu_node);
++		TEE_Result res;
++		int status = fdt_get_status(fdt, regu_node);
 +		const char *regu_name;
 +
 +		assert(status >= 0);
@@ -1247,7 +1384,8 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +		regu_name = fdt_get_name(fdt, regu_node, NULL);
 +		assert(regu_name);
 +
-+		res = register_pmic_regulator(fdt, pmic, regu_name, regu_node);
++		res = register_pmic_regulator(fdt, pmic, regu_name, regu_node,
++					      regulators_node);
 +		if (res) {
 +			EMSG("Failed to register %s", regu_name);
 +			return res;
@@ -1259,7 +1397,7 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +
 +#ifdef CFG_STM32_PWR_IRQ
 +
-+enum itr_return pca9450_irq_callback(struct pmic_handle_s *pmic, uint8_t it_id)
++enum itr_return pca9450_irq_callback(struct pca9450_pmic *pmic, uint8_t it_id)
 +{
 +	struct pmic_it_handle_s *prv = NULL;
 +
@@ -1279,7 +1417,7 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +
 +static enum itr_return pca9450_irq_handler(struct itr_handler *handler)
 +{
-+	struct pmic_handle_s *pmic = handler->data;
++	struct pca9450_pmic *pmic = handler->data;
 +
 +	FMSG("PCA9450 irq");
 +
@@ -1287,11 +1425,14 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +}
 +
 +static TEE_Result initialize_pca9450_irq(const void *fdt, int node,
-+					 struct pmic_handle_s *pmic)
++					 struct pca9450_pmic *pmic)
 +{
 +	TEE_Result res;
 +	struct itr_handler *hdl;
 +	const fdt32_t *cuint;
++	uint32_t phandle;
++	int wakeup_parent_node;
++	int len;
 +	const uint32_t *notif_ids;
 +	int nb_notif;
 +
@@ -1299,11 +1440,21 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +
 +	SLIST_INIT(&pmic->it_list);
 +
++	cuint = fdt_getprop(fdt, node, "wakeup-parent", &len);
++	if (cuint) {
++		phandle = fdt32_to_cpu(*cuint);
++		wakeup_parent_node = fdt_node_offset_by_phandle(fdt, phandle);
++	} else {
++		wakeup_parent_node = -1;
++	}
 +	cuint = fdt_getprop(fdt, node, "st,wakeup-pin-number", NULL);
 +	if (cuint) {
 +		size_t it = fdt32_to_cpu(*cuint) - 1;
 +
-+		res = stm32mp25_pwr_itr_alloc_add(it, pca9450_irq_handler,
++		if (wakeup_parent_node < 0)
++			panic("Missing wakeup-parent");
++		res = stm32mp25_pwr_itr_alloc_add(fdt, wakeup_parent_node, it,
++						  pca9450_irq_handler,
 +						  PWR_WKUP_FLAG_FALLING |
 +						  PWR_WKUP_FLAG_THREADED,
 +						  pmic, &hdl);
@@ -1358,7 +1509,7 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +#endif
 +
 +static void initialize_pca9450_i2c(const void *fdt, int node,
-+				   struct pmic_handle_s *pmic,
++				   struct pca9450_pmic *pmic,
 +				   struct i2c_handle_s *i2c)
 +{
 +	const fdt32_t *cuint = NULL;
@@ -1386,7 +1537,7 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 + * PMIC and resource initialization
 + */
 +static void initialize_pca9450(const void *fdt, int node,
-+			       struct pmic_handle_s *pmic,
++			       struct pca9450_pmic *pmic,
 +			       struct i2c_handle_s *i2c)
 +{
 +	uint8_t chip_id;
@@ -1399,7 +1550,9 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	if (pca9450_get_chip_id(pmic, &chip_id))
 +		panic("Failed to access PMIC");
 +
-+	switch ((chip_id & CHIP_ID_MASK) >> CHIP_ID_SHIFT) {
++	pmic->ref_id = (chip_id & CHIP_ID_MASK) >> CHIP_ID_SHIFT;
++
++	switch (pmic->ref_id) {
 +	case CHIP_ID_PCA9450A:
 +		variant = "A";
 +		break;
@@ -1422,21 +1575,24 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +static TEE_Result pmic_pca9450_probe(const void *fdt, int node,
 +				     const void *compat_data __unused)
 +{
-+	struct i2c_handle_s *i2c = NULL;
-+	TEE_Result res = TEE_ERROR_GENERIC;
-+	struct pmic_handle_s *pmic = NULL;
++	TEE_Result res;
++	struct i2c_dev *i2c;
++	struct stm32_i2c_dev *stm32_i2c;
++	struct pca9450_pmic *pmic;
 +
 +	FMSG("Probe pca9450");
 +
-+	res = i2c_dt_get_by_subnode(fdt, node, &i2c);
++	res = i2c_dt_get_dev(fdt, node, &i2c);
 +	if (res)
 +		return res;
++
++	stm32_i2c = container_of(i2c, struct stm32_i2c_dev, i2c_dev);
 +
 +	pmic = calloc(1, sizeof(*pmic));
 +	if (!pmic)
 +		panic();
 +
-+	initialize_pca9450(fdt, node, pmic, i2c);
++	initialize_pca9450(fdt, node, pmic, stm32_i2c->handle);
 +
 +#ifdef CFG_STM32_PWR_IRQ
 +	res = initialize_pca9450_irq(fdt, node, pmic);
@@ -1470,22 +1626,22 @@ Index: optee-os-qsmp-2550/core/drivers/pmic-pca9450.c
 +	.match_table = pmic_pca9450_match_table,
 +	.probe = pmic_pca9450_probe,
 +};
-Index: optee-os-qsmp-2550/core/drivers/sub.mk
+Index: optee-qsmp-2550/core/drivers/sub.mk
 ===================================================================
---- optee-os-qsmp-2550.orig/core/drivers/sub.mk
-+++ optee-os-qsmp-2550/core/drivers/sub.mk
-@@ -72,6 +72,7 @@ srcs-$(CFG_VERSAL_GPIO) += versal_gpio.c
- srcs-$(CFG_VERSAL_MBOX) += versal_mbox.c
- srcs-$(CFG_VERSAL_PM) += versal_pm.c
- srcs-$(CFG_STM32MP15_HUK) += stm32mp15_huk.c
+--- optee-qsmp-2550.orig/core/drivers/sub.mk
++++ optee-qsmp-2550/core/drivers/sub.mk
+@@ -91,6 +91,7 @@ srcs-$(CFG_VERSAL_PUF) += versal_puf.c
+ srcs-$(CFG_VERSAL_HUK) += versal_huk.c
+ srcs-$(CFG_CBMEM_CONSOLE) += cbmem_console.c
+ srcs-$(CFG_RISCV_PLIC) += plic.c
 +srcs-$(CFG_PMIC_PCA9450) += pmic-pca9450.c pca9450.c
- 
  subdirs-y += counter
  subdirs-y += crypto
-Index: optee-os-qsmp-2550/core/include/dt-bindings/regulator/nxp,pca9450-regulator.h
+ subdirs-y += firewall
+Index: optee-qsmp-2550/core/include/dt-bindings/regulator/nxp,pca9450-regulator.h
 ===================================================================
 --- /dev/null
-+++ optee-os-qsmp-2550/core/include/dt-bindings/regulator/nxp,pca9450-regulator.h
++++ optee-qsmp-2550/core/include/dt-bindings/regulator/nxp,pca9450-regulator.h
 @@ -0,0 +1,43 @@
 +/* SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause) */
 +/*

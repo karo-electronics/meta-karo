@@ -1,0 +1,301 @@
+Index: linux-txmp-2550/arch/arm64/boot/dts/st/stm32mp253.dtsi
+===================================================================
+--- linux-txmp-2550.orig/arch/arm64/boot/dts/st/stm32mp253.dtsi
++++ linux-txmp-2550/arch/arm64/boot/dts/st/stm32mp253.dtsi
+@@ -117,14 +117,14 @@
+ 
+ 	m_can2: can@402e0000 {
+ 		compatible = "bosch,m_can";
+-		reg = <0x402e0000 0x400>, <0x40310000 0x1aa0>;
++		reg = <0x402e0000 0x400>, <0x40310d50 0x0d50>;
+ 		reg-names = "m_can", "message_ram";
+ 		interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
+ 		interrupt-names = "int0", "int1";
+ 		clocks = <&rcc CK_BUS_FDCAN>, <&rcc CK_KER_FDCAN>;
+ 		clock-names = "hclk", "cclk";
+-		bosch,mram-cfg = <0xd50 0 0 32 0 0 2 2>;
++		bosch,mram-cfg = <0x0 0 0 32 0 0 2 2>;
+ 		access-controllers = <&rifsc 56>;
+ 		power-domains = <&CLUSTER_PD>;
+ 		status = "disabled";
+@@ -132,14 +132,14 @@
+ 
+ 	m_can3: can@402f0000 {
+ 		compatible = "bosch,m_can";
+-		reg = <0x402f0000 0x400>, <0x40310000 0x2800>;
++		reg = <0x402f0000 0x400>, <0x40311aa0 0x0d50>;
+ 		reg-names = "m_can", "message_ram";
+ 		interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>,
+ 			     <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
+ 		interrupt-names = "int0", "int1";
+ 		clocks = <&rcc CK_BUS_FDCAN>, <&rcc CK_KER_FDCAN>;
+ 		clock-names = "hclk", "cclk";
+-		bosch,mram-cfg = <0x1aa0 0 0 32 0 0 2 2>;
++		bosch,mram-cfg = <0x0 0 0 32 0 0 2 2>;
+ 		access-controllers = <&rifsc 56>;
+ 		power-domains = <&CLUSTER_PD>;
+ 		status = "disabled";
+Index: linux-txmp-2550/drivers/gpu/drm/stm/lvds.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/gpu/drm/stm/lvds.c
++++ linux-txmp-2550/drivers/gpu/drm/stm/lvds.c
+@@ -885,9 +885,8 @@ static void lvds_config_mode(struct stm_
+ 		lvds_cr |= CR_LKPHA;
+ 		break;
+ 	default:
+-		drm_notice(lvds->lvds_bridge.dev, "No phase precised, setting default\n");
++		drm_notice(lvds->lvds_bridge.dev, "No LVDS clock phase specified, setting default\n");
+ 		lvds_cr &= ~CR_LKPHA;
+-		break;
+ 	}
+ 
+ 	/* Write config to registers */
+Index: linux-txmp-2550/drivers/pci/controller/dwc/Kconfig
+===================================================================
+--- linux-txmp-2550.orig/drivers/pci/controller/dwc/Kconfig
++++ linux-txmp-2550/drivers/pci/controller/dwc/Kconfig
+@@ -418,7 +418,7 @@ config PCIE_VISCONTI_HOST
+ config PCIE_STM32
+ 	tristate "STMicroelectronics PCIe Controller Host Mode for STM32 MP25"
+ 	depends on ARCH_STM32 || COMPILE_TEST
+-	depends on PCI_MSI
++	depends on PCI_MSI && PCIEPORTBUS
+ 	select PCIE_DW_HOST
+ 	help
+ 	  Enables support for the DesignWare core based PCIe host controller
+Index: linux-txmp-2550/drivers/media/platform/st/stm32/stm32-csi.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/media/platform/st/stm32/stm32-csi.c
++++ linux-txmp-2550/drivers/media/platform/st/stm32/stm32-csi.c
+@@ -950,10 +950,9 @@ static int stm32_csi_parse_dt(struct stm
+ 	int ret;
+ 
+ 	/* Get bus characteristics from devicetree */
+-	ep = fwnode_graph_get_endpoint_by_id(dev_fwnode(csi2priv->dev), 0, 0,
+-					     FWNODE_GRAPH_ENDPOINT_NEXT);
++	ep = fwnode_graph_get_endpoint_by_regs(dev_fwnode(csi2priv->dev), 0, -1);
+ 	if (!ep) {
+-		dev_err(csi2priv->dev, "Could not find the endpoint\n");
++		dev_err(csi2priv->dev, "Failed to find endpoint port0\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -974,12 +973,6 @@ static int stm32_csi_parse_dt(struct stm
+ 	memcpy(csi2priv->lanes, v4l2_ep.bus.mipi_csi2.data_lanes,
+ 	       sizeof(csi2priv->lanes));
+ 
+-	ep = fwnode_graph_get_next_endpoint(dev_fwnode(csi2priv->dev), NULL);
+-	if (!ep) {
+-		dev_err(csi2priv->dev, "Failed to get next endpoint\n");
+-		return -EINVAL;
+-	}
+-
+ 	v4l2_async_subdev_nf_init(&csi2priv->notifier, &csi2priv->subdev);
+ 
+ 	asd = v4l2_async_nf_add_fwnode_remote(&csi2priv->notifier, ep,
+@@ -1028,8 +1021,8 @@ static int stm32_csi_probe(struct platfo
+ 	csi2priv->subdev.dev = &pdev->dev;
+ 	v4l2_subdev_init(&csi2priv->subdev, &stm32_csi_subdev_ops);
+ 	v4l2_set_subdevdata(&csi2priv->subdev, &pdev->dev);
+-	snprintf(csi2priv->subdev.name, V4L2_SUBDEV_NAME_SIZE, "%s",
+-		 dev_name(&pdev->dev));
++	snprintf(csi2priv->subdev.name, V4L2_SUBDEV_NAME_SIZE, "%s %s",
++		 KBUILD_MODNAME, dev_name(&pdev->dev));
+ 
+ 	/* Create our media pads */
+ 	csi2priv->subdev.entity.function = MEDIA_ENT_F_VID_IF_BRIDGE;
+@@ -1144,7 +1137,7 @@ error_out:
+ 
+ static const struct of_device_id stm32_csi_of_table[] = {
+ 	{ .compatible = "st,stm32mp25-csi", },
+-	{ /* end node */ },
++	{ /* end node */ }
+ };
+ MODULE_DEVICE_TABLE(of, stm32_csi_of_table);
+ 
+Index: linux-txmp-2550/drivers/media/v4l2-core/v4l2-subdev.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/media/v4l2-core/v4l2-subdev.c
++++ linux-txmp-2550/drivers/media/v4l2-core/v4l2-subdev.c
+@@ -1076,26 +1076,26 @@ int v4l2_subdev_link_validate_default(st
+ 
+ 	/* The width, height and code must match. */
+ 	if (source_fmt->format.width != sink_fmt->format.width) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+-			"%s: width does not match (source %u, sink %u)\n",
+-			__func__,
+-			source_fmt->format.width, sink_fmt->format.width);
++		dev_warn(sd->entity.graph_obj.mdev->dev,
++			 "%s: width does not match (source %u, sink %u)\n",
++			 __func__,
++			 source_fmt->format.width, sink_fmt->format.width);
+ 		pass = false;
+ 	}
+ 
+ 	if (source_fmt->format.height != sink_fmt->format.height) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+-			"%s: height does not match (source %u, sink %u)\n",
+-			__func__,
+-			source_fmt->format.height, sink_fmt->format.height);
++		dev_warn(sd->entity.graph_obj.mdev->dev,
++			 "%s: height does not match (source %u, sink %u)\n",
++			 __func__,
++			 source_fmt->format.height, sink_fmt->format.height);
+ 		pass = false;
+ 	}
+ 
+ 	if (source_fmt->format.code != sink_fmt->format.code) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
+-			"%s: media bus code does not match (source 0x%8.8x, sink 0x%8.8x)\n",
+-			__func__,
+-			source_fmt->format.code, sink_fmt->format.code);
++		dev_warn(sd->entity.graph_obj.mdev->dev,
++			 "%s: media bus code does not match (source 0x%8.8x, sink 0x%8.8x)\n",
++			 __func__,
++			 source_fmt->format.code, sink_fmt->format.code);
+ 		pass = false;
+ 	}
+ 
+@@ -1105,7 +1105,7 @@ int v4l2_subdev_link_validate_default(st
+ 	 */
+ 	if (source_fmt->format.field != sink_fmt->format.field &&
+ 	    sink_fmt->format.field != V4L2_FIELD_NONE) {
+-		dev_dbg(sd->entity.graph_obj.mdev->dev,
++		dev_warn(sd->entity.graph_obj.mdev->dev,
+ 			"%s: field does not match (source %u, sink %u)\n",
+ 			__func__,
+ 			source_fmt->format.field, sink_fmt->format.field);
+Index: linux-txmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
++++ linux-txmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-core.c
+@@ -108,7 +108,7 @@ static const struct dcmipp_pipeline_conf
+ 	.num_ents	= ARRAY_SIZE(stm32mp13_ent_config),
+ 	.links		= stm32mp13_ent_links,
+ 	.num_links	= ARRAY_SIZE(stm32mp13_ent_links),
+-	.hw_revision	= DCMIPP_STM32MP13_VERR
++	.hw_revision	= DCMIPP_STM32MP13_VERR,
+ };
+ 
+ #define	ID_MAIN_ISP 3
+@@ -203,7 +203,7 @@ static const struct dcmipp_pipeline_conf
+ 	.num_ents	= ARRAY_SIZE(stm32mp25_ent_config),
+ 	.links		= stm32mp25_ent_links,
+ 	.num_links	= ARRAY_SIZE(stm32mp25_ent_links),
+-	.hw_revision	= DCMIPP_STM32MP25_VERR
++	.hw_revision	= DCMIPP_STM32MP25_VERR,
+ };
+ 
+ #define LINK_FLAG_TO_STR(f) ((f) == 0 ? "" :\
+@@ -278,14 +278,14 @@ static int dcmipp_create_subdevs(struct
+ 
+ err_init_entity:
+ 	while (i-- > 0)
+-		dcmipp->pipe_cfg->ents[i - 1].release(dcmipp->entity[i - 1]);
++		dcmipp->pipe_cfg->ents[i].release(dcmipp->entity[i]);
+ 	return ret;
+ }
+ 
+ static const struct of_device_id dcmipp_of_match[] = {
+ 	{ .compatible = "st,stm32mp13-dcmipp", .data = &stm32mp13_pipe_cfg },
+ 	{ .compatible = "st,stm32mp25-dcmipp", .data = &stm32mp25_pipe_cfg },
+-	{ /* end node */ },
++	{ /* end node */ }
+ };
+ MODULE_DEVICE_TABLE(of, dcmipp_of_match);
+ 
+Index: linux-txmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp-params.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp-params.c
++++ linux-txmp-2550/drivers/media/platform/st/stm32/stm32-dcmipp/dcmipp-isp-params.c
+@@ -542,9 +542,11 @@ out:
+ }
+ 
+ static const struct v4l2_file_operations dcmipp_isp_params_fops = {
++	.owner		= THIS_MODULE,
+ 	.open		= v4l2_fh_open,
+ 	.release	= vb2_fop_release,
+-	.mmap           = vb2_fop_mmap,
++	.read		= vb2_fop_read,
++	.mmap		= vb2_fop_mmap,
+ 	.poll		= vb2_fop_poll,
+ 	.unlocked_ioctl = video_ioctl2,
+ };
+@@ -558,7 +560,7 @@ dcmipp_isp_params_ent_init(const char *e
+ 	struct video_device *vdev;
+ 	struct vb2_queue *q;
+ 	const unsigned long pad_flag = MEDIA_PAD_FL_SOURCE;
+-	int ret = 0;
++	int ret;
+ 
+ 	/* Allocate the dcmipp_cap_device struct */
+ 	vout = kzalloc(sizeof(*vout), GFP_KERNEL);
+Index: linux-txmp-2550/drivers/net/ethernet/stmicro/stmmac/dwmac-stm32.c
+===================================================================
+--- linux-txmp-2550.orig/drivers/net/ethernet/stmicro/stmmac/dwmac-stm32.c
++++ linux-txmp-2550/drivers/net/ethernet/stmicro/stmmac/dwmac-stm32.c
+@@ -281,7 +281,7 @@ static int stm32mp2_set_mode(struct plat
+ 		if ((clk_rate == ETH_CK_F_50M) &&
+ 		    (dwmac->eth_ref_clk_sel_reg || dwmac->ext_phyclk)) {
+ 			dwmac->enable_eth_ck = true;
+-			val |= SYSCFG_ETHCR_ETH_REF_CLK_SEL;
++			val |= !dwmac->ext_phyclk * SYSCFG_ETHCR_ETH_REF_CLK_SEL;
+ 		}
+ 		dev_dbg(dwmac->dev, "SYSCFG init : PHY_INTERFACE_MODE_RMII\n");
+ 		break;
+@@ -295,7 +295,7 @@ static int stm32mp2_set_mode(struct plat
+ 		if ((clk_rate == ETH_CK_F_125M) &&
+ 		    (dwmac->eth_clk_sel_reg || dwmac->ext_phyclk)) {
+ 			dwmac->enable_eth_ck = true;
+-			val |= SYSCFG_ETHCR_ETH_CLK_SEL;
++			val |= !dwmac->ext_phyclk * SYSCFG_ETHCR_ETH_CLK_SEL;
+ 		}
+ 		dev_dbg(dwmac->dev, "SYSCFG init : PHY_INTERFACE_MODE_RGMII\n");
+ 		break;
+@@ -701,7 +701,7 @@ static struct stm32_ops stm32mp25_dwmac_
+ 	.suspend = stm32mp1_suspend,
+ 	.resume = stm32mp1_resume,
+ 	.parse_data = stm32mp1_parse_data,
+-	.syscfg_eth_mask = SYSCFG_MP2_ETH_MASK
++	.syscfg_eth_mask = SYSCFG_MP2_ETH_MASK,
+ };
+ 
+ static const struct of_device_id stm32_dwmac_match[] = {
+@@ -717,7 +717,7 @@ static struct platform_driver stm32_dwma
+ 	.probe  = stm32_dwmac_probe,
+ 	.remove_new = stm32_dwmac_remove,
+ 	.driver = {
+-		.name           = "stm32-dwmac",
++		.name		= "stm32-dwmac",
+ #ifdef CONFIG_PM_SLEEP
+ 		.pm		= &stm32_dwmac_pm_ops,
+ #endif /* CONFIG_PM_SLEEP */
+Index: linux-txmp-2550/arch/arm64/boot/dts/st/stm32mp25xxak-pinctrl.dtsi
+===================================================================
+--- linux-txmp-2550.orig/arch/arm64/boot/dts/st/stm32mp25xxak-pinctrl.dtsi
++++ linux-txmp-2550/arch/arm64/boot/dts/st/stm32mp25xxak-pinctrl.dtsi
+@@ -60,6 +60,9 @@
+ 		ngpios = <12>;
+ 		gpio-ranges = <&pinctrl 0 128 12>;
+ 	};
++
++	/delete-node/ gpio@442d0000; /* GPIOJ */
++	/delete-node/ gpio@442e0000; /* GPIOK */
+ };
+ 
+ &pinctrl_z {
+Index: linux-txmp-2550/arch/arm64/boot/dts/st/stm32mp25xxal-pinctrl.dtsi
+===================================================================
+--- linux-txmp-2550.orig/arch/arm64/boot/dts/st/stm32mp25xxal-pinctrl.dtsi
++++ linux-txmp-2550/arch/arm64/boot/dts/st/stm32mp25xxal-pinctrl.dtsi
+@@ -60,6 +60,9 @@
+ 		ngpios = <12>;
+ 		gpio-ranges = <&pinctrl 0 128 12>;
+ 	};
++
++	/delete-node/ gpio@442d0000; /* GPIOJ */
++	/delete-node/ gpio@442e0000; /* GPIOK */
+ };
+ 
+ &pinctrl_z {
