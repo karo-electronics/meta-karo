@@ -20,18 +20,8 @@
 			no-map;
 		};
 
-		hpdma1_lli: hpdma1-lli@a020000 {
-			reg = <0x0 0x0a020000 0x0 0xf0f0>;
-			no-map;
-		};
-
-		hpdma2_lli: hpdma2-lli@a02f0f0 {
-			reg = <0x0 0x0a02f0f0 0x0 0xf0f0>;
-			no-map;
-		};
-
-		hpdma3_lli: hpdma3-lli@a03e1e0 {
-			reg = <0x0 0x0a03e1e0 0x0 0x1e20>;
+		hpdma_lli: hpdma-lli@a020000 {
+			reg = <0x0 0x0a020000 0x0 0x20000>;
 			no-map;
 		};
 
@@ -57,6 +47,12 @@
 
 		ddr_param: ddr-param@a09f000 {
 			reg = <0x0 0x0a09f000 0x0 0x1000>;
+			no-map;
+		};
+
+		/* PCIe reserved memory declaration */
+		pcie_device: pcie-device@10000000 {
+			reg = <0x0 0x10000000 0x0 0x10000000>;
 			no-map;
 		};
 

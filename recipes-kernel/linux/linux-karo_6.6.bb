@@ -6,9 +6,9 @@ require recipes-kernel/linux/linux-karo.inc
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
-KERNEL_SRC_DEFAULT = "git://github.com/STMicroelectronics/linux.git;protocol=https"
-KERNEL_BRANCH_DEFAULT = "v6.6-stm32mp"
-KERNEL_REV_DEFAULT = "f1d0da4f719b1f68c6cb6fca4efb59268a9a82af"
+KERNEL_SRC_DEFAULT = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
+KERNEL_BRANCH_DEFAULT = "linux-stm32mp-v6.6-karo"
+KERNEL_REV_DEFAULT = "ac39a3dddcd1da881e485ef3004a96d52fc88349"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
@@ -34,8 +34,7 @@ SRC_URI:append:stm32mp1 = " \
 "
 
 SRC_URI:append:stm32mp25 = " \
-        file://dts/st/stm32mp255c-txmp-2550-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp255f-qsmp-2550-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+        file://dts/st/stm32mp25-karo-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"

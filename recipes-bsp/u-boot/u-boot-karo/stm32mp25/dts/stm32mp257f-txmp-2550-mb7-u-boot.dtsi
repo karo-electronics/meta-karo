@@ -3,4 +3,4 @@
  * Copyright (C) 2019: Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp255c-txmp-2550-u-boot.dtsi"
+#include "stm32mp257f-txmp-2550-u-boot.dtsi"

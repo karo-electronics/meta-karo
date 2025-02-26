@@ -10,17 +10,17 @@
 
 /dts-v1/;
 
-#include "stm32mp255.dtsi"
+#include "stm32mp257.dtsi"
 #include "stm32mp25xf.dtsi"
-#include "stm32mp255c-txmp-2550-rcc.dtsi"
-#include "stm32mp25-mx.h"
+#include "stm32mp257f-txmp-2550-rcc.dtsi"
+#include "stm32mp257f-txmp-ddr.h"
 #include "stm32mp25-ddr.dtsi"
 #include "stm32mp25xxai-pinctrl.dtsi"
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module";
-	compatible = "st,stm32mp255c-txmp-2550", "st,stm32mp255";
+	compatible = "st,stm32mp257f-txmp-2550", "st,stm32mp257";
 
 	aliases {
 		serial0 = &usart2;
@@ -43,7 +43,7 @@
 };
 
 &ddr {
-	vdd1-supply = <&v1v8>;
+	vdd1-supply = <&vdd1_ddr>;
 	vdd2-supply = <&vddq_ddr>;
 	vddq-supply = <&vddq_ddr>;
 };
@@ -106,7 +106,6 @@
 				regulator-name = "vddq_ddr";
 				regulator-min-microvolt = <1100000>;
 				regulator-max-microvolt = <1100000>;
-				regulator-always-on;
 			};
 
 			v3v3: buck7 {
@@ -128,6 +127,13 @@
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
+			};
+
+			vdd1_ddr: ldo3 {
+				regulator-name = "vdd1ddr";
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
+				regulator-enable-ramp-delay = <1000>;
 			};
 
 			vdd3v3_usb: ldo4 {

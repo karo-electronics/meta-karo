@@ -3,7 +3,7 @@
  * Copyright (C) Lothar Waßmann <LW@KARO-electronics.de>
  */
 
-#include "stm32mp255c-txmp-2550.dts"
+#include "stm32mp257f-txmp-2550.dts"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module on MB7 baseboard";

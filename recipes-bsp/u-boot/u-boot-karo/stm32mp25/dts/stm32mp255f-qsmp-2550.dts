@@ -9,8 +9,8 @@
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 #include <dt-bindings/regulator/nxp,pca9450-regulator.h>
+#include "stm32mp25-karo-resmem.dtsi"
 #include "stm32mp255.dtsi"
-#include "stm32mp255f-qsmp-2550-resmem.dtsi"
 #include "stm32mp25xf.dtsi"
 #include "stm32mp25xxak-pinctrl.dtsi"
 

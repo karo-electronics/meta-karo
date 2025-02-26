@@ -30,10 +30,10 @@ SRC_URI:append:stm32mp15 = " \
 "
 
 SRC_URI:append:stm32mp25 = " \
-	file://fdts/stm32mp25-mx.h;subdir=git \
-	file://fdts/stm32mp255c-txmp-2550-rcc.dtsi;subdir=git \
-	file://fdts/stm32mp255c-txmp-2550.dts;subdir=git \
-	file://fdts/stm32mp255c-txmp-2550-fw-config.dts;subdir=git \
+	file://fdts/stm32mp257f-txmp-ddr.h;subdir=git \
+	file://fdts/stm32mp257f-txmp-2550-rcc.dtsi;subdir=git \
+	file://fdts/stm32mp257f-txmp-2550.dts;subdir=git \
+	file://fdts/stm32mp257f-txmp-2550-fw-config.dts;subdir=git \
 	file://fdts/stm32mp255f-qsmp-2550-rcc.dtsi;subdir=git \
 	file://fdts/stm32mp255f-qsmp-2550.dts;subdir=git \
 	file://fdts/stm32mp255f-qsmp-2550-fw-config.dts;subdir=git \
@@ -67,10 +67,10 @@ SRC_URI:append:stm32mp2:qsmp = " ${@ " file://pca9450-support.patch" if d.getVar
 
 # Extra make settings
 EXTRA_OEMAKE = "CROSS_COMPILE=${TARGET_PREFIX}"
-EXTRA_OEMAKE += "PLAT=${TF_A_PLATFORM}"
-EXTRA_OEMAKE += "ARCH=${TF_A_ARCH}"
-EXTRA_OEMAKE += "ARM_ARCH_MAJOR=${TF_A_ARM_MAJOR}"
-EXTRA_OEMAKE += "STM32MP_EMMC=1"
+EXTRA_OEMAKE:append = " PLAT=${TF_A_PLATFORM}"
+EXTRA_OEMAKE:append = " ARCH=${TF_A_ARCH}"
+EXTRA_OEMAKE:append = " ARM_ARCH_MAJOR=${TF_A_ARM_MAJOR}"
+EXTRA_OEMAKE:append = " STM32MP_EMMC=1"
 
 EXTRA_OEMAKE:append:stm32mp1 = " AARCH32_SP=optee"
 EXTRA_OEMAKE:append:stm32mp1 = " STM32MP_BL2_SIZE=0x0001e000"
@@ -82,20 +82,28 @@ EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_EARLY_CONSOLE=1"
 EXTRA_OEMAKE:append:stm32mp25 = " SPD=opteed"
 EXTRA_OEMAKE:append:stm32mp25:txmp = " STM32MP_DEBUG_UART=2"
 EXTRA_OEMAKE:append:stm32mp25:qsmp = " STM32MP_DEBUG_UART=4"
-EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_BL31_SIZE=0x1e000"
+EXTRA_OEMAKE:append:stm32mp25 = " STM32MP_BL31_SIZE=0x1d000"
 EXTRA_OEMAKE:append:stm32mp2common = " ${@ "STM32MP_%s=1" % "${KARO_BOARD_PMIC}".upper()}"
 
-EXTRA_OEMAKE += "${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
-EXTRA_OEMAKE += "${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_FORCE_MTD_START_OFFSET=0x00080000','',d)}"
+EXTRA_OEMAKE:append = " ${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
+EXTRA_OEMAKE:append = " ${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_FORCE_MTD_START_OFFSET=0x00080000','',d)}"
 
-TF_A_CONFIG_usb += 'STM32MP_USB_PROGRAMMER=1'
-TF_A_CONFIG_usb += 'DEBUG=1'
-TF_A_CONFIG_usb += 'LOG_LEVEL=40'
-TF_A_CONFIG_usb:append:stm32mp25:qsmp = ' LOG_LEVEL=30'
-TF_A_CONFIG_usb:append:stm32mp25:qsmp = ' STM32MP_BL2_SIZE=0x0002a000'
-TF_A_CONFIG_usb:append:stm32mp25:txmp = ' STM32MP_BL2_SIZE=0x00029000'
-TF_A_CONFIG_usb:append:stm32mp25 = ' STM32MP_BL2_RO_SIZE=0x00022000'
-TF_A_CONFIG_trusted += 'LOG_LEVEL=30'
-TF_A_CONFIG_optee += 'LOG_LEVEL=30'
+TF_A_CONFIG_usb:append = ' STM32MP_USB_PROGRAMMER=1'
+TF_A_CONFIG_usb:append = ' DEBUG=1'
+TF_A_CONFIG_usb:append = ' LOG_LEVEL=30'
+TF_A_CONFIG_usb:append:stm32mp25 = ' STM32MP_BL2_RO_SIZE=0x00021000'
+TF_A_CONFIG_usb:append:stm32mp25:qsmp = ' STM32MP_BL2_SIZE=0x00029000'
+
+TF_A_CONFIG_optee:append = ' LOG_LEVEL=30'
 TF_A_CONFIG_optee:append:stm32mp25 = ' STM32MP_BL2_RO_SIZE=0x00023000'
 TF_A_CONFIG_optee:append:stm32mp25 = ' STM32MP_BL2_SIZE=0x0002b000'
+
+TF_A_CONFIG_usb:append:stm32mp25:txmp = ' STM32MP_BL2_SIZE=0x00029000'
+TF_A_CONFIG_usb:append:stm32mp25:txmp = ' STM32MP_BL2_RO_SIZE=0x00022000'
+TF_A_CONFIG_usb:append:stm32mp25:txmp = ' STM32MP_BL31_SIZE=0x1e000'
+
+TF_A_CONFIG_optee:append:stm32mp25:txmp = ' STM32MP_BL2_SIZE=0x00029000'
+TF_A_CONFIG_optee:append:stm32mp25:txmp = ' STM32MP_BL2_RO_SIZE=0x0001c000'
+TF_A_CONFIG_optee:append:stm32mp25:txmp = ' STM32MP_BL31_SIZE=0x1e000'
+
+TF_A_CONFIG_trusted:append = ' LOG_LEVEL=30'

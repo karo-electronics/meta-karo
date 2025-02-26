@@ -38,13 +38,9 @@ SRC_URI:append:stm32mp15 = " \
 "
 
 SRC_URI:append:stm32mp25 = " \
-    file://dts/stm32mp255c-txmp-2550-rcc.dtsi;subdir=git/core/arch/arm/ \
-    file://dts/stm32mp255c-txmp-2550-resmem.dtsi;subdir=git/core/arch/arm/ \
-    file://dts/stm32mp255c-txmp-2550-rif.dtsi;subdir=git/core/arch/arm/ \
-"
-
-SRC_URI:append:stm32mp25 = " \
+    file://dts/stm32mp25-karo-resmem.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp255f-qsmp-2550-rcc.dtsi;subdir=git/core/arch/arm/ \
-    file://dts/stm32mp255f-qsmp-2550-resmem.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp255f-qsmp-2550-rif.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp257f-txmp-2550-rcc.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp257f-txmp-2550-rif.dtsi;subdir=git/core/arch/arm/ \
 "

@@ -8,7 +8,7 @@
  * https://wiki.st.com/stm32mpu/wiki/Category:Device_tree_configuration
  */
 
- / {
+/ {
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;

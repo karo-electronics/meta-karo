@@ -31,8 +31,6 @@
 };
 
 &rcc {
-	clocks = <&clk_hse>, <&clk_hsi>, <&clk_msi>, <&clk_lse>, <&clk_lsi>;
-	clock-names = "clk-hse", "clk-hsi", "clk-msi", "clk-lse", "clk-lsi";
 	st,busclk = <
 		DIV_CFG(DIV_LSMCU, 1)
 		DIV_CFG(DIV_APB1, 0)
@@ -52,14 +50,15 @@
 		FLEXGEN_CFG(7, XBAR_SRC_PLL4, 0, 11) /* LPTIM[12] */
 //		FLEXGEN_CFG(8, XBAR_SRC_HSI_KER, 0, 0) /* USART2, UART4 */
 //		FLEXGEN_CFG(9, XBAR_SRC_HSI_KER, 0, 0) /* USART3, UART5 */
+		FLEXGEN_CFG(10, XBAR_SRC_PLL4, 0, 9) /* SPI[23] */
 //		FLEXGEN_CFG(11, XBAR_SRC_PLL?, 0, ?) /* SPDIFRX */
 //		FLEXGEN_CFG(12, XBAR_SRC_PLL?, 0, ?) /* I2C[12], I3C[12] */
 //		FLEXGEN_CFG(13, XBAR_SRC_PLL?, 0, ?) /* I2C[35], I3C3 */
 //		FLEXGEN_CFG(14, XBAR_SRC_PLL?, 0, ?) /* I2C[46] */
 		FLEXGEN_CFG(15, XBAR_SRC_PLL4, 0, 9) /* I2C7 */
-//		FLEXGEN_CFG(16, XBAR_SRC_PLL?, 0, ?) /* SPI1 */
-//		FLEXGEN_CFG(17, XBAR_SRC_PLL?, 0, ?) /* SPI[45] */
-//		FLEXGEN_CFG(18, XBAR_SRC_PLL?, 0, ?) /* SPI[67] */
+		FLEXGEN_CFG(16, XBAR_SRC_PLL4, 0, 5) /* SPI1 */
+		FLEXGEN_CFG(17, XBAR_SRC_PLL4, 0, 9) /* SPI[45] */
+		FLEXGEN_CFG(18, XBAR_SRC_PLL4, 0, 9) /* SPI[67] */
 //		FLEXGEN_CFG(19, XBAR_SRC_HSI_KER, 0, 0) /* USART1 */
 //		FLEXGEN_CFG(20, XBAR_SRC_HSI_KER, 0, 0) /* USART6 */
 //		FLEXGEN_CFG(21, XBAR_SRC_HSI_KER, 0, 0) /* UART[78] */
@@ -67,7 +66,7 @@
 		FLEXGEN_CFG(23, XBAR_SRC_PLL7, 0, 10) /* SAI1, MDF1 */
 //		FLEXGEN_CFG(24, XBAR_SRC_PLL7, 0, 10) /* SAI2 */
 //		FLEXGEN_CFG(25, XBAR_SRC_PLL7, 0, 10) /* SAI[34] */
-//		FLEXGEN_CFG(26, XBAR_SRC_PLL?, 0, ?) /* FDCAN */
+		FLEXGEN_CFG(26, XBAR_SRC_PLL5, 0, 3) /* FDCAN */
 		FLEXGEN_CFG(27, XBAR_SRC_PLL8, 0, 1) /* LTDC (DSI pix or DSI IO) */
 		FLEXGEN_CFG(28, XBAR_SRC_PLL8, 0, 21) /* DSIPHY */
 		FLEXGEN_CFG(29, XBAR_SRC_PLL5, 0, 1) /* CSI, DCMIPP */

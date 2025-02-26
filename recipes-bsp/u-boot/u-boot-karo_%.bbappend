@@ -44,8 +44,7 @@ SRC_URI:append:stm32mp15 = " \
 "
 
 SRC_URI:append:stm32mp25 = " \
-        file://dts/stm32mp255c-txmp-2550-resmem.dtsi;subdir=git/arch/arm \
-        file://dts/stm32mp255f-qsmp-2550-resmem.dtsi;subdir=git/arch/arm \
+        file://dts/stm32mp25-karo-resmem.dtsi;subdir=git/arch/arm \
 "
 
 SRC_URI:append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
@@ -53,8 +52,11 @@ SRC_URI:append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
         file://dts/${DTB_BASENAME}-u-boot.dtsi;subdir=git/arch/arm \
 "}"
 
-SRC_URI:append:stm32mp25:qsmp = " \
+SRC_URI:append:stm32mp25 = " \
         file://stm32mp25-bugfix.patch \
+"
+
+SRC_URI:append:stm32mp25:qsmp = " \
         file://qsmp-2550-support.patch \
         file://ksz9131-skew.patch \
 "

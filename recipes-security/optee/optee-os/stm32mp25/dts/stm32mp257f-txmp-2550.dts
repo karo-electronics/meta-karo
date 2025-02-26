@@ -10,19 +10,18 @@
 
 /dts-v1/;
 
-#include "stm32mp255.dtsi"
-#include "stm32mp25xf.dtsi"
-#include "stm32mp255c-txmp-2550-rcc.dtsi"
-#include "stm32mp255c-txmp-2550-resmem.dtsi"
-#include "stm32mp25xxai-pinctrl.dtsi"
-#include "stm32mp255c-txmp-2550-rif.dtsi"
-
 #include <dt-bindings/mfd/st,stpmic2.h>
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include "stm32mp255.dtsi"
+#include "stm32mp25-karo-resmem.dtsi"
+#include "stm32mp257f-txmp-2550-rcc.dtsi"
+#include "stm32mp25xf.dtsi"
+#include "stm32mp25xxak-pinctrl.dtsi"
+#include "stm32mp257f-txmp-2550-rif.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-2550 module";
-	compatible = "st,stm32mp255c-txmp-2550", "st,stm32mp255";
+	compatible = "st,stm32mp257f-txmp-2550", "st,stm32mp255";
 
 	aliases {
 		serial0 = &usart2;
@@ -87,13 +86,13 @@
 		compatible = "st,stpmic2";
 		reg = <0x33>;
 		st,wakeup-pin-number = <1>;
+		wakeup-parent = <&pwr>;
 		st,pmic-it-id = <IT_PKEY_FA IT_PKEY_RI>;
 		st,notif-it-id = <0 1>;
 		status = "okay";
 
 		regulators {
 			compatible = "st,stpmic2-regulators";
-			ldo1-supply = <&vddio_pmic>;
 
 			vddcpu: buck1 {
 				regulator-name = "vddcpu";
@@ -204,8 +203,7 @@
 				};
 
 				standby {
-					regulator-on-in-suspend;
-					regulator-suspend-microvolt = <1800000>;
+					regulator-off-in-suspend;
 				};
 
 				off {
@@ -218,6 +216,7 @@
 				regulator-min-microvolt = <1100000>;
 				regulator-max-microvolt = <1100000>;
 				regulator-always-on;
+				regulator-pull-down;
 				st,pwrctrl-sel = <1>;
 				st,pwrctrl-enable;
 
@@ -274,7 +273,6 @@
 				regulator-min-microvolt = <1800000>;
 				regulator-max-microvolt = <1800000>;
 				regulator-always-on;
-				st,alternate-input-source;
 				st,mask-reset;
 			};
 
@@ -284,6 +282,8 @@
 				regulator-max-microvolt = <3300000>;
 				regulator-over-current-protection;
 				regulator-always-on;
+				st,pwrctrl-sel = <3>;
+				st,pwrctrl-enable;
 			};
 
 			vdd3v3_usb: ldo4 {
@@ -300,6 +300,8 @@
 				regulator-max-microvolt = <3300000>;
 				regulator-over-current-protection;
 				st,regulator-bypass-microvolt = <3300000>;
+				st,pwrctrl-sel = <3>;
+				st,pwrctrl-reset;
 			};
 		};
 	};
@@ -307,10 +309,6 @@
 
 &ipcc1 {
 	status = "okay";
-};
-
-&iwdg1 {
-//	status = "okay";
 };
 
 &lptimer1 {
@@ -322,11 +320,11 @@
 };
 
 &m33_rproc {
-	status = "okay";
 	compatible = "st,stm32mp2-m33-tee";
 	memory-region = <&cm33_cube_fw>, <&cm33_cube_data>,
 			<&ipc_shmem>, <&tfm_code>, <&tfm_data>,
 			<&cm33_sram2>;
+//	status = "okay";
 };
 
 &pka {
@@ -336,6 +334,7 @@
 &pwr {
 	pinctrl-names = "default";
 	pinctrl-0 = <&wakeup_pins>;
+	wakeup-gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
 	status = "okay";
 };
 
@@ -424,16 +423,15 @@
 &uart7 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&uart7_pins>;
-	status = "okay";
 };
 
 &usart1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&usart1_pins>;
-	status = "okay";
 };
 
 &usart2 {
+	/* U-Boot console */
 	pinctrl-names = "default";
 	pinctrl-0 = <&usart2_pins>;
 	status = "okay";
@@ -515,42 +513,42 @@
 
 	uart7_pins: uart7-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('D', 3, AF6)>; /* UART7_TX */
+			pinmux = <STM32_PINMUX_NSEC('D', 3, AF6)>; /* UART7_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 
 		pins2 {
-			pinmux = <STM32_PINMUX('D', 0, AF6)>; /* UART7_RX */
+			pinmux = <STM32_PINMUX_NSEC('D', 0, AF6)>; /* UART7_RX */
 			bias-pull-up;
 		};
 	};
 
 	usart1_pins: usart1-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('B', 8, AF6)>; /* USART1_TX */
+			pinmux = <STM32_PINMUX_NSEC('B', 8, AF6)>; /* USART1_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 
 		pins2 {
-			pinmux = <STM32_PINMUX('B', 10, AF6)>; /* USART1_RX */
+			pinmux = <STM32_PINMUX_NSEC('B', 10, AF6)>; /* USART1_RX */
 			bias-pull-up;
 		};
 	};
 
 	usart2_pins: usart2-pins {
 		pins1 {
-			pinmux = <STM32_PINMUX('A', 4, AF6)>; /* USART2_TX */
+			pinmux = <STM32_PINMUX_NSEC('A', 4, AF6)>; /* USART2_TX */
 			bias-disable;
 			drive-push-pull;
 			slew-rate = <0>;
 		};
 
 		pins2 {
-			pinmux = <STM32_PINMUX('A', 8, AF8)>; /* USART2_RX */
+			pinmux = <STM32_PINMUX_NSEC('A', 8, AF8)>; /* USART2_RX */
 			bias-pull-up;
 		};
 	};
