@@ -7,6 +7,60 @@
 
 / {
 	model = "Ka-Ro electronics GmbH QSMP-2550 solder-in module on QSBASE5 baseboard";
+
+	aliases {
+		display = "/lvds-panel";
+	};
+
+	lvds_backlight: lvds-backlight {
+		compatible = "gpio-backlight";
+		default-on;
+		gpios = <&gpiof 13 GPIO_ACTIVE_LOW>;
+	};
+
+	panel: lvds-panel {
+		compatible = "panel-lvds";
+		backlight = <&lvds_backlight>;
+		enable-gpios = <&gpioh 5 GPIO_ACTIVE_HIGH>; /* Pin 78 */
+		data-mapping = "vesa24";
+		status = "okay";
+
+		panel-timing {
+			clock-frequency = <54000000>;
+			hactive = <1024>;
+			vactive = <600>;
+			hfront-porch = <150>;
+			hback-porch = <150>;
+			hsync-len = <21>;
+			vfront-porch = <24>;
+			vback-porch = <24>;
+			vsync-len = <21>;
+		};
+
+		port {
+			lvds_panel_from_lvds: endpoint {
+				remote-endpoint = <&lvds_to_lvds_panel>;
+			};
+		};
+
+		display-timings {
+			TM101: TM101 {
+				clock-frequency = <68200000>;
+				hactive = <1280>;
+				vactive = <800>;
+				hback-porch = <5>;
+				hsync-len = <1>;
+				hfront-porch = <64>;
+				vback-porch = <2>;
+				vsync-len = <1>;
+				vfront-porch = <40>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
 };
 
 &eth1 {
@@ -54,6 +108,49 @@
 			interrupt-parent = <&gpioh>;
 			interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
 			smsc,disable-energy-detect;
+		};
+	};
+};
+
+&ltdc {
+	default-on;
+	status = "okay";
+
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ltdc_ep0_to_lvds: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&lvds_from_ltdc_ep0>;
+		};
+	};
+};
+
+&lvds {
+	vdd-supply =  <&scmi_vddcore>;
+	vdda18-supply = <&scmi_v1v8>;
+	default-on;
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			lvds_from_ltdc_ep0: endpoint {
+				remote-endpoint = <&ltdc_ep0_to_lvds>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+
+			lvds_to_lvds_panel: endpoint {
+				remote-endpoint = <&lvds_panel_from_lvds>;
+			};
 		};
 	};
 };

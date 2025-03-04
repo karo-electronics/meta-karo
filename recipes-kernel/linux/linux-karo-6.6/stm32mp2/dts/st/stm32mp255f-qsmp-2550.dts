@@ -661,8 +661,8 @@
 	uart5_sleep_pins: uart5-sleep-pins {
 		pins {
 			pinmux = <
-				  STM32_PINMUX('D', 3, ANALOG)	/* UART5_TX */
-				  STM32_PINMUX('D', 0, ANALOG)	/* UART5_RX */
+				  STM32_PINMUX('G', 9, ANALOG)	/* UART5_TX */
+				  STM32_PINMUX('G', 10, ANALOG)	/* UART5_RX */
 			>;
 		};
 	};

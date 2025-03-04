@@ -23,13 +23,10 @@
 	compatible = "karo,stm32mp255f-qsmp-2550", "st,stm32mp255";
 
 	aliases {
+		i2c0 = &i2c1;
 		serial0 = &uart4;
 		serial1 = &usart3;
 		serial2 = &uart5;
-		serial3 = &usart2;
-		serial4 = &uart7;
-		serial5 = &uart8;
-		i2c0 = &i2c1;
 	};
 
 	chosen {
@@ -188,18 +185,6 @@
 	status = "okay";
 };
 
-&uart7 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&uart7_pins>;
-	status = "okay";
-};
-
-&usart2 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&usart2_pins>;
-	status = "okay";
-};
-
 &usart3 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&usart3_pins>;
@@ -323,48 +308,6 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('G', 1, AF5)>; /* UART5_CTS_NSS */
-			bias-pull-up;
-		};
-	};
-
-	uart7_pins: uart7-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('D', 3, AF6)>; /* UART7_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('D', 0, AF6)>; /* UART7_RX */
-			bias-pull-up;
-		};
-	};
-
-	uart8_pins: uart8-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('G', 3, AF3)>; /* UART8_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('F', 3, AF3)>; /* UART8_RX */
-			bias-pull-up;
-		};
-	};
-
-	usart2_pins: usart2-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('A', 4, AF6)>; /* USART2_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('A', 8, AF8)>; /* USART2_RX */
 			bias-pull-up;
 		};
 	};

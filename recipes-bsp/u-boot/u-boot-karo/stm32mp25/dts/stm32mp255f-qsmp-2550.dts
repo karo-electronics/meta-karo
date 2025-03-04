@@ -55,7 +55,7 @@
 };
 
 &arm_wdt {
-//	status = "okay";
+	status = "okay";
 };
 
 &bsec {
@@ -530,7 +530,6 @@
 			>;
 		};
 	};
-
 
 	uart4_pins: uart4-pins {
 		pins1 {
