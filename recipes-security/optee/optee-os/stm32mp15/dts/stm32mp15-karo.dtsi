@@ -55,14 +55,6 @@
 	cpu-supply = <&vddcpu>;
 };
 
-&dts {
-	status = "okay";
-};
-
-&hash1 {
-	status = "okay";
-};
-
 &osc_calibration {
 	csi-calibration {
 		status = "okay";
@@ -76,7 +68,7 @@
 &pwr_regulators {
 	system_suspend_supported_soc_modes = <
 		STM32_PM_CSLEEP_RUN
-		STM32_PM_CSTOP_ALLOW_LP_STOP
+//		STM32_PM_CSTOP_ALLOW_LP_STOP
 		STM32_PM_CSTOP_ALLOW_STANDBY_DDR_SR
 	>;
 	system_off_soc_mode = <STM32_PM_CSTOP_ALLOW_STANDBY_DDR_OFF>;

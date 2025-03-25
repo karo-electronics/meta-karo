@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Copyright (C) Marcel Mertens <MM@KARO-electronics.de>
+ */
+
+/dts-v1/;
+
+#include "stm32mp157c-qsmp.h"
+#include "stm32mp157-karo.dtsi"
+#include "stm32mp157-qsmp.dtsi"
+#include "stm32mp157c-karo-scmi.dtsi"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1570W solder-in module";
+	compatible = "karo,stm32mp157c-qsmp-1570w", "st,stm32mp157";
+};
+
+&dsi {
+	status = "okay";
+};

@@ -1,0 +1,14 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
+/*
+ * Copyright (C) Marcel Mertens <MM@KARO-electronics.de>
+ */
+
+#include "stm32mp157c-qsmp-1570w.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-1570W solder-in module on QSBASE1 baseboard";
+};
+
+&ethernet0 {
+	status = "okay";
+};

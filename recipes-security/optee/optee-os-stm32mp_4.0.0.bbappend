@@ -20,6 +20,9 @@ SRC_URI:append:stm32mp2:not = " \
 SRC_URI:append:stm32mp2:not = " \
     file://patches/whitespace-cleanup.patch \
 "
+SRC_URI:append:stm32mp15:txmp = " \
+    file://patches/optee-gpioz.patch \
+"
 
 #SRC_URI:append:stm32mp2 = "${@ " file://patches/regulators-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
 

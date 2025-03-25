@@ -1,0 +1,13 @@
+diff --git a/core/arch/arm/plat-stm32mp1/shared_resources.c b/core/arch/arm/plat-stm32mp1/shared_resources.c
+index b1d4951bf..15b0db0e8 100644
+--- a/core/arch/arm/plat-stm32mp1/shared_resources.c
++++ b/core/arch/arm/plat-stm32mp1/shared_resources.c
+@@ -134,7 +134,7 @@ static __maybe_unused const char *shres2str_state(enum shres_state id)
+ 
+ /* GPIOZ bank pin count depends on SoC variants */
+ /* A light count routine for unpaged context to not depend on DTB support */
+-static int gpioz_nbpin = -1;
++static int gpioz_nbpin = 0;
+ 
+ static unsigned int get_gpioz_nbpin(void)
+ {

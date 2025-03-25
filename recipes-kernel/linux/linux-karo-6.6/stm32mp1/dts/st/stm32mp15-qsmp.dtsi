@@ -10,8 +10,10 @@
 		i2c1 = &i2c2;
 		i2c2 = &i2c1;
 		mmc1 = &sdmmc1;
+		mmc2 = &sdmmc3;
 		serial1 = &usart3;
 		serial2 = &usart2;
+		serial3 = &uart7;
 	};
 };
 
@@ -30,6 +32,8 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_i2c1_pins>;
 	pinctrl-1 = <&qsmp_i2c1_sleep_pins>;
+	scl-gpios = <&gpiod 12 GPIO_ACTIVE_HIGH>;
+	sda-gpios = <&gpiod 15 GPIO_ACTIVE_HIGH>;
 	clock-frequency = <400000>;
 };
 
@@ -37,6 +41,8 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&qsmp_i2c2_pins_z>;
 	pinctrl-1 = <&qsmp_i2c2_sleep_pins_z>;
+	scl-gpios = <&gpioz 0 GPIO_ACTIVE_HIGH>;
+	sda-gpios = <&gpioz 1 GPIO_ACTIVE_HIGH>;
 	clock-frequency = <400000>;
 	status = "okay";
 };
@@ -107,6 +113,13 @@
 	status = "okay";
 };
 
+/* Bluetooth */
+&uart7 {
+	/delete-property/ dma-names;
+	/delete-property/ dmas;
+	status = "disabled";
+};
+
 &vrefbuf {
 	regulator-min-microvolt = <2500000>;
 	regulator-max-microvolt = <2500000>;
@@ -121,7 +134,7 @@
 				  STM32_PINMUX('D', 12, AF5) /* I2C1_SCL */
 				  STM32_PINMUX('F', 15, AF5) /* I2C1_SDA */
 			>;
-			bias-disable;
+			bias-pull-up;
 			drive-open-drain;
 			slew-rate = <0>;
 		};
@@ -403,7 +416,7 @@
 				  STM32_PINMUX('Z', 0, AF3) /* I2C2_SCL */
 				  STM32_PINMUX('Z', 1, AF3) /* I2C2_SDA */
 			>;
-			bias-disable;
+			bias-pull-up;
 			drive-open-drain;
 			slew-rate = <0>;
 		};

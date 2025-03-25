@@ -1,0 +1,218 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+#include <dt-bindings/rtc/rtc-stm32.h>
+
+/dts-v1/;
+
+/plugin/;
+
+#define USE_PWRSEQ
+
+&{/} {
+	aliases {
+		
+	};
+
+	chosen {
+		overlays {
+			qsmp-bcm4373;
+		};
+	};
+
+#ifdef USE_PWRSEQ
+	wifi_pwrseq: wifi-pwrseq {
+		compatible = "mmc-pwrseq-simple";
+		reset-gpios = <&gpiog 0 GPIO_ACTIVE_LOW>;
+	};
+#else
+	sdio_regulator: regulator-sdio {
+		compatible = "regulator-fixed";
+		vin-supply = <&reg_3v3>;
+		gpios = <&gpiog 0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-name = "vdd-sdio";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+#endif
+};
+
+&rtc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&rtc_pins>;
+	st,lsco = <RTC_OUT1>;
+};
+
+&sdmmc3 {
+	pinctrl-names = "default", "opendrain", "sleep";
+	pinctrl-0 = <&qsmp_sdio_pins>;
+	pinctrl-1 = <&qsmp_sdio_opendrain_pins>;
+	pinctrl-2 = <&qsmp_sdio_sleep_pins>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+#ifndef USE_PWRSEQ
+	vmmc-supply = <&sdio_regulator>;
+#else
+	vmmc-supply = <&reg_3v3>;
+	mmc-pwrseq = <&wifi_pwrseq>;
+#endif
+	no-1-8-v;
+	st,neg-edge;
+	non-removable;
+	cap-sdio-irq;
+	max-frequency = <50000000>;
+	status = "okay";
+	wifi@1 {
+		reg = <1>;
+		compatible = "cypress,cyw4373-fmac";
+		interrupt-parent = <&gpiof>;
+		interrupts = <14 IRQ_TYPE_EDGE_FALLING>;
+		interrupt-names = "host-wake";
+		brcm,ccode-map = "JP-JP-78", "US-Q2-86";
+	};
+};
+
+&uart7 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&qsmp_uart7_pins &qsmp_uart7_rtscts_pins>;
+	pinctrl-1 = <&qsmp_uart7_sleep_pins &qsmp_uart7_rtscts_sleep_pins>;
+	uart-has-rtscts;
+	status = "okay";
+
+	bluetooth {
+		shutdown-gpios = <&gpiof 13 GPIO_ACTIVE_HIGH>;
+		compatible = "cypress,cyw4373a0-bt";
+		max-speed = <3000000>;
+		vbat-supply = <&reg_3v3>;
+		vddio-supply = <&reg_3v3>;
+	};
+};
+
+&pinctrl {
+	qsmp_sdio_pins: qsmp-sdio-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('F', 1, AF9)	/* SDMMC3_CMD */
+				  STM32_PINMUX('F', 0, AF9)	/* SDMMC3_D0 */
+				  STM32_PINMUX('F', 4, AF9)	/* SDMMC3_D1 */
+				  STM32_PINMUX('F', 5, AF9)	/* SDMMC3_D2 */
+				  STM32_PINMUX('D', 7, AF10)	/* SDMMC3_D3 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('G', 15, AF10)>; /* SDMMC3_CK */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+	};
+
+	qsmp_sdio_opendrain_pins: qsmp-sdio-opendrain-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('F', 0, AF9)	/* SDMMC3_D0 */
+				  STM32_PINMUX('F', 4, AF9)	/* SDMMC3_D1 */
+				  STM32_PINMUX('F', 5, AF9)	/* SDMMC3_D2 */
+				  STM32_PINMUX('D', 7, AF10)	/* SDMMC3_D3 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('F', 1, AF9)>; /* SDMMC3_CMD */
+			bias-disable;
+			drive-open-drain;
+			slew-rate = <1>;
+		};
+
+		pins3 {
+			pinmux = <STM32_PINMUX('G', 15, AF10)>; /* SDMMC3_CK */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <1>;
+		};
+	};
+
+	qsmp_sdio_sleep_pins: qsmp-sdio-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('F', 1, ANALOG)	/* SDMMC3_CMD */
+				  STM32_PINMUX('F', 0, ANALOG)	/* SDMMC3_D0 */
+				  STM32_PINMUX('F', 4, ANALOG)	/* SDMMC3_D1 */
+				  STM32_PINMUX('F', 5, ANALOG)	/* SDMMC3_D2 */
+				  STM32_PINMUX('D', 7, ANALOG)	/* SDMMC3_D3 */
+				  STM32_PINMUX('G', 15, ANALOG)	/* SDMMC3_CK */
+			>;
+		};
+	};
+
+	rtc_pins: rtc-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('C', 13, ANALOG)	/* RTC_LSCO */
+			>;
+		};
+	};
+
+	qsmp_uart7_pins: qsmp-uart7-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('F', 7, AF7)>; /* UART7_TX */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('E', 7, AF7)>; /* UART7_RX */
+			bias-pull-up;
+		};
+	};
+
+	qsmp_uart7_rtscts_pins: qsmp-uart7-rtscts-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('E', 10, AF7) /* UART7_CTS */
+			>;
+			bias-pull-up;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('E', 9, AF7) /* UART7_RTS */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	qsmp_uart7_sleep_pins: qsmp-uart7-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('F', 7, ANALOG) /* UART7_TX */
+				  STM32_PINMUX('E', 7, ANALOG) /* UART7_RX */
+			>;
+		};
+	};
+
+	qsmp_uart7_rtscts_sleep_pins: qsmp-uart7-rtscts-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('E', 10, ANALOG) /* UART7_CTS */
+				  STM32_PINMUX('E', 9, ANALOG) /* UART7_RTS */
+			>;
+		};
+	};
+};

@@ -48,6 +48,8 @@ KERNEL_FEATURES:append:stm32mp25 = " stm32mp25.cfg"
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"bluetooth"," bluetooth.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"wifi"," wifi.cfg","",d)}"
+KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"bcm4373"," bcm4373.cfg","",d)}"
+KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"laird-wifi"," laird-wifi.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"systemd"," systemd.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"ipv6"," ipv6.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"pcie"," pci.cfg","",d)}"
@@ -61,6 +63,8 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"nvme"," nvme.c
 KERNEL_FEATURES:append:stm32mp25:qsmp = "${@bb.utils.contains('DISTRO_FEATURES',"csi-camera"," imx219.cfg csi.cfg","",d)}"
 
 KERNEL_FEATURES:append:stm32mp25 = "${@bb.utils.contains('DISTRO_FEATURES',"flexcan"," fdcan.cfg","",d)}"
+
+KERNEL_FEATURES:remove = "${@bb.utils.contains('DISTRO_FEATURES','bcm4373','wifi.cfg','',d)}"
 
 
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"

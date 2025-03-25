@@ -4,3 +4,17 @@
  */
 
 #include "stm32mp15-qsmp-scmi.dtsi"
+
+/ {
+    memory@c0000000 {
+		device_type = "memory";
+		reg = <0xc0000000 0x10000000>;
+	};
+    
+	reserved-memory {
+		optee@ce000000 {
+			reg = <0xce000000 0x02000000>;
+			no-map;
+		};
+	};
+};

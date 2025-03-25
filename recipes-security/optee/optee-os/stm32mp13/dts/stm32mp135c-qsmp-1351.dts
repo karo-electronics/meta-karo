@@ -72,13 +72,13 @@
 		DECPROT(STM32MP1_ETZPC_I2C4_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_I2C5_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_LTDC_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
+		DECPROT(STM32MP1_ETZPC_OTG_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_QSPI_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_SDMMC1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_SDMMC2_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_SPI5_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_USART1_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_USART2_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
-		DECPROT(STM32MP1_ETZPC_OTG_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		DECPROT(STM32MP1_ETZPC_USBPHYCTRL_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
 		/* "Secured" peripherals */
 		DECPROT(STM32MP1_ETZPC_HASH_ID, DECPROT_S_RW, DECPROT_UNLOCK)
@@ -91,6 +91,34 @@
 
 &hash {
 	status = "okay";
+};
+
+&ltdc {
+	pinctrl-names = "default";
+	pinctrl-0 = <&qsmp_ltdc_pins>;
+	access-controllers-conf-nsec = <
+		&etzpc DECPROT(STM32MP1_ETZPC_LTDC_ID, DECPROT_NS_RW, DECPROT_UNLOCK)
+		&gpioa (GPIO_STM32_NSEC | TZPROT(15))
+		&gpiob (GPIO_STM32_NSEC | TZPROT(6) | TZPROT(12))
+		&gpioc (GPIO_STM32_NSEC | TZPROT(6) | TZPROT(7))
+		&gpiod (GPIO_STM32_NSEC | TZPROT(5) | TZPROT(9) | TZPROT(10) | TZPROT(14))
+		&gpioe (GPIO_STM32_NSEC | TZPROT(0) | TZPROT(7) | TZPROT(9) | TZPROT(13))
+		&gpiof (GPIO_STM32_NSEC | TZPROT(1) | TZPROT(2) | TZPROT(3))
+		&gpiog (GPIO_STM32_NSEC | TZPROT(0) | TZPROT(4) | TZPROT(7))
+		&gpioh (GPIO_STM32_NSEC | TZPROT(9) | TZPROT(13) | TZPROT(14))
+	>;
+	access-controllers-conf-sec = <
+		&etzpc DECPROT(STM32MP1_ETZPC_LTDC_ID, DECPROT_NS_R_S_W, DECPROT_UNLOCK)
+		&gpioa (TZPROT(15))
+		&gpiob (TZPROT(6) | TZPROT(12))
+		&gpioc (TZPROT(6) | TZPROT(7))
+		&gpiod (TZPROT(5) | TZPROT(9) | TZPROT(10) | TZPROT(14))
+		&gpioe (TZPROT(0) | TZPROT(7) | TZPROT(9) | TZPROT(13))
+		&gpiof (TZPROT(1) | TZPROT(2) | TZPROT(3))
+		&gpiog (TZPROT(0) | TZPROT(4) | TZPROT(7))
+		&gpioh (TZPROT(9) | TZPROT(13) | TZPROT(14))
+	>;
+//	status = "okay";
 };
 
 &pka {
@@ -306,6 +334,44 @@
 };
 
 &pinctrl {
+	qsmp_ltdc_pins: qsmp-ltdc-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('B',  5, AF14) /* LCD_DE */
+				  STM32_PINMUX('B', 12, AF14) /* LCD_VSYNC */
+				  STM32_PINMUX('H', 10, AF13) /* LCD_HSYNC */
+				  STM32_PINMUX('D',  9, AF13) /* LCD_CLK */
+				  STM32_PINMUX('E', 11,  AF9) /* LCD_R0 */
+				  STM32_PINMUX('G',  7, AF11) /* LCD_R1 */
+				  STM32_PINMUX('H',  8, AF14) /* LCD_R2 */
+				  STM32_PINMUX('B', 10, AF14) /* LCD_R3 */
+				  STM32_PINMUX('D', 14, AF14) /* LCD_R4 */
+				  STM32_PINMUX('E',  7, AF14) /* LCD_R5 */
+				  STM32_PINMUX('A',  9, AF14) /* LCD_R6 */
+				  STM32_PINMUX('D', 11, AF11) /* LCD_R7 */
+				  STM32_PINMUX('F',  5,  AF9) /* LCD_G0 */
+				  STM32_PINMUX('F',  1, AF14) /* LCD_G1 */
+				  STM32_PINMUX('H', 13, AF14) /* LCD_G2 */
+				  STM32_PINMUX('F',  3, AF14) /* LCD_G3 */
+				  STM32_PINMUX('G',  5, AF11) /* LCD_G4 */
+				  STM32_PINMUX('G',  0, AF14) /* LCD_G5 */
+				  STM32_PINMUX('E', 12, AF14) /* LCD_G6 */
+				  STM32_PINMUX('A', 15, AF11) /* LCD_G7 */
+				  STM32_PINMUX('D',  5, AF13) /* LCD_B0 */
+				  STM32_PINMUX('G',  8,  AF7) /* LCD_B1 */
+				  STM32_PINMUX('D', 10, AF14) /* LCD_B2 */
+				  STM32_PINMUX('F',  2, AF14) /* LCD_B3 */
+				  STM32_PINMUX('H', 14, AF11) /* LCD_B4 */
+				  STM32_PINMUX('D', 15, AF14) /* LCD_B5 */
+				  STM32_PINMUX('B',  6,  AF7) /* LCD_B6 */
+				  STM32_PINMUX('E', 15, AF14) /* LCD_B7 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
 	uart4_pins: uart4-pinctrl {
 		pins1 {
 			pinmux = <STM32_PINMUX_NSEC('D', 6, AF8)>; /* UART4_TX */
@@ -313,6 +379,7 @@
 			drive-push-pull;
 			slew-rate = <0>;
 		};
+
 		pins2 {
 			pinmux = <STM32_PINMUX_NSEC('D', 8, AF8)>; /* UART4_RX */
 			bias-disable;
