@@ -83,6 +83,7 @@ KARO_DTB_OVERLAYS[mb7] = " \
 KARO_DTB_OVERLAYS[qsbase1] = " \
         ${@ mach_overlay(d, "qsmp-bcm4373", dist="bcm4373")} \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
+        qsmp-ft5x06 \
         ${@ mach_overlay(d, "karo-gpu", "stm32mp157c", "wayland")} \
         qsmp-ksz9031 \
         qsmp-lcd-panel \
