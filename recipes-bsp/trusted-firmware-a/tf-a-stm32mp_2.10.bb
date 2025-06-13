@@ -51,7 +51,7 @@ BL32_ELF = "${BL32_NAME}.${TF_A_ELF_SUFFIX}"
 BL32_BASENAME = "${@os.path.basename(d.getVar("BL32_NAME"))}"
 
 TF_A_FWDDR ?= "0"
-TF_A_FWDDR:stm32mp25common = "1"
+TF_A_FWDDR:stm32mp2common = "1"
 
 FWDDR_NAME = "ddr_pmu"
 FWDDR_SUFFIX = "bin"

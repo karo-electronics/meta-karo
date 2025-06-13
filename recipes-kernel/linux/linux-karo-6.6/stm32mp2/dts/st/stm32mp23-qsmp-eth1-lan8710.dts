@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/clock/st,stm32mp25-rcc.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+/dts-v1/;
+
+/plugin/;
+
+&{/chosen} {
+	overlays {
+		qsmp-eth1-lan8710;
+	};
+};
+
+&eth1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth1_mdio_pins &eth1_rmii_pins>;
+	pinctrl-1 = <&eth1_mdio_sleep_pins &eth1_rmii_sleep_pins>;
+	snps,reset-gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+	snps,reset-delays-us = <0 25000 100>;
+	phy-mode = "rmii";
+	phy-handle = <&eth1_phy>;
+	st,ext-phyclk;
+	status = "okay";
+
+	mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eth1_phy: ethernet-phy@0 {
+			reg = <0>;
+			clocks = <&rcc CK_KER_ETH1>;
+			interrupt-parent = <&gpiof>;
+			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+			smsc,disable-energy-detect;
+		};
+	};
+};
+
+&pinctrl {
+	eth1_mdio_pins: eth1-mdio-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('F', 4, AF8)>;	/* ETH1_MDC */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <2>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('A', 10, AF10)>;	/* ETH1_MDIO */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	eth1_mdio_sleep_pins: eth1-mdio-sleep-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('F', 4, ANALOG)	/* ETH1_MDC */
+				  STM32_PINMUX('A', 10, ANALOG)	/* ETH1_MDIO */
+			>;
+		};
+	};
+
+	eth1_rmii_pins: eth1-rmii-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('A', 15, AF10)	/* ETH1_RMII_TXD0 */
+				  STM32_PINMUX('C', 1, AF10)	/* ETH1_RMII_TXD1 */
+				  STM32_PINMUX('A', 13, AF10)	/* ETH1_RMII_TX_EN */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('A', 14, AF10)>;	/* ETH1_REF_CLK */
+			bias-disable;
+		};
+
+		/* LAN8710 strap pins */
+		pins3 {
+			pinmux = <
+				  STM32_PINMUX('F', 1, AF10)	/* ETH1_RMII_RXD0 | MODE0 */
+				  STM32_PINMUX('C', 2, AF10)	/* ETH1_RMII_RXD1 | MODE1 */
+				  STM32_PINMUX('A', 11, AF10)	/* ETH1_RMII_CRS_DV | MODE2 */
+			>;
+			bias-pull-up;
+		};
+	};
+
+	eth1_rmii_sleep_pins: eth1-rmii-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('A', 14, ANALOG)	/* ETH1_REF_CLK */
+				  STM32_PINMUX('A', 15, ANALOG)	/* ETH1_RMII_TXD0 */
+				  STM32_PINMUX('C', 1, ANALOG)	/* ETH1_RMII_TXD1 */
+				  STM32_PINMUX('A', 13, ANALOG)	/* ETH1_RMII_TX_EN */
+				  STM32_PINMUX('F', 1, ANALOG)	/* ETH1_RMII_RXD0 */
+				  STM32_PINMUX('C', 2, ANALOG)	/* ETH1_RMII_RXD1 */
+				  STM32_PINMUX('A', 11, ANALOG)	/* ETH1_RMII_CRS_DV */
+			>;
+		};
+	};
+};

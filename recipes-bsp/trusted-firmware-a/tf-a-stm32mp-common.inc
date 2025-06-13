@@ -10,6 +10,8 @@ def get_tfa_machine(d):
         return "stm32mp1" 
     if d.getVar('SOC_PREFIX') == "stm32mp15":
         return "stm32mp1"
+    if d.getVar('SOC_PREFIX') == "stm32mp23":
+        return "stm32mp2"
     if d.getVar('SOC_PREFIX') == "stm32mp25":
         return "stm32mp2"
     return ""
@@ -33,6 +35,7 @@ SRCREV = "${TF_A_REV}"
 
 #SRC_URI[fw.sha256sum] = "c87d8a03a8feab1f8a51818a7942deade5d31abb7f4afaa6d6dfa922383e9805"
 
+SRC_URI:append = "${@ " file://tf-a-st-ddr.tar.gz;subdir=git;name=fw" if "${SOC_PREFIX}" == "stm32mp23" else ""}"
 SRC_URI:append = "${@ " file://tf-a-st-ddr.tar.gz;subdir=git;name=fw" if "${SOC_PREFIX}" == "stm32mp25" else ""}"
 SRC_URI:append:not = " \
     file://0001-v2.10-stm32mp-r1.patch \

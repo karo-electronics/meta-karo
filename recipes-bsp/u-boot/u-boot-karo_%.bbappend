@@ -43,6 +43,10 @@ SRC_URI:append:stm32mp15 = " \
         file://dts/stm32mp157c-txmp-1571.dts;subdir=git/arch/arm \
 "
 
+SRC_URI:append:stm32mp23 = " \
+        file://dts/stm32mp23-karo-resmem.dtsi;subdir=git/arch/arm \
+"
+
 SRC_URI:append:stm32mp25 = " \
         file://dts/stm32mp25-karo-resmem.dtsi;subdir=git/arch/arm \
 "

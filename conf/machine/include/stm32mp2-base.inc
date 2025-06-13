@@ -1,4 +1,4 @@
-MACHINEOVERRIDES =. "stcommon:stm32mpcommon:stm32mp2common:stm32mp25common:stm32mp2:stm32mp25:"
+MACHINEOVERRIDES =. "stcommon:stm32mpcommon:stm32mp2common:stm32mp2:"
 
 DEFAULTTUNE ?= "cortexa35"
 
@@ -73,6 +73,6 @@ FIP_ENCRYPT_SUFFIX ?= "${@bb.utils.contains('ENCRYPT_ENABLE', '1', '${ENCRYPT_SU
 
 # Configure use of BL31
 FIP_BL31_ENABLE = "0"
-FIP_BL31_ENABLE:stm32mp25common = "1"
+FIP_BL31_ENABLE:stm32mp2common = "1"
 
 REGULATORS_MICROVOLTS = "1"

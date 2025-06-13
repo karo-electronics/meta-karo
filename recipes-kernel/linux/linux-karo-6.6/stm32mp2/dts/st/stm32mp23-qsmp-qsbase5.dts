@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+/dts-v1/;
+
+/plugin/;
+
+&{/} {
+	chosen {
+		overlays {
+			qsmp-qsbase5;
+		};
+	};
+
+	vin: vin-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "5V";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-always-on;
+	};
+};
+
+&dwc3 {
+	vbus-supply = <&vin>;
+};
+
+/* pin conflict with PCIe */
+&usart3 {
+	status = "disabled";
+};
+
+&usbh {
+	vbus-supply = <&vin>;
+};

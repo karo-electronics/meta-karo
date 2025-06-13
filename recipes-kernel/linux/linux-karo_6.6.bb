@@ -33,6 +33,10 @@ SRC_URI:append:stm32mp1 = " \
         file://dts/st/stm32mp157c-qsmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
 
+SRC_URI:append:stm32mp23 = " \
+        file://dts/st/stm32mp23-karo-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
+"
+
 SRC_URI:append:stm32mp25 = " \
         file://dts/st/stm32mp25-karo-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
 "
@@ -44,6 +48,7 @@ KBUILD_DEFCONFIG:qsmp-1510 = "qsmp-1510_defconfig"
 
 KERNEL_FEATURES:append:stm32mp13 = " stm32mp13.cfg"
 KERNEL_FEATURES:append:stm32mp15 = " stm32mp15.cfg"
+KERNEL_FEATURES:append:stm32mp23 = " stm32mp23.cfg"
 KERNEL_FEATURES:append:stm32mp25 = " stm32mp25.cfg"
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"bluetooth"," bluetooth.cfg","",d)}"

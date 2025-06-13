@@ -1,0 +1,292 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) 2025 Marcel Mertens <MM@KARO-electronics.de>
+ */
+
+#include "stm32mp235c-qsmp-2350.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-2350 solder-in module on QSBASE5 baseboard";
+
+	aliases {
+		display = "/lvds-panel";
+	};
+
+	lvds_backlight: lvds-backlight {
+		compatible = "gpio-backlight";
+		default-on;
+		gpios = <&gpiof 13 GPIO_ACTIVE_LOW>;
+	};
+
+	panel: lvds-panel {
+		compatible = "panel-lvds";
+		backlight = <&lvds_backlight>;
+		enable-gpios = <&gpioh 5 GPIO_ACTIVE_HIGH>; /* Pin 78 */
+		data-mapping = "vesa24";
+		status = "okay";
+
+		panel-timing {
+			clock-frequency = <54000000>;
+			hactive = <1024>;
+			vactive = <600>;
+			hfront-porch = <150>;
+			hback-porch = <150>;
+			hsync-len = <21>;
+			vfront-porch = <24>;
+			vback-porch = <24>;
+			vsync-len = <21>;
+		};
+
+		port {
+			lvds_panel_from_lvds: endpoint {
+				remote-endpoint = <&lvds_to_lvds_panel>;
+			};
+		};
+
+		display-timings {
+			TM101: TM101 {
+				clock-frequency = <68200000>;
+				hactive = <1280>;
+				vactive = <800>;
+				hback-porch = <5>;
+				hsync-len = <1>;
+				hfront-porch = <64>;
+				vback-porch = <2>;
+				vsync-len = <1>;
+				vfront-porch = <40>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+};
+
+&eth1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth1_mdio_pins &eth1_rmii_pins>;
+	pinctrl-1 = <&eth1_mdio_sleep_pins &eth1_rmii_sleep_pins>;
+	phy-mode = "rmii";
+	phy-reset-gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+	phy-reset-delay-us = <10000>;
+	phy-reset-post-delay-us = <100>;
+	phy-handle = <&eth1_phy>;
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		compatible = "snps,dwmac-mdio";
+
+		eth1_phy: ethernet-phy@0 {
+			reg = <0>;
+			interrupt-parent = <&gpiof>;
+			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+			smsc,disable-energy-detect;
+		};
+	};
+};
+
+&eth2 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth2_mdio_pins &eth2_rmii_pins>;
+	pinctrl-1 = <&eth2_mdio_sleep_pins &eth2_rmii_sleep_pins>;
+	phy-mode = "rmii";
+	phy-reset-gpios = <&gpioh 13 GPIO_ACTIVE_LOW>;
+	phy-reset-delay-us = <10000>;
+	phy-reset-post-delay-us = <100>;
+	phy-handle = <&eth2_phy>;
+	status = "okay";
+
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eth2_phy: ethernet-phy@0 {
+			reg = <0>;
+			interrupt-parent = <&gpioh>;
+			interrupts = <12 IRQ_TYPE_EDGE_FALLING>;
+			smsc,disable-energy-detect;
+		};
+	};
+};
+
+&ltdc {
+	default-on;
+	status = "okay";
+
+	port {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ltdc_ep0_to_lvds: endpoint@0 {
+			reg = <0>;
+			remote-endpoint = <&lvds_from_ltdc_ep0>;
+		};
+	};
+};
+
+&lvds {
+	vdd-supply =  <&scmi_vddcore>;
+	vdda18-supply = <&scmi_v1v8>;
+	default-on;
+	status = "okay";
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			lvds_from_ltdc_ep0: endpoint {
+				remote-endpoint = <&ltdc_ep0_to_lvds>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+
+			lvds_to_lvds_panel: endpoint {
+				remote-endpoint = <&lvds_panel_from_lvds>;
+			};
+		};
+	};
+};
+
+&pinctrl {
+	eth1_mdio_pins: eth1-mdio-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('F', 4, AF8)>; /* ETH1_MDC */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <2>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('A', 10, AF10)>; /* ETH1_MDIO */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	eth1_mdio_sleep_pins: eth1-mdio-sleep-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('F', 4, ANALOG)>, /* ETH1_MDC */
+				 <STM32_PINMUX('A', 10, ANALOG)>; /* ETH1_MDIO */
+		};
+	};
+
+	eth1_rmii_pins: eth1-rmii-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('A', 15, AF10) /* ETH1_RMII_TXD0 */
+				  STM32_PINMUX('C', 1, AF10) /* ETH1_RMII_TXD1 */
+				  STM32_PINMUX('A', 13, AF10) /* ETH1_RMII_TX_EN */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('A', 14, AF10) /* ETH1_REF_CLK */
+			>;
+			bias-disable;
+		};
+
+		/* LAN8710 strap pins */
+		pins3 {
+			pinmux = <
+				  STM32_PINMUX('F', 1, AF10) /* ETH1_RMII_RXD0 | MODE0 */
+				  STM32_PINMUX('C', 2, AF10) /* ETH1_RMII_RXD1 | MODE1 */
+				  STM32_PINMUX('A', 11, AF10) /* ETH1_RMII_CRS_DV | MODE2 */
+			>;
+			bias-pull-up;
+		};
+	};
+
+	eth1_rmii_sleep_pins: eth1-rmii-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('A', 14, ANALOG) /* ETH1_REF_CLK */
+				  STM32_PINMUX('A', 15, ANALOG) /* ETH1_RMII_TXD0 */
+				  STM32_PINMUX('C', 1, ANALOG) /* ETH1_RMII_TXD1 */
+				  STM32_PINMUX('A', 13, ANALOG) /* ETH1_RMII_TX_EN */
+				  STM32_PINMUX('F', 1, ANALOG) /* ETH1_RMII_RXD0 */
+				  STM32_PINMUX('C', 2, ANALOG) /* ETH1_RMII_RXD1 */
+				  STM32_PINMUX('A', 11, ANALOG) /* ETH1_RMII_CRS_DV */
+			>;
+		};
+	};
+
+	eth2_mdio_pins: eth2-mdio-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('G', 4, AF11)>; /* ETH2_MDC */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <2>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('C', 5, AF10)>; /* ETH2_MDIO */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	eth2_mdio_sleep_pins: eth2-mdio-sleep-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('G', 4, ANALOG)>, /* ETH2_MDC */
+				 <STM32_PINMUX('C', 5, ANALOG)>; /* ETH2_MDIO */
+		};
+	};
+
+	eth2_rmii_pins: eth2-rmii-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('C', 7, AF10) /* ETH2_RMII_TXD0 */
+				  STM32_PINMUX('C', 8, AF10) /* ETH2_RMII_TXD1 */
+				  STM32_PINMUX('C', 4, AF10) /* ETH2_RMII_TX_EN */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('F', 6, AF10) /* ETH2_REF_CLK */
+			>;
+			bias-disable;
+		};
+
+		/* LAN8710 strap pins */
+		pins3 {
+			pinmux = <
+				  STM32_PINMUX('G', 0, AF10) /* ETH2_RMII_RXD0 | MODE0 */
+				  STM32_PINMUX('C', 12, AF10) /* ETH2_RMII_RXD1 | MODE1 */
+				  STM32_PINMUX('C', 3, AF10) /* ETH2_RMII_CRS_DV | MODE2 */
+			>;
+			bias-pull-up;
+		};
+	};
+
+	eth2_rmii_sleep_pins: eth2-rmii-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('F', 6, ANALOG) /* ETH2_REF_CLK */
+				  STM32_PINMUX('C', 7, ANALOG) /* ETH2_RMII_TXD0 */
+				  STM32_PINMUX('C', 8, ANALOG) /* ETH2_RMII_TXD1 */
+				  STM32_PINMUX('C', 4, ANALOG) /* ETH2_RMII_TX_EN */
+				  STM32_PINMUX('G', 0, ANALOG) /* ETH2_RMII_RXD0 */
+				  STM32_PINMUX('C', 12, ANALOG) /* ETH2_RMII_RXD1 */
+				  STM32_PINMUX('C', 3, ANALOG) /* ETH2_RMII_CRS_DV */
+			>;
+		};
+	};
+};

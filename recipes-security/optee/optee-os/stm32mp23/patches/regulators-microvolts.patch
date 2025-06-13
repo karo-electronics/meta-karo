@@ -1,0 +1,4287 @@
+Index: optee-os-qsmp-2550/core/drivers/adc/adc_fw.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/adc/adc_fw.c
++++ optee-os-qsmp-2550/core/drivers/adc/adc_fw.c
+@@ -73,7 +73,7 @@ TEE_Result adc_print_info(const char *ad
+ 		     adc_dev->channels[i].name);
+ 
+ 	IMSG("Data mask: %#"PRIx32, adc_dev->data_mask);
+-	IMSG("VDD: %"PRIu16"mV", adc_dev->vref_mv);
++	IMSG("VDD: %"PRIu16"mV", adc_dev->vref_uv / 1000U);
+ 
+ 	return TEE_SUCCESS;
+ }
+@@ -94,7 +94,7 @@ static TEE_Result adc_conv_raw_data(stru
+ {
+ 	uint64_t data = data_raw;
+ 
+-	data *= 1000 * dev->vref_mv;
++	data *= dev->vref_uv;
+ 	*data_uv = UDIV_ROUND_NEAREST(data, dev->data_mask);
+ 
+ 	return TEE_SUCCESS;
+Index: optee-os-qsmp-2550/core/drivers/adc/stm32_adc.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/adc/stm32_adc.c
++++ optee-os-qsmp-2550/core/drivers/adc/stm32_adc.c
+@@ -997,7 +997,7 @@ static TEE_Result stm32_adc_probe(const
+ 
+ 	adc->regs = adc->common->regs + dt_info.reg;
+ 	adc->dev = adc_dev;
+-	adc_dev->vref_mv = adc->common->vref_mv;
++	adc_dev->vref_uv = adc->common->vref_uv;
+ 
+ 	name = fdt_get_name(fdt, node, NULL);
+ 	pname = fdt_get_name(fdt, pnode, NULL);
+Index: optee-os-qsmp-2550/core/drivers/adc/stm32_adc_core.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/adc/stm32_adc_core.c
++++ optee-os-qsmp-2550/core/drivers/adc/stm32_adc_core.c
+@@ -300,7 +300,7 @@ static TEE_Result stm32_adc_core_probe(c
+ 	if (res)
+ 		goto err;
+ 
+-	res = regulator_get_voltage(priv->vref, &priv->common.vref_mv);
++	res = regulator_get_voltage(priv->vref, &priv->common.vref_uv);
+ 	if (res)
+ 		goto err;
+ 
+Index: optee-os-qsmp-2550/core/include/drivers/adc.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/include/drivers/adc.h
++++ optee-os-qsmp-2550/core/include/drivers/adc.h
+@@ -46,7 +46,7 @@ struct adc_chan {
+  * @channel_mask: Bit mask of available channels
+  * @data_mask: Conversion output data mask
+  * @data: Pointer to private data
+- * @vref_mv: Reference supply voltage level in mV
++ * @vref_uv: Reference supply voltage level in µV
+  */
+ struct adc_device {
+ 	struct adc_ops *ops;
+@@ -58,7 +58,7 @@ struct adc_device {
+ 	uint32_t channel_mask;
+ 	uint32_t data_mask;
+ 	void *data;
+-	uint16_t vref_mv;
++	uint32_t vref_uv;
+ };
+ 
+ /**
+Index: optee-os-qsmp-2550/core/include/drivers/regulator.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/include/drivers/regulator.h
++++ optee-os-qsmp-2550/core/include/drivers/regulator.h
+@@ -38,14 +38,15 @@ TEE_Result regulator_enable(struct rdev
+ TEE_Result regulator_disable(struct rdev *rdev);
+ bool regulator_is_enabled(const struct rdev *rdev);
+ 
+-TEE_Result regulator_set_voltage(struct rdev *rdev, uint16_t level_mv);
++TEE_Result regulator_verify_voltage(struct rdev *rdev, uint32_t level_uv);
++TEE_Result regulator_set_voltage(struct rdev *rdev, uint32_t level_uv);
+ TEE_Result regulator_set_min_voltage(struct rdev *rdev);
+-TEE_Result regulator_get_voltage(const struct rdev *rdev, uint16_t *level_mv);
++TEE_Result regulator_get_voltage(const struct rdev *rdev, uint32_t *level_uv);
+ 
+-TEE_Result regulator_list_voltages(struct rdev *rdev, uint16_t **levels,
++TEE_Result regulator_list_voltages(struct rdev *rdev, uint32_t **levels,
+ 				   size_t *count);
+-void regulator_get_range(const struct rdev *rdev, uint16_t *min_mv,
+-			 uint16_t *max_mv);
++void regulator_get_range(const struct rdev *rdev, uint32_t *min_uv,
++			 uint32_t *max_uv);
+ TEE_Result regulator_set_flag(struct rdev *rdev, uint16_t flag);
+ 
+ /*
+@@ -70,10 +71,10 @@ struct regul_desc {
+ struct regul_ops {
+ 	TEE_Result (*set_state)(const struct regul_desc *desc, bool enabled);
+ 	TEE_Result (*get_state)(const struct regul_desc *desc, bool *enabled);
+-	TEE_Result (*set_voltage)(const struct regul_desc *desc, uint16_t mv);
+-	TEE_Result (*get_voltage)(const struct regul_desc *desc, uint16_t *mv);
++	TEE_Result (*set_voltage)(const struct regul_desc *desc, uint32_t uv);
++	TEE_Result (*get_voltage)(const struct regul_desc *desc, uint32_t *uv);
+ 	TEE_Result (*list_voltages)(const struct regul_desc *desc,
+-				    uint16_t **levels, size_t *count);
++				    uint32_t **levels, size_t *count);
+ 	TEE_Result (*set_flag)(const struct regul_desc *desc, uint16_t flag);
+ 	void (*lock)(const struct regul_desc *desc);
+ 	void (*unlock)(const struct regul_desc *desc);
+@@ -89,8 +90,8 @@ TEE_Result regulator_register(const stru
+ struct rdev {
+ 	const struct regul_desc *desc;
+ 	int32_t phandle;
+-	uint16_t min_mv;
+-	uint16_t max_mv;
++	uint32_t min_uv;
++	uint32_t max_uv;
+ 	uint16_t flags;
+ 	uint32_t ramp_delay_uv_per_us;
+ 	unsigned int enable_ramp_delay_us;
+Index: optee-os-qsmp-2550/core/include/drivers/stm32_adc_core.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/include/drivers/stm32_adc_core.h
++++ optee-os-qsmp-2550/core/include/drivers/stm32_adc_core.h
+@@ -31,7 +31,7 @@ struct stm32_adc_common {
+ 	struct stm32_adc_core_device *dev;
+ 	vaddr_t regs;
+ 	unsigned long rate;
+-	uint16_t vref_mv;
++	uint32_t vref_uv;
+ };
+ 
+ #endif /* __DRIVERS_STM32_ADC_CORE_H */
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_pmic.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_pmic.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_pmic.c
+@@ -34,7 +34,7 @@
+ 
+ #include "pm/power.h"
+ 
+-#define MODE_STANDBY                    8
++#define MODE_STANDBY			8
+ 
+ #define PMIC_I2C_TRIALS			1
+ #define PMIC_I2C_TIMEOUT_BUSY_MS	5
+@@ -222,7 +222,8 @@ static void initialize_pmic_i2c(const vo
+ #ifdef CFG_REGULATOR_DRIVERS
+ static TEE_Result pmic_set_state(const struct regul_desc *desc, bool enable)
+ {
+-	int ret = 0;
++	int ret;
++
+ 	FMSG("%s: set state to %u", desc->node_name, enable);
+ 
+ 	if (enable)
+@@ -245,9 +246,9 @@ static TEE_Result pmic_get_state(const s
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result pmic_get_voltage(const struct regul_desc *desc, uint16_t *mv)
++static TEE_Result pmic_get_voltage(const struct regul_desc *desc, uint32_t *uv)
+ {
+-	int ret = 0;
++	int ret;
+ 
+ 	FMSG("%s: get volt", desc->node_name);
+ 
+@@ -255,28 +256,28 @@ static TEE_Result pmic_get_voltage(const
+ 	if (ret < 0)
+ 		return TEE_ERROR_GENERIC;
+ 
+-	*mv = ret;
++	*uv = ret;
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result pmic_set_voltage(const struct regul_desc *desc, uint16_t mv)
++static TEE_Result pmic_set_voltage(const struct regul_desc *desc, uint32_t uv)
+ {
+ 	FMSG("%s: set volt", desc->node_name);
+ 
+-	if (stpmic1_regulator_voltage_set(desc->node_name, mv))
++	if (stpmic1_regulator_voltage_set(desc->node_name, uv))
+ 		return TEE_ERROR_GENERIC;
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+ static TEE_Result pmic_list_voltages(const struct regul_desc *desc,
+-				     uint16_t **levels, size_t *count)
++				     uint32_t **levels, size_t *count)
+ {
+ 	FMSG("%s: list volt", desc->node_name);
+ 
+-	if (stpmic1_regulator_levels_mv(desc->node_name,
+-					(const uint16_t **)levels, count))
++	if (stpmic1_regulator_levels_uv(desc->node_name,
++					(const uint32_t **)levels, count))
+ 		return TEE_ERROR_GENERIC;
+ 
+ 	return TEE_SUCCESS;
+@@ -284,7 +285,7 @@ static TEE_Result pmic_list_voltages(con
+ 
+ static TEE_Result pmic_set_flag(const struct regul_desc *desc, uint16_t flag)
+ {
+-	int ret = 0;
++	int ret;
+ 
+ 	FMSG("%s: set_flag %#"PRIx16, desc->node_name, flag);
+ 
+@@ -308,7 +309,7 @@ static TEE_Result pmic_set_flag(const st
+ 		ret = stpmic1_regulator_bypass_mode_set(desc->node_name);
+ 		break;
+ 	default:
+-		DMSG("Invalid flag %#"PRIx16, flag);
++		EMSG("Invalid flag %#"PRIx16, flag);
+ 		panic();
+ 	}
+ 
+@@ -335,12 +336,12 @@ static void driver_unlock(const struct r
+ }
+ 
+ static TEE_Result driver_suspend(const struct regul_desc *desc, uint8_t state,
+-				 uint16_t mv)
++				 uint32_t uv)
+ {
+-	int ret = 0;
++	int ret;
+ 
+-	FMSG("%s: suspend state:%"PRIu8", %"PRIu16" mV", desc->node_name,
+-	     state, mv);
++	FMSG("%s: suspend state:%"PRIu8", %"PRIu32" uV", desc->node_name,
++	     state, uv);
+ 
+ 	if (!stpmic1_regu_has_lp_cfg(desc->node_name))
+ 		return TEE_SUCCESS;
+@@ -362,7 +363,7 @@ static TEE_Result driver_suspend(const s
+ 	}
+ 
+ 	if ((state & STPMIC1_LP_STATE_SET_VOLT) != 0U) {
+-		ret = stpmic1_lp_set_voltage(desc->node_name, mv);
++		ret = stpmic1_lp_set_voltage(desc->node_name, uv);
+ 		if (ret)
+ 			return TEE_ERROR_GENERIC;
+ 	}
+@@ -372,8 +373,8 @@ static TEE_Result driver_suspend(const s
+ 
+ struct regu_handle_s {
+ 	struct regul_desc *desc;
++	uint32_t lp_uv[STM32_PM_MAX_SOC_MODE];
+ 	uint8_t lp_state[STM32_PM_MAX_SOC_MODE];
+-	uint16_t lp_mv[STM32_PM_MAX_SOC_MODE];
+ };
+ 
+ const struct regul_ops pmic_ops = {
+@@ -474,7 +475,7 @@ static void parse_low_power_mode(const v
+ 				 int node, int mode)
+ {
+ 	struct regu_handle_s *regu = (struct regu_handle_s *)desc->driver_data;
+-	const fdt32_t *cuint = NULL;
++	const fdt32_t *cuint;
+ 
+ 	regu->lp_state[mode] = 0;
+ 
+@@ -490,13 +491,13 @@ static void parse_low_power_mode(const v
+ 
+ 	cuint = fdt_getprop(fdt, node, "regulator-suspend-microvolt", NULL);
+ 	if (cuint) {
+-		uint16_t mv = (uint16_t)(fdt32_to_cpu(*cuint) / 1000U);
++		uint32_t uv = fdt32_to_cpu(*cuint);
+ 
+-		FMSG("%s: mode:%d suspend mv=%"PRIu16, desc->node_name,
+-		     mode, mv);
++		FMSG("%s: mode:%d suspend mV=%u.%u", desc->node_name,
++		     mode, uv / 1000U, uv / 100 % 10);
+ 
+ 		regu->lp_state[mode] |= STPMIC1_LP_STATE_SET_VOLT;
+-		regu->lp_mv[mode] = mv;
++		regu->lp_uv[mode] = uv;
+ 	}
+ }
+ 
+@@ -504,7 +505,7 @@ static void parse_low_power_modes(const
+ 				  const struct regul_desc *desc, int node)
+ {
+ 	int mode_count = STM32_PM_MAX_SOC_MODE;
+-	int mode = 0;
++	int mode;
+ 
+ 	for (mode = 0; mode < mode_count; mode++) {
+ 		const char *lp_mode_name = plat_get_lp_mode_name(mode);
+@@ -532,7 +533,7 @@ static TEE_Result stpmic1_regu_pm(enum p
+ 		stm32mp_get_pmic();
+ 
+ 		res = driver_suspend(desc, regu->lp_state[pm_hint],
+-				     regu->lp_mv[pm_hint]);
++				     regu->lp_uv[pm_hint]);
+ 
+ 		stm32mp_put_pmic();
+ 	}
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_pwr.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_pwr.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_pwr.c
+@@ -35,24 +35,24 @@
+ static struct mutex pwr_regul_mu = MUTEX_INITIALIZER;
+ 
+ struct pwr_regu_desc {
+-	uint16_t level_mv;
++	uint32_t level_uv;
+ 	uint32_t cr3_enable_mask;
+ 	uint32_t cr3_ready_mask;
+ };
+ 
+ static const struct pwr_regu_desc pwr_regulators[PWR_REGU_COUNT] = {
+ 	 [PWR_REG11] = {
+-		 .level_mv = 1100,
++		 .level_uv = 1100000,
+ 		 .cr3_enable_mask = PWR_CR3_REG11_EN,
+ 		 .cr3_ready_mask = PWR_CR3_REG11_RDY,
+ 	 },
+ 	 [PWR_REG18] = {
+-		 .level_mv = 1800,
++		 .level_uv = 1800000,
+ 		 .cr3_enable_mask = PWR_CR3_REG18_EN,
+ 		 .cr3_ready_mask = PWR_CR3_REG18_RDY,
+ 	 },
+ 	 [PWR_USB33] = {
+-		 .level_mv = 3300,
++		 .level_uv = 3300000,
+ 		 .cr3_enable_mask = PWR_CR3_USB33_EN,
+ 		 .cr3_ready_mask = PWR_CR3_USB33_RDY,
+ 	 },
+@@ -103,22 +103,22 @@ static TEE_Result pwr_get_state(const st
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result pwr_get_voltage(const struct regul_desc *desc, uint16_t *mv)
++static TEE_Result pwr_get_voltage(const struct regul_desc *desc, uint32_t *uv)
+ {
+ 	struct pwr_regu_desc *p = (struct pwr_regu_desc *)desc->driver_data;
+ 
+-	*mv = p->level_mv;
++	*uv = p->level_uv;
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+ static TEE_Result pwr_list_voltages(const struct regul_desc *desc,
+-				    uint16_t **levels, size_t *count)
++				    uint32_t **levels, size_t *count)
+ {
+ 	struct pwr_regu_desc *p = (struct pwr_regu_desc *)desc->driver_data;
+ 
+ 	*count = 1;
+-	*levels = &p->level_mv;
++	*levels = &p->level_uv;
+ 
+ 	return TEE_SUCCESS;
+ }
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_syscfg.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_syscfg.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/drivers/stm32mp1_syscfg.c
+@@ -275,12 +275,12 @@ DECLARE_KEEP_PAGER(syscfg_hslv_pm);
+ 
+ static TEE_Result stm32mp_syscfg_set_hslv(void)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint32_t otp_value = 0;
+-	uint32_t otp_id = 0;
+-	uint16_t vdd_voltage = 0;
+-	bool product_below_2v5 = false;
+-	struct rdev *regu = NULL;
++	TEE_Result res;
++	uint32_t otp_value;
++	uint32_t otp_id;
++	uint32_t vdd_voltage;
++	bool product_below_2v5;
++	struct rdev *regu;
+ 
+ 	/*
+ 	 * High Speed Low Voltage Pad mode Enable for SPI, SDMMC, ETH, QSPI
+@@ -306,7 +306,7 @@ static TEE_Result stm32mp_syscfg_set_hsl
+ 	if (res)
+ 		panic();
+ 
+-	product_below_2v5 = ((otp_value & HW2_OTP_PRODUCT_BELOW_2V5) != 0);
++	product_below_2v5 = (otp_value & HW2_OTP_PRODUCT_BELOW_2V5) != 0;
+ 
+ 	/* Get VDD supply */
+ 	regu = regulator_get_by_regulator_name("vdd");
+@@ -318,7 +318,7 @@ static TEE_Result stm32mp_syscfg_set_hsl
+ 		panic("VDD get voltage error");
+ 
+ 	/* Check if VDD is Low Voltage */
+-	if (vdd_voltage < 2700U) {
++	if (vdd_voltage < 2700000U) {
+ 		vdd_low_voltage = true;
+ 		enable_high_speed_mode_low_voltage();
+ 
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regul.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regul.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp25_pwr_regul.c
+@@ -76,7 +76,7 @@ static struct mutex pwr_regu_mu = MUTEX_
+ #define TIMEOUT_US_10MS		U(10000)
+ #define DELAY_100US		U(100)
+ 
+-#define IO_VOLTAGE_THRESHOLD_MV U(2700)
++#define IO_VOLTAGE_THRESHOLD_UV U(2700000)
+ 
+ struct pwr_regu {
+ 	uint32_t enable_reg;
+@@ -86,7 +86,7 @@ struct pwr_regu {
+ 	uint32_t vrsel_mask;
+ 	struct rdev *supply;
+ 	enum syscfg_io_ids comp_idx;
+-	uint16_t suspend_mv;
++	uint32_t suspend_uv;
+ 	bool suspend_state;
+ 	/* An IO domain is a power switch, meaning that
+ 	 * its output voltage follows its power supply voltage
+@@ -178,7 +178,7 @@ static void pwr_disable_reg(const struct
+ static TEE_Result pwr_set_state(const struct regul_desc *desc, bool enable)
+ {
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	TEE_Result res;
+ 
+ 	FMSG("%s: set state %u", desc->node_name, enable);
+ 
+@@ -228,41 +228,47 @@ static TEE_Result pwr_set_low_volt(const
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+ 	uintptr_t pwr_reg = stm32_pwr_base() + regu->enable_reg;
+ 
+-	if (regu->vrsel_mask) {
+-		FMSG("%s: set speed=%u", desc->node_name, state);
++	if (!regu->vrsel_mask)
++		return TEE_SUCCESS;
+ 
+-		if (state) {
+-			io_setbits32(pwr_reg, regu->vrsel_mask);
++	FMSG("%s: set speed=%u", desc->node_name, state);
+ 
+-			if (!(io_read32(pwr_reg) & regu->vrsel_mask)) {
+-				EMSG("%s: set VRSEL failed", desc->node_name);
+-				panic();
+-			}
+-		} else {
+-			io_clrbits32(pwr_reg, regu->vrsel_mask);
+-		}
++	if (!state) {
++		io_clrbits32(pwr_reg, regu->vrsel_mask);
++		return TEE_SUCCESS;
+ 	}
+ 
++	io_setbits32(pwr_reg, regu->vrsel_mask);
++	if (io_read32(pwr_reg) & regu->vrsel_mask)
++		return TEE_SUCCESS;
++
++	if (regu->comp_idx == SYSFG_VDD_IO_ID)
++		EMSG("%s: failed to set VRSEL; make sure the HSLV_VDD fuse is correctly configured",
++		     desc->node_name);
++	else
++		EMSG("%s: failed to set VRSEL; make sure the HSLV_VDDIO%u fuse is correctly configured",
++		     desc->node_name, regu->comp_idx + 1);
++
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result pwr_get_voltage(const struct regul_desc *desc, uint16_t *mv)
++static TEE_Result pwr_get_voltage(const struct regul_desc *desc, uint32_t *uv)
+ {
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+ 
+ 	FMSG("%s: get volt", desc->node_name);
+ 
+-	return regulator_get_voltage(regu->supply, mv);
++	return regulator_get_voltage(regu->supply, uv);
+ }
+ 
+-static TEE_Result pwr_set_voltage(const struct regul_desc *desc, uint16_t mv)
++static TEE_Result pwr_set_voltage(const struct regul_desc *desc, uint32_t uv)
+ {
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 	TEE_Result result = TEE_ERROR_GENERIC;
+ 	bool en = false;
+ 
+-	FMSG("%s: set volt to %"PRIu16" mv", desc->node_name, mv);
++	FMSG("%s: set volt to %"PRIu16" uV", desc->node_name, uv);
+ 
+ 	res = pwr_get_state(desc, &en);
+ 	if (res)
+@@ -276,24 +282,24 @@ static TEE_Result pwr_set_voltage(const
+ 	}
+ 
+ 	/* Set IO to high voltage */
+-	if (mv >= IO_VOLTAGE_THRESHOLD_MV) {
++	if (uv >= IO_VOLTAGE_THRESHOLD_UV) {
+ 		res = pwr_set_low_volt(desc, false);
+ 		if (res)
+ 			return res;
+ 	}
+ 
+ 	/* Forward set voltage request to the power supply */
+-	result = regulator_set_voltage(regu->supply, mv);
++	result = regulator_set_voltage(regu->supply, uv);
+ 	if (result) {
+ 		EMSG("regulator %s set voltage failed (%d)",
+ 		     desc->node_name, result);
+ 		/* continue to restore IOs setting for current voltage */
+-		res = regulator_get_voltage(regu->supply, &mv);
++		res = regulator_get_voltage(regu->supply, &uv);
+ 		if (res)
+ 			return res;
+ 	}
+ 
+-	if (mv < IO_VOLTAGE_THRESHOLD_MV)
++	if (uv < IO_VOLTAGE_THRESHOLD_UV)
+ 		res = pwr_set_low_volt(desc, true);
+ 
+ 	/* De-isolate IOs and enable IOs compensation */
+@@ -310,7 +316,7 @@ static TEE_Result pwr_set_voltage(const
+ }
+ 
+ static TEE_Result pwr_list_voltages(const struct regul_desc *desc,
+-				    uint16_t **levels, size_t *count)
++				    uint32_t **levels, size_t *count)
+ {
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+ 
+@@ -340,7 +346,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
+ {
+ 	struct regul_desc *desc = (struct regul_desc *)hdl->handle;
+ 	struct pwr_regu *regu = (struct pwr_regu *)desc->driver_data;
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	TEE_Result res;
+ 
+ 	assert(op == PM_OP_SUSPEND || op == PM_OP_RESUME);
+ 
+@@ -352,7 +358,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
+ 			return res;
+ 
+ 		if (regu->is_an_iod) {
+-			res = pwr_get_voltage(desc, &regu->suspend_mv);
++			res = pwr_get_voltage(desc, &regu->suspend_uv);
+ 			if (res)
+ 				return res;
+ 
+@@ -369,7 +375,7 @@ static TEE_Result pwr_regu_pm(enum pm_op
+ 		FMSG("%s: resume", desc->node_name);
+ 
+ 		if (regu->is_an_iod) {
+-			res = pwr_set_voltage(desc, regu->suspend_mv);
++			res = pwr_set_voltage(desc, regu->suspend_uv);
+ 			if (res)
+ 				return res;
+ 		}
+@@ -516,11 +522,10 @@ static TEE_Result pwr_regulator_probe(co
+ 				      const void *compat_data __unused)
+ {
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+-	struct regul_desc *desc = NULL;
+-	const char *regu_name = NULL;
+-	struct pwr_regu *regu = NULL;
+-	uint16_t mv = 0;
+-	size_t i = 0;
++	struct regul_desc *desc;
++	const char *regu_name;
++	struct pwr_regu *regu;
++	size_t i;
+ 
+ 	regu_name = fdt_get_name(fdt, node, NULL);
+ 
+@@ -548,7 +553,7 @@ static TEE_Result pwr_regulator_probe(co
+ 		}
+ 
+ 		/* If the supply voltage is fixed, do not handle voltage ops */
+-		if (regu->supply->min_mv == regu->supply->max_mv)
++		if (regu->supply->min_uv == regu->supply->max_uv)
+ 			desc->ops = &pwr_regu_fixed_ops;
+ 	}
+ 
+@@ -560,18 +565,20 @@ static TEE_Result pwr_regulator_probe(co
+ 	}
+ 
+ 	if (regu->is_an_iod) {
+-		res = pwr_get_voltage(desc, &mv);
++		uint32_t uv;
++
++		res = pwr_get_voltage(desc, &uv);
+ 		if (res)
+ 			return res;
+ 
+-		if (mv < IO_VOLTAGE_THRESHOLD_MV) {
++		if (uv < IO_VOLTAGE_THRESHOLD_UV) {
+ 			res = pwr_set_low_volt(desc, true);
+ 			if (res)
+ 				return res;
+ 		}
+ 	}
+ 
+-	register_pm_driver_cb(pwr_regu_pm, (void *)desc, "pwr-regu");
++	register_pm_driver_cb(pwr_regu_pm, desc, "pwr-regu");
+ 
+ 	FMSG("regu_name=%s probed", regu_name);
+ 
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp2_pmic.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/drivers/stm32mp2_pmic.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stm32mp2_pmic.c
+@@ -85,11 +85,11 @@ struct regu_handle_s {
+ 	struct pmic_handle_s *pmic;
+ 	struct regul_desc desc;
+ 	uint32_t id;
+-	uint16_t *bypass_volt_table;
++	uint32_t *bypass_volt_table;
+ 	size_t bypass_volt_table_size;
+-	uint16_t bypass_mv;
++	uint32_t bypass_uv;
+ 	uint8_t lp_state[STM32_PM_NB_SOC_MODES];
+-	uint16_t lp_mv[STM32_PM_NB_SOC_MODES];
++	uint32_t lp_uv[STM32_PM_NB_SOC_MODES];
+ };
+ 
+ static TEE_Result pmic_set_state(const struct regul_desc *desc, bool enable)
+@@ -114,16 +114,16 @@ static TEE_Result pmic_get_state(const s
+ 	return stpmic2_regulator_get_state(pmic, id, enabled);
+ }
+ 
+-static TEE_Result pmic_get_voltage(const struct regul_desc *desc, uint16_t *mv)
++static TEE_Result pmic_get_voltage(const struct regul_desc *desc, uint32_t *uv)
+ {
+ 	struct regu_handle_s *regu = (struct regu_handle_s *)desc->driver_data;
+ 	struct pmic_handle_s *pmic = regu->pmic;
+ 	uint32_t id = regu->id;
+-	uint16_t val = U(0);
++	uint32_t val;
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 
+-	if (regu->bypass_mv != U(0)) {
+-		uint8_t arg = U(0);
++	if (regu->bypass_uv) {
++		uint8_t arg;
+ 
+ 		/* If the regul is in bypass mode, return bypass value */
+ 		res = stpmic2_regulator_get_prop(pmic, id, STPMIC2_BYPASS,
+@@ -132,7 +132,7 @@ static TEE_Result pmic_get_voltage(const
+ 			return res;
+ 
+ 		if (arg == PROP_BYPASS_SET) {
+-			*mv = regu->bypass_mv;
++			*uv = regu->bypass_uv;
+ 			return TEE_SUCCESS;
+ 		}
+ 	}
+@@ -141,35 +141,35 @@ static TEE_Result pmic_get_voltage(const
+ 	if (res)
+ 		return res;
+ 
+-	*mv = val;
++	*uv = val;
+ 
+-	FMSG("%s: get volt %"PRIu16"mV", desc->node_name, *mv);
++	FMSG("%s: get volt %"PRIu32"uV", desc->node_name, *uv);
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result pmic_set_voltage(const struct regul_desc *desc, uint16_t mv)
++static TEE_Result pmic_set_voltage(const struct regul_desc *desc, uint32_t uv)
+ {
+ 	struct regu_handle_s *regu = (struct regu_handle_s *)desc->driver_data;
+ 	struct pmic_handle_s *pmic = regu->pmic;
+ 	uint32_t id = regu->id;
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 
+-	FMSG("%s: set volt to %"PRIu16"mV", desc->node_name, mv);
++	FMSG("%s: set volt to %"PRIu32"uV", desc->node_name, uv);
+ 
+-	if (mv == regu->bypass_mv) {
++	if (uv == regu->bypass_uv) {
+ 		res = stpmic2_regulator_set_prop(pmic, id, STPMIC2_BYPASS,
+ 						 PROP_BYPASS_SET);
+ 		/* do not set voltage in the register */
+ 		return res;
+ 	}
+ 
+-	res = stpmic2_regulator_set_voltage(pmic, id, mv);
++	res = stpmic2_regulator_set_voltage(pmic, id, uv);
+ 	if (res)
+ 		return res;
+ 
+ 	/* disable bypass after set voltage ; wait settling time ? */
+-	if (regu->bypass_mv != U(0) && mv != regu->bypass_mv) {
++	if (regu->bypass_uv && uv != regu->bypass_uv) {
+ 		res = stpmic2_regulator_set_prop(pmic, id, STPMIC2_BYPASS,
+ 						 PROP_BYPASS_RESET);
+ 	}
+@@ -178,7 +178,7 @@ static TEE_Result pmic_set_voltage(const
+ }
+ 
+ static TEE_Result pmic_list_voltages(const struct regul_desc *desc,
+-				     uint16_t **levels, size_t *count)
++				     uint32_t **levels, size_t *count)
+ {
+ 	struct regu_handle_s *regu = (struct regu_handle_s *)desc->driver_data;
+ 	struct pmic_handle_s *pmic = regu->pmic;
+@@ -195,8 +195,8 @@ static TEE_Result pmic_list_voltages(con
+ 		return TEE_SUCCESS;
+ 	}
+ 
+-	return stpmic2_regulator_levels_mv(pmic, id,
+-					   (const uint16_t **)levels, count);
++	return stpmic2_regulator_levels_uv(pmic, id,
++					   (const uint32_t **)levels, count);
+ }
+ 
+ /*
+@@ -247,28 +247,28 @@ regu_prepare_suspend(const struct regul_
+ 	struct pmic_handle_s *pmic = regu->pmic;
+ 	uint32_t id = regu->id;
+ 	uint8_t state = regu->lp_state[mode];
+-	uint16_t mv = regu->lp_mv[mode];
++	uint32_t uv = regu->lp_uv[mode];
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 
+-	FMSG("%s: suspend state:%#"PRIx8" %"PRIu16"mV", desc->node_name,
+-	     state, mv);
++	FMSG("%s: suspend state:%#"PRIx8" %"PRIu32"uV", desc->node_name,
++	     state, uv);
+ 
+ 	if (state & STPMIC2_LP_STATE_UNMODIFIED)
+ 		return TEE_SUCCESS;
+ 
+-	if ((state & STPMIC2_LP_STATE_OFF) != U(0)) {
++	if (state & STPMIC2_LP_STATE_OFF) {
+ 		res = stpmic2_lp_set_state(pmic, id, false);
+ 		if (res)
+ 			return res;
+ 	}
+ 
+-	if ((state & STPMIC2_LP_STATE_ON) != U(0)) {
++	if (state & STPMIC2_LP_STATE_ON) {
+ 		res = stpmic2_lp_set_state(pmic, id, true);
+ 		if (res)
+ 			return res;
+ 
+-		if ((state & STPMIC2_LP_STATE_SET_VOLT) != U(0)) {
+-			res = stpmic2_lp_set_voltage(pmic, id, mv);
++		if (state & STPMIC2_LP_STATE_SET_VOLT) {
++			res = stpmic2_lp_set_voltage(pmic, id, uv);
+ 			if (res)
+ 				return res;
+ 		}
+@@ -365,29 +365,29 @@ static TEE_Result stpmic2_handle_bypass_
+ 	struct pmic_handle_s *pmic = regu->pmic;
+ 	uint32_t id = regu->id;
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+-	const uint16_t *levels = NULL;
++	const uint32_t *levels = NULL;
+ 	size_t count = U(0);
+ 	size_t i = U(0);
+ 
+-	res =  stpmic2_regulator_levels_mv(pmic, id, &levels, &count);
++	res =  stpmic2_regulator_levels_uv(pmic, id, &levels, &count);
+ 	if (res)
+ 		return res;
+ 
+-	while ((i < count) && (levels[i] < regu->bypass_mv))
++	while ((i < count) && (levels[i] < regu->bypass_uv))
+ 		i++;
+ 
+-	if (i < count && levels[i] == regu->bypass_mv) {
+-		FMSG("%s: bypass voltage found for volt %"PRIu16"mV\n",
+-		     desc->node_name, regu->bypass_mv);
++	if (i < count && levels[i] == regu->bypass_uv) {
++		FMSG("%s: bypass voltage found for volt %"PRIu32"uv\n",
++		     desc->node_name, regu->bypass_uv);
+ 	} else {
+ 		regu->bypass_volt_table = calloc(count + U(1),
+-						 sizeof(uint16_t));
++						 sizeof(uint32_t));
+ 
+ 		/* Insert bypass voltage into the new table */
+-		memcpy(regu->bypass_volt_table, levels, i * sizeof(uint16_t));
+-		regu->bypass_volt_table[i] = regu->bypass_mv;
++		memcpy(regu->bypass_volt_table, levels, i * sizeof(uint32_t));
++		regu->bypass_volt_table[i] = regu->bypass_uv;
+ 		memcpy(regu->bypass_volt_table + i + U(1), levels + i,
+-		       (count - i) * sizeof(uint16_t));
++		       (count - i) * sizeof(uint32_t));
+ 		regu->bypass_volt_table_size = count + U(1);
+ 	}
+ 
+@@ -406,7 +406,7 @@ TEE_Result stpmic2_set_prop(const struct
+ 	FMSG("%s: set_prop 0x%x val=%u\n", desc->node_name, prop, value);
+ 
+ 	if (prop == STPMIC2_BYPASS_UV) {
+-		regu->bypass_mv = (uint16_t)(value / U(1000));
++		regu->bypass_uv = value;
+ 		return stpmic2_handle_bypass_voltage(desc);
+ 	}
+ 
+@@ -457,13 +457,13 @@ static void parse_low_power_mode(const v
+ 
+ 	cuint = fdt_getprop(fdt, node, "regulator-suspend-microvolt", NULL);
+ 	if (cuint) {
+-		uint16_t mv = (uint16_t)(fdt32_to_cpu(*cuint) / 1000U);
++		uint32_t uv = fdt32_to_cpu(*cuint);
+ 
+-		FMSG("%s: mode:%d suspend mv=%"PRIu16, desc->node_name,
+-		     mode, mv);
++		FMSG("%s: mode:%d suspend uV=%"PRIu32, desc->node_name,
++		     mode, uv);
+ 
+ 		regu->lp_state[mode] |= STPMIC2_LP_STATE_SET_VOLT;
+-		regu->lp_mv[mode] = mv;
++		regu->lp_uv[mode] = uv;
+ 	}
+ }
+ 
+@@ -657,8 +657,8 @@ static TEE_Result initialize_pmic2_irq(c
+ 
+ 	cuint = fdt_getprop(fdt, node, "st,wakeup-pin-number", NULL);
+ 	if (cuint) {
+-		TEE_Result res = TEE_ERROR_GENERIC;
+-		size_t it = U(0);
++		TEE_Result res;
++		size_t it;
+ 
+ 		it = fdt32_to_cpu(*cuint) - U(1);
+ 
+@@ -677,10 +677,10 @@ static TEE_Result initialize_pmic2_irq(c
+ 		return TEE_ERROR_ITEM_NOT_FOUND;
+ 
+ 	if (nb_notif > 0) {
+-		struct pmic_it_handle_s *prv = NULL;
+-		unsigned int i = 0;
+-		const uint32_t *pmic_its = NULL;
+-		int nb_it = 0;
++		struct pmic_it_handle_s *prv;
++		unsigned int i;
++		const uint32_t *pmic_its;
++		int nb_it;
+ 
+ 		pmic_its = fdt_getprop(fdt, node, "st,pmic-it-id", &nb_it);
+ 		if (!pmic_its)
+@@ -690,7 +690,7 @@ static TEE_Result initialize_pmic2_irq(c
+ 			panic("st,notif-it-id incorrect description");
+ 
+ 		for (i = 0; i < (nb_notif / sizeof(uint32_t)); i++) {
+-			uint8_t pmic_it = 0;
++			uint8_t pmic_it;
+ 
+ 			prv = calloc(1, sizeof(*prv));
+ 			if (!prv)
+Index: optee-os-qsmp-2550/core/drivers/regulator/core.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/regulator/core.c
++++ optee-os-qsmp-2550/core/drivers/regulator/core.c
+@@ -273,55 +273,86 @@ bool regulator_is_enabled(const struct r
+ 	return !res && enabled;
+ }
+ 
++TEE_Result regulator_verify_voltage(struct rdev *rdev, uint32_t uvolt)
++{
++	TEE_Result res;
++	uint32_t *ref;
++	size_t ref_cnt;
++	size_t n;
++
++	assert(rdev);
++
++	FMSG("%s %"PRIu32"uV", rdev->desc->node_name, uvolt);
++
++	lock_driver(rdev);
++	res = rdev->desc->ops->list_voltages(rdev->desc, &ref, &ref_cnt);
++	unlock_driver(rdev);
++
++	if (res) {
++		/* Caller may be query the level table size */
++		if (res != TEE_ERROR_SHORT_BUFFER)
++			DMSG("regul %s list_voltages failed: res = %#"PRIx32,
++			     rdev->desc->node_name, res);
++
++		return res;
++	}
++
++	for (n = 0; n < ref_cnt; n++) {
++		if (ref[n] == uvolt)
++			return TEE_SUCCESS;
++	}
++	return TEE_ERROR_GENERIC;
++}
++
+ /*
+  * Set regulator voltage
+  *
+  * @rdev - regulator device
+- * @mvolt - Target voltage level in millivolt
++ * @uvolt - Target voltage level in microvolt
+  * Return 0 if succeed, non 0 else.
+  */
+-TEE_Result regulator_set_voltage(struct rdev *rdev, uint16_t mvolt)
++TEE_Result regulator_set_voltage(struct rdev *rdev, uint32_t uvolt)
+ {
+ 	TEE_Result res;
+-	uint16_t cur_mv;
++	uint32_t cur_uv;
+ 
+ 	assert(rdev);
+ 
+-	FMSG("%s %"PRIu16"mV", rdev->desc->node_name, mvolt);
++	FMSG("%s %"PRIu32"uV", rdev->desc->node_name, uvolt);
+ 
+-	if (mvolt < rdev->min_mv || mvolt > rdev->max_mv)
++	if (uvolt < rdev->min_uv || uvolt > rdev->max_uv)
+ 		return TEE_ERROR_BAD_PARAMETERS;
+ 
+-	res = regulator_get_voltage(rdev, &cur_mv);
++	res = regulator_get_voltage(rdev, &cur_uv);
+ 	if (res)
+ 		return res;
+-	if (cur_mv == mvolt)
++	if (cur_uv == uvolt)
+ 		return TEE_SUCCESS;
+ 
+ 	if (!rdev->desc->ops->set_voltage)
+ 		return TEE_ERROR_NOT_IMPLEMENTED;
+ 
+ 	lock_driver(rdev);
+-	res = rdev->desc->ops->set_voltage(rdev->desc, mvolt);
++	res = rdev->desc->ops->set_voltage(rdev->desc, uvolt);
+ 	unlock_driver(rdev);
+ 
+ 	if (res) {
+ 		EMSG("regul %s set voltage to %umV failed with %#"PRIx32,
+-		     rdev->desc->node_name, mvolt, res);
++		     rdev->desc->node_name, uvolt / 1000, res);
+ 		return res;
+ 	}
+ 
+ 	if (rdev->ramp_delay_uv_per_us > 0) {
+ 		unsigned int d;
+ 
+-		if (cur_mv > mvolt)
+-			d = cur_mv - mvolt;
++		if (cur_uv > uvolt)
++			d = cur_uv - uvolt;
+ 		else
+-			d = mvolt - cur_mv;
++			d = uvolt - cur_uv;
+ 
+-		d = (d * 1000) / rdev->ramp_delay_uv_per_us;
++		d = d / rdev->ramp_delay_uv_per_us;
+ 
+-		FMSG("%s %"PRIu32"uS", rdev->desc->node_name, d);
++		FMSG("%s ramp delay %"PRIu32"µs", rdev->desc->node_name, d);
+ 		udelay(d);
+ 	}
+ 
+@@ -331,28 +362,28 @@ TEE_Result regulator_set_voltage(struct
+ /* Set regulator to its min voltage level */
+ TEE_Result regulator_set_min_voltage(struct rdev *rdev)
+ {
+-	return regulator_set_voltage(rdev, rdev->min_mv);
++	return regulator_set_voltage(rdev, rdev->min_uv);
+ }
+ 
+ /*
+- * Get regulator voltage level in millivolt
++ * Get regulator voltage level in microvolt
+  *
+  * @rdev - regulator device
+- * @level_mv - Output voltage level
++ * @level_uv - Output voltage level
+  */
+-TEE_Result regulator_get_voltage(const struct rdev *rdev, uint16_t *level_mv)
++TEE_Result regulator_get_voltage(const struct rdev *rdev, uint32_t *level_uv)
+ {
+ 	TEE_Result res = TEE_SUCCESS;
+ 
+-	assert(rdev && level_mv);
++	assert(rdev && level_uv);
+ 
+ 	if (!rdev->desc->ops->get_voltage) {
+-		*level_mv = rdev->min_mv;
++		*level_uv = rdev->min_uv;
+ 		return TEE_SUCCESS;
+ 	}
+ 
+ 	lock_driver(rdev);
+-	res = rdev->desc->ops->get_voltage(rdev->desc, level_mv);
++	res = rdev->desc->ops->get_voltage(rdev->desc, level_uv);
+ 	unlock_driver(rdev);
+ 
+ 	if (res)
+@@ -366,14 +397,14 @@ TEE_Result regulator_get_voltage(const s
+  * List regulator voltages
+  *
+  * @rdev - regulator device
+- * @levels - optional output ref to supported millitvolt levels from min to max
+- * @count - output number of supported millivolt levels
++ * @levels - optional output ref to supported microtvolt levels from min to max
++ * @count - output number of supported microvolt levels
+  */
+-TEE_Result regulator_list_voltages(struct rdev *rdev, uint16_t **levels,
++TEE_Result regulator_list_voltages(struct rdev *rdev, uint32_t **levels,
+ 				   size_t *count)
+ {
+ 	TEE_Result res;
+-	uint16_t *ref;
++	uint32_t *ref;
+ 	size_t ref_cnt;
+ 	size_t n;
+ 
+@@ -381,7 +412,7 @@ TEE_Result regulator_list_voltages(struc
+ 
+ 	if (!rdev->desc->ops->list_voltages) {
+ 		if (levels)
+-			*levels = &rdev->min_mv;
++			*levels = &rdev->min_uv;
+ 		*count = 1;
+ 		return TEE_SUCCESS;
+ 	}
+@@ -401,17 +432,17 @@ TEE_Result regulator_list_voltages(struc
+ 
+ 	/* Reduce the possible values depending on min and max from DT */
+ 	n = ref_cnt;
+-	while (ref[n - 1U] > rdev->max_mv && n > 1)
++	while (ref[n - 1] > rdev->max_uv && n > 1)
+ 		n--;
+ 
+ 	/* Verify that max val is a valid value */
+-	if (rdev->max_mv != ref[n - 1]) {
+-		EMSG("regul %s: max value %"PRIu16" is invalid",
+-		     rdev->desc->node_name, rdev->max_mv);
++	if (rdev->max_uv != ref[n - 1]) {
++		EMSG("regul %s: max value %"PRIu32" is invalid (%u)",
++		     rdev->desc->node_name, rdev->max_uv, ref[n - 1]);
+ 		return TEE_ERROR_GENERIC;
+ 	}
+ 
+-	while (*ref < rdev->min_mv && n > 1) {
++	while (*ref < rdev->min_uv && n > 1) {
+ 		DMSG("Skipping out of range value %u", *ref);
+ 		ref++;
+ 		n--;
+@@ -423,9 +454,9 @@ TEE_Result regulator_list_voltages(struc
+ 		return TEE_ERROR_GENERIC;
+ 	}
+ 
+-	if (rdev->min_mv != *ref) {
++	if (rdev->min_uv != *ref) {
+ 		EMSG("regul %s: min value %u is invalid",
+-		     rdev->desc->node_name, rdev->min_mv);
++		     rdev->desc->node_name, rdev->min_uv);
+ 		return TEE_ERROR_GENERIC;
+ 	}
+ 
+@@ -433,7 +464,7 @@ TEE_Result regulator_list_voltages(struc
+ 	if (levels)
+ 		*levels = ref;
+ 
+-	FMSG("min_mv=%"PRIu16" max_mv=%"PRIu16, rdev->min_mv, rdev->max_mv);
++	FMSG("min_uv=%"PRIu32" max_uv=%"PRIu32, rdev->min_uv, rdev->max_uv);
+ 
+ 	return TEE_SUCCESS;
+ }
+@@ -442,18 +473,18 @@ TEE_Result regulator_list_voltages(struc
+  * Get regulator voltages range
+  *
+  * @rdev - regulator device
+- * @min_mv - out: min possible millivolt value
+- * @max_mv - out: max possible millivolt value
++ * @min_uv - out: min possible microvolt value
++ * @max_uv - out: max possible microvolt value
+  * Return 0 if succeed, non 0 else.
+  */
+-void regulator_get_range(const struct rdev *rdev, uint16_t *min_mv,
+-			 uint16_t *max_mv)
++void regulator_get_range(const struct rdev *rdev, uint32_t *min_uv,
++			 uint32_t *max_uv)
+ {
+-	if (min_mv)
+-		*min_mv = rdev->min_mv;
++	if (min_uv)
++		*min_uv = rdev->min_uv;
+ 
+-	if (max_mv)
+-		*max_mv = rdev->max_mv;
++	if (max_uv)
++		*max_uv = rdev->max_uv;
+ }
+ 
+ /*
+@@ -594,7 +625,7 @@ static TEE_Result parse_dt(struct rdev *
+ {
+ 	TEE_Result res;
+ 	const fdt32_t *cuint;
+-	uint16_t *levels;
++	uint32_t *levels;
+ 	void *fdt;
+ 	size_t size;
+ 
+@@ -609,28 +640,28 @@ static TEE_Result parse_dt(struct rdev *
+ 
+ 	cuint = fdt_getprop(fdt, node, "regulator-min-microvolt", NULL);
+ 	if (cuint) {
+-		uint16_t min_mv = (uint16_t)(fdt32_to_cpu(*cuint) / 1000U);
++		uint32_t min_uv = fdt32_to_cpu(*cuint);
+ 
+-		FMSG("%s: min_mv=%"PRIu16, rdev->desc->node_name, min_mv);
+-		if (min_mv <= rdev->max_mv) {
+-			rdev->min_mv = min_mv;
++		FMSG("%s: min_uv=%"PRIu32, rdev->desc->node_name, min_uv);
++		if (min_uv <= rdev->max_uv) {
++			rdev->min_uv = min_uv;
+ 		} else {
+-			EMSG("%s: min_mv=%"PRIu16" is too high",
+-			     rdev->desc->node_name, min_mv);
++			EMSG("%s: min_uv=%"PRIu32" is too high",
++			     rdev->desc->node_name, min_uv);
+ 			return TEE_ERROR_GENERIC;
+ 		}
+ 	}
+ 
+ 	cuint = fdt_getprop(fdt, node, "regulator-max-microvolt", NULL);
+ 	if (cuint) {
+-		uint16_t max_mv = (uint16_t)(fdt32_to_cpu(*cuint) / 1000U);
++		uint32_t max_uv = fdt32_to_cpu(*cuint);
+ 
+-		FMSG("%s: max_mv=%"PRIu16, rdev->desc->node_name, max_mv);
+-		if (max_mv >= rdev->min_mv) {
+-			rdev->max_mv = max_mv;
++		FMSG("%s: max_uv=%"PRIu32, rdev->desc->node_name, max_uv);
++		if (max_uv >= rdev->min_uv) {
++			rdev->max_uv = max_uv;
+ 		} else {
+-			EMSG("%s: max_mv=%"PRIu16" is too low",
+-			     rdev->desc->node_name, max_mv);
++			EMSG("%s: max_uv=%"PRIu32" is too low",
++			     rdev->desc->node_name, max_uv);
+ 			return TEE_ERROR_GENERIC;
+ 		}
+ 	}
+@@ -666,7 +697,7 @@ TEE_Result regulator_register(const stru
+ {
+ 	TEE_Result res;
+ 	struct rdev *rdev;
+-	uint16_t mv = 0;
++	uint32_t uv = 0;
+ 
+ 	assert(desc);
+ 
+@@ -681,7 +712,7 @@ TEE_Result regulator_register(const stru
+ 	rdev->desc = desc;
+ 
+ 	if (desc->ops->list_voltages) {
+-		uint16_t *levels;
++		uint32_t *levels;
+ 		size_t count;
+ 		size_t __maybe_unused i;
+ 
+@@ -698,22 +729,22 @@ TEE_Result regulator_register(const stru
+ 		for (i = 0; i < count - 1; i++)
+ 			assert(levels[i] <= levels[i + 1]);
+ 
+-		rdev->min_mv = levels[0];
+-		rdev->max_mv = levels[count - 1];
++		rdev->min_uv = levels[0];
++		rdev->max_uv = levels[count - 1];
+ 	} else {
+-		rdev->max_mv = UINT16_MAX;
++		rdev->max_uv = UINT32_MAX;
+ 	}
+ 
+ 	res = parse_dt(rdev, node);
+ 	if (res)
+ 		goto out;
+ 
+-	if (regulator_get_voltage(rdev, &mv) == TEE_SUCCESS) {
+-		if (mv < rdev->min_mv || mv > rdev->max_mv) {
+-			FMSG("Update regulator %s to %"PRIu16"mV",
+-			     desc->node_name, rdev->min_mv);
++	if (regulator_get_voltage(rdev, &uv) == TEE_SUCCESS) {
++		if (uv < rdev->min_uv || uv > rdev->max_uv) {
++			FMSG("Update regulator %s to %"PRIu32"uV",
++			     desc->node_name, rdev->min_uv);
+ 
+-			res = regulator_set_voltage(rdev, rdev->min_mv);
++			res = regulator_set_voltage(rdev, rdev->min_uv);
+ 			if (res)
+ 				goto out;
+ 		}
+@@ -823,12 +854,12 @@ void regulator_core_dump(void)
+ 		return;
+ 
+ 	FMSG("Dump Regulators\n");
+-	FMSG("reg      name     use\ten\tmV\tmin\tmax\tflags\tsupply\n");
++	FMSG("reg      name     use\ten\tuv\tmin\tmax\tflags\tsupply\n");
+ 
+ 	SLIST_FOREACH(rdev, &regulator_device_list, link) {
+-		uint16_t mv;
+-		uint16_t min_mv;
+-		uint16_t max_mv;
++		uint32_t uv;
++		uint32_t min_uv;
++		uint32_t max_uv;
+ 		char reg[9];
+ 		char name[9];
+ 		const char __maybe_unused *supply = "";
+@@ -836,16 +867,16 @@ void regulator_core_dump(void)
+ 		sprint_name(name, rdev->desc->node_name, 8);
+ 		sprint_name(reg, rdev->reg_name, 8);
+ 
+-		if (regulator_get_voltage(rdev, &mv))
+-			mv = UINT16_MAX;
++		if (regulator_get_voltage(rdev, &uv))
++			uv = UINT32_MAX;
+ 
+-		regulator_get_range(rdev, &min_mv, &max_mv);
++		regulator_get_range(rdev, &min_uv, &max_uv);
+ 		if (rdev->supply_dev)
+ 			supply = rdev->supply_dev->desc->node_name;
+ 
+-		FMSG("%s %s %"PRIu8"\t%d\t%"PRIu16"\t%"PRIu16"\t%"PRIu16"\t%#"PRIx16"\t%s\n",
+-		     reg, name, rdev->use_count, regulator_is_enabled(rdev), mv,
+-		     min_mv, max_mv, rdev->flags, supply);
++		FMSG("%s %s %"PRIu8"\t%d\t%"PRIu32"\t%"PRIu32"\t%"PRIu32"\t%#"PRIx16"\t%s\n",
++		     reg, name, rdev->use_count, regulator_is_enabled(rdev), uv,
++		     min_uv, max_uv, rdev->flags, supply);
+ 	}
+ }
+ 
+Index: optee-os-qsmp-2550/core/drivers/regulator/stm32_regulator_gpio.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/regulator/stm32_regulator_gpio.c
++++ optee-os-qsmp-2550/core/drivers/regulator/stm32_regulator_gpio.c
+@@ -20,7 +20,7 @@ struct gpio_regul {
+ 	struct regul_ops ops;
+ 	unsigned int enable_gpio;
+ 	unsigned int voltage_gpio;
+-	uint16_t gpio_voltage_table[MAX_VOLTAGE_LIST_SIZE];
++	uint32_t gpio_voltage_table[MAX_VOLTAGE_LIST_SIZE];
+ 	char name[GPIO_REGULATOR_NAME_LEN];
+ 	bool enable_active_high;
+ 	bool voltage_level_high;
+@@ -74,16 +74,16 @@ static TEE_Result gpio_get_state(const s
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result gpio_set_voltage(const struct regul_desc *desc, uint16_t mv)
++static TEE_Result gpio_set_voltage(const struct regul_desc *desc, uint32_t uv)
+ {
+ 	struct gpio_regul *gr = (struct gpio_regul *)desc->driver_data;
+ 	enum gpio_level level = GPIO_LEVEL_LOW;
+ 
+ 	FMSG("%s: set volt", desc->node_name);
+ 
+-	if (mv == gr->gpio_voltage_table[1])
++	if (uv == gr->gpio_voltage_table[1])
+ 		level = GPIO_LEVEL_HIGH;
+-	else if (mv != gr->gpio_voltage_table[0])
++	else if (uv != gr->gpio_voltage_table[0])
+ 		return TEE_ERROR_BAD_PARAMETERS;
+ 
+ 	if (!gr->voltage_level_high)
+@@ -95,7 +95,7 @@ static TEE_Result gpio_set_voltage(const
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result gpio_get_voltage(const struct regul_desc *desc, uint16_t *mv)
++static TEE_Result gpio_get_voltage(const struct regul_desc *desc, uint32_t *uv)
+ {
+ 	struct gpio_regul *gr = (struct gpio_regul *)desc->driver_data;
+ 	enum gpio_level level = GPIO_LEVEL_LOW;
+@@ -108,14 +108,14 @@ static TEE_Result gpio_get_voltage(const
+ 		level = level == GPIO_LEVEL_HIGH ? GPIO_LEVEL_LOW :
+ 						   GPIO_LEVEL_HIGH;
+ 
+-	*mv = level == GPIO_LEVEL_HIGH ? gr->gpio_voltage_table[1] :
++	*uv = level == GPIO_LEVEL_HIGH ? gr->gpio_voltage_table[1] :
+ 					 gr->gpio_voltage_table[0];
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+ static TEE_Result gpio_list_voltages(const struct regul_desc *desc,
+-				     uint16_t **levels, size_t *count)
++				     uint32_t **levels, size_t *count)
+ {
+ 	struct gpio_regul *gr = (struct gpio_regul *)desc->driver_data;
+ 
+@@ -202,10 +202,8 @@ static TEE_Result gpio_regulator_probe(c
+ 			goto err;
+ 		}
+ 
+-		gr->gpio_voltage_table[0] = (uint16_t)(fdt32_to_cpu(prop[0]) /
+-						       U(1000));
+-		gr->gpio_voltage_table[1] = (uint16_t)(fdt32_to_cpu(prop[2]) /
+-						       U(1000));
++		gr->gpio_voltage_table[0] = fdt32_to_cpu(prop[0]);
++		gr->gpio_voltage_table[1] = fdt32_to_cpu(prop[2]);
+ 
+ 		/* Low voltage should be lower than high voltage.*/
+ 		if (gr->gpio_voltage_table[0] >= gr->gpio_voltage_table[1]) {
+@@ -219,7 +217,7 @@ static TEE_Result gpio_regulator_probe(c
+ 			goto err;
+ 		}
+ 
+-		if ((uint32_t)fdt32_to_cpu(prop[1]) == 0U)
++		if (fdt32_to_cpu(prop[1]) == 0U)
+ 			gr->voltage_level_high = true;
+ 
+ 		gr->ops.set_voltage = gpio_set_voltage;
+@@ -230,7 +228,7 @@ static TEE_Result gpio_regulator_probe(c
+ 	cuint = fdt_getprop(fdt, node, "st,enable_pin_index", NULL);
+ 	if (cuint) {
+ 		size_t index = (size_t)fdt32_to_cpu(*cuint);
+-		struct stm32_pinctrl *pin = NULL;
++		struct stm32_pinctrl *pin;
+ 
+ 		res = get_pinctrl_from_index(list, index, &pin);
+ 		if (res)
+Index: optee-os-qsmp-2550/core/drivers/regulator/stm32_vrefbuf.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/regulator/stm32_vrefbuf.c
++++ optee-os-qsmp-2550/core/drivers/regulator/stm32_vrefbuf.c
+@@ -36,13 +36,13 @@
+ #define TIMEOUT_US_1MS			U(1 * 1000)
+ 
+ struct stm32_vrefbuf_compat_data {
+-	const uint16_t *voltages;
++	const uint32_t *voltages;
+ 	uint8_t nb_voltages;
+ 	bool invert_voltages;
+ };
+ 
+-static const uint16_t stm32_vrefbuf_mp25_voltages[2] = {
+-	U(1210), U(1500)
++static const uint32_t stm32_vrefbuf_mp25_voltages[2] = {
++	U(1210000), U(1500000)
+ };
+ 
+ static const struct stm32_vrefbuf_compat_data stm32_vrefbuf_mp25 = {
+@@ -51,8 +51,8 @@ static const struct stm32_vrefbuf_compat
+ 	.invert_voltages = false,
+ };
+ 
+-static const uint16_t stm32_vrefbuf_mp13_voltages[4] = {
+-	U(1650), U(1800), U(2048), U(2500)
++static const uint32_t stm32_vrefbuf_mp13_voltages[4] = {
++	U(1650000), U(1800000), U(2048000), U(2500000)
+ };
+ 
+ static const struct stm32_vrefbuf_compat_data stm32_vrefbuf_mp13 = {
+@@ -146,7 +146,7 @@ static TEE_Result vrefbuf_get_state(cons
+ }
+ 
+ static TEE_Result vrefbuf_get_voltage(const struct regul_desc *desc,
+-				      uint16_t *mv)
++				      uint32_t *uv)
+ {
+ 	struct vrefbuf_regul *vr = (struct vrefbuf_regul *)desc->driver_data;
+ 	uintptr_t reg = stm32mp_vrefbuf_base(vr) + STM32_VREFBUF_CSR;
+@@ -161,20 +161,20 @@ static TEE_Result vrefbuf_get_voltage(co
+ 
+ 	clk_disable(vr->clock);
+ 
+-	*mv = vr->comp_data->voltages[index];
++	*uv = vr->comp_data->voltages[index];
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+ static TEE_Result vrefbuf_set_voltage(const struct regul_desc *desc,
+-				      uint16_t mv)
++				      uint32_t uv)
+ {
+ 	struct vrefbuf_regul *vr = (struct vrefbuf_regul *)desc->driver_data;
+ 	uintptr_t reg = stm32mp_vrefbuf_base(vr) + STM32_VREFBUF_CSR;
+ 	uint8_t i = 0;
+ 
+ 	for (i = 0 ; i < vr->comp_data->nb_voltages ; i++) {
+-		if (vr->comp_data->voltages[i] == mv) {
++		if (vr->comp_data->voltages[i] == uv) {
+ 			uint32_t val = i << STM32_VRS_SHIFT;
+ 
+ 			if (vr->comp_data->invert_voltages)
+@@ -196,10 +196,10 @@ static TEE_Result vrefbuf_set_voltage(co
+ }
+ 
+ static TEE_Result vrefbuf_list_voltages(const struct regul_desc *desc __unused,
+-					uint16_t **levels, size_t *count)
++					uint32_t **levels, size_t *count)
+ {
+ 	struct vrefbuf_regul *vr = (struct vrefbuf_regul *)desc->driver_data;
+-	const uint16_t **vrefbuf = (const uint16_t **)levels;
++	const uint32_t **vrefbuf = (const uint32_t **)levels;
+ 
+ 	*count = vr->comp_data->nb_voltages;
+ 	*vrefbuf = vr->comp_data->voltages;
+@@ -269,13 +269,13 @@ DECLARE_KEEP_PAGER(vrefbuf_pm);
+ static TEE_Result stm32_vrefbuf_regulator_probe(const void *fdt, int node,
+ 						const void *comp_data)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
++	TEE_Result res;
+ 	struct dt_node_info info = { };
+-	size_t __maybe_unused len = 0;
+-	const char *reg_name = NULL;
+-	struct vrefbuf_regul *vr = NULL;
++	size_t __maybe_unused len;
++	const char *reg_name;
++	struct vrefbuf_regul *vr;
+ 	struct io_pa_va base = { };
+-	struct clk *clk = NULL;
++	struct clk *clk;
+ 
+ 	FMSG("vrefbuf init");
+ 
+@@ -313,7 +313,7 @@ static TEE_Result stm32_vrefbuf_regulato
+ 		return res;
+ 	}
+ 
+-	register_pm_driver_cb(vrefbuf_pm, (void *)vr, "vrefbuf-driver");
++	register_pm_driver_cb(vrefbuf_pm, vr, "vrefbuf-driver");
+ 
+ 	return TEE_SUCCESS;
+ }
+Index: optee-os-qsmp-2550/core/drivers/regulator/stm32mp1_regulator_iod.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/regulator/stm32mp1_regulator_iod.c
++++ optee-os-qsmp-2550/core/drivers/regulator/stm32mp1_regulator_iod.c
+@@ -23,7 +23,7 @@
+ 
+ #define TIMEOUT_US_10MS		U(10000)
+ 
+-#define IO_VOLTAGE_THRESHOLD	U(2700)
++#define IO_VOLTAGE_THRESHOLD	U(2700000)
+ 
+ /*
+  * struct iod_regul - IO domain regulator instance
+@@ -34,7 +34,7 @@
+  * @hslv_index: Index of HSLV register for the IO domain
+  * @io_comp_index: Index of IO compensation for the IO domain
+  * @suspend_state: True if regulator is enabled before suspend, false otherwise
+- * @suspend_mv: Voltage level before suspend in millivolts
++ * @suspend_uv: Voltage level before suspend in microvolts
+  * @supply: Regulator supplier for the IO domain
+  */
+ struct iod_regul {
+@@ -47,7 +47,7 @@ struct iod_regul {
+ 	uint32_t io_comp_index;
+ 
+ 	bool suspend_state;
+-	uint16_t suspend_mv;
++	uint32_t suspend_uv;
+ 
+ 	struct rdev *supply;
+ };
+@@ -108,23 +108,23 @@ static TEE_Result iod_get_state(const st
+ 	return TEE_SUCCESS;
+ }
+ 
+-static TEE_Result iod_get_voltage(const struct regul_desc *desc, uint16_t *mv)
++static TEE_Result iod_get_voltage(const struct regul_desc *desc, uint32_t *uv)
+ {
+ 	struct iod_regul *iod = (struct iod_regul *)desc->driver_data;
+ 
+ 	FMSG("%s: get volt", desc->node_name);
+ 
+-	return regulator_get_voltage(iod->supply, mv);
++	return regulator_get_voltage(iod->supply, uv);
+ }
+ 
+-static TEE_Result iod_set_voltage(const struct regul_desc *desc, uint16_t mv)
++static TEE_Result iod_set_voltage(const struct regul_desc *desc, uint32_t uv)
+ {
+ 	struct iod_regul *iod = (struct iod_regul *)desc->driver_data;
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 	TEE_Result result = TEE_ERROR_GENERIC;
+ 	bool en = false;
+ 
+-	FMSG("%s: set volt to %"PRIu16" mv", desc->node_name, mv);
++	FMSG("%s: set volt to %"PRIu16" uv", desc->node_name, uv);
+ 
+ 	res = iod_get_state(desc, &en);
+ 	if (res)
+@@ -146,16 +146,16 @@ static TEE_Result iod_set_voltage(const
+ 		return res;
+ 
+ 	/* Forward set voltage request to the power supply */
+-	result = regulator_set_voltage(iod->supply, mv);
++	result = regulator_set_voltage(iod->supply, uv);
+ 	if (result) {
+ 		EMSG("regulator %s set voltage failed (%d)",
+ 		     desc->node_name, result);
+-		res = regulator_get_voltage(iod->supply, &mv);
++		res = regulator_get_voltage(iod->supply, &uv);
+ 		if (res)
+ 			return res;
+ 	}
+ 
+-	if (mv < IO_VOLTAGE_THRESHOLD)
++	if (uv < IO_VOLTAGE_THRESHOLD)
+ 		res = iod_set_speed(desc, true);
+ 
+ 	if (en) {
+@@ -168,7 +168,7 @@ static TEE_Result iod_set_voltage(const
+ }
+ 
+ static TEE_Result iod_list_voltages(const struct regul_desc *desc,
+-				    uint16_t **levels, size_t *count)
++				    uint32_t **levels, size_t *count)
+ {
+ 	struct iod_regul *iod = (struct iod_regul *)desc->driver_data;
+ 
+@@ -197,7 +197,7 @@ static TEE_Result iod_pm(enum pm_op op,
+ 		if (res)
+ 			return res;
+ 
+-		res = iod_get_voltage(desc, &iod->suspend_mv);
++		res = iod_get_voltage(desc, &iod->suspend_uv);
+ 		if (res)
+ 			return res;
+ 
+@@ -208,7 +208,7 @@ static TEE_Result iod_pm(enum pm_op op,
+ 	} else {
+ 		FMSG("%s: resume", desc->node_name);
+ 
+-		res = iod_set_voltage(desc, iod->suspend_mv);
++		res = iod_set_voltage(desc, iod->suspend_uv);
+ 		if (res)
+ 			return res;
+ 
+@@ -279,11 +279,11 @@ static TEE_Result iod_regulator_probe(co
+ 				      const void *compat_data __unused)
+ {
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+-	struct regul_desc *desc = NULL;
+-	const char *regu_name = NULL;
+-	struct iod_regul *iod = NULL;
+-	uint16_t mv = 0;
+-	size_t i = 0;
++	struct regul_desc *desc;
++	const char *regu_name;
++	struct iod_regul *iod;
++	uint32_t uv;
++	size_t i;
+ 
+ 	regu_name = fdt_get_name(fdt, node, NULL);
+ 
+@@ -310,7 +310,7 @@ static TEE_Result iod_regulator_probe(co
+ 	}
+ 
+ 	/* If the supply voltage is fixed, do not handle voltage ops */
+-	if (iod->supply->min_mv == iod->supply->max_mv)
++	if (iod->supply->min_uv == iod->supply->max_uv)
+ 		desc->ops = &iod_fixed_ops;
+ 
+ 	res = regulator_register(desc, node);
+@@ -320,17 +320,17 @@ static TEE_Result iod_regulator_probe(co
+ 		return res;
+ 	}
+ 
+-	res = iod_get_voltage(desc, &mv);
++	res = iod_get_voltage(desc, &uv);
+ 	if (res)
+ 		return res;
+ 
+-	if (mv < IO_VOLTAGE_THRESHOLD) {
++	if (uv < IO_VOLTAGE_THRESHOLD) {
+ 		res = iod_set_speed(desc, true);
+ 		if (res)
+ 			return res;
+ 	}
+ 
+-	register_pm_driver_cb(iod_pm, (void *)desc, "iod-regu");
++	register_pm_driver_cb(iod_pm, desc, "iod-regu");
+ 
+ 	FMSG("regu_name=%s probed", regu_name);
+ 
+Index: optee-os-qsmp-2550/core/drivers/scmi-msg/regulator_consumer.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/scmi-msg/regulator_consumer.c
++++ optee-os-qsmp-2550/core/drivers/scmi-msg/regulator_consumer.c
+@@ -82,11 +82,11 @@ int32_t plat_scmi_voltd_levels_array(uns
+ 				     long *microvolt, size_t *nb_elts)
+ {
+ 	struct scmi_voltd *voltd = voltd_from_id(channel_id, domain_id);
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint16_t *levels = NULL;
+-	size_t full_count = 0;
+-	size_t out_count = 0;
+-	size_t i = 0;
++	TEE_Result res;
++	uint32_t *levels;
++	size_t full_count;
++	size_t out_count;
++	size_t i;
+ 
+ 	if (!voltd)
+ 		return SCMI_NOT_FOUND;
+@@ -113,7 +113,7 @@ int32_t plat_scmi_voltd_levels_array(uns
+ 		      full_count, start_index, *nb_elts, out_count);
+ 
+ 	for (i = 0; i < out_count; i++)
+-		microvolt[i] = (long)levels[start_index + i] * 1000;
++		microvolt[i] = levels[start_index + i];
+ 
+ 	*nb_elts = out_count;
+ 
+@@ -124,20 +124,20 @@ int32_t plat_scmi_voltd_get_level(unsign
+ 				  unsigned int domain_id, long *level)
+ {
+ 	struct scmi_voltd *voltd = voltd_from_id(channel_id, domain_id);
+-	uint16_t level_mv = 0;
++	uint32_t level_uv;
+ 
+ 	if (!voltd)
+ 		return SCMI_NOT_FOUND;
+ 	if (!voltd->rdev)
+ 		return SCMI_DENIED;
+ 
+-	if (regulator_get_voltage(voltd->rdev, &level_mv))
++	if (regulator_get_voltage(voltd->rdev, &level_uv))
+ 		return SCMI_GENERIC_ERROR;
+ 
+-	VERBOSE_VOLTD(channel_id, domain_id, "get voltage = %lduV",
+-		      (long)level_mv * 1000);
++	VERBOSE_VOLTD(channel_id, domain_id, "get voltage = %uuV",
++		      level_uv);
+ 
+-	*level = (long)level_mv * 1000;
++	*level = (long)level_uv;
+ 
+ 	return SCMI_SUCCESS;
+ }
+@@ -155,7 +155,7 @@ int32_t plat_scmi_voltd_set_level(unsign
+ 
+ 	VERBOSE_VOLTD(channel_id, domain_id, "set voltage to %lduV", microvolt);
+ 
+-	if (regulator_set_voltage(voltd->rdev, microvolt / 1000))
++	if (regulator_set_voltage(voltd->rdev, microvolt))
+ 		return SCMI_GENERIC_ERROR;
+ 
+ 	return SCMI_SUCCESS;
+@@ -227,12 +227,12 @@ int32_t plat_scmi_voltd_set_config(unsig
+ 
+ static TEE_Result scmi_regulator_consumer_init(void)
+ {
+-	int node = 0;
+-	int subnode = 0;
+-	void *fdt = NULL;
+-	const fdt32_t *cuint = NULL;
+-	unsigned int channel_id = 0;
+-	struct scmi_voltd_channel *chan = NULL;
++	int node;
++	int subnode;
++	void *fdt;
++	const fdt32_t *cuint;
++	unsigned int channel_id;
++	struct scmi_voltd_channel *chan;
+ 
+ 	fdt = get_embedded_dt();
+ 	if (!fdt)
+@@ -266,14 +266,14 @@ static TEE_Result scmi_regulator_consume
+ 
+ 	/* Compute the number of domains to allocate */
+ 	fdt_for_each_subnode(subnode, fdt, node) {
+-		paddr_t reg = 0;
++		paddr_t reg;
+ 
+ 		/* Get an ID for the domain */
+ 		reg = _fdt_reg_base_address(fdt, subnode);
+ 		assert(reg != DT_INFO_INVALID_REG);
+ 
+-		if ((uint32_t)reg >= chan->voltd_count)
+-			chan->voltd_count = (uint32_t)reg + U(1);
++		if ((size_t)reg >= chan->voltd_count)
++			chan->voltd_count = reg + 1;
+ 	}
+ 
+ 	chan->voltd_array = calloc(chan->voltd_count,
+@@ -282,9 +282,9 @@ static TEE_Result scmi_regulator_consume
+ 		return TEE_ERROR_OUT_OF_MEMORY;
+ 
+ 	fdt_for_each_subnode(subnode, fdt, node) {
+-		struct scmi_voltd *voltd = NULL;
+-		struct rdev *rdev = NULL;
+-		uint32_t domain_id = 0;
++		struct scmi_voltd *voltd;
++		struct rdev *rdev;
++		uint32_t domain_id;
+ 
+ 		rdev = regulator_get_by_supply_name(fdt, subnode, "voltd");
+ 		if (!rdev) {
+@@ -294,7 +294,7 @@ static TEE_Result scmi_regulator_consume
+ 		}
+ 
+ 		/* Get an ID for the domain */
+-		domain_id = (uint32_t)_fdt_reg_base_address(fdt, subnode);
++		domain_id = _fdt_reg_base_address(fdt, subnode);
+ 		voltd = chan->voltd_array + domain_id;
+ 
+ 		/* Check that the domain_id is not already used */
+Index: optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/stm32_cpu_opp.c
++++ optee-os-qsmp-2550/core/drivers/stm32_cpu_opp.c
+@@ -29,11 +29,11 @@
+ /*
+  * struct cpu_dvfs - CPU DVFS registered operating points
+  * @freq_khz: CPU frequency in kilohertz (kHz)
+- * @volt_mv: CPU voltage level in millivolts (mV)
++ * @volt_uv: CPU voltage level in microvolts (µV)
+  */
+ struct cpu_dvfs {
+ 	unsigned int freq_khz;
+-	unsigned int volt_mv;
++	unsigned int volt_uv;
+ };
+ 
+ /*
+@@ -46,7 +46,7 @@ struct cpu_dvfs {
+  * @dvfs: Arrays of the supported CPU operating points
+  * @scp_clock: Clock instance exposed to scp-firmware SCMI DVFS
+  * @scp_rdev: Regulator instance exposed to scp-firmware SCMI DVFS
+- * @cpu_opp_levels_mv: Helper array for struct regul_ops::list_voltages
++ * @cpu_opp_levels_uv: Helper array for struct regul_ops::list_voltages
+  * @default_opp_freq: Operating point frequency to use during initialization
+  */
+ struct cpu_opp {
+@@ -58,7 +58,7 @@ struct cpu_opp {
+ #ifdef CFG_SCPFW_MOD_DVFS
+ 	struct clk scp_clock;
+ 	struct rdev scp_rdev;
+-	uint16_t *cpu_opp_levels_mv;
++	uint32_t *cpu_opp_levels_uv;
+ 	unsigned int default_opp_freq;
+ #endif
+ };
+@@ -70,7 +70,7 @@ static struct cpu_opp cpu_opp;
+ static struct mutex cpu_opp_mu = MUTEX_INITIALIZER;
+ #endif
+ 
+-#define MPU_RAM_LOW_SPEED_THRESHOLD 1320
++#define MPU_RAM_LOW_SPEED_THRESHOLD 1320000
+ 
+ #ifndef CFG_SCPFW_MOD_DVFS
+ size_t stm32_cpu_opp_count(void)
+@@ -95,19 +95,19 @@ static TEE_Result _set_opp_clk_rate(unsi
+ #endif
+ }
+ 
+-static TEE_Result opp_set_voltage(struct rdev *rdev, uint16_t volt_mv)
++static TEE_Result opp_set_voltage(struct rdev *rdev, uint32_t volt_uv)
+ {
+-	return regulator_set_voltage(rdev, volt_mv);
++	return regulator_set_voltage(rdev, volt_uv);
+ }
+ 
+-static bool opp_voltage_is_supported(struct rdev *rdev, uint16_t volt_mv)
++static bool opp_voltage_is_supported(struct rdev *rdev, uint32_t volt_uv)
+ {
+-	uint16_t min_mv;
+-	uint16_t max_mv;
++	uint32_t min_uv;
++	uint32_t max_uv;
+ 
+-	regulator_get_range(rdev, &min_mv, &max_mv);
++	regulator_get_range(rdev, &min_uv, &max_uv);
+ 
+-	if (volt_mv < min_mv || volt_mv > max_mv)
++	if (volt_uv < min_uv || volt_uv > max_uv)
+ 		return false;
+ 
+ 	return true;
+@@ -124,11 +124,11 @@ static TEE_Result set_clock_then_voltage
+ 	}
+ 
+ #ifdef CFG_STM32MP13
+-	if (cpu_opp.dvfs[opp].volt_mv <= MPU_RAM_LOW_SPEED_THRESHOLD)
++	if (cpu_opp.dvfs[opp].volt_uv <= MPU_RAM_LOW_SPEED_THRESHOLD)
+ 		io_setbits32(stm32_pwr_base(), PWR_CR1_MPU_RAM_LOW_SPEED);
+ #endif
+ 
+-	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_mv);
++	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_uv);
+ 	if (res) {
+ 		unsigned int current_opp = cpu_opp.current_opp;
+ 
+@@ -148,25 +148,25 @@ static TEE_Result set_voltage_then_clock
+ {
+ 	TEE_Result res;
+ 
+-	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_mv);
++	res = opp_set_voltage(cpu_opp.rdev, cpu_opp.dvfs[opp].volt_uv);
+ 	if (res)
+ 		return res;
+ 
+ #ifdef CFG_STM32MP13
+-	if (cpu_opp.dvfs[opp].volt_mv > MPU_RAM_LOW_SPEED_THRESHOLD)
++	if (cpu_opp.dvfs[opp].volt_uv > MPU_RAM_LOW_SPEED_THRESHOLD)
+ 		io_clrbits32(stm32_pwr_base(), PWR_CR1_MPU_RAM_LOW_SPEED);
+ #endif
+ 
+ 	if (_set_opp_clk_rate(opp)) {
+ 		unsigned int current_opp = cpu_opp.current_opp;
+-		unsigned int previous_volt;
++		uint32_t previous_volt;
+ 
+ 		EMSG("Failed to set clock");
+ 
+ 		if (current_opp == cpu_opp.opp_count)
+ 			panic();
+ 
+-		previous_volt = cpu_opp.dvfs[current_opp].volt_mv;
++		previous_volt = cpu_opp.dvfs[current_opp].volt_uv;
+ 
+ 		opp_set_voltage(cpu_opp.rdev, previous_volt);
+ 
+@@ -247,31 +247,31 @@ static TEE_Result read_regu_state(const
+ }
+ 
+ static TEE_Result set_regu_voltage(const struct regul_desc *desc __unused,
+-				   uint16_t mv)
++				   uint32_t uv)
+ {
+ 	TEE_Result res;
+-	uint16_t cur_mv;
++	uint32_t cur_uv;
+ 
+-	res = regulator_get_voltage(cpu_opp.rdev, &cur_mv);
++	res = regulator_get_voltage(cpu_opp.rdev, &cur_uv);
+ 	if (res)
+ 		return res;
+ 
+-	if (mv == cur_mv)
++	if (uv == cur_uv)
+ 		return TEE_SUCCESS;
+ 
+ #ifdef CFG_STM32MP13
+-	if (cur_mv > MPU_RAM_LOW_SPEED_THRESHOLD &&
+-	    mv <= MPU_RAM_LOW_SPEED_THRESHOLD)
++	if (cur_uv > MPU_RAM_LOW_SPEED_THRESHOLD &&
++	    uv <= MPU_RAM_LOW_SPEED_THRESHOLD)
+ 		io_setbits32(stm32_pwr_base(), PWR_CR1_MPU_RAM_LOW_SPEED);
+ #endif
+ 
+-	res = opp_set_voltage(cpu_opp.rdev, mv);
++	res = opp_set_voltage(cpu_opp.rdev, uv);
+ 	if (res)
+ 		return res;
+ 
+ #ifdef CFG_STM32MP13
+-	if (cur_mv <= MPU_RAM_LOW_SPEED_THRESHOLD &&
+-	    mv > MPU_RAM_LOW_SPEED_THRESHOLD)
++	if (cur_uv <= MPU_RAM_LOW_SPEED_THRESHOLD &&
++	    uv > MPU_RAM_LOW_SPEED_THRESHOLD)
+ 		io_clrbits32(stm32_pwr_base(), PWR_CR1_MPU_RAM_LOW_SPEED);
+ #endif
+ 
+@@ -279,16 +279,16 @@ static TEE_Result set_regu_voltage(const
+ }
+ 
+ static TEE_Result read_regu_voltage(const struct regul_desc *desc __unused,
+-				    uint16_t *mv)
++				    uint32_t *uv)
+ {
+-	return regulator_get_voltage(cpu_opp.rdev, mv);
++	return regulator_get_voltage(cpu_opp.rdev, uv);
+ }
+ 
+ static TEE_Result list_regu_voltages(const struct regul_desc *desc __unused,
+-				     uint16_t **levels, size_t *count)
++				     uint32_t **levels, size_t *count)
+ {
+ 	if (levels)
+-		*levels = cpu_opp.cpu_opp_levels_mv;
++		*levels = cpu_opp.cpu_opp_levels_uv;
+ 	if (count)
+ 		*count = cpu_opp.opp_count;
+ 
+@@ -313,40 +313,39 @@ static int cmp_cpu_opp_by_freq(const voi
+ 	const struct cpu_dvfs *opp_b = b;
+ 
+ 	if (opp_a->freq_khz == opp_b->freq_khz)
+-		return CMP_TRILEAN(opp_a->volt_mv, opp_b->volt_mv);
++		return CMP_TRILEAN(opp_a->volt_uv, opp_b->volt_uv);
+ 	else
+ 		return CMP_TRILEAN(opp_a->freq_khz, opp_b->freq_khz);
+ }
+ 
+-static uint16_t min_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
++static uint32_t min_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
+ {
+-	unsigned int min_mv = UINT_MAX;
++	uint32_t min_uv = UINT32_MAX;
+ 	size_t n;
+ 
+ 	for (n = 0; n < count; n++)
+-		min_mv = MIN(min_mv, dvfs[n].volt_mv);
++		min_uv = MIN(min_uv, dvfs[n].volt_uv);
+ 
+-	assert(min_mv <= UINT16_MAX);
+-	return min_mv;
++	return min_uv;
+ }
+ 
+-static uint16_t max_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
++static uint32_t max_cpu_voltage(struct cpu_dvfs *dvfs, size_t count)
+ {
+-	unsigned int max_mv = 0;
++	unsigned int max_uv = 0;
+ 	size_t n;
+ 
+ 	for (n = 0; n < count; n++)
+-		max_mv = MAX(max_mv, dvfs[n].volt_mv);
++		max_uv = MAX(max_uv, dvfs[n].volt_uv);
+ 
+-	assert(max_mv > 0 && max_mv <= UINT16_MAX);
+-	return max_mv;
++	assert(max_uv > 0);
++	return max_uv;
+ }
+ 
+ static void setup_scmi_server_resources(void)
+ {
+ 	TEE_Result res;
+ 	unsigned int *dvfs_khz;
+-	unsigned int *dvfs_mv;
++	unsigned int *dvfs_uv;
+ 	size_t opp;
+ 	struct cpu_dvfs *sorted_dvfs;
+ 	unsigned int scpfw_default_opp_index = UINT_MAX;
+@@ -381,26 +380,23 @@ static void setup_scmi_server_resources(
+ 	/* Setup a regulator for scp-firmare DVFS module PSU instance */
+ 	cpu_opp.scp_rdev = (struct rdev){
+ 		.desc = &stm32_scp_rdev_desc,
+-		.min_mv = min_cpu_voltage(sorted_dvfs, cpu_opp.opp_count),
+-		.max_mv = max_cpu_voltage(sorted_dvfs, cpu_opp.opp_count),
++		.min_uv = min_cpu_voltage(sorted_dvfs, cpu_opp.opp_count),
++		.max_uv = max_cpu_voltage(sorted_dvfs, cpu_opp.opp_count),
+ 		.reg_name = "stm32-cpu-opp",
+ 	};
+ 
+-	cpu_opp.cpu_opp_levels_mv = calloc(cpu_opp.opp_count,
+-					   sizeof(*cpu_opp.cpu_opp_levels_mv));
+-	assert(cpu_opp.cpu_opp_levels_mv);
+-
+-	for (opp = 0; opp < cpu_opp.opp_count; opp++)
+-		cpu_opp.cpu_opp_levels_mv[opp] = sorted_dvfs[opp].volt_mv;
++	cpu_opp.cpu_opp_levels_uv = calloc(cpu_opp.opp_count,
++					   sizeof(*cpu_opp.cpu_opp_levels_uv));
++	assert(cpu_opp.cpu_opp_levels_uv);
+ 
+ 	/* Feed SCP-firmware with CPU DVFS configuration data */
+ 	dvfs_khz = calloc(cpu_opp.opp_count, sizeof(*dvfs_khz));
+-	dvfs_mv = calloc(cpu_opp.opp_count, sizeof(*dvfs_mv));
+-	assert(dvfs_khz && dvfs_mv);
++	dvfs_uv = calloc(cpu_opp.opp_count, sizeof(*dvfs_uv));
++	assert(dvfs_khz && dvfs_uv);
+ 
+ 	for (opp = 0; opp < cpu_opp.opp_count; opp++) {
+ 		dvfs_khz[opp] = sorted_dvfs[opp].freq_khz;
+-		dvfs_mv[opp] = sorted_dvfs[opp].volt_mv;
++		dvfs_uv[opp] = sorted_dvfs[opp].volt_uv;
+ 		if (cpu_opp.default_opp_freq == dvfs_khz[opp])
+ 			scpfw_default_opp_index = opp;
+ 	}
+@@ -411,13 +407,13 @@ static void setup_scmi_server_resources(
+ 
+ 	res = scmi_scpfw_cfg_add_dvfs(0 /*agent*/, 0 /*channel*/, 0 /*domain*/,
+ 				      &cpu_opp.scp_rdev, &cpu_opp.scp_clock,
+-				      dvfs_khz, dvfs_mv, cpu_opp.opp_count,
++				      dvfs_khz, dvfs_uv, cpu_opp.opp_count,
+ 				      scpfw_default_opp_index);
+ 	if (res)
+ 		panic();
+ 
+ 	free(dvfs_khz);
+-	free(dvfs_mv);
++	free(dvfs_uv);
+ }
+ #else /*CFG_SCPFW_MOD_DVFS*/
+ static void setup_scmi_server_resources(void)
+@@ -490,17 +486,17 @@ static TEE_Result cpu_opp_pm(enum pm_op
+ 		 * OPP state, fallback to default OPP at PM resume.
+ 		 */
+ 		unsigned int cur_khz;
+-		uint16_t cur_mv;
++		uint32_t cur_uv;
+ 
+ 		cur_khz = clk_get_rate(cpu_opp.clock) / 1000;
+ 
+-		if (regulator_get_voltage(cpu_opp.rdev, &cur_mv))
++		if (regulator_get_voltage(cpu_opp.rdev, &cur_uv))
+ 			panic();
+ 
+ 		/* Get current OPP or fallback to default */
+ 		for (opp = 0; opp < cpu_opp.opp_count; opp++) {
+ 			if (cur_khz == cpu_opp.dvfs[opp].freq_khz  &&
+-			    cur_mv == cpu_opp.dvfs[opp].volt_mv)
++			    cur_uv == cpu_opp.dvfs[opp].volt_uv)
+ 				break;
+ 		}
+ 		if (opp >= cpu_opp.opp_count) {
+@@ -567,7 +563,7 @@ static TEE_Result stm32_cpu_opp_get_dt_s
+ 	const fdt32_t *cuint32;
+ 	uint64_t freq_khz;
+ 	uint64_t freq_khz_opp_def = 0;
+-	uint32_t volt_mv;
++	uint32_t volt_uv;
+ 	unsigned long clk_cpu;
+ 	unsigned int i = 0;
+ 	int subnode;
+@@ -606,21 +602,21 @@ static TEE_Result stm32_cpu_opp_get_dt_s
+ 			return TEE_ERROR_GENERIC;
+ 		}
+ 
+-		volt_mv = fdt32_to_cpu(*cuint32) / 1000U;
++		volt_uv = fdt32_to_cpu(*cuint32);
+ 
+ 		/* skip OPP when voltage is not supported */
+-		if (!opp_voltage_is_supported(cpu_opp.rdev, volt_mv)) {
+-			DMSG("Skip OPP %"PRIu64"kHz/%"PRIu32"mV",
+-			     freq_khz, volt_mv);
++		if (!opp_voltage_is_supported(cpu_opp.rdev, volt_uv)) {
++			DMSG("Skip OPP %"PRIu64"kHz/%"PRIu32"uV",
++			     freq_khz, volt_uv);
+ 			cpu_opp.opp_count--;
+ 			continue;
+ 		}
+ 
+ 		cpu_opp.dvfs[i].freq_khz = freq_khz;
+-		cpu_opp.dvfs[i].volt_mv = volt_mv;
++		cpu_opp.dvfs[i].volt_uv = volt_uv;
+ 
+-		DMSG("Found OPP %u (%"PRIu64"kHz/%"PRIu32"mV) from DT",
+-		     i, freq_khz, volt_mv);
++		DMSG("Found OPP %u (%"PRIu64"kHz/%"PRIu32"uV) from DT",
++		     i, freq_khz, volt_uv);
+ 
+ 		if (fdt_getprop(fdt, subnode, "st,opp-default", NULL) &&
+ 		    freq_khz > freq_khz_opp_def) {
+@@ -691,7 +687,7 @@ static TEE_Result
+ stm32_cpu_opp_init(const void *fdt, int node, const void *compat_data __unused)
+ {
+ 	TEE_Result res;
+-	uint16_t cpu_voltage __maybe_unused;
++	uint32_t cpu_voltage __maybe_unused;
+ 
+ 	res = get_cpu_parent(fdt);
+ 	if (res)
+Index: optee-os-qsmp-2550/core/drivers/stpmic1.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/stpmic1.c
++++ optee-os-qsmp-2550/core/drivers/stpmic1.c
+@@ -17,7 +17,7 @@
+ 
+ struct regul_struct {
+ 	const char *dt_node_name;
+-	const uint16_t *voltage_table;
++	const uint32_t *voltage_table;
+ 	uint8_t voltage_table_size;
+ 	uint8_t control_reg;
+ 	uint8_t low_power_reg;
+@@ -38,409 +38,409 @@ static uint16_t pmic_i2c_addr;
+  */
+ static bool ldo3_special_mode;
+ 
+-/* Voltage tables in mV */
+-static const uint16_t buck1_voltage_table[] = {
+-	725,
+-	725,
+-	725,
+-	725,
+-	725,
+-	725,
+-	750,
+-	775,
+-	800,
+-	825,
+-	850,
+-	875,
+-	900,
+-	925,
+-	950,
+-	975,
+-	1000,
+-	1025,
+-	1050,
+-	1075,
+-	1100,
+-	1125,
+-	1150,
+-	1175,
+-	1200,
+-	1225,
+-	1250,
+-	1275,
+-	1300,
+-	1325,
+-	1350,
+-	1375,
+-	1400,
+-	1425,
+-	1450,
+-	1475,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
+-	1500,
++/* Voltage tables in µV */
++static const uint32_t buck1_voltage_table[] = {
++	725000,
++	725000,
++	725000,
++	725000,
++	725000,
++	725000,
++	750000,
++	775000,
++	800000,
++	825000,
++	850000,
++	875000,
++	900000,
++	925000,
++	950000,
++	975000,
++	1000000,
++	1025000,
++	1050000,
++	1075000,
++	1100000,
++	1125000,
++	1150000,
++	1175000,
++	1200000,
++	1225000,
++	1250000,
++	1275000,
++	1300000,
++	1325000,
++	1350000,
++	1375000,
++	1400000,
++	1425000,
++	1450000,
++	1475000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
++	1500000,
+ };
+ 
+-static const uint16_t buck2_voltage_table[] = {
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1050,
+-	1050,
+-	1100,
+-	1100,
+-	1150,
+-	1150,
+-	1200,
+-	1200,
+-	1250,
+-	1250,
+-	1300,
+-	1300,
+-	1350,
+-	1350,
+-	1400,
+-	1400,
+-	1450,
+-	1450,
+-	1500,
++static const uint32_t buck2_voltage_table[] = {
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1050000,
++	1050000,
++	1100000,
++	1100000,
++	1150000,
++	1150000,
++	1200000,
++	1200000,
++	1250000,
++	1250000,
++	1300000,
++	1300000,
++	1350000,
++	1350000,
++	1400000,
++	1400000,
++	1450000,
++	1450000,
++	1500000,
+ };
+ 
+-static const uint16_t buck3_voltage_table[] = {
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1000,
+-	1100,
+-	1100,
+-	1100,
+-	1100,
+-	1200,
+-	1200,
+-	1200,
+-	1200,
+-	1300,
+-	1300,
+-	1300,
+-	1300,
+-	1400,
+-	1400,
+-	1400,
+-	1400,
+-	1500,
+-	1600,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
+-	3400,
++static const uint32_t buck3_voltage_table[] = {
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1000000,
++	1100000,
++	1100000,
++	1100000,
++	1100000,
++	1200000,
++	1200000,
++	1200000,
++	1200000,
++	1300000,
++	1300000,
++	1300000,
++	1300000,
++	1400000,
++	1400000,
++	1400000,
++	1400000,
++	1500000,
++	1600000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
++	3400000,
+ };
+ 
+-static const uint16_t buck4_voltage_table[] = {
+-	600,
+-	625,
+-	650,
+-	675,
+-	700,
+-	725,
+-	750,
+-	775,
+-	800,
+-	825,
+-	850,
+-	875,
+-	900,
+-	925,
+-	950,
+-	975,
+-	1000,
+-	1025,
+-	1050,
+-	1075,
+-	1100,
+-	1125,
+-	1150,
+-	1175,
+-	1200,
+-	1225,
+-	1250,
+-	1275,
+-	1300,
+-	1300,
+-	1350,
+-	1350,
+-	1400,
+-	1400,
+-	1450,
+-	1450,
+-	1500,
+-	1600,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
+-	3400,
+-	3500,
+-	3600,
+-	3700,
+-	3800,
+-	3900,
++static const uint32_t buck4_voltage_table[] = {
++	600000,
++	625000,
++	650000,
++	675000,
++	700000,
++	725000,
++	750000,
++	775000,
++	800000,
++	825000,
++	850000,
++	875000,
++	900000,
++	925000,
++	950000,
++	975000,
++	1000000,
++	1025000,
++	1050000,
++	1075000,
++	1100000,
++	1125000,
++	1150000,
++	1175000,
++	1200000,
++	1225000,
++	1250000,
++	1275000,
++	1300000,
++	1300000,
++	1350000,
++	1350000,
++	1400000,
++	1400000,
++	1450000,
++	1450000,
++	1500000,
++	1600000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
++	3400000,
++	3500000,
++	3600000,
++	3700000,
++	3800000,
++	3900000,
+ };
+ 
+-static const uint16_t ldo1_voltage_table[] = {
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
++static const uint32_t ldo1_voltage_table[] = {
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
+ };
+ 
+-static const uint16_t ldo2_voltage_table[] = {
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
++static const uint32_t ldo2_voltage_table[] = {
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
+ };
+ 
+-static const uint16_t ldo3_voltage_table[] = {
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
+-	3300,
+-	3300,
+-	3300,
+-	3300,
+-	3300,
+-	3300,
++static const uint32_t ldo3_voltage_table[] = {
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
++	3300000,
++	3300000,
++	3300000,
++	3300000,
++	3300000,
++	3300000,
+ #ifndef CFG_REGULATOR_DRIVERS
+ 	/* Old specific config to be replaced with ldo3_special_mode support */
+-	500,	/* VOUT2/2 (Sink/source mode) */
+-	0xFFFF, /* VREFDDR */
++	500000,	/* VOUT2/2 (Sink/source mode) */
++	~0, /* VREFDDR */
+ #endif
+ };
+ 
+ /* Special mode table is used for sink source OR bypass mode */
+-static const uint16_t ldo3_special_mode_table[] = {
++static const uint32_t ldo3_special_mode_table[] = {
+ 	0,
+ };
+ 
+-static const uint16_t ldo5_voltage_table[] = {
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
+-	3400,
+-	3500,
+-	3600,
+-	3700,
+-	3800,
+-	3900,
++static const uint32_t ldo5_voltage_table[] = {
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
++	3400000,
++	3500000,
++	3600000,
++	3700000,
++	3800000,
++	3900000,
+ };
+ 
+-static const uint16_t ldo6_voltage_table[] = {
+-	900,
+-	1000,
+-	1100,
+-	1200,
+-	1300,
+-	1400,
+-	1500,
+-	1600,
+-	1700,
+-	1800,
+-	1900,
+-	2000,
+-	2100,
+-	2200,
+-	2300,
+-	2400,
+-	2500,
+-	2600,
+-	2700,
+-	2800,
+-	2900,
+-	3000,
+-	3100,
+-	3200,
+-	3300,
++static const uint32_t ldo6_voltage_table[] = {
++	900000,
++	1000000,
++	1100000,
++	1200000,
++	1300000,
++	1400000,
++	1500000,
++	1600000,
++	1700000,
++	1800000,
++	1900000,
++	2000000,
++	2100000,
++	2200000,
++	2300000,
++	2400000,
++	2500000,
++	2600000,
++	2700000,
++	2800000,
++	2900000,
++	3000000,
++	3100000,
++	3200000,
++	3300000,
+ };
+ 
+-static const uint16_t ldo4_voltage_table[] = {
+-	3300,
++static const uint32_t ldo4_voltage_table[] = {
++	3300000,
+ };
+ 
+-static const uint16_t vref_ddr_voltage_table[] = {
+-	3300,
++static const uint32_t vref_ddr_voltage_table[] = {
++	3300000,
+ };
+ 
+-static const uint16_t fixed_5v_voltage_table[] = {
+-	5000,
++static const uint32_t fixed_5v_voltage_table[] = {
++	5000000,
+ };
+ 
+ /* Table of Regulators in PMIC SoC */
+@@ -614,7 +614,7 @@ static const struct regul_struct regulat
+ 
+ static const struct regul_struct *get_regulator_data(const char *name)
+ {
+-	unsigned int i = 0;
++	size_t i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(regulators_table); i++)
+ 		if (strcmp(name, regulators_table[i].dt_node_name) == 0)
+@@ -629,14 +629,14 @@ bool stpmic1_regulator_is_valid(const ch
+ 	return get_regulator_data(name);
+ }
+ 
+-static size_t voltage_to_index(const char *name, uint16_t millivolts)
++static size_t voltage_to_index(const char *name, uint32_t microvolts)
+ {
+ 	const struct regul_struct *regul = get_regulator_data(name);
+-	unsigned int i = 0;
++	size_t i;
+ 
+ 	assert(regul->voltage_table);
+ 	for (i = 0; i < regul->voltage_table_size; i++)
+-		if (regul->voltage_table[i] == millivolts)
++		if (regul->voltage_table[i] == microvolts)
+ 			return i;
+ 
+ 	return VOLTAGE_INDEX_INVALID;
+@@ -674,7 +674,7 @@ int stpmic1_regulator_disable(const char
+ bool stpmic1_is_regulator_enabled(const char *name)
+ {
+ 	const struct regul_struct *regul = get_regulator_data(name);
+-	uint8_t val = 0;
++	uint8_t val;
+ 
+ 	if (stpmic1_register_read(regul->control_reg, &val))
+ 		panic();
+@@ -694,11 +694,11 @@ static uint8_t find_plat_mask(const char
+ 	return 0;
+ }
+ 
+-int stpmic1_regulator_voltage_set(const char *name, uint16_t millivolts)
++int stpmic1_regulator_voltage_set(const char *name, uint32_t microvolts)
+ {
+-	size_t voltage_index = voltage_to_index(name, millivolts);
++	size_t voltage_index = voltage_to_index(name, microvolts);
+ 	const struct regul_struct *regul = get_regulator_data(name);
+-	uint8_t mask = 0;
++	uint8_t mask;
+ 
+ 	if (voltage_index == VOLTAGE_INDEX_INVALID)
+ 		return -1;
+@@ -811,8 +811,8 @@ bool stpmic1_regu_has_lp_cfg(const char
+ int stpmic1_lp_copy_reg(const char *name)
+ {
+ 	const struct regul_struct *regul = get_regulator_data(name);
+-	uint8_t val = 0;
+-	int status = 0;
++	uint8_t val;
++	int status;
+ 
+ 	if (!regul->low_power_reg)
+ 		return -1;
+@@ -835,11 +835,11 @@ int stpmic1_lp_reg_on_off(const char *na
+ 				       LDO_BUCK_ENABLE_MASK);
+ }
+ 
+-int stpmic1_lp_set_voltage(const char *name, uint16_t millivolts)
++int stpmic1_lp_set_voltage(const char *name, uint32_t microvolts)
+ {
+-	size_t voltage_index = voltage_to_index(name, millivolts);
++	size_t voltage_index = voltage_to_index(name, microvolts);
+ 	const struct regul_struct *regul = get_regulator_data(name);
+-	uint8_t mask = 0;
++	uint8_t mask;
+ 
+ 	assert(voltage_index != VOLTAGE_INDEX_INVALID);
+ 
+@@ -870,12 +870,12 @@ int stpmic1_bo_enable_unpg(struct stpmic
+ }
+ 
+ /* Returns 1 if no configuration are expected applied at runtime, 0 otherwise */
+-int stpmic1_bo_voltage_cfg(const char *name, uint16_t min_millivolt,
++int stpmic1_bo_voltage_cfg(const char *name, uint32_t min_microvolt,
+ 			   struct stpmic1_bo_cfg *cfg)
+ {
+-	size_t min_index = voltage_to_index(name, min_millivolt);
++	size_t min_index = voltage_to_index(name, min_microvolt);
+ 	const struct regul_struct *regul = get_regulator_data(name);
+-	uint8_t mask = 0;
++	uint8_t mask;
+ 
+ 	if (min_index == VOLTAGE_INDEX_INVALID)
+ 		panic();
+@@ -893,7 +893,7 @@ int stpmic1_bo_voltage_cfg(const char *n
+ 
+ int stpmic1_bo_voltage_unpg(struct stpmic1_bo_cfg *cfg)
+ {
+-	uint8_t value = 0;
++	uint8_t value;
+ 
+ 	assert(cfg->ctrl_reg);
+ 
+@@ -970,8 +970,8 @@ int stpmic1_lp_cfg(const char *name, str
+ 
+ int stpmic1_lp_load_unpg(struct stpmic1_lp_cfg *cfg)
+ {
+-	uint8_t val = 0;
+-	int status = 0;
++	uint8_t val;
++	int status;
+ 
+ 	assert(cfg->lp_reg);
+ 
+@@ -994,7 +994,7 @@ int stpmic1_lp_set_mode(const char *name
+ {
+ 	const struct regul_struct *regul = get_regulator_data(name);
+ 
+-	assert(regul->low_power_reg && (hplp == 0 || hplp == 1));
++	assert(regul->low_power_reg && hplp <= 1);
+ 
+ 	return stpmic1_register_update(regul->low_power_reg,
+ 				       hplp << LDO_BUCK_HPLP_POS,
+@@ -1003,19 +1003,19 @@ int stpmic1_lp_set_mode(const char *name
+ 
+ int stpmic1_lp_mode_unpg(struct stpmic1_lp_cfg *cfg, unsigned int mode)
+ {
+-	assert(cfg->lp_reg && (mode == 0 || mode == 1));
++	assert(cfg->lp_reg && mode <= 1);
+ 	return stpmic1_register_update(cfg->lp_reg,
+ 				       mode << LDO_BUCK_HPLP_POS,
+ 				       BIT(LDO_BUCK_HPLP_POS));
+ }
+ 
+ /* Returns 1 if no configuration are expected applied at runtime, 0 otherwise */
+-int stpmic1_lp_voltage_cfg(const char *name, uint16_t millivolts,
++int stpmic1_lp_voltage_cfg(const char *name, uint32_t microvolts,
+ 			   struct stpmic1_lp_cfg *cfg)
+ 
+ {
+-	size_t voltage_index = voltage_to_index(name, millivolts);
+-	uint8_t mask = 0;
++	size_t voltage_index = voltage_to_index(name, microvolts);
++	uint8_t mask;
+ 
+ 	mask = find_plat_mask(name);
+ 	if (!mask)
+@@ -1038,8 +1038,8 @@ int stpmic1_lp_voltage_unpg(struct stpmi
+ }
+ #endif
+ 
+-TEE_Result stpmic1_regulator_levels_mv(const char *name,
+-				       const uint16_t **levels,
++TEE_Result stpmic1_regulator_levels_uv(const char *name,
++				       const uint32_t **levels,
+ 				       size_t *levels_count)
+ {
+ 	const struct regul_struct *regul = get_regulator_data(name);
+@@ -1066,7 +1066,7 @@ int stpmic1_regulator_voltage_get(const
+ {
+ 	const struct regul_struct *regul = get_regulator_data(name);
+ 	uint8_t value = 0;
+-	uint8_t mask = 0;
++	uint8_t mask;
+ 
+ 	if ((strncmp(name, "ldo3", 4) == 0) && ldo3_special_mode)
+ 		return 0;
+@@ -1106,8 +1106,8 @@ int stpmic1_register_write(uint8_t regis
+ 
+ int stpmic1_register_update(uint8_t register_id, uint8_t value, uint8_t mask)
+ {
+-	int status = 0;
+-	uint8_t val = 0;
++	int status;
++	uint8_t val;
+ 
+ 	status = stpmic1_register_read(register_id, &val);
+ 	if (status)
+@@ -1126,15 +1126,16 @@ void stpmic1_bind_i2c(struct i2c_handle_
+ 
+ void stpmic1_dump_regulators(void)
+ {
+-	size_t i = 0;
+-	char __maybe_unused const *name = NULL;
++	size_t i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(regulators_table); i++) {
++		char __maybe_unused const *name = NULL;
++
+ 		if (!regulators_table[i].control_reg)
+ 			continue;
+ 
+ 		name = regulators_table[i].dt_node_name;
+-		DMSG("PMIC regul %s: %sable, %dmV",
++		DMSG("PMIC regul %s: %sable, %duV",
+ 		     name, stpmic1_is_regulator_enabled(name) ? "en" : "dis",
+ 		     stpmic1_regulator_voltage_get(name));
+ 	}
+@@ -1142,7 +1143,7 @@ void stpmic1_dump_regulators(void)
+ 
+ int stpmic1_get_version(unsigned long *version)
+ {
+-	uint8_t read_val = 0;
++	uint8_t read_val;
+ 
+ 	if (stpmic1_register_read(VERSION_STATUS_REG, &read_val))
+ 		return -1;
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stpmic2.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/drivers/stpmic2.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stpmic2.c
+@@ -12,11 +12,11 @@
+ #include <trace.h>
+ #include <util.h>
+ 
+-#define VOLTAGE_INDEX_INVALID		((size_t)~(U(0)))
++#define VOLTAGE_INDEX_INVALID		((size_t)~(0))
+ 
+ struct regul_struct {
+ 	const char *name;
+-	const uint16_t *volt_table;
++	const uint32_t *volt_table;
+ 	uint8_t volt_table_size;
+ 	uint8_t volt_cr;
+ 	uint8_t volt_shift;
+@@ -37,85 +37,85 @@ struct regul_struct {
+ #define LDO235678_VOLT_TABLE_SIZE 32
+ #define LDO_SINGLE_VOLT_TABLE_SIZE 1
+ 
+-/* Voltage tables in mV */
+-static const uint16_t buck1236_volt_table[BUCK_VOLT_TABLE_SIZE] = {
+-	U(500), U(510), U(520), U(530), U(540),
+-	U(550), U(560), U(570), U(580), U(590),
+-	U(600), U(610), U(620), U(630), U(640),
+-	U(650), U(660), U(670), U(680), U(690),
+-	U(700), U(710), U(720), U(730), U(740),
+-	U(750), U(760), U(770), U(780), U(790),
+-	U(800), U(810), U(820), U(830), U(840),
+-	U(850), U(860), U(870), U(880), U(890),
+-	U(900), U(910), U(920), U(930), U(940),
+-	U(950), U(960), U(970), U(980), U(990),
+-	U(1000), U(1010), U(1020), U(1030), U(1040),
+-	U(1050), U(1060), U(1070), U(1080), U(1090),
+-	U(1100), U(1110), U(1120), U(1130), U(1140),
+-	U(1150), U(1160), U(1170), U(1180), U(1190),
+-	U(1200), U(1210), U(1220), U(1230), U(1240),
+-	U(1250), U(1260), U(1270), U(1280), U(1290),
+-	U(1300), U(1310), U(1320), U(1330), U(1340),
+-	U(1350), U(1360), U(1370), U(1380), U(1390),
+-	U(1400), U(1410), U(1420), U(1430), U(1440),
+-	U(1450), U(1460), U(1470), U(1480), U(1490),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500)
++/* Voltage tables in µV */
++static const uint32_t buck1236_volt_table[BUCK_VOLT_TABLE_SIZE] = {
++	500000, 510000, 520000, 530000, 540000,
++	550000, 560000, 570000, 580000, 590000,
++	600000, 610000, 620000, 630000, 640000,
++	650000, 660000, 670000, 680000, 690000,
++	700000, 710000, 720000, 730000, 740000,
++	750000, 760000, 770000, 780000, 790000,
++	800000, 810000, 820000, 830000, 840000,
++	850000, 860000, 870000, 880000, 890000,
++	900000, 910000, 920000, 930000, 940000,
++	950000, 960000, 970000, 980000, 990000,
++	1000000, 1010000, 1020000, 1030000, 1040000,
++	1050000, 1060000, 1070000, 1080000, 1090000,
++	1100000, 1110000, 1120000, 1130000, 1140000,
++	1150000, 1160000, 1170000, 1180000, 1190000,
++	1200000, 1210000, 1220000, 1230000, 1240000,
++	1250000, 1260000, 1270000, 1280000, 1290000,
++	1300000, 1310000, 1320000, 1330000, 1340000,
++	1350000, 1360000, 1370000, 1380000, 1390000,
++	1400000, 1410000, 1420000, 1430000, 1440000,
++	1450000, 1460000, 1470000, 1480000, 1490000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000,
+ };
+ 
+-static const uint16_t buck457_volt_table[BUCK_VOLT_TABLE_SIZE] = {
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1500), U(1500), U(1500), U(1500),
+-	U(1500), U(1600), U(1700), U(1800), U(1900),
+-	U(2000), U(2100), U(2200), U(2300), U(2400),
+-	U(2500), U(2600), U(2700), U(2800), U(2900),
+-	U(3000), U(3100), U(3200), U(3300), U(3400),
+-	U(3500), U(3600), U(3700), U(3800), U(3900),
+-	U(4000), U(4100), U(4200)
++static const uint32_t buck457_volt_table[BUCK_VOLT_TABLE_SIZE] = {
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1500000, 1500000, 1500000, 1500000,
++	1500000, 1600000, 1700000, 1800000, 1900000,
++	2000000, 2100000, 2200000, 2300000, 2400000,
++	2500000, 2600000, 2700000, 2800000, 2900000,
++	3000000, 3100000, 3200000, 3300000, 3400000,
++	3500000, 3600000, 3700000, 3800000, 3900000,
++	4000000, 4100000, 4200000,
+ };
+ 
+-static const uint16_t ldo235678_volt_table[LDO235678_VOLT_TABLE_SIZE] = {
+-	U(900), U(1000), U(1100), U(1200), U(1300),
+-	U(1400), U(1500), U(1600), U(1700), U(1800),
+-	U(1900), U(2000), U(2100), U(2200), U(2300),
+-	U(2400), U(2500), U(2600), U(2700), U(2800),
+-	U(2900), U(3000), U(3100), U(3200), U(3300),
+-	U(3400), U(3500), U(3600), U(3700), U(3800),
+-	U(3900), U(4000)
++static const uint32_t ldo235678_volt_table[LDO235678_VOLT_TABLE_SIZE] = {
++	900000, 1000000, 1100000, 1200000, 1300000,
++	1400000, 1500000, 1600000, 1700000, 1800000,
++	1900000, 2000000, 2100000, 2200000, 2300000,
++	2400000, 2500000, 2600000, 2700000, 2800000,
++	2900000, 3000000, 3100000, 3200000, 3300000,
++	3400000, 3500000, 3600000, 3700000, 3800000,
++	3900000, 4000000,
+ };
+ 
+-static const uint16_t ldo1_volt_table[LDO_SINGLE_VOLT_TABLE_SIZE] = {
+-	U(1800),
++static const uint32_t ldo1_volt_table[LDO_SINGLE_VOLT_TABLE_SIZE] = {
++	1800000,
+ };
+ 
+-static const uint16_t ldo4_volt_table[LDO_SINGLE_VOLT_TABLE_SIZE] = {
+-	U(3300),
++static const uint32_t ldo4_volt_table[LDO_SINGLE_VOLT_TABLE_SIZE] = {
++	3300000,
+ };
+ 
+-static const uint16_t refddr_volt_table[LDO_SINGLE_VOLT_TABLE_SIZE] = {
+-	U(0),
++static const uint32_t refddr_volt_table[LDO_SINGLE_VOLT_TABLE_SIZE] = {
++	0,
+ };
+ 
+ #define DEFINE_BUCK(regu_name, ID, pd, table) { \
+@@ -218,7 +218,7 @@ TEE_Result stpmic2_register_read(struct
+ 	stm32_i2c_read_write_membyte(pmic->pmic_i2c_handle,
+ 				     pmic->pmic_i2c_addr,
+ 				     register_id, value,
+-				     false /* !write */);
++				     false /* read */);
+ 	if (res) {
+ 		EMSG("Failed to read reg:0x%x", register_id);
+ 		return TEE_ERROR_COMMUNICATION;
+@@ -252,7 +252,7 @@ TEE_Result stpmic2_register_update(struc
+ 				   uint8_t mask)
+ {
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint8_t val = U(0);
++	uint8_t val = 0;
+ 
+ 	res = stpmic2_register_read(pmic, register_id, &val);
+ 	if (res)
+@@ -273,10 +273,10 @@ TEE_Result stpmic2_regulator_set_state(s
+ 
+ 	if (enable)
+ 		return stpmic2_register_update(pmic,
+-					       regul->en_cr, U(1), U(1));
++					       regul->en_cr, 1, 1);
+ 	else
+ 		return stpmic2_register_update(pmic,
+-					       regul->en_cr, U(0), U(1));
++					       regul->en_cr, 0, 1);
+ }
+ 
+ TEE_Result stpmic2_regulator_get_state(struct pmic_handle_s *pmic,
+@@ -284,19 +284,19 @@ TEE_Result stpmic2_regulator_get_state(s
+ {
+ 	const struct regul_struct *regul = &regul_table[id];
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+-	uint8_t val = U(0);
++	uint8_t val = 0;
+ 
+ 	res = stpmic2_register_read(pmic, regul->en_cr, &val);
+ 	if (res)
+ 		return res;
+ 
+-	*enabled = (val & U(1)) == U(1);
++	*enabled = (val & 1) == 1;
+ 
+ 	return TEE_SUCCESS;
+ }
+ 
+-TEE_Result stpmic2_regulator_levels_mv(struct pmic_handle_s *pmic __unused,
+-				       uint8_t id, const uint16_t **levels,
++TEE_Result stpmic2_regulator_levels_uv(struct pmic_handle_s *pmic __unused,
++				       uint8_t id, const uint32_t **levels,
+ 				       size_t *levels_count)
+ {
+ 	const struct regul_struct *regul = &regul_table[id];
+@@ -313,16 +313,16 @@ TEE_Result stpmic2_regulator_levels_mv(s
+ }
+ 
+ TEE_Result stpmic2_regulator_get_voltage(struct pmic_handle_s *pmic,
+-					 uint8_t id, uint16_t *val)
++					 uint8_t id, uint32_t *val)
+ {
+ 	const struct regul_struct *regul = &regul_table[id];
+-	uint8_t value = U(0);
+-	uint8_t mask = U(0);
++	uint8_t value = 0;
++	uint8_t mask = 0;
+ 
+ 	if (regul->volt_table_size == 0)
+ 		return TEE_ERROR_GENERIC;
+ 
+-	mask = regul->volt_table_size - U(1);
++	mask = regul->volt_table_size - 1;
+ 	if (mask) {
+ 		TEE_Result res = stpmic2_register_read(pmic, regul->volt_cr,
+ 						       &value);
+@@ -341,31 +341,31 @@ TEE_Result stpmic2_regulator_get_voltage
+ }
+ 
+ static size_t voltage_to_index(const struct regul_struct *regul,
+-			       uint16_t millivolts)
++			       uint32_t microvolts)
+ {
+ 	unsigned int i = 0;
+ 
+ 	assert(regul->volt_table);
+ 	for (i = 0; i < regul->volt_table_size; i++)
+-		if (regul->volt_table[i] == millivolts)
++		if (regul->volt_table[i] == microvolts)
+ 			return i;
+ 
+ 	return VOLTAGE_INDEX_INVALID;
+ }
+ 
+ TEE_Result stpmic2_regulator_set_voltage(struct pmic_handle_s *pmic,
+-					 uint8_t id, uint16_t millivolts)
++					 uint8_t id, uint32_t microvolts)
+ {
+ 	const struct regul_struct *regul = &regul_table[id];
+-	size_t index = U(0);
+-	uint8_t mask = U(0);
++	size_t index = 0;
++	uint8_t mask = 0;
+ 
+ 	if (!regul->volt_table_size)
+ 		return TEE_SUCCESS;
+ 
+-	mask = regul->volt_table_size - U(1);
++	mask = regul->volt_table_size - 1;
+ 
+-	index = voltage_to_index(regul, millivolts);
++	index = voltage_to_index(regul, microvolts);
+ 	if (index == VOLTAGE_INDEX_INVALID)
+ 		return TEE_ERROR_BAD_PARAMETERS;
+ 
+@@ -393,7 +393,7 @@ TEE_Result stpmic2_regulator_get_prop(st
+ {
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+ 	const struct regul_struct *regul = &regul_table[id];
+-	uint8_t val = U(0);
++	uint8_t val = 0;
+ 
+ 	DMSG("%s: get prop 0x%x", regul->name, prop);
+ 
+@@ -448,7 +448,7 @@ TEE_Result stpmic2_regulator_set_prop(st
+ 
+ 		/* clear sink source mode */
+ 		if (id == STPMIC2_LDO3) {
+-			res = stpmic2_update_en_crs(pmic, id, U(0),
++			res = stpmic2_update_en_crs(pmic, id, 0,
+ 						    LDO3_SNK_SRC);
+ 			if (res)
+ 				return res;
+@@ -457,14 +457,14 @@ TEE_Result stpmic2_regulator_set_prop(st
+ 		/* set or reset bypass mode */
+ 		return stpmic2_update_en_crs(pmic, id,
+ 					     (arg == PROP_BYPASS_SET) ?
+-						LDO_BYPASS : U(0),
++						LDO_BYPASS : 0,
+ 					     LDO_BYPASS);
+ 	case STPMIC2_SINK_SOURCE:
+ 		if (id != STPMIC2_LDO3)
+ 			return TEE_ERROR_BAD_PARAMETERS;
+ 
+ 		/* clear bypass mode */
+-		res = stpmic2_update_en_crs(pmic, id, U(0), LDO_BYPASS);
++		res = stpmic2_update_en_crs(pmic, id, 0, LDO_BYPASS);
+ 		if (res)
+ 			return res;
+ 
+@@ -473,7 +473,7 @@ TEE_Result stpmic2_regulator_set_prop(st
+ 	case STPMIC2_OCP:
+ 		/* enable mask reset */
+ 		return stpmic2_register_update(pmic, regul->ocp_reg,
+-					       U(0), regul->ocp_mask);
++					       0, regul->ocp_mask);
+ 	case STPMIC2_PWRCTRL_EN:
+ 		/* set pwrctrl enable, disable pwrctrl reset */
+ 		return stpmic2_register_update(pmic, regul->pwrctrl_cr,
+@@ -525,15 +525,15 @@ TEE_Result stpmic2_regulator_set_prop(st
+ 
+ void stpmic2_dump_regulators(struct pmic_handle_s *pmic)
+ {
+-	size_t i = U(0);
++	size_t i;
+ 	char __maybe_unused const *name = NULL;
+ 
+ 	assert(pmic);
+ 
+-	for (i = U(0); i < ARRAY_SIZE(regul_table); i++) {
+-		uint16_t val = U(0);
++	for (i = 0; i < ARRAY_SIZE(regul_table); i++) {
++		uint32_t val = 0;
+ 		bool state = false;
+-		uint8_t arg = U(0);
++		uint8_t arg = 0;
+ 
+ 		if (!regul_table[i].volt_cr)
+ 			continue;
+@@ -543,7 +543,7 @@ void stpmic2_dump_regulators(struct pmic
+ 		stpmic2_regulator_get_prop(pmic, i, STPMIC2_BYPASS, &arg);
+ 
+ 		name = regul_table[i].name;
+-		DMSG("PMIC regul %s: %s%s, %dmV", name,
++		DMSG("PMIC regul %s: %s%s, %duV", name,
+ 		     state ? "EN" : "DIS",
+ 		     arg == PROP_BYPASS_SET ? " BYPASS" : "",  val);
+ 	}
+@@ -571,25 +571,25 @@ TEE_Result stpmic2_lp_set_state(struct p
+ 
+ 	if (enable)
+ 		return stpmic2_register_update(pmic,
+-					       regul->alt_en_cr, U(1), U(1));
++					       regul->alt_en_cr, 1, 1);
+ 	else
+ 		return stpmic2_register_update(pmic,
+-					       regul->alt_en_cr, U(0), U(1));
++					       regul->alt_en_cr, 0, 1);
+ }
+ 
+ TEE_Result stpmic2_lp_set_voltage(struct pmic_handle_s *pmic, uint8_t id,
+-				  uint16_t mv)
++				  uint32_t uv)
+ {
+ 	const struct regul_struct *regul = &regul_table[id];
+-	size_t index = U(0);
+-	uint8_t mask = U(0);
++	size_t index;
++	uint8_t mask;
+ 
+ 	if (!regul->volt_table_size)
+ 		return TEE_SUCCESS;
+ 
+-	mask = regul->volt_table_size - U(1);
++	mask = regul->volt_table_size - 1;
+ 
+-	index = voltage_to_index(regul, mv);
++	index = voltage_to_index(regul, uv);
+ 	if (index == VOLTAGE_INDEX_INVALID)
+ 		return TEE_ERROR_GENERIC;
+ 
+@@ -606,17 +606,17 @@ TEE_Result stpmic2_lp_set_voltage(struct
+ TEE_Result stpmic2_set_irq_mask(struct pmic_handle_s *pmic, uint8_t num,
+ 				bool state)
+ {
+-	uint8_t reg = INT_MASK_R1 + num / U(8);
+-	uint8_t mask = BIT(num % U(8));
+-	uint8_t val = state ? mask : U(0);
++	uint8_t reg = INT_MASK_R1 + num / 8;
++	uint8_t mask = BIT(num % 8);
++	uint8_t val = state ? mask : 0;
+ 
+ 	return stpmic2_register_update(pmic, reg, val, mask);
+ }
+ 
+ TEE_Result stpmic2_irq_gen(struct pmic_handle_s *pmic, uint8_t num)
+ {
+-	uint8_t reg = INT_DBG_LATCH_R1 + num / U(8);
+-	uint8_t mask = BIT(num % U(8));
++	uint8_t reg = INT_DBG_LATCH_R1 + num / 8;
++	uint8_t mask = BIT(num % 8);
+ 
+ 	return stpmic2_register_update(pmic, reg, mask, mask);
+ }
+@@ -624,18 +624,18 @@ TEE_Result stpmic2_irq_gen(struct pmic_h
+ static void stpmic2_handle_irq_reg(struct pmic_handle_s *pmic,
+ 				   uint8_t reg_index, uint8_t val)
+ {
+-	int i = 0;
++	int i;
+ 
+ 	for (i = 0; i < 7; i++) {
+ 		if (val & BIT(i)) {
+-			uint8_t it_id = reg_index * U(8) + i;
++			uint8_t it_id = reg_index * 8 + i;
+ 			enum itr_return res;
+ 
+ 			res = stpmic2_irq_callback(pmic, it_id);
+ 
+ 			/* handle over-current protection */
+ 			if (res != ITRR_HANDLED && it_id >= IT_BUCK1_OCP) {
+-				uint8_t regu_id = (reg_index - U(2)) * U(8) + i;
++				uint8_t regu_id = (reg_index - 2) * 8 + i;
+ 
+ 				EMSG("Overcurrent on %s, disable regulator",
+ 				     regul_table[regu_id].name);
+@@ -650,8 +650,8 @@ static void stpmic2_handle_irq_reg(struc
+ 
+ int stpmic2_handle_irq(struct pmic_handle_s *pmic)
+ {
+-	uint8_t read_val = U(0);
+-	int i = 0;
++	uint8_t read_val;
++	int i;
+ 
+ 	FMSG("Stpmic2 irq handler");
+ 
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stpmic2.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/drivers/stpmic2.h
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/drivers/stpmic2.h
+@@ -294,13 +294,13 @@ TEE_Result stpmic2_regulator_set_state(s
+ TEE_Result stpmic2_regulator_get_state(struct pmic_handle_s *pmic,
+ 				       uint8_t id, bool *enabled);
+ 
+-TEE_Result stpmic2_regulator_levels_mv(struct pmic_handle_s *pmic,
+-				       uint8_t id, const uint16_t **levels,
++TEE_Result stpmic2_regulator_levels_uv(struct pmic_handle_s *pmic,
++				       uint8_t id, const uint32_t **levels,
+ 				       size_t *levels_count);
+ TEE_Result stpmic2_regulator_get_voltage(struct pmic_handle_s *pmic,
+-					 uint8_t id, uint16_t *val);
++					 uint8_t id, uint32_t *val);
+ TEE_Result stpmic2_regulator_set_voltage(struct pmic_handle_s *pmic,
+-					 uint8_t id, uint16_t millivolts);
++					 uint8_t id, uint32_t microvolts);
+ 
+ TEE_Result stpmic2_regulator_get_prop(struct pmic_handle_s *pmic, uint8_t id,
+ 				      enum stpmic2_prop_id prop, uint8_t *arg);
+@@ -315,7 +315,7 @@ TEE_Result stpmic2_get_product_id(struct
+ TEE_Result stpmic2_lp_set_state(struct pmic_handle_s *pmic, uint8_t id,
+ 				bool enable);
+ TEE_Result stpmic2_lp_set_voltage(struct pmic_handle_s *pmic, uint8_t id,
+-				  uint16_t mv);
++				  uint32_t uv);
+ 
+ /* Interrupt Handling */
+ enum itr_return stpmic2_irq_callback(struct pmic_handle_s *pmic, uint8_t it_id);
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/stm32_regu_consumer/src/mod_stm32_regu_consumer.c
+@@ -134,17 +134,17 @@ static int stm32_regu_consumer_set_confi
+ static int stm32_regu_consumer_get_level(fwk_id_t dev_id, int *level_uv)
+ {
+     struct stm32_regu_consumer_dev_ctx *ctx;
+-    uint16_t level_mv;
++    uint32_t cur_level;
+     int ret;
+ 
+     ret = find_ctx(dev_id, &ctx);
+     if (ret)
+ 	return ret;
+ 
+-    if (regulator_get_voltage(ctx->rdev, &level_mv))
++    if (regulator_get_voltage(ctx->rdev, &cur_level))
+ 	return FWK_E_PANIC;
+ 
+-    *level_uv = (int)level_mv * 1000;
++    *level_uv = cur_level;
+ 
+     DEBUG_MSG("SCMI voltd %u: get level PMIC %s = %d",
+ 	      fwk_id_get_element_idx(dev_id), regu_name(ctx->rdev), *level_uv);
+@@ -161,7 +161,7 @@ static int stm32_regu_consumer_set_level
+     if (ret)
+ 	return ret;
+ 
+-    if (regulator_set_voltage(ctx->rdev, level_uv / 1000))
++    if (regulator_set_voltage(ctx->rdev, level_uv))
+ 	return FWK_E_DEVICE;
+ 
+     DEBUG_MSG("SCMI voltd %u: set level PMIC %s to %d",
+@@ -170,13 +170,13 @@ static int stm32_regu_consumer_set_level
+     return FWK_SUCCESS;
+ }
+ 
+-static void find_bound_uv(const uint16_t *levels, size_t count,
+-			  int32_t *min, int32_t *max)
++static void find_bound_uv(const uint32_t *levels, size_t count,
++			  uint32_t *min, uint32_t *max)
+ {
+     size_t n;
+ 
+-    *min = INT32_MAX;
+-    *max = INT32_MIN;
++    *min = UINT32_MAX;
++    *max = 0;
+ 
+     for (n = 0; n < count; n++) {
+ 	if (*min > levels[n]) {
+@@ -186,17 +186,13 @@ static void find_bound_uv(const uint16_t
+ 	    *max = levels[n];
+ 	}
+     }
+-
+-    /* Convert from mV to uV */
+-    *min *= 1000;
+-    *max *= 1000;
+ }
+ 
+ static int stm32_regu_consumer_get_info(fwk_id_t dev_id,
+ 					struct mod_voltd_info *info)
+ {
+     struct stm32_regu_consumer_dev_ctx *ctx;
+-    uint16_t *levels;
++    uint32_t *levels;
+     size_t full_count;
+     int ret;
+ 
+@@ -239,7 +235,7 @@ static int stm32_regu_consumer_level_fro
+ 						int32_t *level_uv)
+ {
+     struct stm32_regu_consumer_dev_ctx *ctx;
+-    uint16_t *levels;
++    uint32_t *levels;
+     size_t full_count;
+     int ret;
+ 
+@@ -262,7 +258,7 @@ static int stm32_regu_consumer_level_fro
+     if (index >= full_count)
+ 	return FWK_E_RANGE;
+ 
+-    *level_uv = (int32_t)levels[index] * 1000;
++    *level_uv = levels[index];
+ 
+     DEBUG_MSG("SCMI voltd %u: get level PMIC %s = %"PRId32,
+ 	      fwk_id_get_element_idx(dev_id), regu_name(ctx->rdev), *level_uv);
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
+@@ -93,16 +93,15 @@ static int psu_optee_regulator_set_volta
+ {
+     TEE_Result res;
+     struct rdev *regulator;
+-    uint16_t level_mv = voltage;
+ 
+     regulator = get_regulator(id);
+     if (!regulator)
+ 	return FWK_E_PARAM;
+ 
+-    DEBUG_MSG("PSU set regulator %s level: %"PRIu32"mV",
+-	      regulator_name(regulator), (uint32_t)level_mv);
++    DEBUG_MSG("PSU set regulator %s level: %"PRIu32"uV",
++	      regulator_name(regulator), voltage);
+ 
+-    res = regulator_set_voltage(regulator, level_mv);
++    res = regulator_set_voltage(regulator, voltage);
+ 
+     return res ? FWK_E_HANDLER : FWK_SUCCESS;
+ }
+@@ -111,23 +110,17 @@ static int psu_optee_regulator_get_volta
+ {
+     TEE_Result res;
+     struct rdev *regulator;
+-    uint16_t level_mv;
+ 
+     regulator = get_regulator(id);
+     if (!regulator || !voltage)
+ 	return FWK_E_PARAM;
+ 
+-    res = regulator_get_voltage(regulator, &level_mv);
++    res = regulator_get_voltage(regulator, voltage);
+ 
+-    DEBUG_MSG("PSU get regulator %s level: %"PRIu32"mV (res %#"PRIx32")",
+-	      regulator_name(regulator), (uint32_t)level_mv, res);
++    DEBUG_MSG("PSU get regulator %s level: %"PRIu32"uV (res %#"PRIx32")",
++	      regulator_name(regulator), *voltage, res);
+ 
+-    if (res)
+-	return FWK_E_HANDLER;
+-
+-    *voltage = level_mv;
+-
+-    return FWK_SUCCESS;
++    return res ? FWK_E_HANDLER : FWK_SUCCESS;
+ }
+ 
+ static struct mod_psu_driver_api psu_driver_api = {
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/voltage_domain/include/mod_voltage_domain.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/module/voltage_domain/include/mod_voltage_domain.h
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/voltage_domain/include/mod_voltage_domain.h
+@@ -92,17 +92,17 @@ struct mod_voltd_range {
+     enum mod_voltd_voltage_level_type level_type;
+ 
+     /*! Minimum voltage level (in uV) */
+-    int32_t min_uv;
++    uint32_t min_uv;
+ 
+     /*! Maximum voltage level (in uV) */
+-    int32_t max_uv;
++    uint32_t max_uv;
+ 
+     /*!
+      * The number of uV by which the level can be incremented at each step
+      * throughout the domain's range. Valid only when level_type is equal to
+      * \ref mod_voltd_voltage_level_type.MOD_VOLTD_VOLTAGE_LEVEL_CONTINUOUS.
+      */
+-    int32_t step_uv;
++    uint32_t step_uv;
+ 
+     /*! The number of unique voltage levels that the domain can attain */
+     size_t level_count;
+Index: optee-os-qsmp-2550/core/drivers/clk/clk-stm32mp15.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/drivers/clk/clk-stm32mp15.c
++++ optee-os-qsmp-2550/core/drivers/clk/clk-stm32mp15.c
+@@ -1405,20 +1405,20 @@ void stm32mp1_clk_mcuss_protect(bool ena
+ }
+ 
+ /*
+- * Gets OPP parameters (frequency in KHz and voltage in mV) from an OPP table
++ * Gets OPP parameters (frequency in KHz and voltage in uV) from an OPP table
+  * subnode. Platform HW support capabilities are also checked.
+  */
+ static int get_opp_freqvolt_from_dt_subnode(void *fdt, int subnode,
+ 					    uint32_t *freq_khz,
+-					    uint32_t *voltage_mv)
++					    uint32_t *voltage_uv)
+ {
+-	const fdt64_t *cuint64 = NULL;
+-	const fdt32_t *cuint32 = NULL;
+-	uint64_t read_freq_64 = 0;
+-	uint32_t read_voltage_32 = 0;
++	const fdt64_t *cuint64;
++	const fdt32_t *cuint32;
++	uint64_t read_freq_64;
++	uint32_t read_voltage_32;
+ 
+ 	assert(freq_khz);
+-	assert(voltage_mv);
++	assert(voltage_uv);
+ 
+ 	cuint32 = fdt_getprop(fdt, subnode, "opp-supported-hw", NULL);
+ 	if (cuint32)
+@@ -1447,8 +1447,7 @@ static int get_opp_freqvolt_from_dt_subn
+ 		return -FDT_ERR_NOTFOUND;
+ 	}
+ 
+-	/* Millivolt value must fit on 16 bits */
+-	read_voltage_32 = fdt32_to_cpu(*cuint32) / 1000U;
++	read_voltage_32 = fdt32_to_cpu(*cuint32);
+ 	if (read_voltage_32 > UINT16_MAX) {
+ 		DMSG("Invalid opp-microvolt %"PRIu32, read_voltage_32);
+ 		return -FDT_ERR_BADVALUE;
+@@ -1456,7 +1455,7 @@ static int get_opp_freqvolt_from_dt_subn
+ 
+ 	*freq_khz = (uint32_t)read_freq_64;
+ 
+-	*voltage_mv = read_voltage_32;
++	*voltage_uv = read_voltage_32;
+ 
+ 	return 0;
+ }
+Index: optee-os-qsmp-2550/core/include/drivers/stpmic1.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/include/drivers/stpmic1.h
++++ optee-os-qsmp-2550/core/include/drivers/stpmic1.h
+@@ -134,8 +134,8 @@
+ #define VREF_DDR_MASK_RESET_SHIFT	6
+ 
+ /* LDO3 Special modes */
+-#define LDO3_BYPASS                     BIT(7)
+-#define LDO3_DDR_SEL                    31U
++#define LDO3_BYPASS			BIT(7)
++#define LDO3_DDR_SEL			31U
+ 
+ /* Main PMIC Control Register (MAIN_CONTROL_REG) */
+ #define ICC_EVENT_ENABLED		BIT(4)
+@@ -153,7 +153,7 @@
+ 
+ /* Main PMIC VINLOW Control Register (VIN_CONTROL_REGC DMSC) */
+ #define SWIN_DETECTOR_ENABLED		BIT(7)
+-#define SWOUT_DETECTOR_ENABLED          BIT(6)
++#define SWOUT_DETECTOR_ENABLED		BIT(6)
+ #define VINLOW_HYST_MASK		GENMASK_32(5, 4)
+ #define VINLOW_HYST_SHIFT		4
+ #define VINLOW_THRESHOLD_MASK		GENMASK_32(3, 1)
+@@ -200,7 +200,7 @@ bool stpmic1_regu_has_lp_cfg(const char
+ int stpmic1_lp_copy_reg(const char *name);
+ int stpmic1_lp_reg_on_off(const char *name, uint8_t enable);
+ int stpmic1_lp_set_mode(const char *name, uint8_t hplp);
+-int stpmic1_lp_set_voltage(const char *name, uint16_t millivolts);
++int stpmic1_lp_set_voltage(const char *name, uint32_t microvolts);
+ 
+ #ifdef CFG_STM32MP15
+ /*
+@@ -242,7 +242,7 @@ struct stpmic1_lp_cfg {
+ 
+ int stpmic1_bo_enable_cfg(const char *name, struct stpmic1_bo_cfg *cfg);
+ int stpmic1_bo_enable_unpg(struct stpmic1_bo_cfg *cfg);
+-int stpmic1_bo_voltage_cfg(const char *name, uint16_t min_millivolt,
++int stpmic1_bo_voltage_cfg(const char *name, uint32_t min_microvolt,
+ 			   struct stpmic1_bo_cfg *cfg);
+ int stpmic1_bo_voltage_unpg(struct stpmic1_bo_cfg *cfg);
+ 
+@@ -258,7 +258,7 @@ int stpmic1_lp_load_unpg(struct stpmic1_
+ int stpmic1_lp_on_off_unpg(struct stpmic1_lp_cfg *cfg, int enable);
+ int stpmic1_lp_mode_unpg(struct stpmic1_lp_cfg *cfg,
+ 			 unsigned int mode);
+-int stpmic1_lp_voltage_cfg(const char *name, uint16_t millivolts,
++int stpmic1_lp_voltage_cfg(const char *name, uint32_t microvolts,
+ 			   struct stpmic1_lp_cfg *cfg);
+ int stpmic1_lp_voltage_unpg(struct stpmic1_lp_cfg *cfg);
+ #endif /* CFG_STM32MP15 */
+Index: optee-os-qsmp-2550/core/include/drivers/stpmic1_regulator.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/include/drivers/stpmic1_regulator.h
++++ optee-os-qsmp-2550/core/include/drivers/stpmic1_regulator.h
+@@ -32,26 +32,26 @@ int stpmic1_regulator_disable(const char
+ bool stpmic1_is_regulator_enabled(const char *name);
+ 
+ /*
+- * Retrieve regulator levels array (in millivolts) and/or levels count
++ * Retrieve regulator levels array (in microvolts) and/or levels count
+  * @name: regulator identifier
+  * @levels: output reference for an arrays of the supported levels, or NULL
+  * @levels_count: output reference for number of supported levels, or NULL
+  */
+-TEE_Result stpmic1_regulator_levels_mv(const char *name,
+-				       const uint16_t **levels,
++TEE_Result stpmic1_regulator_levels_uv(const char *name,
++				       const uint32_t **levels,
+ 				       size_t *levels_count);
+ 
+ /*
+- * Set voltage level @millivolt for target regulator @name
++ * Set voltage level @microvolt for target regulator @name
+  * @name: regulator identifier
+- * @millivot: target voltage level, in mV
++ * @microvolt: target voltage level, in uv
+  */
+-int stpmic1_regulator_voltage_set(const char *name, uint16_t millivolts);
++int stpmic1_regulator_voltage_set(const char *name, uint32_t microvolts);
+ 
+ /*
+- * Get current voltage level (in millivolt) for target regulator @name
++ * Get current voltage level (in microvolt) for target regulator @name
+  * @name: regulator identifier
+- * Return a positive millivolt level on success or a negative value on error
++ * Return a positive microvolt level on success or a negative value on error
+  */
+ int stpmic1_regulator_voltage_get(const char *name);
+ 
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/include/mod_dvfs.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/module/dvfs/include/mod_dvfs.h
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/include/mod_dvfs.h
+@@ -31,7 +31,7 @@
+  */
+ struct mod_dvfs_opp {
+     uint32_t level; /*!< Level value of the OPP */
+-    uint32_t voltage; /*!< Power supply voltage in millivolts (mV) */
++    uint32_t voltage; /*!< Power supply voltage in microvolts (µV) */
+     uint32_t frequency; /*!< Clock rate in Hertz (Hz) */
+     uint32_t power; /*!< Power draw in milliwatts (mW) */
+ };
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/mock_psu/include/mod_mock_psu.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/module/mock_psu/include/mod_mock_psu.h
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/mock_psu/include/mod_mock_psu.h
+@@ -90,7 +90,7 @@ struct mod_mock_psu_element_cfg {
+     bool default_enabled;
+ 
+     /*!
+-     * \brief Default voltage, in millivolts (mV), of the device's supply.
++     * \brief Default voltage, in microvolts (µV), of the device's supply.
+      */
+     uint32_t default_voltage;
+ };
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/psu/include/mod_psu.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/module/psu/include/mod_psu.h
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/psu/include/mod_psu.h
+@@ -153,7 +153,7 @@ struct mod_psu_device_api {
+      * \brief Get the voltage of a device.
+      *
+      * \param[in] device_id Identifier of the device to get the voltage of.
+-     * \param[out] voltage Voltage in millivolts (mV).
++     * \param[out] voltage Voltage in microvolts (µV).
+      *
+      * \retval ::FWK_E_HANDLER An error occurred in the device driver.
+      * \retval ::FWK_E_PARAM One or more parameters were invalid.
+@@ -168,7 +168,7 @@ struct mod_psu_device_api {
+      * \brief Set the voltage of a device.
+      *
+      * \param[in] device_id Identifier of the device to set the voltage of.
+-     * \param[in] voltage New voltage in millivolts (mV).
++     * \param[in] voltage New voltage in microvolts (µV).
+      *
+      * \retval ::FWK_E_HANDLER An error occurred in the device driver.
+      * \retval ::FWK_E_PARAM One or more parameters were invalid.
+@@ -217,7 +217,7 @@ struct mod_psu_response {
+ 	bool enabled;
+ 
+ 	/*!
+-	 * \brief Voltage in millivolts (mV).
++	 * \brief Voltage in microvolts (µV).
+ 	 *
+ 	 * \warning Used only in response to a ::mod_psu_device_api::get_voltage
+ 	 *      call.
+@@ -307,7 +307,7 @@ struct mod_psu_driver_api {
+      * \brief Get the voltage of a device.
+      *
+      * \param[in] id Identifier of the device to get the voltage of.
+-     * \param[out] voltage Voltage in millivolts (mV).
++     * \param[out] voltage Voltage in microvolts (µV).
+      *
+      * \retval ::FWK_E_HANDLER The operation failed.
+      * \retval ::FWK_PENDING The result of the operation is pending.
+@@ -321,7 +321,7 @@ struct mod_psu_driver_api {
+      * \brief Set the voltage of a device.
+      *
+      * \param[in] id Identifier of the device to set the voltage of.
+-     * \param[in] voltage New voltage in millivolts (mV).
++     * \param[in] voltage New voltage in microvolts (µV).
+      *
+      * \retval ::FWK_E_HANDLER The operation failed.
+      * \retval ::FWK_PENDING The result of the operation is pending.
+@@ -361,7 +361,7 @@ struct mod_psu_driver_response {
+ 	bool enabled;
+ 
+ 	/*!
+-	 * \brief Voltage in millivolts (mV).
++	 * \brief Voltage in microvolts (µV).
+ 	 *
+ 	 * \warning Used only in response to a
+ 	 *      ::mod_psu_driver_api::get_voltage call.
+Index: optee-os-qsmp-2550/core/lib/scmi-server/include/scmi_agent_configuration.h
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/include/scmi_agent_configuration.h
++++ optee-os-qsmp-2550/core/lib/scmi-server/include/scmi_agent_configuration.h
+@@ -51,22 +51,22 @@ struct scmi_voltd {
+ /*
+  * struct scmi_perfd - DVFS/performance domaindescription
+  * @name: DVFS name
+- * @dvfs_opp_count: Number of cells in @dvfs_opp_khz and @dvfs_opp_mv
++ * @dvfs_opp_count: Number of cells in @dvfs_opp_khz and @dvfs_opp_uv
+  * @initial_opp: Initial operating point
+  * @dvfs_opp_khz: Operating point frequencies in Hertz
+- * @dvfs_opp_mv: Operating point voltage levels in millivolts
++ * @dvfs_opp_uv: Operating point voltage levels in microvolts
+  * @clk: Clock used by the DVFS service
+  * @rdev: Regulator used by the DVFS service
+  *
+  * SCP firmware configuration expects array couple @dvfs_opp_khz and
+- * @dvfs_opp_mv values are ordered by increasing performance operating points.
++ * @dvfs_opp_uv values are ordered by increasing performance operating points.
+  */
+ struct scmi_perfd {
+ 	const char *name;
+ 	size_t dvfs_opp_count;
+ 	size_t initial_opp;
+ 	unsigned int *dvfs_opp_khz;
+-	unsigned int *dvfs_opp_mv;
++	unsigned int *dvfs_opp_uv;
+ 	struct clk *clk;
+ 	struct rdev *rdev;
+ };
+@@ -152,7 +152,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 				   unsigned int domain_id,
+ 				   struct rdev *regulator, struct clk *clk,
+ 				   unsigned int *dvfs_khz,
+-				   unsigned int *dvfs_mv, size_t dvfs_count,
++				   unsigned int *dvfs_uv, size_t dvfs_count,
+ 				   size_t initial_index);
+ 
+ /* Add a voltage domains/regulators service to an SCMI channel */
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp2/scmi_server_scpfw.c
+@@ -612,17 +612,15 @@ driver_init_late(scmi_scpfw_cfg_init);
+ 
+ void scmi_scpfw_release_configuration(void)
+ {
+-	struct scpfw_channel_config *channel_cfg = NULL;
+-	struct scpfw_agent_config *agent_cfg = NULL;
+-	size_t i = 0;
+-	size_t j = 0;
+-	size_t k = 0;
++	size_t i;
++	size_t j;
++	size_t k;
+ 
+ 	for (i = 0; i < scpfw_cfg.agent_count; i++) {
+-		agent_cfg = scpfw_cfg.agent_config + i;
++		struct scpfw_agent_config *agent_cfg = &scpfw_cfg.agent_config[i];
+ 
+ 		for (j = 0; j < agent_cfg->channel_count; j++) {
+-			channel_cfg = agent_cfg->channel_config + j;
++			struct scpfw_channel_config *channel_cfg = &agent_cfg->channel_config[j];
+ 
+ 			free(channel_cfg->clock);
+ 			free(channel_cfg->reset);
+@@ -630,7 +628,7 @@ void scmi_scpfw_release_configuration(vo
+ 
+ 			for (k = 0; k < channel_cfg->perfd_count; k++) {
+ 				free(channel_cfg->perfd[k].dvfs_opp_khz);
+-				free(channel_cfg->perfd[k].dvfs_opp_mv);
++				free(channel_cfg->perfd[k].dvfs_opp_uv);
+ 			}
+ 
+ 			free(channel_cfg->perfd);
+@@ -647,7 +645,7 @@ static unsigned int voltd_id_count(struc
+ 				   size_t regu_count)
+ {
+ 	unsigned int max_id = 0;
+-	size_t i = 0;
++	size_t i;
+ 
+ 	for (i = 0; i < regu_count; i++)
+ 		max_id = MAX(max_id, regu[i].domain_id);
+@@ -662,7 +660,7 @@ TEE_Result scmi_scpfw_cfg_add_regu(unsig
+ {
+ 	struct scpfw_channel_config *channel_cfg = NULL;
+ 	struct scpfw_agent_config *agent_cfg = NULL;
+-	size_t i = 0;
++	size_t i;
+ 
+ 	agent_cfg = scpfw_cfg.agent_config + agent_id;
+ 	channel_cfg = agent_cfg->channel_config + channel_id;
+@@ -705,13 +703,13 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 				   unsigned int domain_id,
+ 				   struct rdev *regulator, struct clk *clk,
+ 				   unsigned int *dvfs_khz,
+-				   unsigned int *dvfs_mv, size_t dvfs_count,
++				   unsigned int *dvfs_uv, size_t dvfs_count,
+ 				   size_t initial_index)
+ {
+-	struct scpfw_channel_config *channel_cfg = NULL;
+-	struct scpfw_agent_config *agent_cfg = NULL;
+-	unsigned int *dvfs_opp_khz = NULL;
+-	unsigned int *dvfs_opp_mv = NULL;
++	struct scpfw_channel_config *channel_cfg;
++	struct scpfw_agent_config *agent_cfg;
++	unsigned int *dvfs_opp_khz;
++	unsigned int *dvfs_opp_uv;
+ 
+ 	agent_cfg = scpfw_cfg.agent_config + agent_id;
+ 	channel_cfg = agent_cfg->channel_config + channel_id;
+@@ -721,15 +719,15 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 		return TEE_ERROR_BAD_PARAMETERS;
+ 
+ 	dvfs_opp_khz = calloc(dvfs_count, sizeof(*dvfs_opp_khz));
+-	dvfs_opp_mv = calloc(dvfs_count, sizeof(*dvfs_opp_mv));
+-	if (!dvfs_opp_khz || !dvfs_opp_mv) {
++	dvfs_opp_uv = calloc(dvfs_count, sizeof(*dvfs_opp_uv));
++	if (!dvfs_opp_khz || !dvfs_opp_uv) {
+ 		free(dvfs_opp_khz);
+-		free(dvfs_opp_mv);
++		free(dvfs_opp_uv);
+ 
+ 		return TEE_ERROR_OUT_OF_MEMORY;
+ 	}
+ 	memcpy(dvfs_opp_khz, dvfs_khz, dvfs_count * sizeof(*dvfs_opp_khz));
+-	memcpy(dvfs_opp_mv, dvfs_mv, dvfs_count * sizeof(*dvfs_opp_mv));
++	memcpy(dvfs_opp_uv, dvfs_uv, dvfs_count * sizeof(*dvfs_opp_uv));
+ 
+ 	if (channel_cfg->perfd_count <= domain_id) {
+ 		void *ptr = realloc(channel_cfg->perfd,
+@@ -738,7 +736,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 
+ 		if (!ptr) {
+ 			free(dvfs_opp_khz);
+-			free(dvfs_opp_mv);
++			free(dvfs_opp_uv);
+ 			return TEE_ERROR_OUT_OF_MEMORY;
+ 		}
+ 
+@@ -761,7 +759,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 		.initial_opp = initial_index,
+ 		.dvfs_opp_count = dvfs_count,
+ 		.dvfs_opp_khz = dvfs_opp_khz,
+-		.dvfs_opp_mv = dvfs_opp_mv,
++		.dvfs_opp_uv = dvfs_opp_uv,
+ 		.clk = clk,
+ 		.rdev = regulator,
+ 	};
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/fw/config_all.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/fw/config_all.c
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/fw/config_all.c
+@@ -611,7 +611,6 @@ static void set_resources(struct scpfw_c
+ 		    optee_reset_elt[reset_index].name = reset_cfg->name;
+ 		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
+ 
+-
+ 		    reset_data[reset_index] = (struct mod_reset_domain_dev_config){
+ 			.driver_id =
+ 			    (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_RESET,
+@@ -725,16 +724,16 @@ static void set_resources(struct scpfw_c
+ 		    for (l = 0; l < perfd_cfg->dvfs_opp_count; l++) {
+ 			uint64_t power;
+ 
+-			/* Quick estimation of power consumpsion */
++			/* Quick estimation of power consumption */
+ 			power = perfd_cfg->dvfs_opp_khz[l];
+-			power *= perfd_cfg->dvfs_opp_mv[l];
+-			power *= perfd_cfg->dvfs_opp_mv[l];
++			power *= perfd_cfg->dvfs_opp_uv[l] / 1000;
++			power *= perfd_cfg->dvfs_opp_uv[l] / 1000;
+ 			power /= 100 * 1000 * 1000;
+ 
+ 			dvfs_data[dvfs_index].opps[l] = (struct mod_dvfs_opp){
+ 			    .level = perfd_cfg->dvfs_opp_khz[l] * 1000UL,
+ 			    .frequency = perfd_cfg->dvfs_opp_khz[l],
+-			    .voltage = perfd_cfg->dvfs_opp_mv[l],
++			    .voltage = perfd_cfg->dvfs_opp_uv[l],
+ 			    .power = power,
+ 			};
+ 		    }
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp2/fw/config_all.c
+@@ -665,7 +665,6 @@ static void set_resources(struct scpfw_c
+ 		    optee_reset_elt[reset_index].name = reset_cfg->name;
+ 		    optee_reset_elt[reset_index].data = &optee_reset_data[reset_index];
+ 
+-
+ 		    reset_data[reset_index] = (struct mod_reset_domain_dev_config){
+ 			.driver_id =
+ 			    (fwk_id_t)FWK_ID_ELEMENT_INIT(FWK_MODULE_IDX_OPTEE_RESET,
+@@ -781,15 +780,15 @@ static void set_resources(struct scpfw_c
+ 
+ 			/* Quick estimation of power consumpsion */
+ 			power = perfd_cfg->dvfs_opp_khz[l];
+-			power *= perfd_cfg->dvfs_opp_mv[l];
+-			power *= perfd_cfg->dvfs_opp_mv[l];
++			power *= perfd_cfg->dvfs_opp_uv[l] / 1000;
++			power *= perfd_cfg->dvfs_opp_uv[l] / 1000;
+ 			power /= 100 * 1000 * 1000;
+ 
+ 			dvfs_data[dvfs_index].opps[l] = (struct mod_dvfs_opp){
+ 			    .level = perfd_cfg->dvfs_opp_khz[l] * 1000UL,
+ 			    .frequency = perfd_cfg->dvfs_opp_khz[l],
+-			    .voltage = perfd_cfg->dvfs_opp_mv[l],
+-			    .power = (uint32_t)power,
++			    .voltage = perfd_cfg->dvfs_opp_uv[l],
++			    .power = power,
+ 			};
+ 		    }
+ 
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/product/optee-stm32mp1/module/psu_optee_regulator/src/mod_psu_optee_regulator.c
+@@ -96,16 +96,15 @@ static int psu_optee_regulator_set_volta
+ {
+     TEE_Result res;
+     struct rdev *regulator;
+-    uint16_t level_mv = voltage;
+ 
+     regulator = get_regulator(id);
+     if (!regulator)
+ 	return FWK_E_PARAM;
+ 
+-    DEBUG_MSG("PSU set regulator %s level: %"PRIu32"mV",
+-	      regulator_name(regulator), (uint32_t)level_mv);
++    DEBUG_MSG("PSU set regulator %s level: %"PRIu32"uV",
++	      regulator_name(regulator), voltage);
+ 
+-    res = regulator_set_voltage(regulator, level_mv);
++    res = regulator_set_voltage(regulator, voltage);
+     if (res)
+ 	return FWK_E_HANDLER;
+ 
+@@ -116,20 +115,18 @@ static int psu_optee_regulator_get_volta
+ {
+     TEE_Result res;
+     struct rdev *regulator;
+-    uint16_t level_mv;
+ 
+     regulator = get_regulator(id);
+     if (!regulator || !voltage)
+ 	return FWK_E_PARAM;
+ 
+-    res = regulator_get_voltage(regulator, &level_mv);
++    res = regulator_get_voltage(regulator, voltage);
+ 
+-    DEBUG_MSG("PSU get regulator %s level: %"PRIu32"mV (res %#"PRIx32")",
+-	      regulator_name(regulator), (uint32_t)level_mv, res);
++    DEBUG_MSG("PSU get regulator %s level: %"PRIu32"uV (res %#"PRIx32")",
++	      regulator_name(regulator), *voltage, res);
+ 
+     if (res)
+ 	return FWK_E_HANDLER;
+-    *voltage = level_mv;
+ 
+     return FWK_SUCCESS;
+ }
+Index: optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_dvfs.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_dvfs.c
++++ optee-os-qsmp-2550/core/lib/scmi-server/SCP-firmware/module/dvfs/src/mod_dvfs.c
+@@ -162,9 +162,8 @@ static size_t count_opps(const struct mo
+ {
+     const struct mod_dvfs_opp *opp = &opps[0];
+ 
+-    while (opp->level && opp->voltage && opp->frequency) {
+-        opp++;
+-    }
++    while (opp->level && opp->voltage && opp->frequency)
++	opp++;
+ 
+     return opp - &opps[0];
+ }
+Index: optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/scmi_server_scpfw.c
+===================================================================
+--- optee-os-qsmp-2550.orig/core/arch/arm/plat-stm32mp1/scmi_server_scpfw.c
++++ optee-os-qsmp-2550/core/arch/arm/plat-stm32mp1/scmi_server_scpfw.c
+@@ -445,7 +445,7 @@ void scmi_scpfw_release_configuration(vo
+ 
+ 			for (k = 0; k < channel_cfg->perfd_count; k++) {
+ 				free(channel_cfg->perfd[k].dvfs_opp_khz);
+-				free(channel_cfg->perfd[k].dvfs_opp_mv);
++				free(channel_cfg->perfd[k].dvfs_opp_uv);
+ 			}
+ 
+ 			free(channel_cfg->perfd);
+@@ -519,13 +519,13 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 				   unsigned int domain_id,
+ 				   struct rdev *regulator, struct clk *clk,
+ 				   unsigned int *dvfs_khz,
+-				   unsigned int *dvfs_mv, size_t dvfs_count,
++				   unsigned int *dvfs_uv, size_t dvfs_count,
+ 				   size_t initial_index)
+ {
+-	struct scpfw_channel_config *channel_cfg = NULL;
+-	struct scpfw_agent_config *agent_cfg = NULL;
+-	unsigned int *dvfs_opp_khz = NULL;
+-	unsigned int *dvfs_opp_mv = NULL;
++	struct scpfw_channel_config *channel_cfg;
++	struct scpfw_agent_config *agent_cfg;
++	unsigned int *dvfs_opp_khz;
++	unsigned int *dvfs_opp_uv;
+ 
+ 	agent_cfg = scpfw_cfg.agent_config + agent_id;
+ 	channel_cfg = agent_cfg->channel_config + channel_id;
+@@ -535,15 +535,15 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 		return TEE_ERROR_BAD_PARAMETERS;
+ 
+ 	dvfs_opp_khz = calloc(dvfs_count, sizeof(*dvfs_opp_khz));
+-	dvfs_opp_mv = calloc(dvfs_count, sizeof(*dvfs_opp_mv));
+-	if (!dvfs_opp_khz || !dvfs_opp_mv) {
++	dvfs_opp_uv = calloc(dvfs_count, sizeof(*dvfs_opp_uv));
++	if (!dvfs_opp_khz || !dvfs_opp_uv) {
+ 		free(dvfs_opp_khz);
+-		free(dvfs_opp_mv);
++		free(dvfs_opp_uv);
+ 
+ 		return TEE_ERROR_OUT_OF_MEMORY;
+ 	}
+ 	memcpy(dvfs_opp_khz, dvfs_khz, dvfs_count * sizeof(*dvfs_opp_khz));
+-	memcpy(dvfs_opp_mv, dvfs_mv, dvfs_count * sizeof(*dvfs_opp_mv));
++	memcpy(dvfs_opp_uv, dvfs_uv, dvfs_count * sizeof(*dvfs_opp_uv));
+ 
+ 	if (channel_cfg->perfd_count <= domain_id) {
+ 		void *ptr = realloc(channel_cfg->perfd,
+@@ -552,7 +552,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 
+ 		if (!ptr) {
+ 			free(dvfs_opp_khz);
+-			free(dvfs_opp_mv);
++			free(dvfs_opp_uv);
+ 			return TEE_ERROR_OUT_OF_MEMORY;
+ 		}
+ 
+@@ -575,7 +575,7 @@ TEE_Result scmi_scpfw_cfg_add_dvfs(unsig
+ 		.initial_opp = initial_index,
+ 		.dvfs_opp_count = dvfs_count,
+ 		.dvfs_opp_khz = dvfs_opp_khz,
+-		.dvfs_opp_mv = dvfs_opp_mv,
++		.dvfs_opp_uv = dvfs_opp_uv,
+ 		.clk = clk,
+ 		.rdev = regulator,
+ 	};

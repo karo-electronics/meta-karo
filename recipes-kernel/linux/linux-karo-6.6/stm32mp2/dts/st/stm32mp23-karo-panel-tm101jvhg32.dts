@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: (GPL-2.0 OR MIT)
+/*
+ * Copyright 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ *
+ */
+
+/dts-v1/;
+/plugin/;
+
+&{/chosen} {
+	overlays {
+		karo-panel-tm101jvhg32;
+	};
+};
+
+&panel {
+	label = "TM101JVHG32";
+	data-mapping = "vesa-24";
+	width-mm = <217>;
+	height-mm = <136>;
+	status = "okay";
+
+	panel-timing {
+		clock-frequency = <68200000>;
+		hactive = <1280>;
+		vactive = <800>;
+		hback-porch = <6>;
+		hsync-len = <2>;
+		hfront-porch = <15>;
+		vback-porch = <2>;
+		vsync-len = <1>;
+		vfront-porch = <3>;
+		hsync-active = <0>;
+		vsync-active = <0>;
+		de-active = <1>;
+		pixelclk-active = <0>;
+	};
+};

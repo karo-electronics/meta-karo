@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+&{/chosen} {
+	overlays {
+		qsmp-fdcan1;
+	};
+};
+
+&m_can1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&m_can1_pins>;
+	pinctrl-1 = <&m_can1_sleep_pins>;
+	status = "okay";
+};
+
+&pinctrl {
+	m_can1_pins: m-can1-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('B', 9, AF7)>; /* FDCAN1_TX */
+			slew-rate = <1>;
+			drive-open-drain;
+			bias-pull-up;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('B', 11, AF7)>; /* FDCAN1_RX */
+			drive-open-drain;
+			bias-pull-up;
+		};
+	};
+
+	m_can1_sleep_pins: m-can1-sleep-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('B', 9, ANALOG)
+				  STM32_PINMUX('B', 11, ANALOG)
+			>;
+		};
+	};
+};

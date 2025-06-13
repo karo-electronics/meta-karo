@@ -1,0 +1,32 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ *
+ * based on stm32mp15-karo-copro.dts:
+ *   Copyright (C) 2022 Markus Bauer <MB@KARO-electronics.de>
+ *
+ */
+
+/dts-v1/;
+
+/plugin/;
+
+#include <dt-bindings/pinctrl/stm32-pinfunc.h>
+
+&{/chosen} {
+	overlays {
+		karo-copro;
+	};
+};
+
+&m33_rproc {
+	mboxes = <&ipcc1 0x100>, <&ipcc1 0x101>, <&ipcc1 2>;
+	mbox-names = "vq0", "vq1", "shutdown";
+	memory-region = <&cm33_cube_fw>, <&cm33_cube_data>,
+			<&ipc_shmem>, <&vdev0vring0>,
+			<&vdev0vring1>, <&vdev0buffer>,
+			<&cm33_sram2>;
+	st,syscfg-nsvtor = <&a35ss_syscfg 0xa8 0xffffff80>;
+	wakeup-source;
+	status = "okay";
+};

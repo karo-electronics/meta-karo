@@ -1,0 +1,284 @@
+Index: optee-qsmp-2550/core/drivers/stm32_i2c.c
+===================================================================
+--- optee-qsmp-2550.orig/core/drivers/stm32_i2c.c
++++ optee-qsmp-2550/core/drivers/stm32_i2c.c
+@@ -290,16 +290,13 @@ static const struct i2c_spec_s i2c_specs
+  * @timeout_ms: Timeout in millisenconds for the request
+  */
+ struct i2c_request {
+-	uint32_t dev_addr;
+ 	enum i2c_mode_e mode;
+-	uint32_t mem_addr;
+-	uint32_t mem_addr_size;
+ 	unsigned int timeout_ms;
++	uint16_t dev_addr;
++	uint16_t mem_addr;
++	uint16_t mem_addr_size;
+ };
+ 
+-/* Non-null reference for compat data */
+-static const int secure_i2c;
+-
+ static vaddr_t get_base(struct i2c_handle_s *hi2c)
+ {
+ 	return io_pa_or_va_secure(&hi2c->base, hi2c->reg_size);
+@@ -313,7 +310,7 @@ static void notif_i2c_timeout(struct i2c
+ 
+ static const struct i2c_spec_s *get_specs(uint32_t rate)
+ {
+-	size_t i = 0;
++	size_t i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(i2c_specs); i++)
+ 		if (rate <= i2c_specs[i].rate)
+@@ -389,26 +386,23 @@ static void __maybe_unused dump_i2c(stru
+ static int i2c_compute_timing(struct stm32_i2c_init_s *init,
+ 			      unsigned long clock_src, uint32_t *timing)
+ {
+-	const struct i2c_spec_s *specs = NULL;
+-	uint32_t speed_freq = 0;
+-	uint32_t i2cbus = UDIV_ROUND_NEAREST(I2C_NSEC_PER_SEC, speed_freq);
++	const struct i2c_spec_s *specs;
++	uint32_t speed_freq;
++	uint32_t i2cbus;
+ 	uint32_t i2cclk = UDIV_ROUND_NEAREST(I2C_NSEC_PER_SEC, clock_src);
+ 	uint32_t p_prev = I2C_TIMINGR_PRESC_MAX;
+ 	uint32_t af_delay_min = 0;
+ 	uint32_t af_delay_max = 0;
+-	uint32_t dnf_delay = 0;
+-	uint32_t tsync = 0;
+-	uint32_t clk_min = 0;
+-	uint32_t clk_max = 0;
+-	int clk_error_prev = 0;
+-	uint16_t p = 0;
+-	uint16_t l = 0;
+-	uint16_t a = 0;
+-	uint16_t h = 0;
+-	unsigned int sdadel_min = 0;
+-	unsigned int sdadel_max = 0;
+-	unsigned int scldel_min = 0;
+-	unsigned int delay = 0;
++	uint32_t dnf_delay;
++	uint32_t tsync;
++	uint32_t clk_min;
++	uint32_t clk_max;
++	int clk_error_prev = INT_MAX;
++	uint16_t p;
++	unsigned int sdadel_min;
++	unsigned int sdadel_max;
++	unsigned int scldel_min;
++	unsigned int delay;
+ 	int s = -1;
+ 	struct i2c_timing_s solutions[I2C_TIMINGR_PRESC_MAX] = { 0 };
+ 
+@@ -420,7 +414,6 @@ static int i2c_compute_timing(struct stm
+ 
+ 	speed_freq = specs->rate;
+ 	i2cbus = UDIV_ROUND_NEAREST(I2C_NSEC_PER_SEC, speed_freq);
+-	clk_error_prev = INT_MAX;
+ 
+ 	if (init->rise_time > specs->rise_max ||
+ 	    init->fall_time > specs->fall_max) {
+@@ -460,8 +453,11 @@ static int i2c_compute_timing(struct stm
+ 
+ 	/* Compute possible values for PRESC, SCLDEL and SDADEL */
+ 	for (p = 0; p < I2C_TIMINGR_PRESC_MAX; p++) {
++		uint16_t l;
++
+ 		for (l = 0; l < I2C_TIMINGR_SCLDEL_MAX; l++) {
+ 			uint32_t scldel = (l + 1) * (p + 1) * i2cclk;
++			uint16_t a;
+ 
+ 			if (scldel < scldel_min)
+ 				continue;
+@@ -506,12 +502,14 @@ static int i2c_compute_timing(struct stm
+ 	 */
+ 	for (p = 0; p < I2C_TIMINGR_PRESC_MAX; p++) {
+ 		uint32_t prescaler = (p + 1) * i2cclk;
++		uint16_t l;
+ 
+ 		if (!solutions[p].is_saved)
+ 			continue;
+ 
+ 		for (l = 0; l < I2C_TIMINGR_SCLL_MAX; l++) {
+ 			uint32_t tscl_l = ((l + 1) * prescaler) + tsync;
++			uint16_t h;
+ 
+ 			if (tscl_l < specs->l_min ||
+ 			    i2cclk >= ((tscl_l - af_delay_min - dnf_delay) / 4))
+@@ -542,7 +540,7 @@ static int i2c_compute_timing(struct stm
+ 	}
+ 
+ 	if (s < 0) {
+-		DMSG("I2C no solution at all");
++		EMSG("Cannot calculate I2C timing");
+ 		return -1;
+ 	}
+ 
+@@ -696,10 +694,9 @@ TEE_Result stm32_i2c_get_setup_from_fdt(
+ 					struct pinctrl_state **pinctrl,
+ 					struct pinctrl_state **pinctrl_sleep)
+ {
+-	TEE_Result res = TEE_ERROR_GENERIC;
+-	const fdt32_t *cuint = NULL;
+-	struct dt_node_info info = { .status = 0 };
+-	int __maybe_unused count = 0;
++	TEE_Result res;
++	const fdt32_t *cuint;
++	struct dt_node_info info;
+ 
+ 	/* Default STM32 specific configs caller may need to overwrite */
+ 	memset(init, 0, sizeof(*init));
+@@ -733,7 +731,7 @@ TEE_Result stm32_i2c_get_setup_from_fdt(
+ 		init->bus_rate = fdt32_to_cpu(*cuint);
+ 
+ 		if (init->bus_rate > I2C_FAST_PLUS_RATE) {
+-			DMSG("Invalid bus speed (%"PRIu32" > %i)",
++			EMSG("Invalid bus speed (%"PRIu32" > %i)",
+ 			     init->bus_rate, I2C_FAST_PLUS_RATE);
+ 			return TEE_ERROR_GENERIC;
+ 		}
+@@ -971,8 +971,8 @@ static int i2c_wait_stop(struct i2c_hand
+  * @startstop: One of I2C_NO_STARTSTOP, I2C_GENERATE_STOP,
+  *		I2C_GENERATE_START_{READ|WRITE}
+  */
+-static void i2c_transfer_config(struct i2c_handle_s *hi2c, uint32_t dev_addr,
+-				uint32_t size, uint32_t i2c_mode,
++static void i2c_transfer_config(struct i2c_handle_s *hi2c, uint16_t dev_addr,
++				uint16_t size, enum i2c_mode_e i2c_mode,
+ 				uint32_t startstop)
+ {
+ 	uint32_t clr_value = I2C_CR2_SADD | I2C_CR2_NBYTES | I2C_CR2_RELOAD |
+@@ -1186,8 +1186,8 @@ bail:
+ 	return rc;
+ }
+ 
+-int stm32_i2c_mem_write(struct i2c_handle_s *hi2c, uint32_t dev_addr,
+-			uint32_t mem_addr, uint32_t mem_addr_size,
++int stm32_i2c_mem_write(struct i2c_handle_s *hi2c, uint16_t dev_addr,
++			uint16_t mem_addr, uint16_t mem_addr_size,
+ 			uint8_t *p_data, size_t size, unsigned int timeout_ms)
+ {
+ 	struct i2c_request request = {
+@@ -1201,7 +1201,7 @@ int stm32_i2c_mem_write(struct i2c_handl
+ 	return do_write(hi2c, &request, p_data, size);
+ }
+ 
+-int stm32_i2c_master_transmit(struct i2c_handle_s *hi2c, uint32_t dev_addr,
++int stm32_i2c_master_transmit(struct i2c_handle_s *hi2c, uint16_t dev_addr,
+ 			      uint8_t *p_data, size_t size,
+ 			      unsigned int timeout_ms)
+ {
+@@ -1414,8 +1414,8 @@ bail:
+ 	return rc;
+ }
+ 
+-int stm32_i2c_mem_read(struct i2c_handle_s *hi2c, uint32_t dev_addr,
+-		       uint32_t mem_addr, uint32_t mem_addr_size,
++int stm32_i2c_mem_read(struct i2c_handle_s *hi2c, uint16_t dev_addr,
++		       uint16_t mem_addr, uint16_t mem_addr_size,
+ 		       uint8_t *p_data, size_t size, unsigned int timeout_ms)
+ {
+ 	struct i2c_request request = {
+@@ -1429,7 +1429,7 @@ int stm32_i2c_mem_read(struct i2c_handle
+ 	return do_read(hi2c, &request, p_data, size);
+ }
+ 
+-int stm32_i2c_master_receive(struct i2c_handle_s *hi2c, uint32_t dev_addr,
++int stm32_i2c_master_receive(struct i2c_handle_s *hi2c, uint16_t dev_addr,
+ 			     uint8_t *p_data, size_t size,
+ 			     unsigned int timeout_ms)
+ {
+@@ -1484,7 +1484,7 @@ static const struct i2c_ctrl_ops stm32_i
+ 	.write = stm32_i2c_write_data,
+ };
+ 
+-bool stm32_i2c_is_device_ready(struct i2c_handle_s *hi2c, uint32_t dev_addr,
++bool stm32_i2c_is_device_ready(struct i2c_handle_s *hi2c, uint16_t dev_addr,
+ 			       unsigned int trials, unsigned int timeout_ms)
+ {
+ 	vaddr_t base = get_base(hi2c);
+@@ -1676,7 +1676,7 @@ static TEE_Result stm32_i2c_probe(const
+ 	init_data.analog_filter = true;
+ 	init_data.digital_filter_coef = 0;
+ 
+-	if (compat_data == &secure_i2c)
++	if (compat_data)
+ 		i2c_handle_p->i2c_secure = true;
+ 
+ 	if (pinctrl_apply_state(i2c_handle_p->pinctrl)) {
+@@ -1701,16 +1701,16 @@ static TEE_Result stm32_i2c_probe(const
+ 		}
+ 	}
+ out:
+-	if (res)
++	if (res && res != TEE_ERROR_DEFER_DRIVER_INIT)
+ 		EMSG("I2C probe FAILED: %d\n", res);
+ 	return res;
+ }
+ 
+ static const struct dt_device_match stm32_i2c_match_table[] = {
+-	{ .compatible = "st,stm32mp15-i2c", .compat_data = &secure_i2c },
+-	{ .compatible = "st,stm32mp13-i2c", .compat_data = &secure_i2c },
+-	{ .compatible = "st,stm32mp15-i2c-non-secure" },
+-	{ .compatible = "st,stm32mp25-i2c", .compat_data = &secure_i2c },
++	{ .compatible = "st,stm32mp15-i2c", .compat_data = (void *)1, },
++	{ .compatible = "st,stm32mp13-i2c", .compat_data = (void *)1, },
++	{ .compatible = "st,stm32mp15-i2c-non-secure", },
++	{ .compatible = "st,stm32mp25-i2c", .compat_data = (void *)1, },
+ 	{ }
+ };
+ 
+Index: optee-qsmp-2550/core/include/drivers/stm32_i2c.h
+===================================================================
+--- optee-qsmp-2550.orig/core/include/drivers/stm32_i2c.h
++++ optee-qsmp-2550/core/include/drivers/stm32_i2c.h
+@@ -190,8 +190,8 @@ int stm32_i2c_init(struct i2c_handle_s *
+  * @timeout_ms: Timeout value in milliseconds
+  * Return 0 on success else a negative value
+  */
+-int stm32_i2c_mem_write(struct i2c_handle_s *hi2c, uint32_t dev_addr,
+-			uint32_t mem_addr, uint32_t mem_addr_size,
++int stm32_i2c_mem_write(struct i2c_handle_s *hi2c, uint16_t dev_addr,
++			uint16_t mem_addr, uint16_t mem_addr_size,
+ 			uint8_t *p_data, size_t size, unsigned int timeout_ms);
+ 
+ /*
+@@ -206,8 +206,8 @@ int stm32_i2c_mem_write(struct i2c_handl
+  * @timeout_ms: Timeout value in milliseconds
+  * Return 0 on success else a negative value
+  */
+-int stm32_i2c_mem_read(struct i2c_handle_s *hi2c, uint32_t dev_addr,
+-		       uint32_t mem_addr, uint32_t mem_addr_size,
++int stm32_i2c_mem_read(struct i2c_handle_s *hi2c, uint16_t dev_addr,
++		       uint16_t mem_addr, uint16_t mem_addr_size,
+ 		       uint8_t *p_data, size_t size, unsigned int timeout_ms);
+ 
+ /*
+@@ -220,7 +220,7 @@ int stm32_i2c_mem_read(struct i2c_handle
+  * @timeout_ms: Timeout value in milliseconds
+  * Return 0 on success else a negative value
+  */
+-int stm32_i2c_master_transmit(struct i2c_handle_s *hi2c, uint32_t dev_addr,
++int stm32_i2c_master_transmit(struct i2c_handle_s *hi2c, uint16_t dev_addr,
+ 			      uint8_t *p_data, size_t size,
+ 			      unsigned int timeout_ms);
+ 
+@@ -234,7 +234,7 @@ int stm32_i2c_master_transmit(struct i2c
+  * @timeout_ms: Timeout value in milliseconds
+  * Return 0 on success else a negative value
+  */
+-int stm32_i2c_master_receive(struct i2c_handle_s *hi2c, uint32_t dev_addr,
++int stm32_i2c_master_receive(struct i2c_handle_s *hi2c, uint16_t dev_addr,
+ 			     uint8_t *p_data, size_t size,
+ 			     unsigned int timeout_ms);
+ 
+@@ -256,7 +256,7 @@ int stm32_i2c_read_write_membyte(struct
+  * @timeout_ms: Timeout value in milliseconds for each I2C request
+  * Return 0 on success else a negative value
+  */
+-bool stm32_i2c_is_device_ready(struct i2c_handle_s *hi2c, uint32_t dev_addr,
++bool stm32_i2c_is_device_ready(struct i2c_handle_s *hi2c, uint16_t dev_addr,
+ 			       unsigned int trials, unsigned int timeout_ms);
+ 
+ /*

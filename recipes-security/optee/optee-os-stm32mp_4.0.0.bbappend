@@ -10,8 +10,11 @@ SRC_URI:append:stm32mp1:not = " \
 SRC_URI:append:stm32mp1 = " \
     file://patches/clk-name-bugfix.patch \
 "
-
-SRC_URI:append:stm32mp2 = " \
+SRC_URI:append:stm32mp23 = " \
+    file://patches/stm32mp2-bugfix.patch \
+    file://patches/mp23-optee.patch \
+"
+SRC_URI:append:stm32mp25 = " \
     file://patches/stm32mp2-bugfix.patch \
 "
 SRC_URI:append:stm32mp2:not = " \
@@ -26,7 +29,8 @@ SRC_URI:append:stm32mp15:txmp = " \
 
 #SRC_URI:append:stm32mp2 = "${@ " file://patches/regulators-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
 
-SRC_URI:append:stm32mp2:qsmp = " ${@ " file://patches/pca9450%s-support.patch" % ("" if d.getVar('REGULATORS_MICROVOLTS') == '1' else "-mv")}"
+SRC_URI:append:stm32mp23:qsmp = " ${@ " file://patches/pca9450%s-support.patch" % ("" if d.getVar('REGULATORS_MICROVOLTS') == '1' else "-mv")}"
+SRC_URI:append:stm32mp25:qsmp = " ${@ " file://patches/pca9450%s-support.patch" % ("" if d.getVar('REGULATORS_MICROVOLTS') == '1' else "-mv")}"
 
 # dts files
 SRC_URI:append = " \
@@ -38,6 +42,12 @@ SRC_URI:append:stm32mp15 = " \
     file://dts/stm32mp15-txmp.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp151-qsmp.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp157-qsmp.dtsi;subdir=git/core/arch/arm/ \
+"
+
+SRC_URI:append:stm32mp23 = " \
+    file://dts/stm32mp23-karo-resmem.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp235c-qsmp-2350-rcc.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp235c-qsmp-2350-rif.dtsi;subdir=git/core/arch/arm/ \
 "
 
 SRC_URI:append:stm32mp25 = " \

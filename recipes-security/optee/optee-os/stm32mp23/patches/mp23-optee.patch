@@ -1,0 +1,60 @@
+diff --git a/core/arch/arm/dts/stm32mp231.dtsi b/core/arch/arm/dts/stm32mp231.dtsi
+index 9d4e362d8..c2b1b8f5d 100644
+--- a/core/arch/arm/dts/stm32mp231.dtsi
++++ b/core/arch/arm/dts/stm32mp231.dtsi
+@@ -37,6 +37,12 @@
+ 	cpu0_opp_table: cpu0-opp-table {
+ 		compatible = "operating-points-v2";
+ 
++		opp-1000000000 {
++			opp-hz = /bits/ 64 <1000000000>;
++			opp-microvolt = <800000>;
++			opp-supported-hw = <0x3>;
++		};
++
+ 		opp-1200000000 {
+ 			opp-hz = /bits/ 64 <1200000000>;
+ 			opp-microvolt = <800000>;
+@@ -1140,27 +1146,27 @@
+ 					#address-cells = <1>;
+ 					#size-cells = <0>;
+ 
+-					voltd-vddio1 {
++					voltd-vddio1@0 { /* vddio_sdcard */
+ 						reg = <VOLTD_SCMI_VDDIO1>;
+ 						voltd-supply = <&vddio1>;
+ 					};
+ 
+-					voltd-vddio2 {
++					voltd-vddio2@1 { /* v1v8 */
+ 						reg = <VOLTD_SCMI_VDDIO2>;
+ 						voltd-supply = <&vddio2>;
+ 					};
+ 
+-					voltd-vddio3 {
++					voltd-vddio3@2 { /* vddio_pmic */
+ 						reg = <VOLTD_SCMI_VDDIO3>;
+ 						voltd-supply = <&vddio3>;
+ 					};
+ 
+-					voltd-vddio4 {
++					voltd-vddio4@3 { /* vddio_pmic */
+ 						reg = <VOLTD_SCMI_VDDIO4>;
+ 						voltd-supply = <&vddio4>;
+ 					};
+ 
+-					voltd-vdda18adc {
++					voltd-vdda18adc@7 { /* v1v8 */
+ 						reg = <VOLTD_SCMI_ADC>;
+ 						voltd-supply = <&vdda18adc>;
+ 					};
+@@ -2153,7 +2159,7 @@
+ 					#address-cells = <1>;
+ 					#size-cells = <0>;
+ 
+-					voltd-vdd33ucpd {
++					voltd-vdd33ucpd@5 {
+ 						reg = <VOLTD_SCMI_UCPD>;
+ 						voltd-supply = <&vdd33ucpd>;
+ 					};
+ 
