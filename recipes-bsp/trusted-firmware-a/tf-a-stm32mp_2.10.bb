@@ -11,12 +11,42 @@ SUMMARY = "Trusted Firmware-A for STM32MP"
 PROVIDES += "virtual/trusted-firmware-a"
 PROVIDES += "tf-a-karo"
 
+# ------------------------------------
+# Set MBEDTLS support
+TFA_MBEDTLS_DIR ?= "mbedtls"
+# MBEDTLS v3.6.0
+SRC_URI_MBEDTLS = "git://github.com/ARMmbed/mbedtls.git;protocol=https;destsuffix=git/${TFA_MBEDTLS_DIR};nobranch=1;name=mbedtls"
+SRCREV_mbedtls = "2ca6c285a0dd3f33982dd57299012dacab1ff206"
+LIC_FILES_CHKSUM_MBEDTLS = "file://mbedtls/LICENSE;md5=379d5819937a6c2f1ef1630d341e026d"
+LICENSE_MBEDTLS = "Apache-2.0"
+# Add MBEDTLS to our sources
+SRC_URI:append = " ${SRC_URI_MBEDTLS}"
+# Update license variables
+LICENSE:append = " & ${LICENSE_MBEDTLS}"
+LIC_FILES_CHKSUM:append = " ${LIC_FILES_CHKSUM_MBEDTLS}"
+# Add mbed TLS to version
+SRCREV_FORMAT:append = "_mbedtls"
+# ------------------------------------
+
 B = "${WORKDIR}/build"
 # Configure build dir for externalsrc class usage through devtool
 EXTERNALSRC_BUILD:pn-${PN} = "${WORKDIR}/build"
 
 DEPENDS += "dtc-native"
 DEPENDS:stm32mp2common += "tf-a-tools-native"
+
+SIGN_KEY ?= ""
+SIGN_KEY_PASS ?= ""
+SIGN_PUB_KEY ?= ""
+SIGN_ENABLE ?= "0"
+SIGN_TOOL ?= ""
+
+TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' MBEDTLS_DIR=${S}/${TFA_MBEDTLS_DIR}', '', d)}"
+TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' ROT_KEY=${SB_KEYS_DIR}/${SIGN_KEY}', '', d)}"
+TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' TRUSTED_BOARD_BOOT=1', '', d)}"
+TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' GENERATE_COT=1', '', d)}"
+TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' ROT_KEY_PWD=${SIGN_KEY_PASS}', '', d)}"
+TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' KEY_ALG=ecdsa', '', d)}"
 
 # Define default TF-A namings
 TF_A_BASENAME ?= "tf-a"
@@ -149,7 +179,29 @@ do_compile() {
         else
             oe_runmake -C ${S} BUILD_PLAT=${B}/${config} ${add_extraoemake}
         fi
+
+        if [ "${SIGN_ENABLE}" = 1 ];then
+            # Sign tf-a binary
+            bbnote "${SIGN_TOOL} \
+                -bin "${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX}" \
+                -o "${B}/${config}/${TF_A_BASENAME}-${dt}-${config}_Signed.${TF_A_SUFFIX}" \
+                --password "${SIGN_KEY_PASS}" \
+                --public-key "${SB_KEYS_DIR}/${SIGN_PUB_KEY}" \
+                --private-key "${SB_KEYS_DIR}/${SIGN_KEY}" \
+                --type fsbl \
+                --silent "
+
+            ${SIGN_TOOL} \
+                -bin "${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX}" \
+                -o "${B}/${config}/${TF_A_BASENAME}-${dt}-${config}_Signed.${TF_A_SUFFIX}" \
+                --password ${SIGN_KEY_PASS} \
+                --public-key ${SB_KEYS_DIR}/${SIGN_PUB_KEY} \
+                --private-key ${SB_KEYS_DIR}/${SIGN_KEY} \
+                --type fsbl \
+                --silent
+        fi
     done
+
     if [ "${TF_A_FWDDR}" = 1 ];then
         ddr_target=lpddr4
         if [ -s "${S}/drivers/st/ddr/phy/firmware/bin/${ddr_target}_pmu_train.bin" ]; then
@@ -190,6 +242,10 @@ do_deploy() {
                 fi
 
                 install -v ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}.${TF_A_SUFFIX} ${DEPLOYDIR}
+                if [ "${SIGN_ENABLE}" = 1 ];then
+                    install -v ${B}/${config}/${TF_A_BASENAME}-${dt}-${config}_Signed.${TF_A_SUFFIX} ${DEPLOYDIR}
+                fi
+                install -v ${B}/${config}/bl2.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}
                 if [ -f ${B}/${config}/bl31.bin ]; then
                     install -v ${B}/${config}/bl31.bin ${DEPLOYDIR}/${FIPTOOL_DIR}/${config}/bl31-${MACHINE}.bin
                 fi

@@ -48,6 +48,7 @@ MACHINE_FEATURES = " \
 
 UBOOT_FEATURES ??= ""
 KARO_BASEBOARD ??= ""
+SB_KEYS_DIR ?= "${BSPDIR}/private/keys"
 
 # Blacklist evbug kernel module
 KERNEL_MODULE_PROBECONF += "evbug"

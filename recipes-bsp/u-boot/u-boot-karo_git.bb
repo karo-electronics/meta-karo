@@ -20,6 +20,13 @@ DEPENDS:append = " \
 fiptool = "tf-a-tools-native"
 DEPENDS:append = " ${fiptool}"
 
+SIGN_KEY ?= ""
+SIGN_KEY_PASS ?= ""
+SIGN_PUB_KEY ?= ""
+SIGN_PUB_KEY_HASH ?= ""
+SIGN_ENABLE ?= "0"
+SIGN_TOOL ?= ""
+
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
 UBOOT_SRC_DEFAULT ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
@@ -360,14 +367,52 @@ do_deploy:stm32mp1 () {
             for cfg in ${TF_A_CONFIGS}; do
                 k=$(expr $k + 1)
                 [ $k -lt $j ] && continue
-                fiptool create \
-                    --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
-                    --hw-config ${B}/${config}/u-boot.dtb \
-                    --nt-fw ${B}/${config}/u-boot-nodtb.bin \
-                    --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
-                    --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
-                    --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
-                    ${DEPLOYDIR}/fip-${dt}-${type}.bin
+                if [ "${SIGN_ENABLE}" = 1 ];then
+                    cert_create \
+                        -n --tfw-nvctr 0 --ntfw-nvctr 0 \
+                        --key-alg ecdsa --hash-alg sha256 \
+                        --rot-key ${THISDIR}/${SIGN_KEY} \
+                        --rot-key-pwd ${SIGN_KEY_PASS} \
+                        --tb-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/bl2.bin \
+                        --tb-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tb_fw.crt \
+                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
+                        --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
+                        --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
+                        --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
+                        --hw-config ${B}/${config}/u-boot.dtb \
+                        --nt-fw ${B}/${config}/u-boot-nodtb.bin \
+                        --trusted-key-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/trusted_key.crt \
+                        --tos-fw-key-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tos_fw_key.crt \
+                        --tos-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tos_fw_content.crt \
+                        --nt-fw-key-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/nt_fw_key.crt \
+                        --nt-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/nt_fw_content.crt \
+                        --stm32mp-cfg-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/stm32mp_cfg_cert.crt
+
+                    fiptool create \
+                        --tb-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tb_fw.crt \
+                        --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
+                        --hw-config ${B}/${config}/u-boot.dtb \
+                        --nt-fw ${B}/${config}/u-boot-nodtb.bin \
+                        --trusted-key-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/trusted_key.crt \
+                        --tos-fw-key-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tos_fw_key.crt \
+                        --tos-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tos_fw_content.crt \
+                        --nt-fw-key-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/nt_fw_key.crt \
+                        --nt-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/nt_fw_content.crt \
+                        --stm32mp-cfg-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/stm32mp_cfg_cert.crt \
+                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
+                        --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
+                        --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
+                        ${DEPLOYDIR}/fip-${dt}-${type}_Signed.bin
+                else
+                    fiptool create \
+                        --fw-config ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/${dt}-fw-config.dtb \
+                        --hw-config ${B}/${config}/u-boot.dtb \
+                        --nt-fw ${B}/${config}/u-boot-nodtb.bin \
+                        --tos-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-header_v2-${dt}.bin \
+                        --tos-fw-extra1 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pager_v2-${dt}.bin \
+                        --tos-fw-extra2 ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tee-pageable_v2-${dt}.bin \
+                        ${DEPLOYDIR}/fip-${dt}-${type}.bin
+                fi
                 break
             done
             break
