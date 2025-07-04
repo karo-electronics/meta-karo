@@ -65,9 +65,9 @@ KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"nxp-wifi"," e
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"lvds"," lvds.cfg","",d)}"
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES',"nvme"," nvme.cfg","",d)}"
-KERNEL_FEATURES:append:stm32mp25:qsmp = "${@bb.utils.contains('DISTRO_FEATURES',"csi-camera"," imx219.cfg csi.cfg","",d)}"
+KERNEL_FEATURES:append:stm32mp2:qsmp = "${@bb.utils.contains('DISTRO_FEATURES',"csi-camera"," imx219.cfg csi.cfg","",d)}"
 
-KERNEL_FEATURES:append:stm32mp25 = "${@bb.utils.contains('DISTRO_FEATURES',"flexcan"," fdcan.cfg","",d)}"
+KERNEL_FEATURES:append:stm32mp2 = "${@bb.utils.contains('DISTRO_FEATURES',"flexcan"," fdcan.cfg","",d)}"
 
 KERNEL_FEATURES:remove = "${@bb.utils.contains('DISTRO_FEATURES','bcm4373','wifi.cfg','',d)}"
 

@@ -1,7 +1,7 @@
-Index: linux-qsmp-1351/arch/arm/Kconfig.debug
-===================================================================
---- linux-qsmp-1351.orig/arch/arm/Kconfig.debug
-+++ linux-qsmp-1351/arch/arm/Kconfig.debug
+diff --git a/arch/arm/Kconfig.debug b/arch/arm/Kconfig.debug
+index b407b7b9b715d..b679dab937b00 100644
+--- a/arch/arm/Kconfig.debug
++++ b/arch/arm/Kconfig.debug
 @@ -1203,7 +1203,7 @@ choice
  
  	config STM32MP1_DEBUG_UART
@@ -11,36 +11,10 @@ Index: linux-qsmp-1351/arch/arm/Kconfig.debug
  		select DEBUG_STM32_UART
  		help
  		  Say Y here if you want kernel low-level debugging support on
-Index: linux-qsmp-1351/drivers/thermal/st/Kconfig
-===================================================================
---- linux-qsmp-1351.orig/drivers/thermal/st/Kconfig
-+++ linux-qsmp-1351/drivers/thermal/st/Kconfig
-@@ -14,7 +14,7 @@ config ST_THERMAL_MEMMAP
- 
- config STM32_THERMAL
- 	tristate "Thermal framework support on STMicroelectronics STM32 series of SoCs"
--	depends on MACH_STM32MP157
-+	depends on MACH_STM32MP157 || MACH_STM32MP13
- 	default y
- 	help
- 	  Support for thermal framework on STMicroelectronics STM32 series of
-Index: linux-qsmp-1351/drivers/cpufreq/Kconfig.arm
-===================================================================
---- linux-qsmp-1351.orig/drivers/cpufreq/Kconfig.arm
-+++ linux-qsmp-1351/drivers/cpufreq/Kconfig.arm
-@@ -242,7 +242,7 @@ config ARM_STI_CPUFREQ
- 
- config ARM_STM32_CPUFREQ
- 	tristate "STM32 CPUFreq support"
--	depends on MACH_STM32MP157
-+	depends on MACH_STM32MP157 || MACH_STM32MP13
- 	default y
- 	help
- 	  This adds the CPUFreq driver support for STM32 MPU SOCs.
-Index: linux-qsmp-1351/drivers/clk/stm32/Kconfig
-===================================================================
---- linux-qsmp-1351.orig/drivers/clk/stm32/Kconfig
-+++ linux-qsmp-1351/drivers/clk/stm32/Kconfig
+diff --git a/drivers/clk/stm32/Kconfig b/drivers/clk/stm32/Kconfig
+index d81cec0c3b12f..073d4ef3e0f64 100644
+--- a/drivers/clk/stm32/Kconfig
++++ b/drivers/clk/stm32/Kconfig
 @@ -13,14 +13,14 @@ if COMMON_CLK_STM32MP
  
  config COMMON_CLK_STM32MP135
@@ -58,11 +32,24 @@ Index: linux-qsmp-1351/drivers/clk/stm32/Kconfig
  	default y
  	help
  	  Support for stm32mp15x SoC family clocks.
-Index: linux-qsmp-1351/drivers/soc/st/Kconfig
-===================================================================
---- linux-qsmp-1351.orig/drivers/soc/st/Kconfig
-+++ linux-qsmp-1351/drivers/soc/st/Kconfig
-@@ -2,9 +2,9 @@ if ARCH_STM32
+diff --git a/drivers/cpufreq/Kconfig.arm b/drivers/cpufreq/Kconfig.arm
+index 583c74ab961dc..345ee6e7a09b7 100644
+--- a/drivers/cpufreq/Kconfig.arm
++++ b/drivers/cpufreq/Kconfig.arm
+@@ -242,7 +242,7 @@ config ARM_STI_CPUFREQ
+ 
+ config ARM_STM32_CPUFREQ
+ 	tristate "STM32 CPUFreq support"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  This adds the CPUFreq driver support for STM32 MPU SOCs.
+diff --git a/drivers/soc/st/Kconfig b/drivers/soc/st/Kconfig
+index 6a6f6b38794db..35a7506902ca3 100644
+--- a/drivers/soc/st/Kconfig
++++ b/drivers/soc/st/Kconfig
+@@ -8,9 +8,9 @@ config STM32_HOG
  
  config STM32_PM_DOMAINS
  	bool "STM32 PM domains"
@@ -72,5 +59,18 @@ Index: linux-qsmp-1351/drivers/soc/st/Kconfig
 -	default y if MACH_STM32MP157
 +	default y
  
- config STM32_RISAB
- 	tristate "STM32 RISAB"
+ config STM32MP_PM_DOMAIN
+ 	tristate "STM32MP PM domain"
+diff --git a/drivers/thermal/st/Kconfig b/drivers/thermal/st/Kconfig
+index ecbdf4ef00f43..5f1bc833a22b7 100644
+--- a/drivers/thermal/st/Kconfig
++++ b/drivers/thermal/st/Kconfig
+@@ -14,7 +14,7 @@ config ST_THERMAL_MEMMAP
+ 
+ config STM32_THERMAL
+ 	tristate "Thermal framework support on STMicroelectronics STM32 series of SoCs"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  Support for thermal framework on STMicroelectronics STM32 series of
