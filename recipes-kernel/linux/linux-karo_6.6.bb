@@ -8,7 +8,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 
 KERNEL_SRC_DEFAULT = "git://github.com/karo-electronics/karo-tx-linux.git;protocol=https"
 KERNEL_BRANCH_DEFAULT = "linux-stm32mp-v6.6-karo"
-KERNEL_REV_DEFAULT = "ac39a3dddcd1da881e485ef3004a96d52fc88349"
+KERNEL_REV_DEFAULT = "8a6099975b8ce9a09cae7ef03d3099db40cc3252"
 
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
