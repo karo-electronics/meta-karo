@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
 /*
- * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright (C) 2025 Marcel Mertens <MM@KARO-electronics.de>
  */
 
 /dts-v1/;
@@ -68,7 +68,7 @@
 
 			csi2host_from_imx219: endpoint {
 				remote-endpoint = <&imx219_to_csi2host>;
-				data-lanes = <0 1>;
+				data-lanes = <1 2>;
 				bus-type = <4>;
 			};
 		};

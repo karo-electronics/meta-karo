@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
 /*
- * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright (C) 2025 Marcel Mertens <MM@KARO-electronics.de>
  */
 
 #include <dt-bindings/clock/st,stm32mp25-rcc.h>

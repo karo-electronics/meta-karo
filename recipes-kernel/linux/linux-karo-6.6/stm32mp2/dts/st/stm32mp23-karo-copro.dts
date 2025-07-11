@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
 /*
- * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
- *
- * based on stm32mp15-karo-copro.dts:
- *   Copyright (C) 2022 Markus Bauer <MB@KARO-electronics.de>
+ * Copyright (C) 2025 Marcel Mertens <MM@KARO-electronics.de>
  *
  */
 

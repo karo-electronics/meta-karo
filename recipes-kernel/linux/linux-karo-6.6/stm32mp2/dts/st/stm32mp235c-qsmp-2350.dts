@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
 /*
- * Copyright (C) 2024 Lothar Waßmann <LW@KARO-electronics.de>
+ * Copyright (C) 2025 Marcel Mertens <MM@KARO-electronics.de>
  */
 
 /dts-v1/;
@@ -20,13 +20,11 @@
 
 	aliases {
 		can0 = &m_can1;
-		//can1 = &m_can2;
 		csi2host = &csi;
 		dcmipp = &dcmipp;
 		ethernet0 = &eth1;
 		ethernet1 = &eth2;
 		i2c0 = &i2c2;
-		//i2c1 = &i2c6;
 		i2c2 = &i2c7;
 		mmc0 = &sdmmc2;
 		mmc1 = &sdmmc1;
@@ -36,7 +34,6 @@
 		serial1 = &usart3;
 		serial2 = &uart5;
 		spi0 = &spi4;
-		//spi1 = &spi7;
 		usb-host = &usbh;
 		usbotg = &dwc3;
 	};
