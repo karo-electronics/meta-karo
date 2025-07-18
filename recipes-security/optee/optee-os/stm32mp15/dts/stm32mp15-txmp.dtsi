@@ -64,6 +64,7 @@
 };
 
 &rcc {
+	compatible = "st,stm32mp1-rcc-secure";
 	st,clksrc = <
 		CLK_MPU_PLL1P
 		/*

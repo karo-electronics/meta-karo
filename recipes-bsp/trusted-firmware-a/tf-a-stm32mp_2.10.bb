@@ -48,6 +48,13 @@ TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' GENERATE_
 TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' ROT_KEY_PWD=${SIGN_KEY_PASS}', '', d)}"
 TF_A_CONFIG_optee:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' KEY_ALG=ecdsa', '', d)}"
 
+TF_A_CONFIG_usb:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' MBEDTLS_DIR=${S}/${TFA_MBEDTLS_DIR}', '', d)}"
+TF_A_CONFIG_usb:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' ROT_KEY=${SB_KEYS_DIR}/${SIGN_KEY}', '', d)}"
+TF_A_CONFIG_usb:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' TRUSTED_BOARD_BOOT=1', '', d)}"
+TF_A_CONFIG_usb:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' GENERATE_COT=1', '', d)}"
+TF_A_CONFIG_usb:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' ROT_KEY_PWD=${SIGN_KEY_PASS}', '', d)}"
+TF_A_CONFIG_usb:append = "${@bb.utils.contains('SIGN_ENABLE', '1', ' KEY_ALG=ecdsa', '', d)}"
+
 # Define default TF-A namings
 TF_A_BASENAME ?= "tf-a"
 TF_A_SUFFIX ?= "stm32"

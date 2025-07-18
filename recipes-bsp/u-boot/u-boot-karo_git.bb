@@ -371,7 +371,7 @@ do_deploy:stm32mp1 () {
                     cert_create \
                         -n --tfw-nvctr 0 --ntfw-nvctr 0 \
                         --key-alg ecdsa --hash-alg sha256 \
-                        --rot-key ${THISDIR}/${SIGN_KEY} \
+                        --rot-key ${SB_KEYS_DIR}/${SIGN_KEY} \
                         --rot-key-pwd ${SIGN_KEY_PASS} \
                         --tb-fw ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/${cfg}/bl2.bin \
                         --tb-fw-cert ${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/tb_fw.crt \

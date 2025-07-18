@@ -55,9 +55,3 @@ SRC_URI:append = "${@ "" if 'mx6' in "${MACHINEOVERRIDES}".split(':') else "\
         file://dts/${DTB_BASENAME}.dts;subdir=git/arch/arm \
         file://dts/${DTB_BASENAME}-u-boot.dtsi;subdir=git/arch/arm \
 "}"
-
-do_install:append:stm32mp15 () {
-    if [ "${SIGN_ENABLE}" = 1 ];then
-        install -D -m 755 ${SB_KEYS_DIR}/${SIGN_PUB_KEY_HASH} ${D}/boot/${SIGN_PUB_KEY_HASH}
-    fi
-}
