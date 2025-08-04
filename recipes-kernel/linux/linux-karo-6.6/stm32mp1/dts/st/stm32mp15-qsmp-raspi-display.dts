@@ -8,6 +8,17 @@
 
 /plugin/;
 
+&{/} {
+	reg_bridge: reg_bridge@1 {
+		reg = <1>;
+		compatible = "regulator-fixed";
+		regulator-name = "bridge_reg";
+		gpio = <&reg_rpi_display 0 0>;
+		vin-supply = <&reg_rpi_display>;
+		enable-active-high;
+	};
+};
+
 &{/chosen} {
 	overlays {
 		qsmp-raspi-display;
@@ -16,26 +27,46 @@
 
 &dsi_panel {
 	compatible = "raspberrypi,tc358762";
-	dsi-lanes = <1>;
-	video-mode = <2>;
+	default-on;
 	panel-width-mm = <154>;
 	panel-height-mm = <86>;
-	power-supply = <&reg_rpi_display>;
+	power-supply = <&reg_bridge>;
+	backlight = <&reg_rpi_display>;
+	status = "okay";
+
+	port {
+		dsi_panel_from_dsi: endpoint {
+			remote-endpoint = <&dsi_out>;
+		};
+	};
+};
+
+&dsi_in {
+	remote-endpoint = <&ltdc_ep0_out>;
+};
+
+&dsi_out {
+	remote-endpoint = <&dsi_panel_from_dsi>;
 };
 
 &i2c6 {
+	clock-frequency = <100000>;
 	status = "okay";
+
+	ft5406: ts@38 {
+		compatible = "edt,edt-ft5506";
+		reg = <0x38>;
+		vcc-supply = <&reg_rpi_display>;
+		reset-gpio = <&reg_rpi_display 1 1>;
+
+		touchscreen-size-x = < 800 >;
+		touchscreen-size-y = < 480 >;
+	};
 
 	reg_rpi_display: regulator-rpi-display@45 {
 		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
 		reg = <0x45>;
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-	};
-
-	rpi-ft5406@38 {
-		compatible = "rpi_ft5406";
-		reg = <0x38>;
-		power-supply = <&reg_rpi_display>;
+		gpio-controller;
+		#gpio-cells = <2>;
 	};
 };

@@ -1,0 +1,1557 @@
+diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
+index 3a2f4a9f1d466..32c99eec0ec5d 100644
+--- a/drivers/gpu/drm/panel/Kconfig
++++ b/drivers/gpu/drm/panel/Kconfig
+@@ -487,6 +487,16 @@ config DRM_PANEL_RASPBERRYPI_TOUCHSCREEN
+ 	  Pi 7" Touchscreen.  To compile this driver as a module,
+ 	  choose M here.
+ 
++config DRM_PANEL_RPI_7INCH
++	tristate "Ka-Ro electronics RaspberryPi 7inch display panel driver"
++	depends on OF && I2C
++	depends on DRM_MIPI_DSI
++	select RPI_DISPLAY
++	select TOUCHSCREEN_RPI_FT5406
++	select VIDEOMODE_HELPERS
++	help
++	  Say Y here if you want to enable support for the official RaspberryPi 7inch panel.
++
+ config DRM_PANEL_RAYDIUM_RM67191
+ 	tristate "Raydium RM67191 FHD 1080x1920 DSI video mode panel"
+ 	depends on OF
+diff --git a/drivers/gpu/drm/panel/Makefile b/drivers/gpu/drm/panel/Makefile
+index 433e93d57949c..97915f35b7f40 100644
+--- a/drivers/gpu/drm/panel/Makefile
++++ b/drivers/gpu/drm/panel/Makefile
+@@ -46,6 +46,7 @@ obj-$(CONFIG_DRM_PANEL_ORISETECH_OTM8009A) += panel-orisetech-otm8009a.o
+ obj-$(CONFIG_DRM_PANEL_OSD_OSD101T2587_53TS) += panel-osd-osd101t2587-53ts.o
+ obj-$(CONFIG_DRM_PANEL_PANASONIC_VVX10F034N00) += panel-panasonic-vvx10f034n00.o
+ obj-$(CONFIG_DRM_PANEL_RASPBERRYPI_TOUCHSCREEN) += panel-raspberrypi-touchscreen.o
++obj-$(CONFIG_DRM_PANEL_RPI_7INCH) += panel-rpi-7inch.o
+ obj-$(CONFIG_DRM_PANEL_RAYDIUM_RM67191) += panel-raydium-rm67191.o
+ obj-$(CONFIG_DRM_PANEL_RAYDIUM_RM68200) += panel-raydium-rm68200.o
+ obj-$(CONFIG_DRM_PANEL_RONBO_RB070D30) += panel-ronbo-rb070d30.o
+diff --git a/drivers/gpu/drm/panel/panel-rpi-7inch.c b/drivers/gpu/drm/panel/panel-rpi-7inch.c
+new file mode 100644
+index 0000000000000..2f9c08aedbbc5
+--- /dev/null
++++ b/drivers/gpu/drm/panel/panel-rpi-7inch.c
+@@ -0,0 +1,419 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2021, Markus Bauer <mb@karo-electronics.de>
++ * Edited and fitted to our needs.
++ *
++ * Copyright (C) 2013, NVIDIA Corporation.  All rights reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sub license,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the
++ * next paragraph) shall be included in all copies or substantial portions
++ * of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ */
++
++#include <linux/backlight.h>
++#include <linux/delay.h>
++#include <linux/gpio/consumer.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/of_platform.h>
++#include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
++
++#include <drm/drm_print.h>
++#include <drm/drm_crtc.h>
++#include <drm/drm_mipi_dsi.h>
++#include <drm/drm_panel.h>
++
++#include <video/display_timing.h>
++#include <video/of_display_timing.h>
++#include <video/videomode.h>
++
++/* DSI PPI Layer Registers */
++#define PPI_STARTPPI		0x0104
++#define PPI_LPTXTIMECNT		0x0114
++#define PPI_D0S_ATMR		0x0144
++#define PPI_D1S_ATMR		0x0148
++#define PPI_D0S_CLRSIPOCOUNT	0x0164
++#define PPI_D1S_CLRSIPOCOUNT	0x0168
++
++/* DSI Protocol Layer Registers */
++#define DSI_STARTDSI		0x0204
++#define DSI_BUSYDSI		0x0208
++#define DSI_LANEENABLE		0x0210
++#define DSI_LANEENABLE_CLOCK	BIT(0)
++#define DSI_LANEENABLE_D0	BIT(1)
++#define DSI_LANEENABLE_D1	BIT(2)
++
++/* LCDC/DPI Host Registers */
++#define LCDCTRL			0x0420
++
++/* SPI Master Registers */
++#define SPICMR			0x0450
++
++/* System Controller Registers */
++#define SYSCTRL			0x0464
++
++struct panel_desc {
++	const struct drm_display_mode *modes;
++	unsigned int num_modes;
++	const struct display_timing *timings;
++	unsigned int num_timings;
++
++	unsigned int bpc;
++
++	struct {
++		unsigned int width;
++		unsigned int height;
++	} size;
++
++	u32 bus_format;
++};
++
++struct tc358762 {
++	struct drm_panel base;
++	bool prepared;
++	bool enabled;
++
++	struct device *dev;
++	struct mipi_dsi_device *dsi;
++	const struct panel_desc *desc;
++
++	struct regulator *supply;
++	struct i2c_adapter *ddc;
++
++	struct gpio_desc *enable_gpio;
++	struct regulator *power_supply;
++};
++
++static const struct drm_display_mode tc358762_mode = {
++	.clock = 27448,
++	.hdisplay = 800,
++	.hsync_start = 800 + 70,
++	.hsync_end = 800 + 70 + 20,
++	.htotal = 800 + 70 + 20 + 23,
++	.vdisplay = 480,
++	.vsync_start = 480 + 7,
++	.vsync_end = 480 + 7 + 2,
++	.vtotal = 480 + 7 + 2 + 21,
++	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
++};
++
++static inline struct tc358762 *to_tc358762(struct drm_panel *panel)
++{
++	return container_of(panel, struct tc358762, base);
++}
++
++static int tc358762_disable(struct drm_panel *panel)
++{
++	struct tc358762 *p = to_tc358762(panel);
++
++	if (!p->enabled)
++		return 0;
++
++	regulator_disable(p->power_supply);
++
++	p->enabled = false;
++
++	return 0;
++}
++
++static int tc358762_unprepare(struct drm_panel *panel)
++{
++	struct tc358762 *p = to_tc358762(panel);
++
++	if (!p->prepared)
++		return 0;
++
++	p->prepared = false;
++
++	return 0;
++}
++
++static int rpi_touchscreen_write(struct mipi_dsi_device *dsi, u16 reg, u32 val)
++{
++	int ret;
++	u8 msg[] = {
++		reg,
++		reg >> 8,
++		val,
++		val >> 8,
++		val >> 16,
++		val >> 24,
++	};
++
++	ret = mipi_dsi_generic_write(dsi, msg, sizeof(msg));
++	if (ret == sizeof(msg) + 4)
++		DRM_DEBUG("%s wrote 0x%08x to 0x%03x\n", __func__,
++			  val, reg);
++	else
++		DRM_ERROR("%s failed to write 0x%08x to 0x%03x: %d\n", __func__,
++			  val, reg, ret);
++	return ret;
++}
++
++static struct {
++	int addr;
++	u32 val;
++} tc358762_dsi_data[] = {
++	{ DSI_LANEENABLE, DSI_LANEENABLE_CLOCK | DSI_LANEENABLE_D0, },
++
++	{ PPI_D0S_CLRSIPOCOUNT, 0x05, },
++	{ PPI_D1S_CLRSIPOCOUNT, 0x05, },
++	{ PPI_D0S_ATMR, 0x00, },
++	{ PPI_D1S_ATMR, 0x00, },
++	{ PPI_LPTXTIMECNT, 0x03, },
++
++	{ SPICMR, 0x00, },
++	{ LCDCTRL, 0x00100150, },
++	{ SYSCTRL, 0x040f, },
++
++	{ PPI_STARTPPI, 0x01, },
++	{ DSI_STARTDSI, 0x01, },
++};
++
++static int tc358762_dsi_init(struct tc358762 *p)
++{
++	int ret;
++	struct mipi_dsi_device *dsi = p->dsi;
++	size_t i;
++
++	for (i = 0; i < ARRAY_SIZE(tc358762_dsi_data); i++) {
++		ret = rpi_touchscreen_write(dsi, tc358762_dsi_data[i].addr,
++					    tc358762_dsi_data[i].val);
++		if (ret < 0) {
++			DRM_ERROR("Failed to write %08x to reg %03x: %d\n",
++				  tc358762_dsi_data[i].val,
++				  tc358762_dsi_data[i].addr, ret);
++			return ret;
++		}
++		if (i == 8)
++			msleep(100);
++	}
++	msleep(100);
++	return 0;
++}
++
++static int tc358762_prepare(struct drm_panel *panel)
++{
++	int ret;
++	struct tc358762 *p = to_tc358762(panel);
++
++	if (p->prepared)
++		return 0;
++
++	p->prepared = true;
++
++	return ret;
++}
++
++static int tc358762_enable(struct drm_panel *panel)
++{
++	int ret;
++	struct tc358762 *p = to_tc358762(panel);
++
++	if (p->enabled)
++		return 0;
++
++	ret = regulator_enable(p->power_supply);
++	if (ret) {
++		DRM_ERROR("failed to enable power_supply: %d\n", ret);
++		return ret;
++	}
++
++	msleep(100);
++
++	ret = tc358762_dsi_init(p);
++	if (ret)
++		return ret;
++
++	p->enabled = true;
++
++	return 0;
++}
++
++static int tc358762_get_modes(struct drm_panel *panel, struct drm_connector *connector)
++{
++	struct drm_display_mode *mode;
++
++	mode = drm_mode_duplicate(connector->dev, &tc358762_mode);
++	if (!mode) {
++		DRM_ERROR("failed to add mode %ux%ux\n",
++			  tc358762_mode.hdisplay, tc358762_mode.vdisplay);
++		return -ENOMEM;
++	}
++
++	drm_mode_set_name(mode);
++
++	mode->type = DRM_MODE_TYPE_DRIVER | DRM_MODE_TYPE_PREFERRED;
++	drm_mode_probed_add(connector, mode);
++
++	connector->display_info.width_mm = mode->width_mm;
++	connector->display_info.height_mm = mode->height_mm;
++
++	return 1;
++}
++
++static int tc358762_get_timings(struct drm_panel *panel,
++					unsigned int num_timings,
++					struct display_timing *timings)
++{
++	struct tc358762 *p = to_tc358762(panel);
++	unsigned int i;
++
++	if (!p->desc)
++		return 0;
++
++	if (p->desc->num_timings < num_timings)
++		num_timings = p->desc->num_timings;
++
++	if (timings)
++		for (i = 0; i < num_timings; i++)
++			timings[i] = p->desc->timings[i];
++
++	return p->desc->num_timings;
++}
++
++static const struct drm_panel_funcs tc358762_funcs = {
++	.disable = tc358762_disable,
++	.unprepare = tc358762_unprepare,
++	.prepare = tc358762_prepare,
++	.enable = tc358762_enable,
++	.get_modes = tc358762_get_modes,
++	.get_timings = tc358762_get_timings,
++};
++
++static void tc358762_remove(struct device *dev)
++{
++	struct tc358762 *panel = dev_get_drvdata(dev);
++
++	drm_panel_remove(&panel->base);
++
++	tc358762_disable(&panel->base);
++
++	if (panel->ddc)
++		put_device(&panel->ddc->dev);
++}
++
++static void tc358762_shutdown(struct device *dev)
++{
++	struct tc358762 *panel = dev_get_drvdata(dev);
++
++	tc358762_disable(&panel->base);
++}
++
++struct bridge_desc {
++	struct panel_desc desc;
++
++	unsigned long flags;
++	enum mipi_dsi_pixel_format format;
++	unsigned int lanes;
++};
++
++static int tc358762_dsi_probe(struct mipi_dsi_device *dsi)
++{
++	int err;
++	struct device *dev = &dsi->dev;
++	struct tc358762 *panel;
++
++	panel = devm_kzalloc(dev, sizeof(*panel), GFP_KERNEL);
++	if (!panel)
++		return -ENOMEM;
++
++	panel->dsi = dsi;
++	panel->power_supply = devm_regulator_get(dev, "power");
++	if (IS_ERR(panel->power_supply)) {
++		return dev_err_probe(dev, PTR_ERR(panel->power_supply),
++				     "Failed to get power-supply regulator\n");
++	}
++	dev_info(dev, "Got power-supply regulator\n");
++
++	mipi_dsi_set_drvdata(dsi, panel);
++
++	dsi->lanes = 1;
++	dsi->format = MIPI_DSI_FMT_RGB888;
++	dsi->mode_flags = MIPI_DSI_MODE_VIDEO |
++			  MIPI_DSI_MODE_VIDEO_SYNC_PULSE |
++			  MIPI_DSI_MODE_LPM |
++			  MIPI_DSI_MODE_VIDEO_HSE;
++
++	panel->enabled = false;
++	panel->prepared = false;
++
++	panel->base.dev = dev;
++	panel->base.funcs = &tc358762_funcs;
++
++	drm_panel_init(&panel->base, dev, &tc358762_funcs, DRM_MODE_CONNECTOR_DSI);
++
++	dev_set_drvdata(dev, panel);
++
++	err = drm_panel_of_backlight(&panel->base);
++	if (err) {
++		dev_err_probe(dev, err, "Could not find backlight\n");
++		return err;
++	}
++
++	drm_panel_add(&panel->base);
++
++	err = mipi_dsi_attach(dsi);
++	if (err < 0) {
++		if (err != -EPROBE_DEFER)
++			dev_err(dev, "mipi_dsi_attach failed: %d\n", err);
++
++		drm_panel_remove(&panel->base);
++		return err;
++	}
++	return 0;
++}
++
++static void tc358762_dsi_remove(struct mipi_dsi_device *dsi)
++{
++	int err;
++
++	err = mipi_dsi_detach(dsi);
++	if (err < 0)
++		dev_err(&dsi->dev, "failed to detach from DSI host: %d\n", err);
++
++	tc358762_remove(&dsi->dev);
++}
++
++static void tc358762_dsi_shutdown(struct mipi_dsi_device *dsi)
++{
++	tc358762_shutdown(&dsi->dev);
++}
++
++static const struct of_device_id dsi_of_match[] = {
++	{ .compatible = "raspberrypi,tc358762", },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, dsi_of_match);
++
++static struct mipi_dsi_driver tc358762_dsi_driver = {
++	.driver = {
++		.name = "bridge-tc358762-dsi",
++		.of_match_table = dsi_of_match,
++	},
++	.probe = tc358762_dsi_probe,
++	.remove = tc358762_dsi_remove,
++	.shutdown = tc358762_dsi_shutdown,
++};
++module_mipi_dsi_driver(tc358762_dsi_driver);
++
++MODULE_AUTHOR("Markus Bauer <mb@karo-electronics.de>");
++MODULE_AUTHOR("Jerry <xbl@rock-chips.com>");
++MODULE_DESCRIPTION("DRM Driver for toshiba tc358762 Bridge");
++MODULE_LICENSE("GPL and additional rights");
+diff --git a/drivers/input/touchscreen/Kconfig b/drivers/input/touchscreen/Kconfig
+index e3e2324547b90..a4afcf976db17 100644
+--- a/drivers/input/touchscreen/Kconfig
++++ b/drivers/input/touchscreen/Kconfig
+@@ -1295,6 +1295,13 @@ config TOUCHSCREEN_SX8654
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called sx8654.
+ 
++config TOUCHSCREEN_RPI_FT5406
++	tristate "RaspberryPi 7inch touchscreen ft5406"
++	default y
++	depends on I2C
++	help
++	  Controls the official RaspberryPi 7inch ft5406 touch ic.
++
+ config TOUCHSCREEN_TPS6507X
+ 	tristate "TPS6507x based touchscreens"
+ 	depends on I2C
+diff --git a/drivers/input/touchscreen/Makefile b/drivers/input/touchscreen/Makefile
+index 62bd24f3ac8e0..c030e6e30d8ea 100644
+--- a/drivers/input/touchscreen/Makefile
++++ b/drivers/input/touchscreen/Makefile
+@@ -108,6 +108,7 @@ wm97xx-ts-$(CONFIG_TOUCHSCREEN_WM9712)	+= wm9712.o
+ wm97xx-ts-$(CONFIG_TOUCHSCREEN_WM9713)	+= wm9713.o
+ obj-$(CONFIG_TOUCHSCREEN_WM97XX_MAINSTONE)	+= mainstone-wm97xx.o
+ obj-$(CONFIG_TOUCHSCREEN_SX8654)	+= sx8654.o
++obj-$(CONFIG_TOUCHSCREEN_RPI_FT5406)	+= rpi_ft5406.o
+ obj-$(CONFIG_TOUCHSCREEN_TPS6507X)	+= tps6507x-ts.o
+ obj-$(CONFIG_TOUCHSCREEN_ZET6223)	+= zet6223.o
+ obj-$(CONFIG_TOUCHSCREEN_ZFORCE)	+= zforce_ts.o
+diff --git a/drivers/input/touchscreen/edt-ft5x06.c b/drivers/input/touchscreen/edt-ft5x06.c
+index f32d8b426f617..ed762cd90f665 100644
+--- a/drivers/input/touchscreen/edt-ft5x06.c
++++ b/drivers/input/touchscreen/edt-ft5x06.c
+@@ -32,9 +32,7 @@
+ #include <linux/slab.h>
+ #include <linux/uaccess.h>
+ 
+-#include <asm/unaligned.h>
+-#include <linux/of_device.h>
+-#include <drm/drm_panel.h>
++#include <asm-generic/unaligned.h>
+ 
+ #define WORK_REGISTER_THRESHOLD		0x00
+ #define WORK_REGISTER_REPORT_RATE	0x08
+@@ -71,6 +69,7 @@
+ #define TOUCH_EVENT_RESERVED		0x03
+ 
+ #define EDT_NAME_LEN			23
++#define EDT_NAME_PREFIX_LEN		8
+ #define EDT_SWITCH_MODE_RETRIES		10
+ #define EDT_SWITCH_MODE_DELAY		5 /* msec */
+ #define EDT_RAW_DATA_RETRIES		100
+@@ -82,6 +81,10 @@
+ #define M06_REG_CMD(factory) ((factory) ? 0xf3 : 0xfc)
+ #define M06_REG_ADDR(factory, addr) ((factory) ? (addr) & 0x7f : (addr) & 0x3f)
+ 
++#define RESET_DELAY_MS			300	/* reset deassert to I2C */
++#define FIRST_POLL_DELAY_MS		300	/* in addition to the above */
++#define POLL_INTERVAL_MS		17	/* 17ms = 60fps */
++
+ enum edt_pmode {
+ 	EDT_PMODE_NOT_SUPPORTED,
+ 	EDT_PMODE_HIBERNATE,
+@@ -141,17 +144,19 @@ struct edt_ft5x06_ts_data {
+ 	u8 tdata_cmd;
+ 	int tdata_len;
+ 	int tdata_offset;
++	unsigned int known_ids;
+ 
+-	char name[EDT_NAME_LEN];
++	char name[EDT_NAME_PREFIX_LEN + EDT_NAME_LEN];
+ 	char fw_version[EDT_NAME_LEN];
+-	unsigned int wrbuf;
+-	u8 rdbuf[EDT_NAME_LEN];
+-	u8 irqbuf[64];
++	int init_td_status;
+ 
+ 	struct edt_reg_addr reg_addr;
+ 	enum edt_ver version;
+ 	unsigned int crc_errors;
+ 	unsigned int header_errors;
++
++	struct timer_list timer;
++	struct work_struct work_i2c_poll;
+ };
+ 
+ struct edt_i2c_chip_data {
+@@ -193,8 +198,7 @@ static int edt_M06_i2c_read(void *context, const void *reg_buf, size_t reg_size,
+ 	bool reg_read = false;
+ 	u8 addr;
+ 	u8 wlen;
+-	u8 *wbuf = (u8 *)&tsdata->wrbuf;
+-	u8 *rbuf = tsdata->rdbuf;
++	u8 wbuf[4], rbuf[3];
+ 	int ret;
+ 
+ 	addr = *((u8 *)reg_buf);
+@@ -267,7 +271,7 @@ static int edt_M06_i2c_write(void *context, const void *data, size_t count)
+ 	struct i2c_client *i2c = to_i2c_client(dev);
+ 	struct edt_ft5x06_ts_data *tsdata = i2c_get_clientdata(i2c);
+ 	u8 addr, val;
+-	u8 *wbuf = (u8 *)&tsdata->wrbuf;
++	u8 wbuf[4];
+ 	struct i2c_msg xfer;
+ 	int ret;
+ 
+@@ -306,20 +310,52 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
+ {
+ 	struct edt_ft5x06_ts_data *tsdata = dev_id;
+ 	struct device *dev = &tsdata->client->dev;
+-	u8 *rdbuf = &tsdata->irqbuf[1];
++	u8 rdbuf[63];
+ 	int i, type, x, y, id;
+ 	int error;
++	int num_points;
++	unsigned int active_ids = 0, known_ids = tsdata->known_ids;
++	long released_ids;
++	int b = 0;
+ 
+-	memset(tsdata->irqbuf, 0, sizeof(tsdata->irqbuf));
++	memset(rdbuf, 0, sizeof(rdbuf));
+ 	error = regmap_bulk_read(tsdata->regmap, tsdata->tdata_cmd, rdbuf,
+ 				 tsdata->tdata_len);
++	if (tsdata->version == EDT_M06) {
++		num_points = tsdata->max_support_points;
++	} else {
++		/* Register 2 is TD_STATUS, containing the number of touch
++		 * points.
++		 */
++		num_points = min(rdbuf[2] & 0xf, tsdata->max_support_points);
++
++		/* When polling FT5x06 without IRQ: initial register contents
++		 * could be stale or undefined; discard all readings until
++		 * TD_STATUS changes for the first time (or num_points is 0).
++		 */
++		if (tsdata->init_td_status) {
++			if (tsdata->init_td_status < 0)
++				tsdata->init_td_status = rdbuf[2];
++
++			if (num_points && rdbuf[2] == tsdata->init_td_status)
++				goto out;
++
++			tsdata->init_td_status = 0;
++		}
++
++		if (!error && num_points)
++			error = regmap_bulk_read(tsdata->regmap,
++						 tsdata->tdata_offset,
++						 &rdbuf[tsdata->tdata_offset],
++						 tsdata->point_len * num_points);
++	}
+ 	if (error) {
+ 		dev_err_ratelimited(dev, "Unable to fetch data, error: %d\n",
+ 				    error);
+ 		goto out;
+ 	}
+ 
+-	for (i = 0; i < tsdata->max_support_points; i++) {
++	for (i = 0; i < num_points; i++) {
+ 		u8 *buf = &rdbuf[i * tsdata->point_len + tsdata->tdata_offset];
+ 
+ 		type = buf[0] >> 6;
+@@ -341,10 +377,25 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
+ 
+ 		input_mt_slot(tsdata->input, id);
+ 		if (input_mt_report_slot_state(tsdata->input, MT_TOOL_FINGER,
+-					       type != TOUCH_EVENT_UP))
++					       type != TOUCH_EVENT_UP)) {
+ 			touchscreen_report_pos(tsdata->input, &tsdata->prop,
+ 					       x, y, true);
++			active_ids |= BIT(id);
++		} else {
++			known_ids &= ~BIT(id);
++		}
++	}
++
++	/* One issue with the device is the TOUCH_UP message is not always
++	 * returned. Instead track which ids we know about and report when they
++	 * are no longer updated
++	 */
++	released_ids = known_ids & ~active_ids;
++	for_each_set_bit_from(b, &released_ids, tsdata->max_support_points) {
++		input_mt_slot(tsdata->input, b);
++		input_mt_report_slot_inactive(tsdata->input);
+ 	}
++	tsdata->known_ids = active_ids;
+ 
+ 	input_mt_report_pointer_emulation(tsdata->input, true);
+ 	input_sync(tsdata->input);
+@@ -353,6 +404,22 @@ static irqreturn_t edt_ft5x06_ts_isr(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void edt_ft5x06_ts_irq_poll_timer(struct timer_list *t)
++{
++	struct edt_ft5x06_ts_data *tsdata = from_timer(tsdata, t, timer);
++
++	schedule_work(&tsdata->work_i2c_poll);
++	mod_timer(&tsdata->timer, jiffies + msecs_to_jiffies(POLL_INTERVAL_MS));
++}
++
++static void edt_ft5x06_ts_work_i2c_poll(struct work_struct *work)
++{
++	struct edt_ft5x06_ts_data *tsdata = container_of(work,
++			struct edt_ft5x06_ts_data, work_i2c_poll);
++
++	edt_ft5x06_ts_isr(0, tsdata);
++}
++
+ struct edt_ft5x06_attribute {
+ 	struct device_attribute dattr;
+ 	size_t field_offset;
+@@ -386,7 +453,7 @@ static ssize_t edt_ft5x06_setting_show(struct device *dev,
+ 	struct edt_ft5x06_attribute *attr =
+ 			container_of(dattr, struct edt_ft5x06_attribute, dattr);
+ 	u8 *field = (u8 *)tsdata + attr->field_offset;
+-	unsigned int *val = &tsdata->wrbuf;
++	unsigned int val;
+ 	size_t count = 0;
+ 	int error = 0;
+ 	u8 addr;
+@@ -419,7 +486,7 @@ static ssize_t edt_ft5x06_setting_show(struct device *dev,
+ 	}
+ 
+ 	if (addr != NO_REGISTER) {
+-		error = regmap_read(tsdata->regmap, addr, val);
++		error = regmap_read(tsdata->regmap, addr, &val);
+ 		if (error) {
+ 			dev_err(&tsdata->client->dev,
+ 				"Failed to fetch attribute %s, error %d\n",
+@@ -427,17 +494,17 @@ static ssize_t edt_ft5x06_setting_show(struct device *dev,
+ 			goto out;
+ 		}
+ 	} else {
+-		*val = *field;
++		val = *field;
+ 	}
+ 
+-	if (*val != *field) {
++	if (val != *field) {
+ 		dev_warn(&tsdata->client->dev,
+ 			 "%s: read (%d) and stored value (%d) differ\n",
+-			 dattr->attr.name, *val, *field);
+-		*field = *val;
++			 dattr->attr.name, val, *field);
++		*field = val;
+ 	}
+ 
+-	count = scnprintf(buf, PAGE_SIZE, "%d\n", *val);
++	count = sysfs_emit(buf, "%d\n", val);
+ out:
+ 	mutex_unlock(&tsdata->mutex);
+ 	return error ?: count;
+@@ -586,10 +653,7 @@ static struct attribute *edt_ft5x06_attrs[] = {
+ 	&dev_attr_crc_errors.attr,
+ 	NULL
+ };
+-
+-static const struct attribute_group edt_ft5x06_attr_group = {
+-	.attrs = edt_ft5x06_attrs,
+-};
++ATTRIBUTE_GROUPS(edt_ft5x06);
+ 
+ static void edt_ft5x06_restore_reg_parameters(struct edt_ft5x06_ts_data *tsdata)
+ {
+@@ -614,7 +678,7 @@ static int edt_ft5x06_factory_mode(struct edt_ft5x06_ts_data *tsdata)
+ {
+ 	struct i2c_client *client = tsdata->client;
+ 	int retries = EDT_SWITCH_MODE_RETRIES;
+-	unsigned int *val = &tsdata->wrbuf;
++	unsigned int val;
+ 	int error;
+ 
+ 	if (tsdata->version != EDT_M06) {
+@@ -648,8 +712,8 @@ static int edt_ft5x06_factory_mode(struct edt_ft5x06_ts_data *tsdata)
+ 		mdelay(EDT_SWITCH_MODE_DELAY);
+ 		/* mode register is 0x01 when in factory mode */
+ 		error = regmap_read(tsdata->regmap, FACTORY_REGISTER_OPMODE,
+-				    val);
+-		if (!error && *val == 0x03)
++				    &val);
++		if (!error && val == 0x03)
+ 			break;
+ 	} while (--retries > 0);
+ 
+@@ -675,7 +739,7 @@ static int edt_ft5x06_work_mode(struct edt_ft5x06_ts_data *tsdata)
+ {
+ 	struct i2c_client *client = tsdata->client;
+ 	int retries = EDT_SWITCH_MODE_RETRIES;
+-	unsigned int *val = &tsdata->wrbuf;
++	unsigned int val;
+ 	int error;
+ 
+ 	/* mode register is 0x01 when in the factory mode */
+@@ -691,8 +755,8 @@ static int edt_ft5x06_work_mode(struct edt_ft5x06_ts_data *tsdata)
+ 	do {
+ 		mdelay(EDT_SWITCH_MODE_DELAY);
+ 		/* mode register is 0x01 when in factory mode */
+-		error = regmap_read(tsdata->regmap, WORK_REGISTER_OPMODE, val);
+-		if (!error && *val == 0x01)
++		error = regmap_read(tsdata->regmap, WORK_REGISTER_OPMODE, &val);
++		if (!error && val == 0x01)
+ 			break;
+ 	} while (--retries > 0);
+ 
+@@ -751,7 +815,7 @@ static ssize_t edt_ft5x06_debugfs_raw_data_read(struct file *file,
+ 	struct edt_ft5x06_ts_data *tsdata = file->private_data;
+ 	struct i2c_client *client = tsdata->client;
+ 	int retries  = EDT_RAW_DATA_RETRIES;
+-	unsigned int *val = &tsdata->wrbuf;
++	unsigned int val;
+ 	int i, error;
+ 	size_t read = 0;
+ 	int colbytes;
+@@ -776,7 +840,7 @@ static ssize_t edt_ft5x06_debugfs_raw_data_read(struct file *file,
+ 
+ 	do {
+ 		usleep_range(EDT_RAW_DATA_DELAY, EDT_RAW_DATA_DELAY + 100);
+-		error = regmap_read(tsdata->regmap, 0x08, val);
++		error = regmap_read(tsdata->regmap, 0x08, &val);
+ 		if (error) {
+ 			dev_err(&client->dev,
+ 				"failed to read 0x08 register, error %d\n",
+@@ -784,7 +848,7 @@ static ssize_t edt_ft5x06_debugfs_raw_data_read(struct file *file,
+ 			goto out;
+ 		}
+ 
+-		if (*val == 1)
++		if (val == 1)
+ 			break;
+ 	} while (--retries > 0);
+ 
+@@ -865,12 +929,15 @@ static void edt_ft5x06_ts_teardown_debugfs(struct edt_ft5x06_ts_data *tsdata)
+ static int edt_ft5x06_ts_identify(struct i2c_client *client,
+ 				  struct edt_ft5x06_ts_data *tsdata)
+ {
+-	u8 *rdbuf = tsdata->rdbuf;
++	u8 rdbuf[EDT_NAME_LEN];
+ 	char *p;
+ 	int error;
+ 	char *model_name = tsdata->name;
+ 	char *fw_version = tsdata->fw_version;
+ 
++	snprintf(model_name, EDT_NAME_PREFIX_LEN + 1, "%s ", dev_name(&client->dev));
++	model_name += strlen(model_name);
++
+ 	/* see what we find if we assume it is a M06 *
+ 	 * if we get less than EDT_NAME_LEN, we don't want
+ 	 * to have garbage in there
+@@ -962,10 +1029,6 @@ static int edt_ft5x06_ts_identify(struct i2c_client *client,
+ 			snprintf(model_name, EDT_NAME_LEN, "EP%i%i0ML00",
+ 				 rdbuf[0] >> 4, rdbuf[0] & 0x0F);
+ 			break;
+-		case 0x51:   /* Rocktech Rk043fn48h Display */
+-			tsdata->version = EV_FT;
+-			snprintf(model_name, EDT_NAME_LEN, "FT5336GQQ");
+-			break;
+ 		case 0x5a:   /* Solomon Goldentek Display */
+ 			snprintf(model_name, EDT_NAME_LEN, "GKTW50SCED1R0");
+ 			break;
+@@ -1035,7 +1098,7 @@ static void edt_ft5x06_ts_get_parameters(struct edt_ft5x06_ts_data *tsdata)
+ {
+ 	struct edt_reg_addr *reg_addr = &tsdata->reg_addr;
+ 	struct regmap *regmap = tsdata->regmap;
+-	unsigned int *val = &tsdata->wrbuf;
++	unsigned int val;
+ 
+ 	regmap_read(regmap, reg_addr->reg_threshold, &tsdata->threshold);
+ 	regmap_read(regmap, reg_addr->reg_gain, &tsdata->gain);
+@@ -1050,33 +1113,36 @@ static void edt_ft5x06_ts_get_parameters(struct edt_ft5x06_ts_data *tsdata)
+ 			    &tsdata->report_rate);
+ 	tsdata->num_x = EDT_DEFAULT_NUM_X;
+ 	if (reg_addr->reg_num_x != NO_REGISTER) {
+-		if (!regmap_read(regmap, reg_addr->reg_num_x, val))
+-			tsdata->num_x = *val;
++		if (!regmap_read(regmap, reg_addr->reg_num_x, &val))
++			tsdata->num_x = val;
+ 	}
+ 	tsdata->num_y = EDT_DEFAULT_NUM_Y;
+ 	if (reg_addr->reg_num_y != NO_REGISTER) {
+-		if (!regmap_read(regmap, reg_addr->reg_num_y, val))
+-			tsdata->num_y = *val;
++		if (!regmap_read(regmap, reg_addr->reg_num_y, &val))
++			tsdata->num_y = val;
+ 	}
+ }
+ 
+ static void edt_ft5x06_ts_set_tdata_parameters(struct edt_ft5x06_ts_data *tsdata)
+ {
+ 	int crclen;
++	int points;
+ 
+ 	if (tsdata->version == EDT_M06) {
+ 		tsdata->tdata_cmd = 0xf9;
+ 		tsdata->tdata_offset = 5;
+ 		tsdata->point_len = 4;
+ 		crclen = 1;
++		points = tsdata->max_support_points;
+ 	} else {
+ 		tsdata->tdata_cmd = 0x0;
+ 		tsdata->tdata_offset = 3;
+ 		tsdata->point_len = 6;
+ 		crclen = 0;
++		points = 0;
+ 	}
+ 
+-	tsdata->tdata_len = tsdata->point_len * tsdata->max_support_points +
++	tsdata->tdata_len = tsdata->point_len * points +
+ 		tsdata->tdata_offset + crclen;
+ }
+ 
+@@ -1155,38 +1221,14 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client)
+ 	const struct i2c_device_id *id = i2c_client_get_device_id(client);
+ 	const struct edt_i2c_chip_data *chip_data;
+ 	struct edt_ft5x06_ts_data *tsdata;
+-	struct drm_panel *panel;
+-	struct device_node *np;
++	unsigned int val;
+ 	struct input_dev *input;
+ 	unsigned long irq_flags;
+-	struct device_link *dlink;
+ 	int error;
+ 	u32 report_rate;
+ 
+ 	dev_dbg(&client->dev, "probing for EDT FT5x06 I2C\n");
+ 
+-	np = of_parse_phandle(client->dev.of_node, "panel", 0);
+-	if (np) {
+-		panel = of_drm_find_panel(np);
+-		of_node_put(np);
+-		if (!panel)
+-			return -EPROBE_DEFER;
+-
+-		dlink = device_link_add(&client->dev, panel->dev, DL_FLAG_AUTOREMOVE_CONSUMER);
+-
+-		if (IS_ERR(dlink)) {
+-			error = PTR_ERR(dlink);
+-			dev_err(&client->dev,
+-				"Failed to add link to device %d\n", error);
+-			return error;
+-		}
+-
+-		if (dlink && dlink->status != DL_STATE_CONSUMER_PROBE)
+-			return -EPROBE_DEFER;
+-
+-		put_device(panel->dev);
+-	}
+-
+ 	tsdata = devm_kzalloc(&client->dev, sizeof(*tsdata), GFP_KERNEL);
+ 	if (!tsdata) {
+ 		dev_err(&client->dev, "failed to allocate driver data.\n");
+@@ -1295,7 +1337,7 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client)
+ 	if (tsdata->reset_gpio) {
+ 		usleep_range(5000, 6000);
+ 		gpiod_set_value_cansleep(tsdata->reset_gpio, 0);
+-		msleep(300);
++		msleep(RESET_DELAY_MS);
+ 	}
+ 
+ 	input = devm_input_allocate_device(&client->dev);
+@@ -1320,7 +1362,7 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client)
+ 	 * Dummy read access. EP0700MLP1 returns bogus data on the first
+ 	 * register read access and ignores writes.
+ 	 */
+-	regmap_read(tsdata->regmap, 0x00, &tsdata->wrbuf);
++	regmap_read(tsdata->regmap, 0x00, &val);
+ 
+ 	edt_ft5x06_ts_set_tdata_parameters(tsdata);
+ 	edt_ft5x06_ts_set_regs(tsdata);
+@@ -1369,23 +1411,30 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client)
+ 		return error;
+ 	}
+ 
+-	irq_flags = irq_get_trigger_type(client->irq);
+-	if (irq_flags == IRQF_TRIGGER_NONE)
+-		irq_flags = IRQF_TRIGGER_FALLING;
+-	irq_flags |= IRQF_ONESHOT;
++	if (client->irq) {
++		irq_flags = irq_get_trigger_type(client->irq);
++		if (irq_flags == IRQF_TRIGGER_NONE)
++			irq_flags = IRQF_TRIGGER_FALLING;
++		irq_flags |= IRQF_ONESHOT;
+ 
+-	error = devm_request_threaded_irq(&client->dev, client->irq,
+-					  NULL, edt_ft5x06_ts_isr, irq_flags,
+-					  client->name, tsdata);
+-	if (error) {
+-		dev_err(&client->dev, "Unable to request touchscreen IRQ.\n");
+-		return error;
++		error = devm_request_threaded_irq(&client->dev, client->irq,
++						  NULL, edt_ft5x06_ts_isr,
++						  irq_flags, client->name,
++						  tsdata);
++		if (error) {
++			dev_err(&client->dev, "Unable to request touchscreen IRQ.\n");
++			return error;
++		}
++	} else {
++		tsdata->init_td_status = -1; /* filter bogus initial data */
++		INIT_WORK(&tsdata->work_i2c_poll,
++			  edt_ft5x06_ts_work_i2c_poll);
++		timer_setup(&tsdata->timer, edt_ft5x06_ts_irq_poll_timer, 0);
++		tsdata->timer.expires =
++			jiffies + msecs_to_jiffies(FIRST_POLL_DELAY_MS);
++		add_timer(&tsdata->timer);
+ 	}
+ 
+-	error = devm_device_add_group(&client->dev, &edt_ft5x06_attr_group);
+-	if (error)
+-		return error;
+-
+ 	error = input_register_device(input);
+ 	if (error)
+ 		return error;
+@@ -1405,6 +1454,10 @@ static void edt_ft5x06_ts_remove(struct i2c_client *client)
+ {
+ 	struct edt_ft5x06_ts_data *tsdata = i2c_get_clientdata(client);
+ 
++	if (!client->irq) {
++		del_timer(&tsdata->timer);
++		cancel_work_sync(&tsdata->work_i2c_poll);
++	}
+ 	edt_ft5x06_ts_teardown_debugfs(tsdata);
+ }
+ 
+@@ -1520,6 +1573,10 @@ static const struct edt_i2c_chip_data edt_ft5x06_data = {
+ 	.max_support_points = 5,
+ };
+ 
++static const struct edt_i2c_chip_data edt_ft5452_data = {
++	.max_support_points = 5,
++};
++
+ static const struct edt_i2c_chip_data edt_ft5506_data = {
+ 	.max_support_points = 10,
+ };
+@@ -1528,12 +1585,23 @@ static const struct edt_i2c_chip_data edt_ft6236_data = {
+ 	.max_support_points = 2,
+ };
+ 
++static const struct edt_i2c_chip_data edt_ft8201_data = {
++	.max_support_points = 10,
++};
++
++static const struct edt_i2c_chip_data edt_ft8719_data = {
++	.max_support_points = 10,
++};
++
+ static const struct i2c_device_id edt_ft5x06_ts_id[] = {
+ 	{ .name = "edt-ft5x06", .driver_data = (long)&edt_ft5x06_data },
+ 	{ .name = "edt-ft5506", .driver_data = (long)&edt_ft5506_data },
+ 	{ .name = "ev-ft5726", .driver_data = (long)&edt_ft5506_data },
++	{ .name = "ft5452", .driver_data = (long)&edt_ft5452_data },
+ 	/* Note no edt- prefix for compatibility with the ft6236.c driver */
+ 	{ .name = "ft6236", .driver_data = (long)&edt_ft6236_data },
++	{ .name = "ft8201", .driver_data = (long)&edt_ft8201_data },
++	{ .name = "ft8719", .driver_data = (long)&edt_ft8719_data },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(i2c, edt_ft5x06_ts_id);
+@@ -1544,8 +1612,12 @@ static const struct of_device_id edt_ft5x06_of_match[] = {
+ 	{ .compatible = "edt,edt-ft5406", .data = &edt_ft5x06_data },
+ 	{ .compatible = "edt,edt-ft5506", .data = &edt_ft5506_data },
+ 	{ .compatible = "evervision,ev-ft5726", .data = &edt_ft5506_data },
++	{ .compatible = "focaltech,ft5426", .data = &edt_ft5506_data },
++	{ .compatible = "focaltech,ft5452", .data = &edt_ft5452_data },
+ 	/* Note focaltech vendor prefix for compatibility with ft6236.c */
+ 	{ .compatible = "focaltech,ft6236", .data = &edt_ft6236_data },
++	{ .compatible = "focaltech,ft8201", .data = &edt_ft8201_data },
++	{ .compatible = "focaltech,ft8719", .data = &edt_ft8719_data },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, edt_ft5x06_of_match);
+@@ -1553,6 +1625,7 @@ MODULE_DEVICE_TABLE(of, edt_ft5x06_of_match);
+ static struct i2c_driver edt_ft5x06_ts_driver = {
+ 	.driver = {
+ 		.name = "edt_ft5x06",
++		.dev_groups = edt_ft5x06_groups,
+ 		.of_match_table = edt_ft5x06_of_match,
+ 		.pm = pm_sleep_ptr(&edt_ft5x06_ts_pm_ops),
+ 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+diff --git a/drivers/input/touchscreen/rpi_ft5406.c b/drivers/input/touchscreen/rpi_ft5406.c
+new file mode 100644
+index 0000000000000..6608ed1cbf476
+--- /dev/null
++++ b/drivers/input/touchscreen/rpi_ft5406.c
+@@ -0,0 +1,301 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ *
++ * RPI Display FT5406 touch driver.
++ *
++ * Copyright (c) 2016 ASUSTek Computer Inc.
++ * Copyright (c) 2012-2014, The Linux Foundation. All rights reserved.
++ *
++ * This software is licensed under the terms of the GNU General Public
++ * License version 2, as published by the Free Software Foundation, and
++ * may be copied, distributed, and modified under those terms.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/delay.h>
++#include <linux/i2c.h>
++#include <linux/input.h>
++#include <linux/input/mt.h>
++#include <linux/module.h>
++#include <linux/regulator/consumer.h>
++#include <linux/workqueue.h>
++#include "rpi_ft5406.h"
++
++static int fts_check_fw_ver(struct i2c_client *client)
++{
++	u8 fw_ver[3];
++	int ret;
++
++	fw_ver[0] = i2c_smbus_read_byte_data(client, FT_REG_FW_VER);
++	ret = i2c_smbus_read_i2c_block_data(client, FT_REG_FW_MIN_VER, 2,
++					     &fw_ver[1]);
++	if (ret < 0)
++		return ret;
++	if (ret != 2)
++		return -EIO;
++
++	LOG_INFO("Firmware version = %d.%d.%d\n", fw_ver[0], fw_ver[1], fw_ver[2]);
++	return 0;
++}
++
++static int fts_read_td_status(struct rpi_ft5406_data *ts_data)
++{
++	int ret;
++
++	ret = i2c_smbus_read_byte_data(ts_data->client, FT_TD_STATUS_REG);
++	if (ret < 0)
++		LOG_ERR("get reg td_status failed, %d\n", ret);
++
++	return ret;
++}
++
++static int fts_read_touchdata(struct rpi_ft5406_data *ts_data)
++{
++	struct ts_event *event = &ts_data->event;
++	int ret, i;
++	u8 buf[FT_ONE_TCH_LEN-2] = { 0 };
++	u8 reg_addr, pointid = FT_MAX_ID;
++
++	for (i = 0; i < event->touch_point && i < MAX_TOUCH_POINTS; i++) {
++		reg_addr = FT_TOUCH_X_H_REG + (i * FT_ONE_TCH_LEN);
++		ret = i2c_smbus_read_i2c_block_data(ts_data->client, reg_addr,
++						    FT_ONE_TCH_LEN - 2, buf);
++		if (ret < 0) {
++			dev_err(&ts_data->client->dev,
++				"failed to read touchdata: %d\n", ret);
++			return ret;
++		}
++
++		pointid = (buf[FT_TOUCH_ID]) >> 4;
++		if (pointid >= MAX_TOUCH_POINTS)
++			break;
++		event->au8_finger_id[i] = pointid;
++		event->au16_x[i] = (s16)(buf[FT_TOUCH_X_H] & 0x0F) << 8 |
++			(s16)buf[FT_TOUCH_X_L];
++		event->au16_y[i] = (s16)(buf[FT_TOUCH_Y_H] & 0x0F) << 8 |
++			(s16)buf[FT_TOUCH_Y_L];
++		event->au8_touch_event[i] = buf[FT_TOUCH_EVENT] >> 6;
++
++#if XY_REVERSE
++		event->au16_x[i] = SCREEN_WIDTH - event->au16_x[i] - 1;
++		event->au16_y[i] = SCREEN_HEIGHT - event->au16_y[i] - 1;
++#endif
++	}
++	event->pressure = FT_PRESS;
++
++	return 0;
++}
++
++static void fts_report_value(struct rpi_ft5406_data *ts_data)
++{
++	struct ts_event *event = &ts_data->event;
++	int i, modified_ids = 0, released_ids;
++
++	for (i = 0; i < event->touch_point && i < MAX_TOUCH_POINTS; i++) {
++		if (event->au8_touch_event[i] == FT_TOUCH_DOWN ||
++		    event->au8_touch_event[i] == FT_TOUCH_CONTACT) {
++			modified_ids |= 1 << event->au8_finger_id[i];
++			input_mt_slot(ts_data->input_dev,
++				      event->au8_finger_id[i]);
++			input_mt_report_slot_state(ts_data->input_dev,
++						   MT_TOOL_FINGER,
++				true);
++			input_report_abs(ts_data->input_dev,
++					 ABS_MT_TOUCH_MAJOR, event->pressure);
++			input_report_abs(ts_data->input_dev, ABS_MT_POSITION_X,
++					 event->au16_x[i]);
++			input_report_abs(ts_data->input_dev, ABS_MT_POSITION_Y,
++					 event->au16_y[i]);
++
++			if (!((1 << event->au8_finger_id[i]) &
++			      ts_data->known_ids))
++				LOG_DBG("Touch id-%d: x = %d, y = %d\n",
++					event->au8_finger_id[i],
++					event->au16_x[i], event->au16_y[i]);
++		}
++	}
++
++	released_ids = ts_data->known_ids & ~modified_ids;
++	for (i = 0; released_ids && i < MAX_TOUCH_POINTS; i++) {
++		if (released_ids & (1 << i)) {
++			LOG_DBG("Release id-%d, known = %x modified = %x\n",
++				i, ts_data->known_ids, modified_ids);
++			input_mt_slot(ts_data->input_dev, i);
++			input_mt_report_slot_state(ts_data->input_dev,
++						   MT_TOOL_FINGER, false);
++			modified_ids &= ~(1 << i);
++		}
++	}
++	ts_data->known_ids = modified_ids;
++	input_mt_report_pointer_emulation(ts_data->input_dev, true);
++	input_sync(ts_data->input_dev);
++}
++
++static void fts_retry_clear(struct rpi_ft5406_data *ts_data)
++{
++	if (ts_data->retry_count != 0)
++		ts_data->retry_count = 0;
++}
++
++static int fts_retry_wait(struct rpi_ft5406_data *ts_data)
++{
++	if (ts_data->retry_count < RETRY_COUNT) {
++		LOG_INFO("wait and retry, count = %d\n", ts_data->retry_count);
++		ts_data->retry_count++;
++		msleep_interruptible(1000);
++		return 1;
++	}
++	LOG_ERR("attach retry count\n");
++	return 0;
++}
++
++static void rpi_ft5406_work(struct work_struct *work)
++{
++	struct rpi_ft5406_data *ts_data = container_of(work, struct rpi_ft5406_data,
++						      ft5406_work);
++	struct ts_event *event = &ts_data->event;
++	int ret;
++	int count = 5;
++	int td_status;
++
++	ret = regulator_enable(ts_data->power_supply);
++	if (ret) {
++		dev_err(&ts_data->client->dev, "Failed to enable power_supply: %d\n",
++			ret);
++		return;
++	}
++
++	while (count > 0) {
++		ret = fts_check_fw_ver(ts_data->client);
++		if (ret == 0)
++			break;
++		LOG_INFO("checking touch ic, countdown: %d\n", count);
++		msleep_interruptible(1000);
++		count--;
++	}
++	if (!count) {
++		LOG_ERR("checking touch ic timeout, %d\n", ret);
++		ts_data->is_polling = 0;
++		return;
++	}
++
++	/* polling 60fps */
++	while (1) {
++		td_status = fts_read_td_status(ts_data);
++		if (td_status < 0) {
++			ret = fts_retry_wait(ts_data);
++			if (ret == 0) {
++				LOG_ERR("stop touch polling\n");
++				ts_data->is_polling = 0;
++				break;
++			}
++		} else if (td_status < VALID_TD_STATUS_VAL + 1 &&
++			   (td_status > 0 || ts_data->known_ids != 0)) {
++			fts_retry_clear(ts_data);
++			memset(event, -1, sizeof(struct ts_event));
++			event->touch_point = td_status;
++			ret = fts_read_touchdata(ts_data);
++			if (ret == 0)
++				fts_report_value(ts_data);
++		}
++		msleep_interruptible(17);
++	}
++
++	regulator_disable(ts_data->power_supply);
++}
++
++static int rpi_ft5406_probe(struct i2c_client *client)
++{
++	struct input_dev *input_dev;
++	struct rpi_ft5406_data *ts_data;
++	int ret;
++
++	LOG_INFO("address = 0x%x\n", client->addr);
++
++	ts_data = devm_kzalloc(&client->dev, sizeof(*ts_data), GFP_KERNEL);
++	if (!ts_data)
++		return -ENOMEM;
++	ts_data->client = client;
++	i2c_set_clientdata(client, ts_data);
++
++	ts_data->power_supply = devm_regulator_get(&client->dev, "power");
++	if (IS_ERR(ts_data->power_supply))
++		return dev_err_probe(&client->dev, PTR_ERR(ts_data->power_supply),
++				     "Failed to get power_supply\n");
++
++	input_dev = input_allocate_device();
++	if (!input_dev) {
++		LOG_ERR("failed to allocate input device\n");
++		return -ENOMEM;
++	}
++	input_dev->name = "fts_ts";
++	input_dev->id.bustype = BUS_I2C;
++	input_dev->dev.parent = &ts_data->client->dev;
++
++	ts_data->input_dev = input_dev;
++	input_set_drvdata(input_dev, ts_data);
++
++	__set_bit(EV_SYN, input_dev->evbit);
++	__set_bit(EV_KEY, input_dev->evbit);
++	__set_bit(EV_ABS, input_dev->evbit);
++	__set_bit(BTN_TOUCH, input_dev->keybit);
++
++	input_mt_init_slots(input_dev, MAX_TOUCH_POINTS, 0);
++	input_set_abs_params(input_dev, ABS_MT_POSITION_X, 0,
++			     SCREEN_WIDTH, 0, 0);
++	input_set_abs_params(input_dev, ABS_MT_POSITION_Y, 0,
++			     SCREEN_HEIGHT, 0, 0);
++
++	ret = input_register_device(input_dev);
++	if (ret) {
++		LOG_ERR("Input device registration failed\n");
++		goto input_register_failed;
++	}
++
++	INIT_WORK(&ts_data->ft5406_work, rpi_ft5406_work);
++
++	schedule_work(&ts_data->ft5406_work);
++
++	return 0;
++
++input_register_failed:
++	input_free_device(input_dev);
++	return ret;
++}
++
++static void rpi_ft5406_remove(struct i2c_client *client)
++{
++	struct rpi_ft5406_data *ts_data = i2c_get_clientdata(client);
++
++	cancel_work_sync(&ts_data->ft5406_work);
++	if (ts_data->input_dev) {
++		input_unregister_device(ts_data->input_dev);
++		input_free_device(ts_data->input_dev);
++	}
++	regulator_disable(ts_data->power_supply);
++}
++
++static const struct i2c_device_id rpi_ft5406_id[] = {
++	{"rpi_ft5406", 0},
++	{}
++};
++
++static struct i2c_driver rpi_ft5406_driver = {
++	.driver = {
++		.name = "rpi_ft5406",
++	},
++	.probe = rpi_ft5406_probe,
++	.remove = rpi_ft5406_remove,
++	.id_table = rpi_ft5406_id,
++};
++module_i2c_driver(rpi_ft5406_driver);
++
++MODULE_DESCRIPTION("RPI Display FT5406 Touch driver");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/input/touchscreen/rpi_ft5406.h b/drivers/input/touchscreen/rpi_ft5406.h
+new file mode 100644
+index 0000000000000..55754a6bdd911
+--- /dev/null
++++ b/drivers/input/touchscreen/rpi_ft5406.h
+@@ -0,0 +1,71 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#ifndef _RPI_FT5406_H_
++#define _RPI_FT5406_H_
++
++#define LOG_DBG(fmt, arg...) pr_debug("rpi-ft5406: %s: "fmt, __func__, ##arg)
++#define LOG_INFO(fmt, arg...) pr_info("rpi-ft5406: %s: "fmt, __func__, ##arg)
++#define LOG_ERR(fmt, arg...) pr_err("rpi-ft5406: %s: "fmt, __func__, ##arg)
++
++#define RETRY_COUNT		10
++#define XY_REVERSE		1
++
++#define SCREEN_WIDTH		800
++#define SCREEN_HEIGHT		480
++
++#define FT_ONE_TCH_LEN		6
++
++#define FT_REG_FW_VER		0xA6
++#define FT_REG_FW_MIN_VER	0xB2
++#define FT_REG_FW_SUB_MIN_VER	0xB3
++
++#define VALID_TD_STATUS_VAL	10
++#define MAX_TOUCH_POINTS	1
++
++#define FT_PRESS		0x7F
++#define FT_MAX_ID		0x0F
++
++#define FT_TOUCH_X_H		0
++#define FT_TOUCH_X_L		1
++#define FT_TOUCH_Y_H		2
++#define FT_TOUCH_Y_L		3
++#define FT_TOUCH_EVENT		0
++#define FT_TOUCH_ID		2
++
++#define FT_TOUCH_X_H_REG	3
++#define FT_TOUCH_X_L_REG	4
++#define FT_TOUCH_Y_H_REG	5
++#define FT_TOUCH_Y_L_REG	6
++#define FT_TD_STATUS_REG	2
++#define FT_TOUCH_EVENT_REG	3
++#define FT_TOUCH_ID_REG		5
++
++#define FT_TOUCH_DOWN		0
++#define FT_TOUCH_CONTACT	2
++
++struct ts_event {
++	u16 au16_x[MAX_TOUCH_POINTS]; /* x coordinate */
++	u16 au16_y[MAX_TOUCH_POINTS]; /* y coordinate */
++	u8 au8_touch_event[MAX_TOUCH_POINTS]; /* touch event: 0:down; 1:up; 2:contact */
++	u8 au8_finger_id[MAX_TOUCH_POINTS]; /* touch ID */
++	u16 pressure;
++	u8 touch_point;
++	u8 point_num;
++};
++
++struct rpi_ft5406_data {
++	struct device *dev;
++	struct i2c_client *client;
++	struct input_dev *input_dev;
++	struct ts_event event;
++	struct work_struct ft5406_work;
++
++	int is_polling;
++	int polling_enabled;
++	int known_ids;
++	int retry_count;
++
++	struct regulator *power_supply;
++};
++
++#endif
+diff --git a/drivers/regulator/rpi-panel-attiny-regulator.c b/drivers/regulator/rpi-panel-attiny-regulator.c
+index f52c3d47ecea2..a1ac963dfe5d0 100644
+--- a/drivers/regulator/rpi-panel-attiny-regulator.c
++++ b/drivers/regulator/rpi-panel-attiny-regulator.c
+@@ -75,7 +75,7 @@ static const struct regmap_config attiny_regmap_config = {
+ 	.val_bits = 8,
+ 	.disable_locking = 1,
+ 	.max_register = REG_WRITE_DATA_L,
+-	.cache_type = REGCACHE_RBTREE,
++	.cache_type = REGCACHE_MAPLE,
+ };
+ 
+ static int attiny_set_port_state(struct attiny_lcd *state, int reg, u8 val)
+@@ -143,24 +143,8 @@ static int attiny_lcd_power_disable(struct regulator_dev *rdev)
+ static int attiny_lcd_power_is_enabled(struct regulator_dev *rdev)
+ {
+ 	struct attiny_lcd *state = rdev_get_drvdata(rdev);
+-	unsigned int data;
+-	int ret, i;
+-
+-	mutex_lock(&state->lock);
+ 
+-	for (i = 0; i < 10; i++) {
+-		ret = regmap_read(rdev->regmap, REG_PORTC, &data);
+-		if (!ret)
+-			break;
+-		usleep_range(10000, 12000);
+-	}
+-
+-	mutex_unlock(&state->lock);
+-
+-	if (ret < 0)
+-		return ret;
+-
+-	return data & PC_RST_BRIDGE_N;
++	return state->port_states[REG_PORTC - REG_PORTA] & PC_RST_BRIDGE_N;
+ }
+ 
+ static const struct regulator_init_data attiny_regulator_default = {
+@@ -245,39 +229,6 @@ static void attiny_gpio_set(struct gpio_chip *gc, unsigned int off, int val)
+ 	mutex_unlock(&state->lock);
+ }
+ 
+-static int attiny_i2c_read(struct i2c_client *client, u8 reg, unsigned int *buf)
+-{
+-	struct i2c_msg msgs[1];
+-	u8 addr_buf[1] = { reg };
+-	u8 data_buf[1] = { 0, };
+-	int ret;
+-
+-	/* Write register address */
+-	msgs[0].addr = client->addr;
+-	msgs[0].flags = 0;
+-	msgs[0].len = ARRAY_SIZE(addr_buf);
+-	msgs[0].buf = addr_buf;
+-
+-	ret = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
+-	if (ret != ARRAY_SIZE(msgs))
+-		return -EIO;
+-
+-	usleep_range(5000, 10000);
+-
+-	/* Read data from register */
+-	msgs[0].addr = client->addr;
+-	msgs[0].flags = I2C_M_RD;
+-	msgs[0].len = 1;
+-	msgs[0].buf = data_buf;
+-
+-	ret = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
+-	if (ret != ARRAY_SIZE(msgs))
+-		return -EIO;
+-
+-	*buf = data_buf[0];
+-	return 0;
+-}
+-
+ /*
+  * I2C driver interface functions
+  */
+@@ -289,7 +240,6 @@ static int attiny_i2c_probe(struct i2c_client *i2c)
+ 	struct regulator_dev *rdev;
+ 	struct attiny_lcd *state;
+ 	struct regmap *regmap;
+-	unsigned int data;
+ 	int ret;
+ 
+ 	state = devm_kzalloc(&i2c->dev, sizeof(*state), GFP_KERNEL);
+@@ -307,22 +257,6 @@ static int attiny_i2c_probe(struct i2c_client *i2c)
+ 		goto error;
+ 	}
+ 
+-	ret = attiny_i2c_read(i2c, REG_ID, &data);
+-	if (ret < 0) {
+-		dev_err(&i2c->dev, "Failed to read REG_ID reg: %d\n", ret);
+-		goto error;
+-	}
+-
+-	switch (data) {
+-	case 0xde: /* ver 1 */
+-	case 0xc3: /* ver 2 */
+-		break;
+-	default:
+-		dev_err(&i2c->dev, "Unknown Atmel firmware revision: 0x%02x\n", data);
+-		ret = -ENODEV;
+-		goto error;
+-	}
+-
+ 	regmap_write(regmap, REG_POWERON, 0);
+ 	msleep(30);
+ 	regmap_write(regmap, REG_PWM, 0);
+@@ -386,6 +320,14 @@ static void attiny_i2c_remove(struct i2c_client *client)
+ 	mutex_destroy(&state->lock);
+ }
+ 
++static void attiny_i2c_shutdown(struct i2c_client *client)
++{
++	struct attiny_lcd *state = i2c_get_clientdata(client);
++
++	regmap_write(state->regmap, REG_PWM, 0);
++	regmap_write(state->regmap, REG_POWERON, 0);
++}
++
+ static const struct of_device_id attiny_dt_ids[] = {
+ 	{ .compatible = "raspberrypi,7inch-touchscreen-panel-regulator" },
+ 	{},
+@@ -400,6 +342,7 @@ static struct i2c_driver attiny_regulator_driver = {
+ 	},
+ 	.probe = attiny_i2c_probe,
+ 	.remove	= attiny_i2c_remove,
++	.shutdown = attiny_i2c_shutdown,
+ };
+ 
+ module_i2c_driver(attiny_regulator_driver);
