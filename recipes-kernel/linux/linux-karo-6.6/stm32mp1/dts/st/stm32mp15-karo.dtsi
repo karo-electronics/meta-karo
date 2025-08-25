@@ -129,9 +129,9 @@
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&i2c6_pins>;
 	pinctrl-1 = <&i2c6_sleep_pins>;
-	scl-gpios = <&gpioa 11 GPIO_ACTIVE_HIGH>;
-	sda-gpios = <&gpioa 12 GPIO_ACTIVE_HIGH>;
-	clock-frequency = <400000>;
+	/* spare dmas for other usage */
+	/delete-property/dmas;
+	/delete-property/dma-names;
 	status = "okay";
 };
 

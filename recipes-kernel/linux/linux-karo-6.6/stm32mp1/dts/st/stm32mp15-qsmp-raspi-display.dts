@@ -2,6 +2,7 @@
 /*
  * Copyright (C) 2020 Markus Bauer <mb@karo-electronics.de>
  * Copyright (C) 2024 Lothar Waßmann <LW@karo-electronics.de>
+ * Copyright (C) 2025 Marcel Mertens <MM@karo-electronics.de>
  */
 
 /dts-v1/;
@@ -9,6 +10,20 @@
 /plugin/;
 
 &{/} {
+	panel_disp: panel_disp@1 {
+		reg = <1>;
+		compatible = "raspberrypi,7inch-dsi", "simple-panel";
+		default-on;
+		backlight = <&reg_rpi_display>;
+		power-supply = <&reg_rpi_display>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&bridge_out>;
+			};
+		};
+	};
+
 	reg_bridge: reg_bridge@1 {
 		reg = <1>;
 		compatible = "regulator-fixed";
@@ -26,17 +41,26 @@
 };
 
 &dsi_panel {
-	compatible = "raspberrypi,tc358762";
+	compatible = "toshiba,tc358762";
 	default-on;
-	panel-width-mm = <154>;
-	panel-height-mm = <86>;
-	power-supply = <&reg_bridge>;
-	backlight = <&reg_rpi_display>;
-	status = "okay";
+	vddc-supply = <&reg_bridge>;
 
-	port {
-		dsi_panel_from_dsi: endpoint {
-			remote-endpoint = <&dsi_out>;
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			bridge_in: endpoint {
+				remote-endpoint = <&dsi_out>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			bridge_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
 		};
 	};
 };
@@ -46,7 +70,7 @@
 };
 
 &dsi_out {
-	remote-endpoint = <&dsi_panel_from_dsi>;
+	remote-endpoint = <&bridge_in>;
 };
 
 &i2c6 {
@@ -61,6 +85,8 @@
 
 		touchscreen-size-x = < 800 >;
 		touchscreen-size-y = < 480 >;
+		touchscreen-inverted-x;
+		touchscreen-inverted-y;
 	};
 
 	reg_rpi_display: regulator-rpi-display@45 {
