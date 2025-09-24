@@ -6,5 +6,9 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append:stm32mpcommon = " \
+        file://usart-sysrq-bugfix.patch \
+"
+
+SRC_URI:append:stm32mpcommon = " \
         file://patches/stm32mp-kconfig-bugfixes.patch \
 "
