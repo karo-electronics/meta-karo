@@ -5,6 +5,6 @@ SRC_URI:append = " \
         file://raspi-display.patch \
 "
 
-SRC_URI:append:stm32mp13 = " \
-        file://patches/stm32mp13-kconfig-bugfixes.patch \
+SRC_URI:append:stm32mpcommon = " \
+        file://patches/stm32mp-kconfig-bugfixes.patch \
 "

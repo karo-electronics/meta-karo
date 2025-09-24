@@ -1,0 +1,128 @@
+Index: linux-txmp-2550/arch/arm/Kconfig.debug
+===================================================================
+--- linux-txmp-2550.orig/arch/arm/Kconfig.debug
++++ linux-txmp-2550/arch/arm/Kconfig.debug
+@@ -1203,7 +1203,7 @@ choice
+ 
+ 	config STM32MP1_DEBUG_UART
+ 		bool "Use STM32MP1 UART for low-level debug"
+-		depends on MACH_STM32MP157
++		depends on MACH_STM32MP157 || MACH_STM32MP13
+ 		select DEBUG_STM32_UART
+ 		help
+ 		  Say Y here if you want kernel low-level debugging support on
+Index: linux-txmp-2550/drivers/clk/stm32/Kconfig
+===================================================================
+--- linux-txmp-2550.orig/drivers/clk/stm32/Kconfig
++++ linux-txmp-2550/drivers/clk/stm32/Kconfig
+@@ -13,21 +13,21 @@ if COMMON_CLK_STM32MP
+ 
+ config COMMON_CLK_STM32MP135
+ 	bool "Clock driver for stm32mp13x clocks"
+-	depends on ARM || COMPILE_TEST
++	depends on MACH_STM32MP13 || COMPILE_TEST
+ 	default y
+ 	help
+ 	  Support for stm32mp13x SoC family clocks.
+ 
+ config COMMON_CLK_STM32MP157
+ 	bool "Clock driver for stm32mp15x clocks"
+-	depends on ARM || COMPILE_TEST
++	depends on MACH_STM32MP157 || COMPILE_TEST
+ 	default y
+ 	help
+ 	  Support for stm32mp15x SoC family clocks.
+ 
+ config COMMON_CLK_STM32MP215
+ 	bool "Clock driver for stm32m21x clocks"
+-	depends on ARM || ARM64 || COMPILE_TEST
++	depends on (ARM64 && ARCH_STM32) || COMPILE_TEST
+ 	select COMMON_CLK_REGMAP
+ 	default y
+ 	help
+@@ -35,7 +35,7 @@ config COMMON_CLK_STM32MP215
+ 
+ config COMMON_CLK_STM32MP257
+ 	bool "Clock driver for stm32mp25x clocks"
+-	depends on ARM || ARM64 || COMPILE_TEST
++	depends on (ARM64 && ARCH_STM32) || COMPILE_TEST
+ 	select COMMON_CLK_REGMAP
+ 	default y
+ 	help
+Index: linux-txmp-2550/drivers/cpufreq/Kconfig.arm
+===================================================================
+--- linux-txmp-2550.orig/drivers/cpufreq/Kconfig.arm
++++ linux-txmp-2550/drivers/cpufreq/Kconfig.arm
+@@ -242,7 +242,7 @@ config ARM_STI_CPUFREQ
+ 
+ config ARM_STM32_CPUFREQ
+ 	tristate "STM32 CPUFreq support"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  This adds the CPUFreq driver support for STM32 MPU SOCs.
+Index: linux-txmp-2550/drivers/pinctrl/stm32/Kconfig
+===================================================================
+--- linux-txmp-2550.orig/drivers/pinctrl/stm32/Kconfig
++++ linux-txmp-2550/drivers/pinctrl/stm32/Kconfig
+@@ -55,26 +55,25 @@ config PINCTRL_STM32MP157
+ config PINCTRL_STM32MP215
+ 	tristate "STMicroelectronics STM32MP215 pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP21 || ARM64 || ARM
++	default ARM64 && ARCH_STM32
+ 	select PINCTRL_STM32
+ 
+ config PINCTRL_STM32MP235
+ 	tristate "STMicroelectronics STM32MP235 pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP23 || ARM64 || ARM
++	default ARM64 && ARCH_STM32
+ 	select PINCTRL_STM32
+ 
+ config PINCTRL_STM32MP257
+ 	tristate "STMicroelectronics STM32MP257 pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP25 || ARM64 || ARM
++	default ARM64 && ARCH_STM32
+ 	select PINCTRL_STM32
+ 
+ config PINCTRL_STM32_HDP
+ 	tristate "STMicroelectronics STM32 Hardware Debug Port (HDP) pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP157 || MACH_STM32MP13 || MACH_STM32MP21 || \
+-		MACH_STM32MP23 || MACH_STM32MP25 || ARM64 || ARM
++	default ARCH_STM32 && (ARM64 || ARCH_MULTI_V7)
+ 	select PINMUX
+ 	select GENERIC_PINCONF
+ 	select GPIOLIB
+Index: linux-txmp-2550/drivers/soc/st/Kconfig
+===================================================================
+--- linux-txmp-2550.orig/drivers/soc/st/Kconfig
++++ linux-txmp-2550/drivers/soc/st/Kconfig
+@@ -8,9 +8,9 @@ config STM32_HOG
+ 
+ config STM32_PM_DOMAINS
+ 	bool "STM32 PM domains"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	select PM_GENERIC_DOMAINS
+-	default y if MACH_STM32MP157
++	default y
+ 
+ config STM32MP_PM_DOMAIN
+ 	tristate "STM32MP PM domain"
+Index: linux-txmp-2550/drivers/thermal/st/Kconfig
+===================================================================
+--- linux-txmp-2550.orig/drivers/thermal/st/Kconfig
++++ linux-txmp-2550/drivers/thermal/st/Kconfig
+@@ -14,7 +14,7 @@ config ST_THERMAL_MEMMAP
+ 
+ config STM32_THERMAL
+ 	tristate "Thermal framework support on STMicroelectronics STM32 series of SoCs"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  Support for thermal framework on STMicroelectronics STM32 series of
