@@ -2,7 +2,7 @@ Index: tf-a-txmp-1570/plat/st/stm32mp1/platform.mk
 ===================================================================
 --- tf-a-txmp-1570.orig/plat/st/stm32mp1/platform.mk
 +++ tf-a-txmp-1570/plat/st/stm32mp1/platform.mk
-@@ -221,6 +221,21 @@ $(eval $(call add_defines,\
+@@ -217,6 +217,21 @@ $(eval $(call add_defines,\
  # Include paths and source files
  PLAT_INCLUDES		+=	-Iplat/st/stm32mp1/include/
  
