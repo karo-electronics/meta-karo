@@ -68,6 +68,10 @@ SRC_URI:append = " \
         file://bl2-ro-size.patch \
 "
 
+SRC_URI:append:stm32mp1 = " \
+        file://no-board_id-error.patch \
+"
+
 SRC_URI:append:stm32mp2 = " \
         file://qsmp-debug-uart.patch \
 "

@@ -1,0 +1,54 @@
+Index: tf-a-txmp-1570/plat/st/common/stm32mp_dt.c
+===================================================================
+--- tf-a-txmp-1570.orig/plat/st/common/stm32mp_dt.c
++++ tf-a-txmp-1570/plat/st/common/stm32mp_dt.c
+@@ -340,7 +340,7 @@ const char *dt_get_board_model(void)
+ 		return NULL;
+ 	}
+ 
+-	return (const char *)fdt_getprop(fdt, node, "model", NULL);
++	return fdt_getprop(fdt, node, "model", NULL);
+ }
+ 
+ /*******************************************************************************
+@@ -356,7 +356,7 @@ int dt_find_otp_name(const char *name, u
+ 	int len;
+ 	const fdt32_t *cuint;
+ 
+-	if ((name == NULL) || (otp == NULL)) {
++	if (!name || !otp) {
+ 		return -FDT_ERR_BADVALUE;
+ 	}
+ 
+@@ -367,26 +367,26 @@ int dt_find_otp_name(const char *name, u
+ 
+ 	node = fdt_subnode_offset(fdt, node, name);
+ 	if (node < 0) {
+-		ERROR("nvmem node %s not found\n", name);
++		VERBOSE("nvmem node %s not found\n", name);
+ 		return node;
+ 	}
+ 
+ 	cuint = fdt_getprop(fdt, node, "reg", &len);
+-	if ((cuint == NULL) || (len != (2 * (int)sizeof(uint32_t)))) {
++	if (!cuint || len != (2 * (int)sizeof(uint32_t))) {
+ 		ERROR("Malformed nvmem node %s: ignored\n", name);
+ 		return -FDT_ERR_BADVALUE;
+ 	}
+ 
+-	if ((fdt32_to_cpu(*cuint) % sizeof(uint32_t)) != 0U) {
++	if (fdt32_to_cpu(*cuint) % sizeof(uint32_t)) {
+ 		ERROR("Misaligned nvmem %s element: ignored\n", name);
+ 		return -FDT_ERR_BADVALUE;
+ 	}
+ 
+-	if (otp != NULL) {
++	if (otp) {
+ 		*otp = fdt32_to_cpu(*cuint) / sizeof(uint32_t);
+ 	}
+ 
+-	if (otp_len != NULL) {
++	if (otp_len) {
+ 		cuint++;
+ 		*otp_len = fdt32_to_cpu(*cuint) * CHAR_BIT;
+ 	}
