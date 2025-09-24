@@ -44,7 +44,6 @@ SRC_URI:append:stm32mp25 = " \
 KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
 
 KBUILD_DEFCONFIG = "defconfig"
-KBUILD_DEFCONFIG:qsmp-1510 = "qsmp-1510_defconfig"
 
 KERNEL_FEATURES:append:stm32mp13 = " stm32mp13.cfg"
 KERNEL_FEATURES:append:stm32mp15 = " stm32mp15.cfg"

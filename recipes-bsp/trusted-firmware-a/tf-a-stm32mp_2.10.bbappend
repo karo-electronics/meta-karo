@@ -11,8 +11,6 @@ SRC_URI:append:stm32mp15 = " \
 	file://fdts/stm32mp15-mx.h;subdir=git \
 	file://fdts/stm32mp15-qsmp.dtsi;subdir=git \
 	file://fdts/stm32mp15-txmp.dtsi;subdir=git \
-	file://fdts/stm32mp151a-qsmp-1510.dts;subdir=git \
-	file://fdts/stm32mp151a-qsmp-1510-fw-config.dts;subdir=git \
 	file://fdts/stm32mp151a-qsmp.h;subdir=git \
 	file://fdts/stm32mp153a-qsmp-1530.dts;subdir=git \
 	file://fdts/stm32mp153a-qsmp-1530-fw-config.dts;subdir=git \
@@ -53,10 +51,6 @@ SRC_URI:append:stm32mp23 = " \
 
 SRC_URI:append:stm32mpcommon = " \
 	file://0099-Modify-Reset-reason-trace-level.patch \
-"
-
-SRC_URI:append:qsmp-1510 = " \
-	file://0003-nand.patch \
 "
 
 SRC_URI:append:stm32mp2 = " \
