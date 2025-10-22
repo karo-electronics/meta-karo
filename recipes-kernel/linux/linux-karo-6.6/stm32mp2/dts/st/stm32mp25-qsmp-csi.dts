@@ -68,7 +68,7 @@
 
 			csi2host_from_imx219: endpoint {
 				remote-endpoint = <&imx219_to_csi2host>;
-				data-lanes = <0 1>;
+				data-lanes = <1 2>;
 				bus-type = <4>;
 			};
 		};
