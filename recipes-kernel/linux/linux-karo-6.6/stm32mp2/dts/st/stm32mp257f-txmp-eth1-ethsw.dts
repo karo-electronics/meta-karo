@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2025 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/st,stm32mp25-rcc.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+&{/} {
+	aliases {
+		ethsw = "/soc@0/bus@42080000/ttt-sw@4c000000";
+	};
+
+	chosen {
+		overlays {
+			txmp-eth1-ethsw;
+		};
+	};
+};
+
+&eth1 {
+	pinctrl-0 = <&eth1_mdio_pins>;
+	pinctrl-1 = <&eth1_mdio_sleep_pins>;
+	phy-mode = "rgmii-id";
+	st,eth-clk-sel;
+	snps,ext-systime;
+	status = "okay";
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+
+	mdio {
+		eth1_phy0: ethernet-phy@0 {
+			clocks = <&rcc CK_KER_ETH1>;
+		};
+	};
+};
+
+&switch0 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth1_rmii_pins>;
+	pinctrl-1 = <&eth1_rmii_sleep_pins>;
+	clock-names = "ethsw-bus-clk",
+		      "ethsw-clk",
+		      "ethswacmcfg-bus-clk",
+		      "ethswacmmsg-bus-clk",
+		      "ethsw-ref-clk";
+	clocks = <
+	          &rcc CK_BUS_ETHSW
+		  &rcc CK_KER_ETHSW
+		  &rcc CK_BUS_ETHSWACMCFG
+		  &rcc CK_BUS_ETHSWACMMSG
+		  &rcc CK_KER_ETHSWREF
+	>;
+	phy-mode = "rmii";
+	st,ethsw-rmii-internal-refclk;
+	st,ethsw-internal-125;
+	status = "okay";
+};

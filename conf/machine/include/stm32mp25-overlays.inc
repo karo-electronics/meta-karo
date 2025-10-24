@@ -60,11 +60,11 @@ KARO_BASEBOARDS:qsmp ?= "\
 KARO_DTB_OVERLAYS[mb7] = " \
         ${@ mach_overlay(d, "karo-copro", dist="copro")} \
         ${@ mach_overlay(d, "karo-gpu", dist="wayland")} \
-        txmp-mb7 \
         txmp-fdcan1 \
         txmp-ft5x06 \
         txmp-keypad,txmp-mb7-wakeup-btn \
         txmp-lcd-panel \
+        txmp-mb7 \
         txmp-sound \
         txmp-spidev \
 "

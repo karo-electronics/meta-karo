@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2025 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/clock/st,stm32mp25-rcc.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+&{/} {
+	chosen {
+		overlays {
+			txmp-eth1-lan8710;
+		};
+	};
+};
+
+&eth1 {
+	pinctrl-0 = <&eth1_mdio_pins &eth1_rmii_pins>;
+	pinctrl-1 = <&eth1_mdio_sleep_pins &eth1_rmii_sleep_pins>;
+	phy-mode = "rmii";
+	phy-handle = <&eth1_phy0>;
+	st,eth-ref-clk-sel;
+	status = "okay";
+
+	mdio {
+		eth1_phy0: ethernet-phy@0 {
+			clocks = <&rcc CK_KER_ETH1>;
+			assigned-clocks = <&rcc CK_KER_ETH1>;
+			assigned-clock-rates = <50000000>;
+		};
+	};
+};

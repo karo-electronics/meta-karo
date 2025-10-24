@@ -56,4 +56,6 @@ SRC_URI:append:stm32mp25 = " \
     file://dts/stm32mp255f-qsmp-2550-rif.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp257f-txmp-2550-rcc.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp257f-txmp-2550-rif.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp257f-txmp-2570-rcc.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp257f-txmp-2570-rif.dtsi;subdir=git/core/arch/arm/ \
 "
