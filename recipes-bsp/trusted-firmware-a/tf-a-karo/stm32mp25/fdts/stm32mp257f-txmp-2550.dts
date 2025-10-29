@@ -145,7 +145,6 @@
 
 			vddio_sdcard: ldo8 {
 				regulator-name = "vddio_sdcard";
-				st,regulator-bypass-microvolt = <3300000>;
 				regulator-min-microvolt = <3300000>;
 				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
