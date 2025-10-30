@@ -32,7 +32,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 UBOOT_SRC_DEFAULT ?= "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
 
 UBOOT_BRANCH_DEFAULT = "karo-stm32mp2-v2022.10"
-UBOOT_REV_DEFAULT = "bd74f3a5815c3132484dfe2fd923c0e8544bf687"
+UBOOT_REV_DEFAULT = "ef748a6971cec4d22dba9cc1eeec25f2bcf22134"
 
 UBOOT_BRANCH ?= "${UBOOT_BRANCH_DEFAULT}"
 UBOOT_SRC ?= "${UBOOT_SRC_DEFAULT}"
