@@ -7,7 +7,6 @@ DTB_OVERLAYS_generic ??= ""
 KARO_DTB_OVERLAYS ??= ""
 
 DTB_OVERLAY_INCLUDES ?= "\
-        karo-ft5x06 \
         karo-lcd-panel \
         karo-sound \
 "
