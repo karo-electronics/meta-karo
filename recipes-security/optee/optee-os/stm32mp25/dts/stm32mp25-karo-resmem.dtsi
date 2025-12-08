@@ -94,7 +94,7 @@
 		};
 
 		ipc_shmem: ipc-shmem@81200000 {
-			reg = <0x0 0x81200000 0x0 0xf8000>;
+			reg = <0x0 0x81200000 0x0 0x100000>;
 			no-map;
 		};
 

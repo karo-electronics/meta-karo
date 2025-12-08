@@ -30,3 +30,8 @@
 	wakeup-source;
 	status = "okay";
 };
+
+&ipcc1 {
+	status = "okay";
+};
+
