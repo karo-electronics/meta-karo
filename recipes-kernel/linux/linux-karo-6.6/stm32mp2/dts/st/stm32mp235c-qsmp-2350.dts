@@ -51,8 +51,8 @@
 	};
 };
 
-&cryp1 {
-	status = "okay";
+&vdec {
+	status = "disabled";
 };
 
 &dwc3 {

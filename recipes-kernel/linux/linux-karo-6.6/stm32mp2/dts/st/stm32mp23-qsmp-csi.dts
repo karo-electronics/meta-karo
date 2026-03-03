@@ -94,6 +94,10 @@
 	};
 };
 
+&vdec {
+	status = "okay";
+};
+
 &i2c2 {
 	imx219: csi-camera@10 {
 		compatible = "sony,imx219";
