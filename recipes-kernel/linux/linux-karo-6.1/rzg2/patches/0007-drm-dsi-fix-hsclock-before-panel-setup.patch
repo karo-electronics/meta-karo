@@ -1,0 +1,56 @@
+From 05309c4f292b479cc5d99b069eb469efce92d507 Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Thu, 30 Apr 2026 12:57:47 +0000
+Subject: [PATCH] drm/dsi: fix hsclock before panel setup
+
+---
+ .../gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c    | 21 ++++++++++++-------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+index 351b97350a49..0b227a027dc3 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_mipi_dsi.c
+@@ -945,9 +945,19 @@ static void rzg2l_mipi_dsi_atomic_pre_enable(struct drm_bridge *bridge,
+ 
+ 	ret = rzg2l_mipi_dsi_startup(dsi, mode);
+ 	if (ret < 0)
+-		return;
++		goto err;
+ 
+ 	rzg2l_mipi_dsi_set_display_timing(dsi, mode);
++
++	ret = rzg2l_mipi_dsi_start_hs_clock(dsi);
++	if (ret < 0)
++	 	goto err_stop;
++
++	return;
++
++err_stop:
++	rzg2l_mipi_dsi_stop(dsi);
++err:
+ };
+ 
+ static void rzg2l_mipi_dsi_atomic_enable(struct drm_bridge *bridge,
+@@ -956,19 +966,14 @@ static void rzg2l_mipi_dsi_atomic_enable(struct drm_bridge *bridge,
+ 	struct rzg2l_mipi_dsi *dsi = bridge_to_rzg2l_mipi_dsi(bridge);
+ 	int ret;
+ 
+-	ret = rzg2l_mipi_dsi_start_hs_clock(dsi);
+-	if (ret < 0)
+-		goto err_stop;
+-
+ 	ret = rzg2l_mipi_dsi_start_video(dsi);
+ 	if (ret < 0)
+-		goto err_stop_clock;
++		goto err_stop;
+ 
+ 	return;
+ 
+-err_stop_clock:
+-	rzg2l_mipi_dsi_stop_hs_clock(dsi);
+ err_stop:
++	rzg2l_mipi_dsi_stop_hs_clock(dsi);
+ 	rzg2l_mipi_dsi_stop(dsi);
+ }
+ 

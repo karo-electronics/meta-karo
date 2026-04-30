@@ -30,10 +30,9 @@ do_install:append:stm32mpcommon() {
    ln -sf brcmfmac4373-sdio.bin brcmfmac4373-sdio.karo,${SOC_FAMILY}-${MACHINE}.bin
    ln -sf brcmfmac4373-sdio.clm_blob brcmfmac4373-sdio.karo,${SOC_FAMILY}-${MACHINE}.clm_blob
    ln -sf brcmfmac4373-sdio.txt brcmfmac4373-sdio.karo,${SOC_FAMILY}-${MACHINE}.txt
-
 }
 
-do_install:append() {
+do_install:append:stm32mpcommon() {
     install -d ${D}${nonarch_base_libdir}/firmware/brcm/
 
     # 4373

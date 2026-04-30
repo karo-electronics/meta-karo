@@ -1,0 +1,72 @@
+From f3e907d41582628832cdec0c250466a72b540fac Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Thu, 30 Apr 2026 12:58:22 +0000
+Subject: [PATCH] drm/du: add support for pixelclk polarity
+
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c | 37 ++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c
+index b6c4b975499c..fb4461fc4169 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_crtc.c
+@@ -33,6 +33,7 @@
+ 
+ #define DU_DITR0		0x10
+ #define DU_DITR0_DEMD_HIGH	(BIT(8) | BIT(9))
++#define DU_DITR0_DPI_CLKMD  BIT(0)
+ #define DU_DITR0_VSPOL		BIT(16)
+ #define DU_DITR0_HSPOL		BIT(17)
+ 
+@@ -65,15 +66,49 @@
+ static void rzg2l_du_crtc_set_display_timing(struct rzg2l_du_crtc *rcrtc)
+ {
+ 	const struct drm_display_mode *mode = &rcrtc->crtc.state->adjusted_mode;
++	struct drm_crtc *crtc = &rcrtc->crtc;
++	struct drm_device *ddev = rcrtc->crtc.dev;
++	struct drm_connector_list_iter iter;
++	struct drm_connector *connector = NULL;
++	struct drm_encoder *encoder = NULL;
++	struct drm_bridge *bridge = NULL;
+ 	unsigned long mode_clock = mode->clock * 1000;
+ 	u32 ditr0, ditr1, ditr2, ditr3, ditr4, pbcr0;
++	u32 bus_flags = 0;
+ 
+ 	clk_prepare_enable(rcrtc->rzg2l_clocks.dclk);
+ 	clk_set_rate(rcrtc->rzg2l_clocks.dclk, mode_clock);
+ 
++	/* get encoder from crtc */
++	drm_for_each_encoder(encoder, ddev)
++		if (encoder->crtc == crtc)
++			break;
++
++	if (encoder) {
++		/* get bridge from encoder */
++		list_for_each_entry(bridge, &encoder->bridge_chain, chain_node)
++			if (bridge->encoder == encoder)
++				break;
++
++		/* get the connector from encoder */
++		drm_connector_list_iter_begin(ddev, &iter);
++		drm_for_each_connector_iter(connector, &iter)
++			if (connector->encoder == encoder)
++				break;
++		drm_connector_list_iter_end(&iter);
++	}
++
++	/* get bus flags */
++	if (bridge && bridge->timings)
++		bus_flags = bridge->timings->input_bus_flags;
++	else if (connector)
++		bus_flags = connector->display_info.bus_flags;
++
+ 	ditr0 = (DU_DITR0_DEMD_HIGH
+ 	      | ((mode->flags & DRM_MODE_FLAG_PVSYNC) ? DU_DITR0_VSPOL : 0)
+-	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0));
++	      | ((mode->flags & DRM_MODE_FLAG_PHSYNC) ? DU_DITR0_HSPOL : 0)
++		  | ((bus_flags & DRM_BUS_FLAG_PIXDATA_DRIVE_NEGEDGE) ?
++		    DU_DITR0_DPI_CLKMD : 0));
+ 
+ 	ditr1 = DU_DITR1_VSA(mode->vsync_end - mode->vsync_start)
+ 	      | DU_DITR1_VACTIVE(mode->vdisplay);

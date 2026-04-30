@@ -1,0 +1,32 @@
+From dd2c9ae0fbb3733695e7eddd713603260acd4647 Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Mon, 18 May 2026 10:50:09 +0000
+Subject: [PATCH] irq: add support for edge both interrupts
+
+---
+ drivers/irqchip/irq-renesas-rzg2l.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/irqchip/irq-renesas-rzg2l.c b/drivers/irqchip/irq-renesas-rzg2l.c
+index 8bfed3288f31..fc54ee68cbb0 100644
+--- a/drivers/irqchip/irq-renesas-rzg2l.c
++++ b/drivers/irqchip/irq-renesas-rzg2l.c
+@@ -51,6 +51,7 @@
+ #define TITSR_TITSEL_EDGE_FALLING	1
+ #define TITSR_TITSEL_LEVEL_HIGH		2
+ #define TITSR_TITSEL_LEVEL_LOW		3
++#define TITSR_TITSEL_EDGE_BOTH		8
+ 
+ #define IITSR_IITSEL(n, sense)		((sense) << ((n) * 2))
+ #define IITSR_IITSEL_LEVEL_LOW		0
+@@ -418,6 +419,10 @@ static int rzg2l_tint_set_type(struct irq_data *d, unsigned int type)
+ 	u32 reg, tssr;
+ 
+ 	switch (type & IRQ_TYPE_SENSE_MASK) {
++	case IRQ_TYPE_EDGE_BOTH:
++		sense = TITSR_TITSEL_EDGE_BOTH;
++		break;
++
+ 	case IRQ_TYPE_EDGE_RISING:
+ 		sense = TITSR_TITSEL_EDGE_RISING;
+ 		break;

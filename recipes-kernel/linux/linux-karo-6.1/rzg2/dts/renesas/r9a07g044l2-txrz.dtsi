@@ -1,0 +1,49 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2022 Markus Bauer <MB@karo-electronics.com>
+ */
+
+#include "r9a07g044l2-karo.dtsi"
+
+&eth0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&eth0_mii_pins>;
+	phy-handle = <&phy0>;
+	phy-mode = "mii";
+	renesas,no-ether-link;
+	status = "okay";
+
+	phy0: phy@0 {
+		reg = <0>;
+		reset-gpios = <&pinctrl RZG2L_GPIO(28, 1) GPIO_ACTIVE_LOW>;
+		reset-assert-us = <25000>;
+		reset-deassert-us = <100>;
+		interrupt-parent = <&pinctrl>;
+		interrupts = <RZG2L_GPIO(22, 1) IRQ_TYPE_EDGE_FALLING>;
+		smsc,disable-energy-detect;
+	};
+};
+
+&pinctrl {
+	eth0_mii_pins: eth0grp {
+		pinmux = <
+			RZG2L_PORT_PINMUX(27, 1, 1)	/* ET0_MDC */
+			RZG2L_PORT_PINMUX(28, 0, 1)	/* ET0_MDIO */
+			RZG2L_PORT_PINMUX(24, 0, 1)	/* ET0_RXCLK/PHYAD1 (PD) */
+			RZG2L_PORT_PINMUX(24, 1, 1)	/* ET0_RXEN */
+			RZG2L_PORT_PINMUX(25, 0, 1)	/* ET0_RXD0/MODE0 (PU) */
+			RZG2L_PORT_PINMUX(25, 1, 1)	/* ET0_RXD1/MODE1 (PU) */
+			RZG2L_PORT_PINMUX(26, 0, 1)	/* ET0_RXD2/RMIISEL (PD) */
+			RZG2L_PORT_PINMUX(26, 1, 1)	/* ET0_RXD3/PHYAD2 (PD) */
+			RZG2L_PORT_PINMUX(27, 0, 1)	/* ET0_RX_ERR/PHYAD0 (PD) */
+			RZG2L_PORT_PINMUX(20, 0, 1)	/* ET0_TXCLK */
+			RZG2L_PORT_PINMUX(20, 1, 1)	/* ET0_TXEN */
+			RZG2L_PORT_PINMUX(20, 2, 1)	/* ET0_TXD0 */
+			RZG2L_PORT_PINMUX(21, 0, 1)	/* ET0_TXD1 */
+			RZG2L_PORT_PINMUX(21, 1, 1)	/* ET0_TXD2 */
+			RZG2L_PORT_PINMUX(22, 0, 1)	/* ET0_TXD3 */
+			RZG2L_PORT_PINMUX(23, 0, 1)	/* ET0_TX_COL/MODE2 (PU) */
+			RZG2L_PORT_PINMUX(23, 1, 1)	/* ET0_TX_CRS */
+		>;
+	};
+};

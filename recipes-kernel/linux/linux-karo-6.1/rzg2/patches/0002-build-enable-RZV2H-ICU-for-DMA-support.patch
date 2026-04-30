@@ -1,0 +1,21 @@
+From 593d02fade1c3f9aac5e3703595fb91acc8d59db Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Thu, 30 Apr 2026 12:51:05 +0000
+Subject: [PATCH] build: enable RZV2H ICU for DMA support
+
+---
+ drivers/soc/renesas/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/soc/renesas/Kconfig b/drivers/soc/renesas/Kconfig
+index f918e0c1a568..fa9a7ee90cbb 100644
+--- a/drivers/soc/renesas/Kconfig
++++ b/drivers/soc/renesas/Kconfig
+@@ -45,6 +45,7 @@ config ARCH_RZG2L
+ 	select PM
+ 	select PM_GENERIC_DOMAINS
+ 	select RENESAS_RZG2L_IRQC
++	select RENESAS_RZV2H_ICU
+ 
+ config ARCH_RZN1
+ 	bool

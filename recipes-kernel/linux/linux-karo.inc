@@ -42,12 +42,6 @@ SRC_URI:append = "${@ "".join(map(lambda f: " file://dts%s/includes/%s-%s.dtsi;s
 
 KERNEL_DTC_FLAGS += "-@"
 
-do_symlink_kernsrc:append () {
-    s = os.path.realpath(s)
-    b = os.path.relpath(d.getVar("B"), s)
-    os.symlink(b, os.path.join(s, 'build'))
-}
-
 def get_overlays(d):
     ovlist = []
     vendor = d.getVar('dtb_vendordir')
@@ -183,7 +177,10 @@ do_configure:prepend() {
 addtask do_configure before do_devshell
 
 dtb_ext = "dtb"
+dtb_ext:rzg2 = "dtbo"
+
 dtb_vendordir = ""
+dtb_vendordir:rzg2 = "renesas"
 dtb_vendordir:stm32mpcommon = "st"
 
 python do_check_dtbs () {
@@ -278,7 +275,7 @@ python do_check_overlays() {
                     bb.note("all=[%s]" % " ".join(all))
 
     ovlist = d.getVar('DTB_OVERLAYS').split()
-    ovlist += d.getVar('DTB_OVERLAYS_generic').split()
+    ovlist += (d.getVar('DTB_OVERLAYS_generic') or "").split()
     for baseboard in kb:
         bb.debug(2, "Checking baseboard '%s'" % baseboard);
         ovb = d.getVarFlag('KARO_DTB_OVERLAYS', baseboard, True)

@@ -1,0 +1,102 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
+ */
+/dts-v1/;
+/plugin/;
+
+#include <dt-bindings/gpio/gpio.h>
+
+&{/} {
+	rpi_panel: rpi-panel {
+		compatible = "raspberrypi,7inch-dsi", "simple-panel";
+		backlight = <&reg_rpi_display>;
+		power-supply = <&reg_rpi_display>;
+		default-on;
+		status = "okay";
+
+		port {
+			rpi_panel_in: endpoint {
+				remote-endpoint = <&dd_bridge_out>;
+			};
+		};
+	};
+
+	reg_bridge: reg-bridge {
+		compatible = "regulator-fixed";
+		regulator-name = "bridge_reg";
+		gpio = <&reg_rpi_display 0 GPIO_ACTIVE_HIGH>;
+		vin-supply = <&reg_rpi_display>;
+		enable-active-high;
+	};
+};
+
+&{/chosen} {
+	overlays {
+		qsrz-raspi-display;
+	};
+};
+
+&dsi {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	dsi_dpi_bridge: tc358762@0 {
+		compatible = "toshiba,tc358762";
+		reg = <0>;
+		vddc-supply = <&reg_bridge>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				dd_bridge_in: endpoint {
+					remote-endpoint = <&dsi0_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				dd_bridge_out: endpoint {
+					remote-endpoint = <&rpi_panel_in>;
+				};
+			};
+		};
+	};
+};
+
+&dsi0_out {
+	remote-endpoint = <&dd_bridge_in>;
+	data-lanes = <1>;
+};
+
+&du {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+
+	touchpanel@38 {
+		compatible = "edt,edt-ft5506";
+		reg = <0x38>;
+		vcc-supply = <&reg_rpi_display>;
+		reset-gpio = <&reg_rpi_display 1 GPIO_ACTIVE_LOW>;
+
+		touchscreen-size-x = <800>;
+		touchscreen-size-y = <480>;
+		touchscreen-inverted-x;
+		touchscreen-inverted-y;
+	};
+
+	reg_rpi_display: reg-rpi-display@45 {
+		compatible = "raspberrypi,7inch-touchscreen-panel-regulator";
+		reg = <0x45>;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+};

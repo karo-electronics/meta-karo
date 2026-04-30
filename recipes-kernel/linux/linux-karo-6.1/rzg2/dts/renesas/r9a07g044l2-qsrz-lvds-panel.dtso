@@ -1,0 +1,88 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2023 Markus Bauer <MB@karo-electronics.com>
+ */
+/dts-v1/;
+/plugin/;
+
+&{/} {
+	lvds_panel: lvds-panel { /* Tianma TM101JVHG32 */
+		compatible = "panel-lvds";
+		width-mm = <217>;
+		height-mm = <136>;
+		data-mapping = "vesa-24";
+		status = "okay";
+
+		panel-timing {
+			clock-frequency = <68200000>;
+			hactive = <1280>;
+			vactive = <800>;
+			hfront-porch = <64>;
+			hback-porch = <5>;
+			hsync-len = <1>;
+			vfront-porch = <40>;
+			vback-porch = <2>;
+			vsync-len = <1>;
+			hsync-active = <0>;
+			vsync-active = <0>;
+			de-active = <1>;
+			pixelclk-active = <0>;
+		};
+
+		port {
+			lvds_panel_in: endpoint {
+				remote-endpoint = <&dl_bridge_out>;
+			};
+		};
+	};
+};
+
+&{/chosen} {
+	overlays {
+		qsrz-lvds-panel;
+	};
+};
+
+&dsi {
+	status = "okay";
+};
+
+&dsi0_out {
+	remote-endpoint = <&dl_bridge_in>;
+	data-lanes = <1 2>;
+};
+
+&du {
+	status = "okay";
+};
+
+&i2c1 {
+	status = "okay";
+	
+	dsi_lvds_bridge: sn65dsi83@2c {
+		compatible = "ti,sn65dsi83";
+		reg = <0x2c>;
+		vcc-supply = <&reg_1v8>;
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				dl_bridge_in: endpoint {
+					remote-endpoint = <&dsi0_out>;
+					data-lanes = <1 2>;
+				};
+			};
+
+			port@2 {
+				reg = <2>;
+				dl_bridge_out: endpoint {
+					remote-endpoint = <&lvds_panel_in>;
+				};
+			};
+		};
+	};
+};

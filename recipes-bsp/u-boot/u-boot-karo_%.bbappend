@@ -4,7 +4,18 @@ SRC_URI:append = " \
         file://karo.bmp;subdir=git/tools/logos \
 "
 
+SRC_URI:append:rzg2l = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', \
+      " file://add-u-boot-command-for-cm33-support.patch \
+        file://disable-reserved-area-check.patch", "", d) }"
+
 UBOOT_FEATURES:append = "${@ bb.utils.contains('DISTRO_FEATURES', "copro", " copro", "", d)}"
+
+SRC_URI:append:rzg2l = " \
+        file://dts/r9a07g044l2-qsrz.dtsi;subdir=git/arch/arm \
+        file://dts/r9a07g044l2-qsrz-qsbase1.dtsi;subdir=git/arch/arm \
+        file://dts/r9a07g044l2-qsrz-qsbase4.dtsi;subdir=git/arch/arm \
+        file://dts/r9a07g044l2-txrz.dtsi;subdir=git/arch/arm \
+"
 
 SRC_URI:append:stm32mp15 = " \
         file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm \

@@ -1,0 +1,18 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2022 Markus Bauer <mb@karo-electronics.com>
+ */
+
+/dts-v1/;
+
+#include "r9a07g044l2-qsrz.dtsi"
+
+/ {
+	model = "Ka-Ro rzg2l based QSRZ-G2L0";
+
+	memory@48000000 {
+		device_type = "memory";
+		/* first 128MB is reserved for secure area. */
+		reg = <0 0x48000000 0 0x38000000>;
+	};
+};

@@ -1,0 +1,120 @@
+From c78661d22d54e18cebd1d7e3813dcc06aa77f7ee Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Thu, 30 Apr 2026 12:59:00 +0000
+Subject: [PATCH] drm/du: fix color swap on rgb displays
+
+---
+ drivers/gpu/drm/renesas/rz-du/rzg2l_du_kms.c |  5 ++
+ drivers/gpu/drm/renesas/rz-du/rzg2l_du_vsp.c | 55 +++++++++++++++++++-
+ 2 files changed, 59 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_kms.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_kms.c
+index 2bd19c6b2aab..30cc7284bbcb 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_kms.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_kms.c
+@@ -94,6 +94,11 @@ static const struct rzg2l_du_format_info rzg2l_du_format_infos[] = {
+ 		.v4l2 = V4L2_PIX_FMT_XBGR32,
+ 		.planes = 1,
+ 		.hsub = 1,
++	}, {
++		.fourcc = DRM_FORMAT_XBGR8888,
++		.v4l2 = V4L2_PIX_FMT_RGBX32,
++		.planes = 1,
++		.hsub = 1,
+ 	}, {
+ 		.fourcc = DRM_FORMAT_UYVY,
+ 		.v4l2 = V4L2_PIX_FMT_UYVY,
+diff --git a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_vsp.c b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_vsp.c
+index c35ab71741a5..35f0bc1d9524 100644
+--- a/drivers/gpu/drm/renesas/rz-du/rzg2l_du_vsp.c
++++ b/drivers/gpu/drm/renesas/rz-du/rzg2l_du_vsp.c
+@@ -24,12 +24,14 @@
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+ #include <linux/scatterlist.h>
++#include <linux/media-bus-format.h>
+ 
+ #include <media/vsp1.h>
+ 
+ #include "rzg2l_du_drv.h"
+ #include "rzg2l_du_kms.h"
+ #include "rzg2l_du_vsp.h"
++#include "rzg2l_du_encoder.h"
+ 
+ static void rzg2l_du_vsp_complete(void *private, unsigned int status, u32 crc)
+ {
+@@ -107,6 +109,7 @@ static const u32 rzg2l_du_vsp_formats[] = {
+ 	DRM_FORMAT_BGRX8888,
+ 	DRM_FORMAT_ARGB8888,
+ 	DRM_FORMAT_XRGB8888,
++	DRM_FORMAT_XBGR8888,
+ 	DRM_FORMAT_UYVY,
+ 	DRM_FORMAT_YUYV,
+ 	DRM_FORMAT_YVYU,
+@@ -184,7 +187,15 @@ static int __rzg2l_du_vsp_plane_atomic_check(struct drm_plane *plane,
+ 					     struct drm_plane_state *state,
+ 					     const struct rzg2l_du_format_info **format)
+ {
++	struct drm_crtc *crtc = state->crtc;
++	struct drm_device *ddev = plane->dev;
+ 	struct drm_crtc_state *crtc_state;
++	struct drm_encoder *encoder = NULL;
++	struct drm_connector_list_iter iter;
++	struct drm_connector *connector = NULL;
++	u32 effective_fourcc;
++	u32 bus_format = MEDIA_BUS_FMT_FIXED;
++	bool is_dpi = false;
+ 	int ret;
+ 
+ 	if (!state->crtc) {
+@@ -214,7 +225,49 @@ static int __rzg2l_du_vsp_plane_atomic_check(struct drm_plane *plane,
+ 		return 0;
+ 	}
+ 
+-	*format = rzg2l_du_format_info(state->fb->format->format);
++	effective_fourcc = state->fb->format->format;
++
++	/* get encoder from crtc */
++	drm_for_each_encoder(encoder, ddev) {
++		if (encoder->crtc != crtc)
++			break;
++
++		/* check for dpi mode */
++		if (to_rzg2l_encoder(encoder)->output == RZG2L_DU_OUTPUT_DPAD0)
++            is_dpi = true;
++		break;
++	}
++
++	if (is_dpi) {
++		/* get the connector from encoder */
++		drm_connector_list_iter_begin(ddev, &iter);
++		drm_for_each_connector_iter(connector, &iter)
++			if (connector->encoder == encoder)
++				break;
++		drm_connector_list_iter_end(&iter);
++
++		/* get bus format */
++		if (connector && connector->display_info.num_bus_formats) {
++			bus_format = connector->display_info.bus_formats[0];
++		}
++
++		switch (bus_format) {
++		case MEDIA_BUS_FMT_FIXED:
++		case 0:
++			break;
++		case MEDIA_BUS_FMT_RGB888_1X24:
++			effective_fourcc = DRM_FORMAT_XBGR8888;
++			break;
++		case MEDIA_BUS_FMT_BGR888_1X24:
++			effective_fourcc = DRM_FORMAT_XRGB8888;
++			break;
++		default:
++			dev_warn(plane->dev->dev, "Unsupported bus format 0x%x, keeping fb format %p4cc\n", bus_format, &effective_fourcc);
++			break;
++		}
++	}
++
++	*format = rzg2l_du_format_info(effective_fourcc);
+ 
+ 	return 0;
+ }

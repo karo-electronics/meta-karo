@@ -1,0 +1,54 @@
+From 1e10e133457cdf9ba4ca2813533420ce50b91ff3 Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Thu, 30 Apr 2026 12:54:53 +0000
+Subject: [PATCH] net/phy/smsc: LAN8741 support
+
+---
+ drivers/net/phy/smsc.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/drivers/net/phy/smsc.c b/drivers/net/phy/smsc.c
+index df2c5435c5c4..a9f111a0d670 100644
+--- a/drivers/net/phy/smsc.c
++++ b/drivers/net/phy/smsc.c
+@@ -447,6 +447,32 @@ static struct phy_driver smsc_phy_driver[] = {
+ 	.get_strings	= smsc_get_strings,
+ 	.get_stats	= smsc_get_stats,
+ 
++	.suspend	= genphy_suspend,
++	.resume		= genphy_resume,
++}, {
++	.phy_id		= 0x0007c120,
++	.phy_id_mask	= 0xfffffff0,
++	.name		= "SMSC LAN8741",
++
++	/* PHY_BASIC_FEATURES */
++	.flags		= PHY_RST_AFTER_CLK_EN,
++
++	.probe		= smsc_phy_probe,
++
++	/* basic functions */
++	.config_init	= smsc_phy_config_init,
++	.soft_reset	= smsc_phy_reset,
++	.config_aneg	= lan95xx_config_aneg_ext,
++
++	/* IRQ related */
++	.handle_interrupt	= smsc_phy_handle_interrupt,
++	.config_intr	= smsc_phy_config_intr,
++
++	/* Statistics */
++	.get_sset_count = smsc_get_sset_count,
++	.get_strings	= smsc_get_strings,
++	.get_stats	= smsc_get_stats,
++
+ 	.suspend	= genphy_suspend,
+ 	.resume		= genphy_resume,
+ }, {
+@@ -494,6 +520,7 @@ static struct mdio_device_id __maybe_unused smsc_tbl[] = {
+ 	{ 0x0007c0d0, 0xfffffff0 },
+ 	{ 0x0007c0f0, 0xfffffff0 },
+ 	{ 0x0007c110, 0xfffffff0 },
++	{ 0x0007c120, 0xfffffff0 },
+ 	{ 0x0007c130, 0xfffffff2 },
+ 	{ }
+ };

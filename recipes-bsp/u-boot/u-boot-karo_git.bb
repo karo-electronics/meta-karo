@@ -6,6 +6,7 @@ require conf/machine/include/${OVERLAY_INC_FILE}
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
+LIC_FILES_CHKSUM:rzg2l = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
 
 PROVIDES += "u-boot"
 
@@ -16,8 +17,7 @@ DEPENDS:append = " \
     python3-setuptools-native \
 "
 
-#fiptool = "${@ "tf-a-tools-native" if "stm32mp2" in d.getVar('MACHINEOVERRIDES').split(':') else "fiptool-native"}"
-fiptool = "tf-a-tools-native"
+fiptool = "${@ "tf-a-tools-native" if "stm32mp2" in d.getVar('MACHINEOVERRIDES').split(':') else "fiptool-native"}"
 DEPENDS:append = " ${fiptool}"
 
 SIGN_KEY ?= ""
@@ -32,6 +32,9 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 UBOOT_SRC_DEFAULT = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
 UBOOT_BRANCH_DEFAULT = "karo-stm32mp2-v2022.10"
 UBOOT_REV_DEFAULT = "ef748a6971cec4d22dba9cc1eeec25f2bcf22134"
+
+UBOOT_BRANCH_DEFAULT:rzg2 = "karo-txrz"
+UBOOT_REV_DEFAULT:rzg2 = "23d3b5822290db7f0413074c7d920fb81db1739f"
 
 KARO_UBOOT_SRC ?= "${UBOOT_SRC_DEFAULT}"
 KARO_UBOOT_BRANCH ?= "${UBOOT_BRANCH_DEFAULT}"
@@ -56,6 +59,7 @@ LOCALVERSION ??= "-karo"
 
 UBOOT_BOARD_DIR:stm32mp1 = "board/karo/stm32mp1"
 UBOOT_BOARD_DIR:stm32mp2 = "board/karo/stm32mp2"
+UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
 
 UBOOT_LOCALVERSION = "${LOCALVERSION}"
 UBOOT_INITIAL_ENV = "${@ bb.utils.contains('IMAGE_INSTALL', 'u-boot-fw-utils', "u-boot-initial-env", "", d)}"
@@ -467,6 +471,32 @@ EOF
     done
 }
 
+do_deploy:rzg2l() {
+    # Create fip.bin
+    install -v -d "${DEPLOYDIR}/${FIPTOOL_DIR}"
+    if [ -n "${UBOOT_CONFIG}" ];then
+        i=0
+        for config in ${UBOOT_MACHINE};do
+            i=$(expr $i + 1)
+            j=0
+            for type in ${UBOOT_CONFIG};do
+                j=$(expr $j + 1)
+                [ $j -lt $i ] && continue
+                fiptool create --align 16 \
+                    --soc-fw "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
+                    --nt-fw "${B}/${config}/u-boot-${type}.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin"
+                if [ $i = 1 ];then
+                    ln -s ${FIPTOOL_DIR}/fip-${MACHINE}-${type}.bin "${DEPLOYDIR}/fip-${MACHINE}.bin"
+                fi
+                break
+            done
+        done
+    else
+        fiptool create --align 16 --soc-fw "${DEPLOY_DIR_IMAGE}/${FIPTOOL_DIR}/bl31-${MACHINE}.bin" \
+            --nt-fw "${B}/u-boot.bin" "${DEPLOYDIR}/${FIPTOOL_DIR}/fip-${MACHINE}.bin"
+    fi
+}
+
 python do_env_overlays () {
     import os
     import shutil
@@ -520,4 +550,5 @@ do_env_overlays[vardeps] += "KARO_BASEBOARDS KARO_DTB_OVERLAYS"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
+COMPATIBLE_MACHINE:rzg2 = "(txrz-.*|qsrz-.*)"
 COMPATIBLE_MACHINE:stm32mpcommon = "(txmp-.*|qsmp-.*)"
