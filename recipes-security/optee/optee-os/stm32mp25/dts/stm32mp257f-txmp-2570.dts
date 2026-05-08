@@ -319,11 +319,7 @@
 };
 
 &m33_rproc {
-	compatible = "st,stm32mp2-m33-tee";
-	memory-region = <&cm33_cube_fw>, <&cm33_cube_data>,
-			<&ipc_shmem>, <&tfm_code>, <&tfm_data>,
-			<&cm33_sram2>;
-//	status = "okay";
+	status = "okay";
 };
 
 &pka {
