@@ -1,0 +1,370 @@
+// SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-2-Clause)
+/*
+ * Copyright (C) 2026 Marcel Mertens <MM@KARO-electronics.de>
+ */
+
+#include "stm32mp235c-qsmp-2030.dts"
+
+/ {
+	model = "Ka-Ro electronics GmbH QSMP-2030 solder-in module on QSBASE1 baseboard";
+
+	aliases {
+		display = &lcd_panel;
+	};
+
+	lcd_backlight: lcd-backlight {
+		compatible = "gpio-backlight";
+		default-on;
+		gpios = <&gpiof 13 GPIO_ACTIVE_LOW>;
+	};
+
+	lcd_panel: panel {
+		compatible = "simple-panel";
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&qsmp_ltdc_pins>;
+		pinctrl-1 = <&qsmp_ltdc_pins_sleep>;
+		backlight = <&lcd_backlight>;
+		enable-gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>;
+		power-supply = <&vdd>;
+		status = "okay";
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&ltdc_ep1_out>;
+			};
+		};
+
+		display-timings {
+			native-mode = <&ET0700>;
+
+			VGA: VGA {
+				clock-frequency = <25200000>;
+				hactive = <640>;
+				vactive = <480>;
+				hback-porch = <48>;
+				hsync-len = <96>;
+				hfront-porch = <16>;
+				vback-porch = <31>;
+				vsync-len = <2>;
+				vfront-porch = <12>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ETV570: ETV570 {
+				u-boot,panel-name = "edt,et057090dhu";
+				clock-frequency = <25200000>;
+				hactive = <640>;
+				vactive = <480>;
+				hback-porch = <114>;
+				hsync-len = <30>;
+				hfront-porch = <16>;
+				vback-porch = <32>;
+				vsync-len = <3>;
+				vfront-porch = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ET0350: ET0350 {
+				u-boot,panel-name = "edt,et0350g0dh6";
+				clock-frequency = <6413760>;
+				hactive = <320>;
+				vactive = <240>;
+				hback-porch = <34>;
+				hsync-len = <34>;
+				hfront-porch = <20>;
+				vback-porch = <15>;
+				vsync-len = <3>;
+				vfront-porch = <4>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ET0430: ET0430 {
+				u-boot,panel-name = "edt,et0430g0dh6";
+				clock-frequency = <9009000>;
+				hactive = <480>;
+				vactive = <272>;
+				hback-porch = <2>;
+				hsync-len = <41>;
+				hfront-porch = <2>;
+				vback-porch = <2>;
+				vsync-len = <10>;
+				vfront-porch = <2>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <1>;
+			};
+
+			ET0500: ET0500 {
+				clock-frequency = <33264000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <88>;
+				hsync-len = <128>;
+				hfront-porch = <40>;
+				vback-porch = <33>;
+				vsync-len = <2>;
+				vfront-porch = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ET0700: ET0700 { /* same as ET0500 */
+				u-boot,panel-name = "edt,etm0700g0dh6";
+				clock-frequency = <33264000>;
+				hactive = <800>;
+				vactive = <480>;
+				hback-porch = <88>;
+				hsync-len = <128>;
+				hfront-porch = <40>;
+				vback-porch = <33>;
+				vsync-len = <2>;
+				vfront-porch = <10>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+
+			ETQ570: ETQ570 {
+				clock-frequency = <6596040>;
+				hactive = <320>;
+				vactive = <240>;
+				hback-porch = <38>;
+				hsync-len = <30>;
+				hfront-porch = <30>;
+				vback-porch = <16>;
+				vsync-len = <3>;
+				vfront-porch = <4>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <1>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+};
+
+&eth1 {
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&eth1_mdio_pins &eth1_rgmii_pins>;
+	pinctrl-1 = <&eth1_mdio_sleep_pins &eth1_rgmii_sleep_pins>;
+	phy-mode = "rgmii-id";
+	phy-reset-gpios = <&gpiob 2 GPIO_ACTIVE_LOW>;
+	phy-reset-delay-us = <10000>;
+	phy-reset-post-delay-us = <100>;
+	phy-handle = <&eth1_phy>;
+	status = "okay";
+
+	mdio {
+		compatible = "snps,dwmac-mdio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		eth1_phy: ethernet-phy@3 {
+			reg = <3>;
+			interrupt-parent = <&gpioc>;
+			interrupts = <6 IRQ_TYPE_EDGE_FALLING>;
+			micrel,force-master;
+
+			rxc-skew-ps = <(900 + 780)>;
+		};
+	};
+};
+
+&ltdc {
+	default-on;
+	status = "okay";
+
+	port {
+		ltdc_ep1_out: endpoint {
+			remote-endpoint = <&panel_in>;
+		};
+	};
+};
+
+&pinctrl {
+	eth1_mdio_pins: eth1-mdio-pins {
+		pins1 {
+			pinmux = <STM32_PINMUX('F', 4, AF8)>;	/* ETH1_MDC */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <2>;
+		};
+
+		pins2 {
+			pinmux = <STM32_PINMUX('A', 10, AF10)>;	/* ETH1_MDIO */
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <0>;
+		};
+	};
+
+	eth1_mdio_sleep_pins: eth1-mdio-sleep-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('F', 4, ANALOG)	/* ETH1_MDC */
+				  STM32_PINMUX('A', 10, ANALOG)	/* ETH1_MDIO */
+			>;
+		};
+	};
+
+	eth1_rgmii_pins: eth1-rgmii-pins {
+		pins1 {
+			pinmux = <
+				  STM32_PINMUX('A', 15, AF10)	/* ETH1_TXD0 */
+				  STM32_PINMUX('C', 1, AF10)	/* ETH1_TXD1 */
+				  STM32_PINMUX('H', 10, AF10)	/* ETH1_TXD2 */
+				  STM32_PINMUX('H', 11, AF10)	/* ETH1_TXD3 */
+				  STM32_PINMUX('A', 13, AF10)	/* ETH1_TX_CTL */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		pins2 {
+			pinmux = <
+				  STM32_PINMUX('H', 9, AF10)   /* ETH_RGMII_CLK125 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		pins3 {
+			pinmux = <
+				  STM32_PINMUX('C', 0, AF12)   /* ETH_RGMII_GTX_CLK */
+			>;
+			st,io-delay = <0xd>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		/* KSZ9031 strap pins */
+		pins4 {
+			pinmux = <
+				  STM32_PINMUX('F', 1, AF10)	/* ETH1_RXD0 | MODE0 */
+				  STM32_PINMUX('C', 2, AF10)	/* ETH1_RXD1 | MODE1 */
+				  STM32_PINMUX('H', 12, AF10)	/* ETH1_RXD2 | MODE2 */
+				  STM32_PINMUX('H', 13, AF10)	/* ETH1_RXD3 | MODE3 */
+				  STM32_PINMUX('A', 11, AF10)	/* ETH1_RX_CTL | CLK125_EN */
+			>;
+			bias-pull-up;
+		};
+
+		pins5 {
+			/* external pullup */
+			pinmux = <
+				  STM32_PINMUX('A', 14, AF10)	/* ETH1_RX_CLK | PHYAD2 */
+			>;
+			bias-pull-down;
+		};
+	};
+
+	eth1_rgmii_sleep_pins: eth1-rgmii-sleep-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('A', 13, ANALOG)	/* ETH1_TX_CTL */
+				  STM32_PINMUX('C', 0, ANALOG)	/* ETH1_GTX_CLK */
+				  STM32_PINMUX('A', 15, ANALOG)	/* ETH1_TXD0 */
+				  STM32_PINMUX('C', 1, ANALOG)	/* ETH1_TXD1 */
+				  STM32_PINMUX('H', 10, ANALOG)	/* ETH1_TXD2 */
+				  STM32_PINMUX('H', 11, ANALOG)	/* ETH1_TXD3 */
+				  STM32_PINMUX('A', 11, ANALOG)	/* ETH1_RX_CTL | CLK125_EN */
+				  STM32_PINMUX('F', 1, ANALOG)	/* ETH1_RXD0 | MODE0 */
+				  STM32_PINMUX('C', 2, ANALOG)	/* ETH1_RXD1 | MODE1 */
+				  STM32_PINMUX('H', 12, ANALOG)	/* ETH1_RXD2 | MODE2 */
+				  STM32_PINMUX('H', 13, ANALOG)	/* ETH1_RXD3 | MODE3 */
+				  STM32_PINMUX('A', 14, ANALOG)	/* ETH1_RX_CLK | PHYAD2 */
+			>;
+		};
+	};
+
+	qsmp_ltdc_pins: qsmp-lcd-pins {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('F', 12, AF13) /* LCD_CLK */
+				  STM32_PINMUX('G',  2, AF13) /* LCD_HSYNC */
+				  STM32_PINMUX('I',  6, AF13) /* LCD_VSYNC */
+				  STM32_PINMUX('I',  5, AF13) /* LCD_DE */
+
+				  STM32_PINMUX('H',  4, AF10) /* LCD_R0 */
+				  STM32_PINMUX('A',  4, AF10) /* LCD_R1 */
+				  STM32_PINMUX('C', 11, AF13) /* LCD_R2 */
+				  STM32_PINMUX('A',  1, AF11) /* LCD_R3 */
+				  STM32_PINMUX('F', 15, AF13) /* LCD_R4 */
+				  STM32_PINMUX('G',  5, AF13) /* LCD_R5 */
+				  STM32_PINMUX('F',  3, AF13) /* LCD_R6 */
+				  STM32_PINMUX('G',  7, AF13) /* LCD_R7 */
+				  STM32_PINMUX('F',  8, AF13) /* LCD_G0 */
+				  STM32_PINMUX('C', 12, AF13) /* LCD_G1 */
+				  STM32_PINMUX('C',  9, AF13) /* LCD_G2 */
+				  STM32_PINMUX('G',  9, AF13) /* LCD_G3 */
+				  STM32_PINMUX('A',  6, AF10) /* LCD_G4 */
+				  STM32_PINMUX('G', 11, AF13) /* LCD_G5 */
+				  STM32_PINMUX('G', 12, AF13) /* LCD_G6 */
+				  STM32_PINMUX('A',  9, AF12) /* LCD_G7 */
+				  STM32_PINMUX('A',  2, AF11) /* LCD_B0 */
+				  STM32_PINMUX('G', 14, AF13) /* LCD_B1 */
+				  STM32_PINMUX('G', 15, AF13) /* LCD_B2 */
+				  STM32_PINMUX('I',  0, AF13) /* LCD_B3 */
+				  STM32_PINMUX('C',  7, AF13) /* LCD_B4 */
+				  STM32_PINMUX('A',  7, AF10) /* LCD_B5 */
+				  STM32_PINMUX('F',  5, AF13) /* LCD_B6 */
+				  STM32_PINMUX('I',  4, AF13) /* LCD_B7 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+	};
+
+	qsmp_ltdc_pins_sleep: qsmp-lcd-pins-sleep {
+		pins {
+			pinmux = <
+				  STM32_PINMUX('F', 12, ANALOG) /* LCD_CLK */
+				  STM32_PINMUX('G',  2, ANALOG) /* LCD_HSYNC */
+				  STM32_PINMUX('I',  6, ANALOG) /* LCD_VSYNC */
+				  STM32_PINMUX('I',  5, ANALOG) /* LCD_DE */
+
+				  STM32_PINMUX('H',  4, ANALOG) /* LCD_R0 */
+				  STM32_PINMUX('A',  4, ANALOG) /* LCD_R1 */
+				  STM32_PINMUX('C', 11, ANALOG) /* LCD_R2 */
+				  STM32_PINMUX('A',  1, ANALOG) /* LCD_R3 */
+				  STM32_PINMUX('F', 15, ANALOG) /* LCD_R4 */
+				  STM32_PINMUX('G',  5, ANALOG) /* LCD_R5 */
+				  STM32_PINMUX('F',  3, ANALOG) /* LCD_R6 */
+				  STM32_PINMUX('G',  7, ANALOG) /* LCD_R7 */
+				  STM32_PINMUX('F',  8, ANALOG) /* LCD_G0 */
+				  STM32_PINMUX('C', 12, ANALOG) /* LCD_G1 */
+				  STM32_PINMUX('C',  9, ANALOG) /* LCD_G2 */
+				  STM32_PINMUX('G',  9, ANALOG) /* LCD_G3 */
+				  STM32_PINMUX('A',  6, ANALOG) /* LCD_G4 */
+				  STM32_PINMUX('G', 11, ANALOG) /* LCD_G5 */
+				  STM32_PINMUX('G', 12, ANALOG) /* LCD_G6 */
+				  STM32_PINMUX('A',  9, ANALOG) /* LCD_G7 */
+				  STM32_PINMUX('A',  2, ANALOG) /* LCD_B0 */
+				  STM32_PINMUX('G', 14, ANALOG) /* LCD_B1 */
+				  STM32_PINMUX('G', 15, ANALOG) /* LCD_B2 */
+				  STM32_PINMUX('I',  0, ANALOG) /* LCD_B3 */
+				  STM32_PINMUX('C',  7, ANALOG) /* LCD_B4 */
+				  STM32_PINMUX('A',  7, ANALOG) /* LCD_B5 */
+				  STM32_PINMUX('F',  5, ANALOG) /* LCD_B6 */
+				  STM32_PINMUX('I',  4, ANALOG) /* LCD_B7 */
+			>;
+		};
+	};
+};

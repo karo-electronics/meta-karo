@@ -47,6 +47,8 @@ TF_A_TOOLS_PLATFORM ?= "stm32mp2"
 TF_A_CONFIG[mfg] = "usb"
 TF_A_CONFIG[noenv] = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', "optee", "trusted", d)}"
 
+TF_A_DDR_TARGET ??= "lpddr4"
+
 DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
 KARO_BOARD_PMIC ??= "stpmic2"
 

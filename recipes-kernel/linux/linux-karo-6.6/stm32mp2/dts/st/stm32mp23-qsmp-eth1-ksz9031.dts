@@ -13,7 +13,7 @@
 
 &{/chosen} {
 	overlays {
-		qsmp-eth1-ksz9131;
+		qsmp-eth1-ksz9031;
 	};
 };
 
@@ -33,25 +33,13 @@
 		reset-delay-us = <10000>;
 		reset-post-delay-us = <100>;
 
-		eth1_phy: ethernet-phy@7 {
-			reg = <7>;
-			interrupt-parent = <&gpiof>;
-			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+		eth1_phy: ethernet-phy@3 {
+			reg = <3>;
+			interrupt-parent = <&gpioc>;
+			interrupts = <6 IRQ_TYPE_EDGE_FALLING>;
 			micrel,force-master;
-			/* range: -290 .. 985 */
-			txc-skew-psec = <900>;
-			rxc-skew-psec = <0>;
-			/* range: -355 .. 400 */
-			txen-skew-psec = <0>;
-			txd0-skew-psec = <0>;
-			txd1-skew-psec = <0>;
-			txd2-skew-psec = <0>;
-			txd3-skew-psec = <0>;
-			rxdv-skew-psec = <0>;
-			rxd0-skew-psec = <0>;
-			rxd1-skew-psec = <0>;
-			rxd2-skew-psec = <0>;
-			rxd3-skew-psec = <0>;
+
+			rxc-skew-ps = <(900 + 780)>;
 		};
 	};
 };
@@ -85,43 +73,54 @@
 	eth1_rgmii_pins: eth1-rgmii-pins {
 		pins1 {
 			pinmux = <
-				  STM32_PINMUX('A', 13, AF10)	/* ETH1_TX_CTL */
-				  STM32_PINMUX('C', 0, AF12)	/* ETH1_GTX_CLK */
 				  STM32_PINMUX('A', 15, AF10)	/* ETH1_TXD0 */
 				  STM32_PINMUX('C', 1, AF10)	/* ETH1_TXD1 */
 				  STM32_PINMUX('H', 10, AF10)	/* ETH1_TXD2 */
 				  STM32_PINMUX('H', 11, AF10)	/* ETH1_TXD3 */
+				  STM32_PINMUX('A', 13, AF10)	/* ETH1_TX_CTL */
 			>;
 			bias-disable;
 			drive-push-pull;
-			slew-rate = <2>;
+			slew-rate = <3>;
 		};
 
-		/* KSZ9131 strap pins */
 		pins2 {
+			pinmux = <
+				  STM32_PINMUX('H', 9, AF10)   /* ETH_RGMII_CLK125 */
+			>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		pins3 {
+			pinmux = <
+				  STM32_PINMUX('C', 0, AF12)   /* ETH_RGMII_GTX_CLK */
+			>;
+			st,io-delay = <0xd>;
+			bias-disable;
+			drive-push-pull;
+			slew-rate = <3>;
+		};
+
+		/* KSZ9031 strap pins */
+		pins4 {
 			pinmux = <
 				  STM32_PINMUX('F', 1, AF10)	/* ETH1_RXD0 | MODE0 */
 				  STM32_PINMUX('C', 2, AF10)	/* ETH1_RXD1 | MODE1 */
 				  STM32_PINMUX('H', 12, AF10)	/* ETH1_RXD2 | MODE2 */
 				  STM32_PINMUX('H', 13, AF10)	/* ETH1_RXD3 | MODE3 */
+				  STM32_PINMUX('A', 11, AF10)	/* ETH1_RX_CTL | CLK125_EN */
 			>;
 			bias-pull-up;
 		};
 
-		pins3 {
-			pinmux = <
-				  STM32_PINMUX('A', 11, AF10)	/* ETH1_RX_CTL | CLK125_EN */
-				  STM32_PINMUX('H', 9, AF10)	/* ETH1_CLK125 | LED_MODE */
-			>;
-			bias-pull-down;
-		};
-
-		pins4 {
+		pins5 {
 			/* external pullup */
 			pinmux = <
 				  STM32_PINMUX('A', 14, AF10)	/* ETH1_RX_CLK | PHYAD2 */
 			>;
-			bias-disable;
+			bias-pull-down;
 		};
 	};
 

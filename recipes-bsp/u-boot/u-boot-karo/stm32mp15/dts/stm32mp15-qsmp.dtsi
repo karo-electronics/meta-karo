@@ -17,7 +17,7 @@
 &ethernet0 {
 	pinctrl-0 = <&qsmp_ethernet0_rgmii_pins_b>;
 	pinctrl-1 = <&qsmp_ethernet0_rgmii_pins_sleep_b>;
-	phy-mode = "rgmii";
+	phy-mode = "rgmii-id";
 	phy-reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
 	phy-reset-delay-us = <10000>;
 	phy-reset-post-delay-us = <100>;
@@ -65,7 +65,7 @@
 		rxdv-skew-ps = <(420 - 12)>;
 		txen-skew-ps = <(420 + 15)>;
 		rxc-skew-ps = <(900 - 0)>;
-		txc-skew-ps = <(900 + 1000)>;
+		txc-skew-ps = <(900 + 900)>;
 	};
 };
 

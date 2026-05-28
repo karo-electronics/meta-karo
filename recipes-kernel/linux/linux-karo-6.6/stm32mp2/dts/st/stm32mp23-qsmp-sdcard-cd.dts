@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+/*
+ * Copyright (C) 2022 Lothar Waßmann <LW@KARO-electronics.de>
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+
+/dts-v1/;
+
+/plugin/;
+
+&{/chosen} {
+	overlays {
+		qsmp-sdcard-cd;
+	};
+};
+
+&sdmmc1 {
+	cd-gpios = <&gpiob 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+};

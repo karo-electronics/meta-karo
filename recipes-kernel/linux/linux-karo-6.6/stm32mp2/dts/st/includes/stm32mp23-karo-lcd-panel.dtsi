@@ -30,7 +30,7 @@
 	lcd_panel: lcd-panel {
 		compatible = "panel-dpi";
 		backlight = <&lcd_backlight>;
-		power-supply = <&scmi_v3v3>;
+		power-supply = <&vdd>;
 		data-mapping = "rgb24";
 		status = "okay";
 
@@ -86,7 +86,7 @@
 				hsync-active = <0>;
 				vsync-active = <0>;
 				de-active = <1>;
-				pixelclk-active = <1>;
+				pixelclk-active = <0>;
 			};
 
 			ET0350: ET0350 {

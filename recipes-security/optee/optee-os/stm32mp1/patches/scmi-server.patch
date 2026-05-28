@@ -1,0 +1,586 @@
+diff --git a/core/arch/arm/plat-stm32mp1/scmi_server.c b/core/arch/arm/plat-stm32mp1/scmi_server.c
+index 9ae82d810..aab89abaf 100644
+--- a/core/arch/arm/plat-stm32mp1/scmi_server.c
++++ b/core/arch/arm/plat-stm32mp1/scmi_server.c
+@@ -8,17 +8,18 @@
+ #include <confine_array_index.h>
+ #include <drivers/clk.h>
+ #include <drivers/clk_dt.h>
++#include <drivers/firewall_device.h>
+ #include <drivers/regulator.h>
+ #include <drivers/rstctrl.h>
+ #include <drivers/scmi-msg.h>
+ #include <drivers/scmi.h>
+ #include <drivers/stm32_cpu_opp.h>
+-#include <drivers/stm32mp_dt_bindings.h>
+-#include <drivers/stm32_etzpc.h>
+ #include <drivers/stm32_remoteproc.h>
++#include <drivers/stm32mp_dt_bindings.h>
+ #include <initcall.h>
+ #include <keep.h>
+ #include <kernel/pm.h>
++#include <libfdt.h>
+ #include <mm/core_memprot.h>
+ #include <mm/core_mmu.h>
+ #include <platform_config.h>
+@@ -35,15 +36,20 @@
+ #define SCMI_RD_NAME_SIZE	16
+ #define SCMI_VOLTD_NAME_SIZE	16
+ 
++#define ETZPC_ID_ALWAYS_ACCESSIBLE	(STM32MP1_ETZPC_MAX_ID + 1)
++#define ETZPC_ID_NEVER_ACCESSIBLE	(STM32MP1_ETZPC_MAX_ID + 2)
++
+ /*
+  * struct stm32_scmi_clk - Data for the exposed clock
+  * @clock_id: Clock identifier in RCC clock driver
++ * @etzpc_id: ETZPC ID of the peripheral related to the clock
+  * @name: Clock string ID exposed to channel
+  * @enabled: State of the SCMI clock
+  */
+ struct stm32_scmi_clk {
+ 	unsigned long clock_id;
+ 	struct clk *clk;
++	unsigned int etzpc_id;
+ 	const char *name;
+ 	bool enabled;
+ };
+@@ -51,13 +57,13 @@ struct stm32_scmi_clk {
+ /*
+  * struct stm32_scmi_rd - Data for the exposed reset controller
+  * @reset_id: Reset identifier in RCC reset driver
+- * @fw_id: Firewall ID of the peripheral
++ * @etzpc_id: ETZPC ID of the peripheral related to the reset controller
+  * @name: Reset string ID exposed to channel
+  * @rstctrl: Reset controller device
+  */
+ struct stm32_scmi_rd {
+ 	unsigned long reset_id;
+-	unsigned int fw_id;
++	unsigned int etzpc_id;
+ 	const char *name;
+ 	struct rstctrl *rstctrl;
+ };
+@@ -83,17 +89,37 @@ register_phys_mem(MEM_AREA_IO_NSEC, CFG_STM32MP1_SCMI_SHM_BASE,
+ #endif
+ #endif /*CFG_STM32MP1_SCMI_SHM_BASE*/
+ 
++/* SCMI clock always accessible */
+ #define CLOCK_CELL(_scmi_id, _id, _name, _init_enabled) \
+ 	[(_scmi_id)] = { \
+ 		.clock_id = (_id), \
++		.etzpc_id = ETZPC_ID_ALWAYS_ACCESSIBLE, \
++		.name = (_name), \
++		.enabled = (_init_enabled), \
++	}
++
++/* SCMI clock accessible upon DECPROT ID assigned to non-secure */
++#define CLOCK_CELL_DECPROT(_scmi_id, _id, _name, _init_enabled, _etzpc_id) \
++	[(_scmi_id)] = { \
++		.clock_id = (_id), \
++		.etzpc_id = (_etzpc_id), \
+ 		.name = (_name), \
+ 		.enabled = (_init_enabled), \
+ 	}
+ 
+-#define RESET_CELL(_scmi_id, _id, _fw_id, _name) \
++/* SCMI reset domain always accessible */
++#define RESET_CELL(_scmi_id, _id, _name) \
+ 	[(_scmi_id)] = { \
+ 		.reset_id = (_id), \
+-		.fw_id = (_fw_id), \
++		.etzpc_id = ETZPC_ID_ALWAYS_ACCESSIBLE, \
++		.name = (_name), \
++	}
++
++/* SCMI reset domain accessible upon DECPROT ID assigned to non-secure */
++#define RESET_CELL_DECPROT(_scmi_id, _id, _name, _etzpc_id) \
++	[(_scmi_id)] = { \
++		.reset_id = (_id), \
++		.etzpc_id = (_etzpc_id), \
+ 		.name = (_name), \
+ 	}
+ 
+@@ -144,43 +170,70 @@ static struct stm32_scmi_clk stm32_scmi_clock[] = {
+ 	CLOCK_CELL(CK_SCMI_MPU, CK_MPU, "ck_mpu", true),
+ 	CLOCK_CELL(CK_SCMI_AXI, CK_AXI, "ck_axi", true),
+ 	CLOCK_CELL(CK_SCMI_BSEC, BSEC, "bsec", true),
+-	CLOCK_CELL(CK_SCMI_CRYP1, CRYP1, "cryp1", false),
++	CLOCK_CELL_DECPROT(CK_SCMI_CRYP1, CRYP1, "cryp1", false,
++			   STM32MP1_ETZPC_CRYP1_ID),
+ 	CLOCK_CELL(CK_SCMI_GPIOZ, GPIOZ, "gpioz", false),
+-	CLOCK_CELL(CK_SCMI_HASH1, HASH1, "hash1", false),
+-	CLOCK_CELL(CK_SCMI_I2C4, I2C4_K, "i2c4_k", false),
+-	CLOCK_CELL(CK_SCMI_I2C6, I2C6_K, "i2c6_k", false),
+-	CLOCK_CELL(CK_SCMI_IWDG1, IWDG1, "iwdg1", false),
+-	CLOCK_CELL(CK_SCMI_RNG1, RNG1_K, "rng1_k", true),
++	CLOCK_CELL_DECPROT(CK_SCMI_HASH1, HASH1, "hash1", false,
++			   STM32MP1_ETZPC_HASH1_ID),
++	CLOCK_CELL_DECPROT(CK_SCMI_I2C4, I2C4_K, "i2c4_k", false,
++			   STM32MP1_ETZPC_I2C4_ID),
++	CLOCK_CELL_DECPROT(CK_SCMI_I2C6, I2C6_K, "i2c6_k", false,
++			   STM32MP1_ETZPC_I2C6_ID),
++	CLOCK_CELL_DECPROT(CK_SCMI_IWDG1, IWDG1, "iwdg1", false,
++			   STM32MP1_ETZPC_IWDG1_ID),
++	CLOCK_CELL_DECPROT(CK_SCMI_RNG1, RNG1_K, "rng1_k", true,
++			   STM32MP1_ETZPC_RNG1_ID),
+ 	CLOCK_CELL(CK_SCMI_RTC, RTC, "ck_rtc", true),
+ 	CLOCK_CELL(CK_SCMI_RTCAPB, RTCAPB, "rtcapb", true),
+-	CLOCK_CELL(CK_SCMI_SPI6, SPI6_K, "spi6_k", false),
+-	CLOCK_CELL(CK_SCMI_USART1, USART1_K, "usart1_k", false),
++	CLOCK_CELL_DECPROT(CK_SCMI_SPI6, SPI6_K, "spi6_k", false,
++			   STM32MP1_ETZPC_SPI6_ID),
++	CLOCK_CELL_DECPROT(CK_SCMI_USART1, USART1_K, "usart1_k", false,
++			   STM32MP1_ETZPC_USART1_ID),
++	CLOCK_CELL(CK_SCMI_GPIOA, GPIOA, "gpioa", false),
++	CLOCK_CELL(CK_SCMI_GPIOB, GPIOB, "gpiob", false),
++	CLOCK_CELL(CK_SCMI_GPIOC, GPIOC, "gpioc", false),
++	CLOCK_CELL(CK_SCMI_GPIOD, GPIOD, "gpiod", false),
++	CLOCK_CELL(CK_SCMI_GPIOE, GPIOE, "gpioe", false),
++	CLOCK_CELL(CK_SCMI_GPIOF, GPIOF, "gpiof", false),
++	CLOCK_CELL(CK_SCMI_GPIOG, GPIOG, "gpiog", false),
++	CLOCK_CELL(CK_SCMI_GPIOH, GPIOH, "gpioh", false),
++	CLOCK_CELL(CK_SCMI_GPIOI, GPIOI, "gpioi", false),
++	CLOCK_CELL(CK_SCMI_GPIOJ, GPIOJ, "gpioj", false),
++	CLOCK_CELL(CK_SCMI_GPIOK, GPIOK, "gpiok", false),
+ };
+ #endif
+ 
+ #ifdef CFG_STM32MP13
+ static struct stm32_scmi_rd stm32_scmi_reset_domain[] = {
+-	RESET_CELL(RST_SCMI_LTDC, LTDC_R, STM32MP1_ETZPC_LTDC_ID, "ltdc"),
+-	RESET_CELL(RST_SCMI_MDMA, MDMA_R, STM32MP1_ETZPC_MAX_ID, "mdma"),
++	RESET_CELL_DECPROT(RST_SCMI_LTDC, LTDC_R, "ltdc",
++			   STM32MP1_ETZPC_LTDC_ID),
++	RESET_CELL(RST_SCMI_MDMA, MDMA_R, "mdma"),
+ };
+ #endif
+ 
+ #ifdef CFG_STM32MP15
+ static struct stm32_scmi_rd stm32_scmi_reset_domain[] = {
+-	RESET_CELL(RST_SCMI_SPI6, SPI6_R, STM32MP1_ETZPC_SPI6_ID, "spi6"),
+-	RESET_CELL(RST_SCMI_I2C4, I2C4_R, STM32MP1_ETZPC_I2C4_ID, "i2c4"),
+-	RESET_CELL(RST_SCMI_I2C6, I2C6_R, STM32MP1_ETZPC_I2C6_ID, "i2c6"),
+-	RESET_CELL(RST_SCMI_USART1, USART1_R, STM32MP1_ETZPC_USART1_ID,
+-		   "usart1"),
+-	RESET_CELL(RST_SCMI_STGEN, STGEN_R, STM32MP1_ETZPC_STGENC_ID, "stgen"),
+-	RESET_CELL(RST_SCMI_GPIOZ, GPIOZ_R, STM32MP1_ETZPC_GPIOZ_ID, "gpioz"),
+-	RESET_CELL(RST_SCMI_CRYP1, CRYP1_R, STM32MP1_ETZPC_CRYP1_ID, "cryp1"),
+-	RESET_CELL(RST_SCMI_HASH1, HASH1_R, STM32MP1_ETZPC_HASH1_ID, "hash1"),
+-	RESET_CELL(RST_SCMI_RNG1, RNG1_R, STM32MP1_ETZPC_RNG1_ID, "rng1"),
+-	RESET_CELL(RST_SCMI_MDMA, MDMA_R, STM32MP1_ETZPC_MAX_ID, "mdma"),
+-	RESET_CELL(RST_SCMI_MCU, MCU_R, STM32MP1_ETZPC_MAX_ID, "mcu"),
+-	RESET_CELL(RST_SCMI_MCU_HOLD_BOOT, MCU_HOLD_BOOT_R,
+-		   STM32MP1_ETZPC_MAX_ID, "mcu_hold_boot"),
++	RESET_CELL_DECPROT(RST_SCMI_SPI6, SPI6_R, "spi6",
++			   STM32MP1_ETZPC_SPI6_ID),
++	RESET_CELL_DECPROT(RST_SCMI_I2C4, I2C4_R, "i2c4",
++			   STM32MP1_ETZPC_I2C4_ID),
++	RESET_CELL_DECPROT(RST_SCMI_I2C6, I2C6_R, "i2c6",
++			   STM32MP1_ETZPC_I2C6_ID),
++	RESET_CELL_DECPROT(RST_SCMI_USART1, USART1_R, "usart1",
++			   STM32MP1_ETZPC_USART1_ID),
++	RESET_CELL_DECPROT(RST_SCMI_STGEN, STGEN_R, "stgen",
++			   STM32MP1_ETZPC_STGENC_ID),
++	RESET_CELL_DECPROT(RST_SCMI_GPIOZ, GPIOZ_R, "gpioz",
++			   ETZPC_ID_NEVER_ACCESSIBLE),
++	RESET_CELL_DECPROT(RST_SCMI_CRYP1, CRYP1_R, "cryp1",
++			   STM32MP1_ETZPC_CRYP1_ID),
++	RESET_CELL_DECPROT(RST_SCMI_HASH1, HASH1_R, "hash1",
++			   STM32MP1_ETZPC_HASH1_ID),
++	RESET_CELL_DECPROT(RST_SCMI_RNG1, RNG1_R, "rng1",
++			   STM32MP1_ETZPC_RNG1_ID),
++	RESET_CELL(RST_SCMI_MDMA, MDMA_R, "mdma"),
++	RESET_CELL(RST_SCMI_MCU, MCU_R, "mcu"),
++	RESET_CELL(RST_SCMI_MCU_HOLD_BOOT, MCU_HOLD_BOOT_R, "mcu_hold_boot"),
+ };
+ #endif
+ 
+@@ -242,40 +295,58 @@ struct scmi_msg_channel *plat_scmi_get_channel(unsigned int channel_id)
+ 	return find_resource(confined_id)->channel;
+ }
+ 
+-static size_t __maybe_unused plat_scmi_protocol_count_paranoid(void)
++static uint8_t *plat_protocol_list;
++static size_t plat_protocol_list_count;
++
++static void add_protocol(uint8_t protocol_id)
++{
++	plat_protocol_list_count++;
++
++	plat_protocol_list = realloc(plat_protocol_list,
++				     plat_protocol_list_count *
++				     sizeof(*plat_protocol_list));
++	assert(plat_protocol_list);
++
++	plat_protocol_list[plat_protocol_list_count - 1] = protocol_id;
++}
++
++static void plat_scmi_set_protocol_list(void)
+ {
+ 	unsigned int n = 0;
+-	unsigned int count = 0;
+ 	const size_t channel_count = ARRAY_SIZE(scmi_channel);
+ 
++	if (plat_protocol_list_count)
++		return;
++
+ 	for (n = 0; n < channel_count; n++)
+ 		if (scmi_channel[n].clock_count)
+ 			break;
+ 	if (n < channel_count)
+-		count++;
++		add_protocol(SCMI_PROTOCOL_ID_CLOCK);
+ 
+ 	for (n = 0; n < channel_count; n++)
+ 		if (scmi_channel[n].rd_count)
+ 			break;
+ 	if (n < channel_count)
+-		count++;
++		add_protocol(SCMI_PROTOCOL_ID_RESET_DOMAIN);
+ 
+ 	for (n = 0; n < channel_count; n++)
+ 		if (IS_ENABLED(CFG_SCMI_MSG_REGULATOR_CONSUMER) &&
+ 		    plat_scmi_voltd_count(n))
+ 			break;
+ 	if (n < channel_count)
+-		count++;
++		add_protocol(SCMI_PROTOCOL_ID_VOLTAGE_DOMAIN);
+ 
+ #ifdef CFG_SCMI_MSG_PERF_DOMAIN
+ 	for (n = 0; n < channel_count; n++)
+ 		if (scmi_channel[n].perfd_count)
+ 			break;
+ 	if (n < channel_count)
+-		count++;
++		add_protocol(SCMI_PROTOCOL_ID_PERF);
+ #endif
+ 
+-	return count;
++	/* The array expects a terminal 0 ID value */
++	add_protocol(0);
+ }
+ 
+ static const char vendor[] = "ST";
+@@ -291,36 +362,54 @@ const char *plat_scmi_sub_vendor_name(void)
+ 	return sub_vendor;
+ }
+ 
+-/* Currently supporting Clocks and Reset Domains */
+-static const uint8_t plat_protocol_list[] = {
+-	SCMI_PROTOCOL_ID_CLOCK,
+-	SCMI_PROTOCOL_ID_RESET_DOMAIN,
+-#ifdef CFG_SCMI_MSG_REGULATOR_CONSUMER
+-	SCMI_PROTOCOL_ID_VOLTAGE_DOMAIN,
+-#endif
+-#ifdef CFG_SCMI_MSG_PERF_DOMAIN
+-	SCMI_PROTOCOL_ID_PERF,
+-#endif
+-	0 /* Null termination */
+-};
+-
+ size_t plat_scmi_protocol_count(void)
+ {
+-	const size_t count = ARRAY_SIZE(plat_protocol_list) - 1;
+-
+-	assert(count == plat_scmi_protocol_count_paranoid());
++	plat_scmi_set_protocol_list();
++	assert(plat_protocol_list_count);
+ 
+-	return count;
++	return plat_protocol_list_count - 1;
+ }
+ 
+ const uint8_t *plat_scmi_protocol_list(unsigned int channel_id __unused)
+ {
+-	assert(plat_scmi_protocol_count_paranoid() ==
+-	       (ARRAY_SIZE(plat_protocol_list) - 1));
+-
+ 	return plat_protocol_list;
+ }
+ 
++static bool nsec_can_access_resource(unsigned int etzpc_id)
++{
++	static struct firewall_controller *etzpc_fw_ctrl;
++	uint32_t query_arg = DECPROT(etzpc_id, DECPROT_NS_RW, DECPROT_UNLOCK);
++	struct firewall_query query = {
++		.arg_count = 1,
++		.args = &query_arg,
++		.ctrl = etzpc_fw_ctrl,
++	};
++
++	if (etzpc_id == ETZPC_ID_NEVER_ACCESSIBLE)
++		return false;
++	if (etzpc_id == ETZPC_ID_ALWAYS_ACCESSIBLE)
++		return true;
++
++	if (!etzpc_fw_ctrl) {
++		struct dt_driver_provider *prov = NULL;
++		int node = 0;
++
++		node = fdt_node_offset_by_compatible(get_embedded_dt(), -1,
++						     "st,stm32-etzpc");
++		if (node < 0)
++			panic();
++
++		prov = dt_driver_get_provider_by_node(node, DT_DRIVER_FIREWALL);
++		if (!prov)
++			panic();
++
++		etzpc_fw_ctrl = dt_driver_provider_priv_data(prov);
++		query.ctrl = etzpc_fw_ctrl;
++	}
++
++	return firewall_check_access(&query) == TEE_SUCCESS;
++}
++
+ /*
+  * Platform SCMI clocks
+  */
+@@ -350,7 +439,7 @@ const char *plat_scmi_clock_get_name(unsigned int channel_id,
+ {
+ 	struct stm32_scmi_clk *clock = find_clock(channel_id, scmi_id);
+ 
+-	if (!clock || !stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!clock || !nsec_can_access_resource(clock->etzpc_id))
+ 		return NULL;
+ 
+ 	return clock->name;
+@@ -372,7 +461,7 @@ int32_t plat_scmi_clock_rates_array(unsigned int channel_id,
+ 	if (!clock)
+ 		return SCMI_NOT_FOUND;
+ 
+-	if (!stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!nsec_can_access_resource(clock->etzpc_id))
+ 		return SCMI_DENIED;
+ 
+ 	switch (scmi_id) {
+@@ -409,7 +498,7 @@ int32_t plat_scmi_clock_rates_by_step(unsigned int channel_id,
+ 	if (!clock)
+ 		return SCMI_NOT_FOUND;
+ 
+-	if (!stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!nsec_can_access_resource(clock->etzpc_id))
+ 		return SCMI_DENIED;
+ 
+ 	switch (scmi_id) {
+@@ -435,7 +524,7 @@ int32_t plat_scmi_clock_set_rate(unsigned int channel_id, unsigned int scmi_id,
+ 	if (!clock)
+ 		return SCMI_NOT_FOUND;
+ 
+-	if (!stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!nsec_can_access_resource(clock->etzpc_id))
+ 		return SCMI_DENIED;
+ 
+ 	switch (scmi_id) {
+@@ -465,7 +554,7 @@ unsigned long plat_scmi_clock_get_rate(unsigned int channel_id,
+ {
+ 	struct stm32_scmi_clk *clock = find_clock(channel_id, scmi_id);
+ 
+-	if (!clock || !stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!clock || !nsec_can_access_resource(clock->etzpc_id))
+ 		return 0;
+ 
+ 	return clk_get_rate(clock->clk);
+@@ -477,7 +566,7 @@ unsigned long plat_scmi_clock_round_rate(unsigned int channel_id,
+ {
+ 	struct stm32_scmi_clk *clock = find_clock(channel_id, scmi_id);
+ 
+-	if (!clock || !stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!clock || !nsec_can_access_resource(clock->etzpc_id))
+ 		return 0;
+ 
+ 	return clk_round_rate(stm32mp_rcc_clock_id_to_clk(clock->clock_id), rate);
+@@ -487,7 +576,7 @@ int32_t plat_scmi_clock_get_state(unsigned int channel_id, unsigned int scmi_id)
+ {
+ 	struct stm32_scmi_clk *clock = find_clock(channel_id, scmi_id);
+ 
+-	if (!clock || !stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!clock || !nsec_can_access_resource(clock->etzpc_id))
+ 		return 0;
+ 
+ 	return (int32_t)clock->enabled;
+@@ -501,7 +590,7 @@ int32_t plat_scmi_clock_set_state(unsigned int channel_id, unsigned int scmi_id,
+ 	if (!clock)
+ 		return SCMI_NOT_FOUND;
+ 
+-	if (!stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!nsec_can_access_resource(clock->etzpc_id))
+ 		return SCMI_DENIED;
+ 
+ 	if (enable_not_disable) {
+@@ -528,7 +617,7 @@ int32_t plat_scmi_clock_get_duty_cycle(unsigned int channel_id, unsigned int scm
+ 	struct clk *clk_ref = NULL;
+ 	int ret = 0;
+ 
+-	if (!clock || !stm32mp_nsec_can_access_clock(clock->clock_id))
++	if (!clock || !nsec_can_access_resource(clock->etzpc_id))
+ 		return SCMI_DENIED;
+ 
+ 	clk_ref = stm32mp_rcc_clock_id_to_clk(clock->clock_id);
+@@ -578,16 +667,12 @@ int32_t plat_scmi_rd_autonomous(unsigned int channel_id, unsigned int scmi_id,
+ 				uint32_t state)
+ {
+ 	const struct stm32_scmi_rd *rd = find_rd(channel_id, scmi_id);
+-	unsigned int id = 0;
+ 
+ 	if (!rd)
+ 		return SCMI_NOT_FOUND;
+ 
+-	id = rd->fw_id;
+-
+-	if (id != STM32MP1_ETZPC_MAX_ID && stm32_etzpc_check_ns_access(id))
++	if (!rd->rstctrl || !nsec_can_access_resource(rd->etzpc_id))
+ 		return SCMI_DENIED;
+-	assert(rd->rstctrl);
+ 
+ #ifdef CFG_STM32MP15
+ 	/* Reset cycle on MCU hold boot is not supported */
+@@ -620,14 +705,11 @@ int32_t plat_scmi_rd_set_state(unsigned int channel_id, unsigned int scmi_id,
+ {
+ 	const struct stm32_scmi_rd *rd = find_rd(channel_id, scmi_id);
+ 	TEE_Result res = TEE_ERROR_GENERIC;
+-	unsigned int id = 0;
+ 
+ 	if (!rd)
+ 		return SCMI_NOT_FOUND;
+ 
+-	id = rd->fw_id;
+-
+-	if (id != STM32MP1_ETZPC_MAX_ID && stm32_etzpc_check_ns_access(id))
++	if (!rd->rstctrl || !nsec_can_access_resource(rd->etzpc_id))
+ 		return SCMI_DENIED;
+ 
+ #ifdef CFG_STM32MP15
+@@ -637,8 +719,6 @@ int32_t plat_scmi_rd_set_state(unsigned int channel_id, unsigned int scmi_id,
+ 		return SCMI_DENIED;
+ #endif
+ 
+-	assert(rd->rstctrl);
+-
+ 	if (assert_not_deassert) {
+ 		FMSG("SCMI reset %u set", scmi_id);
+ 		res = rstctrl_assert(rd->rstctrl);
+@@ -829,7 +909,7 @@ static TEE_Result stm32mp1_init_scmi_server(void)
+ 
+ 			/* Sync SCMI clocks with their targeted initial state */
+ 			if (clk->enabled &&
+-			    stm32mp_nsec_can_access_clock(clk->clock_id))
++			    nsec_can_access_resource(clk->etzpc_id))
+ 				clk_enable(clk->clk);
+ 		}
+ 
+@@ -843,6 +923,8 @@ static TEE_Result stm32mp1_init_scmi_server(void)
+ 
+ 			rstctrl = stm32mp_rcc_reset_id_to_rstctrl(rd->reset_id);
+ 			assert(rstctrl);
++			if (rstctrl_get_exclusive(rstctrl))
++				continue;
+ 
+ 			rd->rstctrl = rstctrl;
+ 		}
+diff --git a/core/drivers/scmi-msg/clock.c b/core/drivers/scmi-msg/clock.c
+index c29632f56..f0294ed54 100644
+--- a/core/drivers/scmi-msg/clock.c
++++ b/core/drivers/scmi-msg/clock.c
+@@ -348,9 +348,9 @@ static void scmi_clock_config_set_v2(struct scmi_msg *msg)
+ static void scmi_clock_config_set(struct scmi_msg *msg)
+ {
+ 	/* Support both old and new protocol base on message size */
+-	if (msg->in_size != sizeof(struct scmi_clock_config_set_a2p))
++	if (msg->in_size == sizeof(struct scmi_clock_config_set_a2p))
+ 		scmi_clock_config_set_v1(msg);
+-	else if (msg->in_size != sizeof(struct scmi_clock_config_set_v2_a2p))
++	else if (msg->in_size == sizeof(struct scmi_clock_config_set_v2_a2p))
+ 		scmi_clock_config_set_v2(msg);
+ 	else
+ 		scmi_status_response(msg, SCMI_PROTOCOL_ERROR);
+@@ -392,9 +392,9 @@ static void scmi_clock_config_get(struct scmi_msg *msg)
+ 				       plat_scmi_clock_count(msg->channel_id));
+ 
+ 	switch (in_args->flags & SCMI_CLOCK_CONFIG_GET_EXT_TYPE_MASK) {
+-	case SCMI_CLOCK_CONFIG_SET_EXT_TYPE_UNUSED:
++	case SCMI_CLOCK_EXTENDED_CONFIG_TYPE_UNUSED:
+ 		break;
+-	case SCMI_CLOCK_CONFIG_SET_EXT_TYPE_DUTY_CYCLE:
++	case SCMI_CLOCK_EXTENDED_CONFIG_TYPE_DUTY_CYCLE:
+ 		status = get_duty_cycle(msg->channel_id, clock_id,
+ 					&return_values.extended_config_val);
+ 		if (status == SCMI_NOT_SUPPORTED) {
+@@ -559,6 +559,26 @@ static bool message_id_is_supported(unsigned int message_id)
+ 	       scmi_clock_handler_table[message_id];
+ }
+ 
++#ifdef CFG_STM32_OTSL_SCMI_CLOCK_SUPPORT
++/*
++ * Special case to support OSTLv5 duty-cycle requests:
++ * based on input message size, distinguish standard
++ * SCMI clock protocol v3.0 SCMI_CLOCK_CONFIG_GET
++ * from OSTLv4/v5 SCMI_CLOCK_DUTY_CYCLE_GET.
++ */
++static_assert(sizeof(struct scmi_clock_config_get_a2p) !=
++	      sizeof(struct scmi_clock_duty_cycle_get_a2p));
++
++/*
++ * Special case to support OSTLv5 duty-cycle requests:
++ * based on input message size, distinguish standard
++ * SCMI clock protocol v3.0 SCMI_CLOCK_POSSIBLE_PARENT_GET
++ * from OSTLv4/v5 SCMI_CLOCK_ROUND_RATE_GET.
++ */
++static_assert(sizeof(struct scmi_clock_possible_parent_a2p) !=
++	      sizeof(struct scmi_clock_ostl_round_rate_a2p));
++#endif /* CFG_STM32_OTSL_SCMI_CLOCK_SUPPORT */
++
+ scmi_msg_handler_t scmi_msg_get_clock_handler(struct scmi_msg *msg)
+ {
+ 	const size_t array_size = ARRAY_SIZE(scmi_clock_handler_table);
+@@ -574,29 +594,11 @@ scmi_msg_handler_t scmi_msg_get_clock_handler(struct scmi_msg *msg)
+ #ifdef CFG_STM32_OTSL_SCMI_CLOCK_SUPPORT
+ 	switch (msg->message_id) {
+ 	case SCMI_CLOCK_DUTY_CYCLE_GET:
+-		/*
+-		 * Special case to support OSTLv5 duty-cycle requests:
+-		 * based on input message size, distinguish standard
+-		 * SCMI clock protocol v3.0 SCMI_CLOCK_CONFIG_GET
+-		 * from OSTLv4/v5 SCMI_CLOCK_DUTY_CYCLE_GET.
+-		 */
+-		static_assert(sizeof(struct scmi_clock_config_get_a2p) !=
+-			      sizeof(struct scmi_clock_duty_cycle_get_a2p));
+-
+ 		if (msg->in_size ==
+ 		    sizeof(struct scmi_clock_duty_cycle_get_a2p))
+ 			return scmi_clock_ostl_duty_cycle_get;
+ 		break;
+ 	case SCMI_CLOCK_ROUND_RATE_GET:
+-		/*
+-		 * Special case to support OSTLv5 duty-cycle requests:
+-		 * based on input message size, distinguish standard
+-		 * SCMI clock protocol v3.0 SCMI_CLOCK_POSSIBLE_PARENT_GET
+-		 * from OSTLv4/v5 SCMI_CLOCK_ROUND_RATE_GET.
+-		 */
+-		static_assert(sizeof(struct scmi_clock_possible_parent_a2p) !=
+-			      sizeof(struct scmi_clock_ostl_round_rate_a2p));
+-
+ 		if (msg->in_size ==
+ 		    sizeof(struct scmi_clock_ostl_round_rate_a2p))
+ 			return scmi_clock_ostl_round_rate_get;
+diff --git a/core/include/dt-bindings/clock/stm32mp1-clks.h b/core/include/dt-bindings/clock/stm32mp1-clks.h
+index 615152e7f..ce4983200 100644
+--- a/core/include/dt-bindings/clock/stm32mp1-clks.h
++++ b/core/include/dt-bindings/clock/stm32mp1-clks.h
+@@ -273,5 +273,16 @@
+ #define CK_SCMI_RTCAPB		18
+ #define CK_SCMI_SPI6		19
+ #define CK_SCMI_USART1		20
++#define CK_SCMI_GPIOA		21
++#define CK_SCMI_GPIOB		22
++#define CK_SCMI_GPIOC		23
++#define CK_SCMI_GPIOD		24
++#define CK_SCMI_GPIOE		25
++#define CK_SCMI_GPIOF		26
++#define CK_SCMI_GPIOG		27
++#define CK_SCMI_GPIOH		28
++#define CK_SCMI_GPIOI		29
++#define CK_SCMI_GPIOJ		30
++#define CK_SCMI_GPIOK		31
+ 
+ #endif /* _DT_BINDINGS_STM32MP1_CLKS_H_ */

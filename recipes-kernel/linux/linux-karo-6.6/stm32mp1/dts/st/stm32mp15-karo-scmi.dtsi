@@ -66,11 +66,6 @@
 		 <&scmi_clk CK_SCMI_LSI>;
 };
 
-&rng1 {
-	clocks = <&scmi_clk CK_SCMI_RNG1>;
-	resets = <&scmi_reset RST_SCMI_RNG1>;
-};
-
 &rtc {
 	clocks = <&scmi_clk CK_SCMI_RTCAPB>, <&scmi_clk CK_SCMI_RTC>;
 };

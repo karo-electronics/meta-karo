@@ -95,10 +95,6 @@
 	};
 };
 
-&hash {
-	status = "okay";
-};
-
 &i2c1 {
 	pinctrl-names = "default", "sleep";
 	pinctrl-0 = <&i2c1_pins>;
@@ -141,10 +137,6 @@
 };
 
 &rcc {
-	status = "okay";
-};
-
-&rng {
 	status = "okay";
 };
 

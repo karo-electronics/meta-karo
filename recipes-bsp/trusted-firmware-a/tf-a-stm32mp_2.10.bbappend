@@ -46,6 +46,10 @@ SRC_URI:append:stm32mp25 = " \
 "
 
 SRC_URI:append:stm32mp23 = " \
+	file://fdts/stm32mp235c-qsmp-2030-rcc.dtsi;subdir=git \
+	file://fdts/stm32mp235c-qsmp-2030.dts;subdir=git \
+	file://fdts/stm32mp235c-qsmp-2030-fw-config.dts;subdir=git \
+	file://fdts/stm32mp235c-qsmp-2030-ddr.h;subdir=git \
 	file://fdts/stm32mp235c-qsmp-2350-rcc.dtsi;subdir=git \
 	file://fdts/stm32mp235c-qsmp-2350.dts;subdir=git \
 	file://fdts/stm32mp235c-qsmp-2350-fw-config.dts;subdir=git \
@@ -78,7 +82,7 @@ SRC_URI:append:stm32mp2 = "${@ " file://regulators-microvolts.patch" if d.getVar
 SRC_URI:append:stm32mp2:qsmp = " ${@ " file://pca9450-support.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else "file://pca9450-mv-support.patch"}"
 
 # Extra make settings
-EXTRA_OEMAKE = "CROSS_COMPILE=${TARGET_PREFIX}"
+EXTRA_OEMAKE = 'CROSS_COMPILE=${STAGING_DATADIR_NATIVE}/${ST_CROSS_COMPILE_BIN}/${ST_CROSS_COMPILE}'
 EXTRA_OEMAKE:append = " PLAT=${TF_A_PLATFORM}"
 EXTRA_OEMAKE:append = " ARCH=${TF_A_ARCH}"
 EXTRA_OEMAKE:append = " ARM_ARCH_MAJOR=${TF_A_ARM_MAJOR}"
@@ -89,10 +93,11 @@ EXTRA_OEMAKE:append:stm32mp1 = " STM32MP_BL2_SIZE=0x0001e000"
 
 EXTRA_OEMAKE:append:stm32mp13 = " STM32MP13=1"
 
-EXTRA_OEMAKE:append:stm32mp2 = " STM32MP_LPDDR4_TYPE=1"
+EXTRA_OEMAKE:append:stm32mp2 = " ${@ " STM32MP_LPDDR4_TYPE=1" if d.getVar('TF_A_DDR_TARGET') == 'lpddr4' else "STM32MP_DDR3_TYPE=1"}"
+EXTRA_OEMAKE:append:stm32mp2:qsmp20 = " STM32MP_DDR3_TYPE=1"
 EXTRA_OEMAKE:append:stm32mp2 = " STM32MP_EARLY_CONSOLE=1"
 EXTRA_OEMAKE:append:stm32mp2 = " SPD=opteed"
-EXTRA_OEMAKE:append:stm32mp2:txmp = " STM32MP_DEBUG_UART=2"
+EXTRA_OEMAKE:append:stm32mp2:txmp = " STM32MP_DEBUG_UART=3"
 EXTRA_OEMAKE:append:stm32mp2:qsmp = " STM32MP_DEBUG_UART=4"
 EXTRA_OEMAKE:append:stm32mp2 = " STM32MP_BL31_SIZE=0x1e000"
 EXTRA_OEMAKE:append:stm32mp2common = " ${@ "STM32MP_%s=1" % "${KARO_BOARD_PMIC}".upper()}"

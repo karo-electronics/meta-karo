@@ -35,6 +35,15 @@ EXTERNALSRC_BUILD:pn-${PN} = "${WORKDIR}/build"
 DEPENDS += "dtc-native"
 DEPENDS:stm32mp2common += "tf-a-tools-native"
 
+DEPENDS:append:armv7a = " gcc-arm-none-eabi-native "
+DEPENDS:append:armv7ve = " gcc-arm-none-eabi-native "
+DEPENDS:append:aarch64 = " gcc-aarch64-none-elf-native "
+
+ST_CROSS_COMPILE_BIN:stm32mp1common  = "gcc-arm-none-eabi/bin"
+ST_CROSS_COMPILE:stm32mp1common = "arm-none-eabi-"
+ST_CROSS_COMPILE_BIN:stm32mp2common = "gcc-aarch64-none-elf/bin"
+ST_CROSS_COMPILE:stm32mp2common = "aarch64-none-elf-"
+
 SIGN_KEY ?= ""
 SIGN_KEY_PASS ?= ""
 SIGN_PUB_KEY ?= ""
@@ -210,7 +219,7 @@ do_compile() {
     done
 
     if [ "${TF_A_FWDDR}" = 1 ];then
-        ddr_target=lpddr4
+        ddr_target=${TF_A_DDR_TARGET}
         if [ -s "${S}/drivers/st/ddr/phy/firmware/bin/${ddr_target}_pmu_train.bin" ]; then
             cp "${S}/drivers/st/ddr/phy/firmware/bin/${ddr_target}_pmu_train.bin" "${B}/${FWDDR_NAME}-${dt}.${FWDDR_SUFFIX}"
         else

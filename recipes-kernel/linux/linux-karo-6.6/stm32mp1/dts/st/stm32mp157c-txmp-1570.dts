@@ -8,9 +8,10 @@
 #include <dt-bindings/pinctrl/stm32-pinfunc.h>
 #include "stm32mp157.dtsi"
 #include "stm32mp15xc.dtsi"
-#include "stm32mp15xxab-pinctrl.dtsi"
+#include "stm32mp15xxac-pinctrl.dtsi"
 #include "stm32mp157-txmp.dtsi"
 #include "stm32mp157c-karo-scmi.dtsi"
+#include "stm32mp157c-txmp-scmi.dtsi"
 
 / {
 	model = "Ka-Ro electronics GmbH TXMP-1570 module";

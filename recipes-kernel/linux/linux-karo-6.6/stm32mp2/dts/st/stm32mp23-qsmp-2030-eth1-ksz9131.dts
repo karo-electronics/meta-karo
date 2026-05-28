@@ -13,7 +13,7 @@
 
 &{/chosen} {
 	overlays {
-		qsmp-eth1-ksz9131;
+		qsmp-2030-eth1-ksz9131;
 	};
 };
 
@@ -35,12 +35,12 @@
 
 		eth1_phy: ethernet-phy@7 {
 			reg = <7>;
-			interrupt-parent = <&gpiof>;
-			interrupts = <5 IRQ_TYPE_EDGE_FALLING>;
+			interrupt-parent = <&gpioc>;
+			interrupts = <6 IRQ_TYPE_EDGE_FALLING>;
 			micrel,force-master;
 			/* range: -290 .. 985 */
 			txc-skew-psec = <900>;
-			rxc-skew-psec = <0>;
+			rxc-skew-psec = <120>;
 			/* range: -355 .. 400 */
 			txen-skew-psec = <0>;
 			txd0-skew-psec = <0>;

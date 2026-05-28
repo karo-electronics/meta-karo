@@ -8,7 +8,7 @@ SRC_URI:append:stm32mp1:not = " \
     file://patches/dump-general-regs.patch \
 "
 SRC_URI:append:stm32mp1 = " \
-    file://patches/clk-name-bugfix.patch \
+    file://patches/scmi-server.patch \
 "
 SRC_URI:append:stm32mp23 = " \
     file://patches/stm32mp2-bugfix.patch \
@@ -48,6 +48,8 @@ SRC_URI:append:stm32mp23 = " \
     file://dts/stm32mp23-karo-resmem.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp235c-qsmp-2350-rcc.dtsi;subdir=git/core/arch/arm/ \
     file://dts/stm32mp235c-qsmp-2350-rif.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp235c-qsmp-2030-rcc.dtsi;subdir=git/core/arch/arm/ \
+    file://dts/stm32mp235c-qsmp-2030-rif.dtsi;subdir=git/core/arch/arm/ \
 "
 
 SRC_URI:append:stm32mp25 = " \

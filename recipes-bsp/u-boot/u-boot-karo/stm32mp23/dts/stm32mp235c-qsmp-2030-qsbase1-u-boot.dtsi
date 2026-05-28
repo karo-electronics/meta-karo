@@ -8,22 +8,4 @@
  * https://wiki.st.com/stm32mpu/wiki/Category:Device_tree_configuration
  */
 
-#include "stm32mp25-u-boot.dtsi"
-
-/ {
-	config {
-		u-boot,boot-led = "Heartbeat";
-	};
-};
-
-&arm_wdt {
-	u-boot,noautostart;
-};
-
-&usart3 {
-	u-boot,dm-pre-reloc;
-};
-
-&sdmmc2 {
-	u-boot,dm-pre-reloc;
-};
+#include "stm32mp235c-qsmp-2030-u-boot.dtsi"
