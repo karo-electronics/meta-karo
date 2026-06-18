@@ -97,7 +97,7 @@ EXTRA_OEMAKE:append:stm32mp2 = " ${@ " STM32MP_LPDDR4_TYPE=1" if d.getVar('TF_A_
 EXTRA_OEMAKE:append:stm32mp2:qsmp20 = " STM32MP_DDR3_TYPE=1"
 EXTRA_OEMAKE:append:stm32mp2 = " STM32MP_EARLY_CONSOLE=1"
 EXTRA_OEMAKE:append:stm32mp2 = " SPD=opteed"
-EXTRA_OEMAKE:append:stm32mp2:txmp = " STM32MP_DEBUG_UART=3"
+EXTRA_OEMAKE:append:stm32mp2:txmp = " STM32MP_DEBUG_UART=2"
 EXTRA_OEMAKE:append:stm32mp2:qsmp = " STM32MP_DEBUG_UART=4"
 EXTRA_OEMAKE:append:stm32mp2 = " STM32MP_BL31_SIZE=0x1e000"
 EXTRA_OEMAKE:append:stm32mp2common = " ${@ "STM32MP_%s=1" % "${KARO_BOARD_PMIC}".upper()}"

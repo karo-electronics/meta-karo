@@ -29,10 +29,10 @@
 		mmc0 = &sdmmc2;
 		mmc1 = &sdmmc1;
 		mmc2 = &sdmmc3;
-		serial6 = &usart2;
+		serial0 = &usart2;
 		serial1 = &usart1;
 		serial2 = &uart7;
-		serial0 = &usart3;
+		serial6 = &usart3;
 	};
 
 	chosen {
@@ -263,13 +263,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&usart2_pins &usart2_rtscts_pins>;
 	uart-has-rts-cts;
-	status = "okay";
-};
-
-&usart3 {
-	/* serial console */
-	pinctrl-names = "default";
-	pinctrl-0 = <&usart3_pins>;
 	status = "okay";
 };
 
@@ -663,20 +656,6 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('A', 9, AF6)>; /* USART2_CTS_NSS */
-			bias-pull-up;
-		};
-	};
-
-	usart3_pins: usart3-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('I', 6, AF6)>; /* USART2_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('I', 7, AF6)>; /* USART2_RX */
 			bias-pull-up;
 		};
 	};

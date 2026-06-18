@@ -23,8 +23,7 @@
 	compatible = "st,stm32mp257f-txmp-2550", "st,stm32mp257";
 
 	aliases {
-		serial0 = &usart3;
-		serial3 = &usart2;
+		serial0 = &usart2;
 		serial1 = &usart1;
 		serial2 = &uart7;
 	};
@@ -212,12 +211,6 @@
 	status = "okay";
 };
 
-&usart3 {
-	pinctrl-names = "default";
-	pinctrl-0 = <&usart3_pins>;
-	status = "okay";
-};
-
 &vddio1 {
 	vddio1-supply = <&vddio_sdcard>;
 };
@@ -377,20 +370,6 @@
 
 		pins2 {
 			pinmux = <STM32_PINMUX('A', 9, AF6)>; /* USART2_CTS_NSS */
-			bias-pull-up;
-		};
-	};
-
-	usart3_pins: usart3-pins {
-		pins1 {
-			pinmux = <STM32_PINMUX('I', 6, AF6)>; /* USART2_TX */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <0>;
-		};
-
-		pins2 {
-			pinmux = <STM32_PINMUX('I', 7, AF6)>; /* USART2_RX */
 			bias-pull-up;
 		};
 	};

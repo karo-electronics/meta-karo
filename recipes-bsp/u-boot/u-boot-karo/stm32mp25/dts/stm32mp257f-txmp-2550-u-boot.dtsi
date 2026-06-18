@@ -20,7 +20,7 @@
 	u-boot,noautostart;
 };
 
-&usart3 {
+&usart2 {
 	u-boot,dm-pre-reloc;
 };
 

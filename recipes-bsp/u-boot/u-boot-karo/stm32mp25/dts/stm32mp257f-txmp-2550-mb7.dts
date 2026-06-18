@@ -34,7 +34,7 @@
 		backlight = <&lcd_backlight>;
 		power-supply = <&reg_lcd_pwr>;
 		enable-gpios = <&gpioz 0 GPIO_ACTIVE_HIGH>; /* Pin 151 */
-		status = "disabled";
+		status = "okay";
 
 		port {
 			lcd_panel_from_ltdc_ep0: endpoint {
@@ -182,7 +182,7 @@
 
 &ltdc {
 	default-on;
-	status = "disabled";
+	status = "okay";
 
 	port {
 		ltdc_ep0_to_lcd_panel: endpoint {
