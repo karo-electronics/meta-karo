@@ -10,6 +10,11 @@ KERNEL_SRC_DEFAULT = "git://github.com/karo-electronics/karo-tx-linux.git;protoc
 KERNEL_BRANCH_DEFAULT = "linux-stm32mp-v6.6-karo"
 KERNEL_REV_DEFAULT = "5d05fd35e52b4007bc904b8039a5900dce9ca098"
 
+CVE_PRODUCT = "linux:linux_kernel"
+CVE_VERSION = "6.6.116"
+
+SPDX_INCLUDE_KERNEL_CONFIG = "1"
+
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
         ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \

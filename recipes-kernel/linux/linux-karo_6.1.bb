@@ -10,6 +10,11 @@ KERNEL_BRANCH_DEFAULT = "rz-6.1-cip43"
 KERNEL_REV_DEFAULT = "6717c06c72df7430323d0d48258ae4090f2d76aa"
 KERNEL_SRC_DEFAULT = "git://github.com/renesas-rz/rz_linux-cip.git;protocol=https"
 
+CVE_PRODUCT = "linux:linux_kernel"
+CVE_VERSION = "6.1.141"
+
+SPDX_INCLUDE_KERNEL_CONFIG = "1"
+
 SRC_URI:append = " \
         file://${KBUILD_DEFCONFIG} \
         ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
