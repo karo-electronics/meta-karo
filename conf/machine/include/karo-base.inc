@@ -13,8 +13,6 @@ PREFERRED_PROVIDER_virtual/kernel ??= "linux-karo"
 
 MACHINEOVERRIDES =. "use-mainline-bsp:"
 
-IMAGE_CLASSES += "st-partitions-image"
-
 FIPTOOL_DIR = "fiptool"
 
 GPU_IMAGE_INSTALL ??= ""
@@ -38,12 +36,12 @@ MACHINE_EXTRA_RRECOMMENDS = " \
 "
 
 MACHINE_FEATURES = " \
-                 alsa \
-                 rtc \
-                 serial \
-                 usbgadget \
-                 usbhost \
-                 vfat \
+    alsa \
+    rtc \
+    serial \
+    usbgadget \
+    usbhost \
+    vfat \
 "
 
 UBOOT_FEATURES ??= ""
