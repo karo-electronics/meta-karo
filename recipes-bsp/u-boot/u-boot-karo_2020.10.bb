@@ -6,7 +6,7 @@ PN = "u-boot-karo"
 
 UBOOT_SRC_DEFAULT = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
 UBOOT_BRANCH_DEFAULT = "karo-txrz"
-UBOOT_REV_DEFAULT = "23d3b5822290db7f0413074c7d920fb81db1739f"
+UBOOT_REV_DEFAULT = "4df22e6d47d6c78d1274145e2a530e4fa53d6f10"
 
 CVE_PRODUCT = "denx:u-boot"
 CVE_VERSION = "2020.10"
