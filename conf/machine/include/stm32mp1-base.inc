@@ -28,6 +28,7 @@ SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
 # =========================================================================
 # List of supported boot schemes
 BOOTSCHEME_LABELS ??= "optee"
+BOOTSCHEME_DEFAULT ??= "optee"
 
 # =========================================================================
 # tf-a

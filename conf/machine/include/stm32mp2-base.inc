@@ -31,7 +31,7 @@ KARO_BOARD_PMIC ??= "stpmic2"
 # =========================================================================
 # List of supported boot schemes
 BOOTSCHEME_LABELS ??= "optee"
-BOOTDEVICE_LABELS ?= "emmc sdcard"
+BOOTSCHEME_DEFAULT ??= "optee"
 
 # =========================================================================
 # tf-a
