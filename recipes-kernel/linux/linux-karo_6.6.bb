@@ -1,6 +1,6 @@
 SUMMARY = "Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/cfg:${THISDIR}/${BP}/defconfigs:"
 
 require recipes-kernel/linux/linux-karo.inc
 
@@ -15,41 +15,13 @@ CVE_VERSION = "6.6.116"
 
 SPDX_INCLUDE_KERNEL_CONFIG = "1"
 
+SRC_URI:append = " file://${KBUILD_DEFCONFIG}"
+
 SRC_URI:append = " \
-        file://${KBUILD_DEFCONFIG} \
-        ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
+    ${@ "".join(map(lambda f: " file://" + f, "${KERNEL_FEATURES}".split()))} \
 "
 
-SRC_URI:append:stm32mp1 = " \
-        file://dts/st/stm32mp15-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp15-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp15-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp15-karo-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp15-qsmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp153-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp153-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp153-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp153a-karo-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp153a-qsmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp157-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp157-qsmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp157-txmp.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp157c-karo-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp157c-qsmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/st/stm32mp157c-txmp-scmi.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
-SRC_URI:append:stm32mp23 = " \
-        file://dts/st/stm32mp23-karo-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
-SRC_URI:append:stm32mp25 = " \
-        file://dts/st/stm32mp25-karo-resmem.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
-KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
-
-KBUILD_DEFCONFIG = "defconfig"
+KBUILD_DEFCONFIG ?= "defconfig"
 
 KERNEL_FEATURES:append:stm32mp13 = " stm32mp13.cfg"
 KERNEL_FEATURES:append:stm32mp15 = " stm32mp15.cfg"
@@ -76,6 +48,5 @@ KERNEL_FEATURES:append:stm32mp2 = "${@bb.utils.contains('DISTRO_FEATURES',"flexc
 KERNEL_FEATURES:append:stm32mp2 = "${@bb.utils.contains('MACHINE_FEATURES',"stm-tsn-swch"," stm-tsn-swch.cfg","",d)}"
 
 KERNEL_FEATURES:remove = "${@bb.utils.contains('DISTRO_FEATURES','bcm4373','wifi.cfg','',d)}"
-
 
 COMPATIBLE_MACHINE:stm32mp1 = "(txmp-.*|qsmp-.*)"

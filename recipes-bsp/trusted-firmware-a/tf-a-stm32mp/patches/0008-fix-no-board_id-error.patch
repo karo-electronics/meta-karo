@@ -1,0 +1,64 @@
+From fedc6761acdcb97fd66224b6f5a9be6cae2813e7 Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Wed, 9 Sep 2026 09:22:10 +0000
+Subject: [PATCH] fix: no board_id error
+
+---
+ plat/st/common/stm32mp_dt.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/plat/st/common/stm32mp_dt.c b/plat/st/common/stm32mp_dt.c
+index 2a78aac85..1896b9d66 100644
+--- a/plat/st/common/stm32mp_dt.c
++++ b/plat/st/common/stm32mp_dt.c
+@@ -337,7 +337,7 @@ const char *dt_get_board_model(void)
+ 		return NULL;
+ 	}
+ 
+-	return (const char *)fdt_getprop(fdt, node, "model", NULL);
++	return fdt_getprop(fdt, node, "model", NULL);
+ }
+ 
+ static int find_legacy_node_name(const char *name, int node)
+@@ -374,7 +374,7 @@ int dt_find_otp_name(const char *name, uint32_t *otp, uint32_t *otp_len)
+ 	int len;
+ 	const fdt32_t *cuint;
+ 
+-	if ((name == NULL) || (otp == NULL))
++	if (!name || !otp)
+ 		return -FDT_ERR_BADVALUE;
+ 
+ 	node = fdt_node_offset_by_compatible(fdt, -1, DT_BSEC_COMPAT);
+@@ -386,27 +386,27 @@ int dt_find_otp_name(const char *name, uint32_t *otp, uint32_t *otp_len)
+ 		ret = find_legacy_node_name(name, node);
+ 
+ 	if (ret < 0) {
+-		INFO("nvmem node %s not found\n", name);
++		VERBOSE("nvmem node %s not found\n", name);
+ 		return ret;
+ 	}
+ 	node = ret;
+ 
+ 	cuint = fdt_getprop(fdt, node, "reg", &len);
+-	if ((cuint == NULL) || (len != (2 * (int)sizeof(uint32_t)))) {
++	if (!cuint || len != (2 * (int)sizeof(uint32_t))) {
+ 		ERROR("Malformed nvmem node %s: ignored\n", name);
+ 		return -FDT_ERR_BADVALUE;
+ 	}
+ 
+-	if ((fdt32_to_cpu(*cuint) % sizeof(uint32_t)) != 0U) {
++	if (fdt32_to_cpu(*cuint) % sizeof(uint32_t)) {
+ 		ERROR("Misaligned nvmem %s element: ignored\n", name);
+ 		return -FDT_ERR_BADVALUE;
+ 	}
+ 
+-	if (otp != NULL) {
++	if (otp) {
+ 		*otp = fdt32_to_cpu(*cuint) / sizeof(uint32_t);
+ 	}
+ 
+-	if (otp_len != NULL) {
++	if (otp_len) {
+ 		cuint++;
+ 		*otp_len = fdt32_to_cpu(*cuint) * CHAR_BIT;
+ 	}

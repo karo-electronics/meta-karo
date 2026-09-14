@@ -1,0 +1,37 @@
+From f75687ddf90f3c0c3321d4e88cacd63f2429841a Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Wed, 9 Sep 2026 11:31:03 +0000
+Subject: [PATCH] stm32mp1: initialize gpioz_nbpin with 0 when no compat
+
+Change initial value of gpioz_nbpin from -1 to 0 to properly handle
+the uninitialized state for GPIOZ bank pin count.
+---
+ core/arch/arm/plat-stm32mp1/shared_resources.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/core/arch/arm/plat-stm32mp1/shared_resources.c b/core/arch/arm/plat-stm32mp1/shared_resources.c
+index b1d4951bf..9bc940c96 100644
+--- a/core/arch/arm/plat-stm32mp1/shared_resources.c
++++ b/core/arch/arm/plat-stm32mp1/shared_resources.c
+@@ -134,19 +134,16 @@ static __maybe_unused const char *shres2str_state(enum shres_state id)
+ 
+ /* GPIOZ bank pin count depends on SoC variants */
+ /* A light count routine for unpaged context to not depend on DTB support */
+-static int gpioz_nbpin = -1;
++static int gpioz_nbpin = 0;
+ 
+ static unsigned int get_gpioz_nbpin(void)
+ {
+-	if (gpioz_nbpin < 0)
+-		panic();
+-
+ 	return gpioz_nbpin;
+ }
+ 
+ void stm32mp_register_gpioz_pin_count(size_t count)
+ {
+-	assert(gpioz_nbpin == -1);
++	assert(gpioz_nbpin == 0);
+ 
+ 	gpioz_nbpin = count;
+ }

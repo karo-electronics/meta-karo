@@ -1,12 +1,6 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/tf-a-tools:"
-
-SRC_URI:append = " \
-    file://0001-FIX-GCC-tools-overwrite.patch \
-    file://0001-tools-allow-to-use-a-root-key-password-from-command-.patch \
-    file://create_st_fip_binary.sh \
-"
-
 DEPENDS += "dtc-native openssl"
+
+SRC_URI:append = " file://create_st_fip_binary.sh"
 
 COMPATIBLE_HOST:class-target = "null"
 

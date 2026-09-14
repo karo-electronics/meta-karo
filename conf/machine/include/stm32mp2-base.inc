@@ -2,7 +2,7 @@ MACHINEOVERRIDES =. "stcommon:stm32mpcommon:stm32mp2common:stm32mp2:"
 
 DEFAULTTUNE ?= "cortexa35"
 
-require karo.inc
+require karo-base.inc
 require conf/machine/include/soc-family.inc
 require conf/machine/include/arm/armv8a/tune-cortexa35.inc
 
@@ -20,6 +20,8 @@ PREFERRED_VERSION_linux-karo = "6.6"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySTM0 ${@ " 115200;ttySTM1" if d.getVar('KARO_BASEBOARD') != "qsbase5" else ""} 115200;ttySTM2"
+
+KARO_BOARD_PMIC ??= "stpmic2"
 
 # =========================================================================
 # boot scheme
@@ -49,9 +51,6 @@ TF_A_CONFIG[noenv] = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', "optee"
 
 TF_A_DDR_TARGET ??= "lpddr4"
 
-DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
-KARO_BOARD_PMIC ??= "stpmic2"
-
 # op-tee
 OPTEE_CONF ?= "${DTB_BASENAME}"
 STM32MP_SOC_NAME ?= "${SOC_PREFIX}"
@@ -76,5 +75,3 @@ FIP_ENCRYPT_SUFFIX ?= "${@bb.utils.contains('ENCRYPT_ENABLE', '1', '${ENCRYPT_SU
 # Configure use of BL31
 FIP_BL31_ENABLE = "0"
 FIP_BL31_ENABLE:stm32mp2common = "1"
-
-REGULATORS_MICROVOLTS = "1"

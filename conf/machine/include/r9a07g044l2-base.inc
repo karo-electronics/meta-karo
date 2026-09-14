@@ -1,6 +1,6 @@
 MACHINEOVERRIDES =. "r9a07g044l:rzg2:rzg2l:"
 
-include conf/machine/include/karo.inc
+include karo-base.inc
 require conf/machine/include/arm/armv8-2a/tune-cortexa55.inc
 
 DEFAULTTUNE = "cortexa55"
@@ -24,5 +24,3 @@ UBOOT_CONFIG ??= "generic noenv"
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySC0 115200;ttySC1 ${@ bb.utils.contains('DISTRO_FEATURES', 'copro', "", "115200;ttySC2", d)}"
 SERIAL_CONSOLES:txrz ?= "115200;ttySC0 115200;ttySC1"
-
-DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"

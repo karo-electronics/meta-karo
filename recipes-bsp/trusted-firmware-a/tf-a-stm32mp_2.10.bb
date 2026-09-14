@@ -114,12 +114,6 @@ STAGING_TFA_DIR = "${TMPDIR}/work-shared/${MACHINE}/tfa-source"
 do_unpack[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
 do_clean[cleandirs] += " ${S} ${STAGING_TFA_DIR}"
 
-do_unpack:append () {
-    s = d.getVar("STAGING_TFA_DIR")
-    b = d.getVar("B")
-    os.symlink(os.path.relpath(b, os.path.realpath(s)), os.path.join(s, 'build'))
-}
-
 base_do_unpack:append () {
     # Specific part to update devtool-source class
     if bb.data.inherits_class('devtool-source', d):

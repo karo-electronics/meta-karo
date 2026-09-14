@@ -1,12 +1,15 @@
-FILESEXTRAPATHS:prepend:stm32mpcommon := "${THISDIR}/${PN}:"
-
-# Add calibration file
-SRC_URI:append:stm32mpcommon = " git://github.com/murata-wireless/cyw-fmac-nvram.git;protocol=https;nobranch=1;name=nvram;destsuffix=nvram-murata "
-SRCREV_nvram = "61b41349b5aa95227b4d2562e0d0a06ca97a6959"
-SRC_URI:append:stm32mpcommon = " git://github.com/murata-wireless/cyw-fmac-fw.git;protocol=https;nobranch=1;name=murata;destsuffix=murata "
-SRCREV_murata = "a80cb77798a8d57f15b7c3fd2be65553d9bd5125"
 SRCREV_FORMAT = "linux-firmware-murata"
-SRC_URI:append:stm32mpcommon = "git://github.com/murata-wireless/cyw-bt-patch;protocol=https;nobranch=1;name=bt;destsuffix=bt "
+
+# Add murata Wi-Fi/Bluetooth firmware
+SRC_URI:append = " git://github.com/murata-wireless/cyw-fmac-fw.git;protocol=https;nobranch=1;name=murata;destsuffix=murata "
+SRCREV_murata = "a80cb77798a8d57f15b7c3fd2be65553d9bd5125"
+
+# Add murata configuration files
+SRC_URI:append = " git://github.com/murata-wireless/cyw-fmac-nvram.git;protocol=https;nobranch=1;name=nvram;destsuffix=nvram-murata "
+SRCREV_nvram = "61b41349b5aa95227b4d2562e0d0a06ca97a6959"
+
+# Add murata Bluetooth sample configuration files
+SRC_URI:append = "git://github.com/murata-wireless/cyw-bt-patch;protocol=https;nobranch=1;name=bt;destsuffix=bt "
 SRCREV_bt = "bbc63f8b15394023c4a2fd9f74565fbd0d76ae71"
 
 LICENSE =+ "Firmware-cypress-bcm43 &"

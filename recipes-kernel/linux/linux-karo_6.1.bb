@@ -1,6 +1,6 @@
 SUMMARY = "6.1 Linux Kernel for Ka-Ro electronics Computer-On-Modules"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/patches:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${BP}/cfg:${THISDIR}/${BP}/defconfigs:"
 
 require recipes-kernel/linux/linux-karo.inc
 
@@ -15,20 +15,13 @@ CVE_VERSION = "6.1.141"
 
 SPDX_INCLUDE_KERNEL_CONFIG = "1"
 
+SRC_URI:append = " file://${KBUILD_DEFCONFIG}"
+
 SRC_URI:append = " \
-        file://${KBUILD_DEFCONFIG} \
-        ${@ "".join(map(lambda f: " file://cfg/" + f, "${KERNEL_FEATURES}".split()))} \
+    ${@ "".join(map(lambda f: " file://" + f, "${KERNEL_FEATURES}".split()))} \
 "
 
-SRC_URI:append:rzg2 = " \
-        file://dts/renesas/r9a07g044l2-karo.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/renesas/r9a07g044l2-qsrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-        file://dts/renesas/r9a07g044l2-txrz.dtsi;subdir=git/${KERNEL_OUTPUT_DIR} \
-"
-
-KERNEL_LOCALVERSION = "${LINUX_VERSION_EXTENSION}"
-
-KBUILD_DEFCONFIG = "defconfig"
+KBUILD_DEFCONFIG ?= "defconfig"
 
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"extmod"," extmod.cfg","",d)}"
 KERNEL_FEATURES:append = "${@bb.utils.contains('MACHINE_FEATURES',"dsi83"," dsi83.cfg","",d)}"

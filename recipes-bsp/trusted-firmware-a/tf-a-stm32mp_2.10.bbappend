@@ -1,12 +1,9 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/tf-a-karo:${THISDIR}/tf-a-karo/patches:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/patches:"
 
-SRC_URI:append:stm32mp13 = " \
+SRC_URI:append = " \
 	file://fdts/stm32mp13-mx.h;subdir=git \
 	file://fdts/stm32mp135c-qsmp-1351.dts;subdir=git \
 	file://fdts/stm32mp135c-qsmp-1351-fw-config.dts;subdir=git \
-"
-
-SRC_URI:append:stm32mp15 = " \
 	file://fdts/stm32mp15-karo.dtsi;subdir=git \
 	file://fdts/stm32mp15-mx.h;subdir=git \
 	file://fdts/stm32mp15-qsmp.dtsi;subdir=git \
@@ -29,9 +26,6 @@ SRC_URI:append:stm32mp15 = " \
 	file://fdts/stm32mp157c-txmp-1571.dts;subdir=git \
 	file://fdts/stm32mp157c-txmp-1571-fw-config.dts;subdir=git \
 	file://fdts/stm32mp157c-txmp.h;subdir=git \
-"
-
-SRC_URI:append:stm32mp25 = " \
 	file://fdts/stm32mp257f-txmp-ddr.h;subdir=git \
 	file://fdts/stm32mp257f-txmp-2550-rcc.dtsi;subdir=git \
 	file://fdts/stm32mp257f-txmp-2550.dts;subdir=git \
@@ -43,9 +37,6 @@ SRC_URI:append:stm32mp25 = " \
 	file://fdts/stm32mp255f-qsmp-2550.dts;subdir=git \
 	file://fdts/stm32mp255f-qsmp-2550-fw-config.dts;subdir=git \
 	file://fdts/stm32mp255f-qsmp-ddr.h;subdir=git \
-"
-
-SRC_URI:append:stm32mp23 = " \
 	file://fdts/stm32mp235c-qsmp-2030-rcc.dtsi;subdir=git \
 	file://fdts/stm32mp235c-qsmp-2030.dts;subdir=git \
 	file://fdts/stm32mp235c-qsmp-2030-fw-config.dts;subdir=git \
@@ -56,30 +47,19 @@ SRC_URI:append:stm32mp23 = " \
 	file://fdts/stm32mp235c-qsmp-ddr.h;subdir=git \
 "
 
-SRC_URI:append:stm32mpcommon = " \
-	file://0099-Modify-Reset-reason-trace-level.patch \
-"
-
-SRC_URI:append:stm32mp2 = " \
-        file://stm32mp25-bugfix.patch \
-        file://stm32mp25-dtsi-fixups.patch \
-"
-
 SRC_URI:append = " \
-        file://bl2-ro-size.patch \
+	file://0001-Modify-reset-reason-trace-level.patch \
+	file://0002-fix-stm32mp2-standardize-OTP-node-names-from-undersc.patch \
+	file://0003-fix-stm32mp-use-MiB-instead-of-MB-for-memory-sizes.patch \
+	file://0004-fix-dt-add-missing-address-size-cells-and-cleanup-sy.patch \
+	file://0005-refactor-improve-page_align-and-remove-dead-code.patch \
+	file://0006-fix-improve-error-messages-and-code-style.patch \
+	file://0007-stm32mp-define-BL2-ro-size.patch \
+	file://0008-fix-no-board_id-error.patch \
+	file://0009-stm32mp2-add-debug-uart.patch \
+	file://0010-stm32mp-pmic-use-microvolt-to-avoid-precision-loss.patch \
+	file://0011-drivers-pmic-add-pca9450-driver.patch \
 "
-
-SRC_URI:append:stm32mp1 = " \
-        file://no-board_id-error.patch \
-"
-
-SRC_URI:append:stm32mp2 = " \
-        file://qsmp-debug-uart.patch \
-"
-
-SRC_URI:append:stm32mp2 = "${@ " file://regulators-microvolts.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else ""}"
-
-SRC_URI:append:stm32mp2:qsmp = " ${@ " file://pca9450-support.patch" if d.getVar('REGULATORS_MICROVOLTS') == '1' else "file://pca9450-mv-support.patch"}"
 
 # Extra make settings
 EXTRA_OEMAKE = 'CROSS_COMPILE=${STAGING_DATADIR_NATIVE}/${ST_CROSS_COMPILE_BIN}/${ST_CROSS_COMPILE}'

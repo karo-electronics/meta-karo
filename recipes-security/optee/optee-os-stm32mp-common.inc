@@ -62,17 +62,6 @@ OPTEE_ARCH:armv7a = "arm32"
 OPTEE_ARCH:armv7ve = "arm32"
 OPTEE_ARCH:aarch64 = "arm64"
 
-base_do_unpack:append () {
-    s = d.getVar("S")
-    b = d.getVar("B")
-    bb.note("s=%s b=%s\n" % (s, b))
-    bb.note("S=%s B=%s\n" % (os.path.realpath(s), os.path.realpath(b)))
-    bb.note("Creating symlink %s -> %s (wd=%s)\n" % \
-    	    (os.path.relpath(b, os.path.realpath(s)), os.path.join(s, 'build'), \
-	     os.environ.get('PWD')))
-    os.symlink(os.path.relpath(b, os.path.realpath(s)), os.path.join(s, 'build'))
-}
-
 do_configure:prepend(){
     chmod 755 ${S}/scripts/bin_to_c.py
 }

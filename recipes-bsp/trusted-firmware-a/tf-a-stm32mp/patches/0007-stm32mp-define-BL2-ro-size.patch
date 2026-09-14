@@ -1,0 +1,176 @@
+From c16c65e2ba6e77a05a4cd48265532ee09e11b926 Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Wed, 9 Sep 2026 09:18:34 +0000
+Subject: [PATCH] stm32mp: define BL2 ro size
+
+---
+ plat/st/stm32mp1/platform.mk        | 15 +++++++++++++++
+ plat/st/stm32mp1/stm32mp1_fip_def.h | 24 ++++++++++++++++++++++--
+ plat/st/stm32mp2/platform.mk        | 15 +++++++++++++++
+ plat/st/stm32mp2/stm32mp2_def.h     | 22 +++++++++++++++++++---
+ 4 files changed, 71 insertions(+), 5 deletions(-)
+
+diff --git a/plat/st/stm32mp1/platform.mk b/plat/st/stm32mp1/platform.mk
+index d6cc67274..a17cd02b5 100644
+--- a/plat/st/stm32mp1/platform.mk
++++ b/plat/st/stm32mp1/platform.mk
+@@ -217,6 +217,21 @@ $(eval $(call add_defines,\
+ # Include paths and source files
+ PLAT_INCLUDES		+=	-Iplat/st/stm32mp1/include/
+ 
++ifneq ($(STM32MP_BL32_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL32_SIZE=$(STM32MP_BL32_SIZE)
++endif
++ifneq ($(STM32MP_BL2_RO_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL2_RO_SIZE=$(STM32MP_BL2_RO_SIZE)
++endif
++ifneq ($(STM32MP_BL2_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL2_SIZE=$(STM32MP_BL2_SIZE)
++endif
++TF_CFLAGS		+=	$(STM32MP_CPPFLAGS)
++BL32_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++BL2_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++ASFLAGS			+=	$(STM32MP_CPPFLAGS)
++DTC_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++
+ PLAT_BL_COMMON_SOURCES	+=	plat/st/stm32mp1/stm32mp1_private.c
+ 
+ PLAT_BL_COMMON_SOURCES	+=	drivers/st/uart/aarch32/stm32_console.S
+diff --git a/plat/st/stm32mp1/stm32mp1_fip_def.h b/plat/st/stm32mp1/stm32mp1_fip_def.h
+index 8ad1ed9c7..cac6fe0c0 100644
+--- a/plat/st/stm32mp1/stm32mp1_fip_def.h
++++ b/plat/st/stm32mp1/stm32mp1_fip_def.h
+@@ -32,15 +32,31 @@
+ 					 STM32MP_SYSRAM_SIZE - \
+ 					 STM32MP_BL2_RW_BASE)
+ #else /* STM32MP_SSP */
++#ifndef STM32MP_BL2_RO_SIZE
+ #if TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP
+ #if STM32MP15
+ #define STM32MP_BL2_RO_SIZE		U(0x00014000)	/* 80 KB */
+-#define STM32MP_BL2_SIZE		U(0x0001B000)	/* 108 KB for BL2 */
+ #endif /* STM32MP15 */
+ #else /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
+ #if STM32MP13
+ #if BL2_IN_XIP_MEM
+ #define STM32MP_BL2_RO_SIZE		U(0x00015000)	/* 84 KB */
++#endif
++#endif /* STM32MP13 */
++#if STM32MP15
++#define STM32MP_BL2_RO_SIZE		U(0x00011000)	/* 68 KB */
++#endif /* STM32MP15 */
++#endif /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
++#endif /* STM32MP_BL2_RO_SIZE */
++
++#ifndef STM32MP_BL2_SIZE
++#if TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP
++#if STM32MP15
++#define STM32MP_BL2_SIZE		U(0x0001B000)	/* 108 KB for BL2 */
++#endif /* STM32MP15 */
++#else /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
++#if STM32MP13
++#if BL2_IN_XIP_MEM
+ #define STM32MP_BL2_SIZE		U(0x00017000)	/* 92 KB for BL2 */
+ #else
+ /* STM32MP_BL2_RO_SIZE not used if !BL2_IN_XIP_MEM */
+@@ -49,10 +65,10 @@
+ #endif
+ #endif /* STM32MP13 */
+ #if STM32MP15
+-#define STM32MP_BL2_RO_SIZE		U(0x00011000)	/* 68 KB */
+ #define STM32MP_BL2_SIZE		U(0x00016000)	/* 88 KB for BL2 */
+ #endif /* STM32MP15 */
+ #endif /* TRUSTED_BOARD_BOOT && !STM32MP_USE_EXTERNAL_HEAP */
++#endif /* STM32MP_BL2_SIZE */
+ 
+ #if STM32MP13
+ #if TRUSTED_BOARD_BOOT
+@@ -64,7 +80,11 @@
+ #if STM32MP15
+ #define STM32MP_BL2_DTB_SIZE		U(0x00007000)	/* 28 KB for DTB */
+ #endif /* STM32MP15 */
++
++#ifndef STM32MP_BL32_SIZE
+ #define STM32MP_BL32_SIZE		U(0x0001B000)	/* 108 KB for BL32 */
++#endif
++
+ #define STM32MP_BL32_DTB_SIZE		U(0x00005000)	/* 20 KB for DTB */
+ #define STM32MP_FW_CONFIG_MAX_SIZE	PAGE_SIZE	/* 4 KB for FCONF DTB */
+ #define STM32MP_HW_CONFIG_MAX_SIZE	U(0x40000)	/* 256 KB for HW config DTB */
+diff --git a/plat/st/stm32mp2/platform.mk b/plat/st/stm32mp2/platform.mk
+index d2534a446..3a78c7cac 100644
+--- a/plat/st/stm32mp2/platform.mk
++++ b/plat/st/stm32mp2/platform.mk
+@@ -236,6 +236,21 @@ PLAT_INCLUDES			+=	-Iplat/st/stm32mp2/include/
+ PLAT_INCLUDES			+=	-Idrivers/st/ddr/phy/phyinit/include/
+ PLAT_INCLUDES			+=	-Idrivers/st/ddr/phy/firmware/include/
+ 
++ifneq ($(STM32MP_BL31_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL31_SIZE=$(STM32MP_BL31_SIZE)
++endif
++ifneq ($(STM32MP_BL2_RO_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL2_RO_SIZE=$(STM32MP_BL2_RO_SIZE)
++endif
++ifneq ($(STM32MP_BL2_SIZE),)
++STM32MP_CPPFLAGS	+=	-DSTM32MP_BL2_SIZE=$(STM32MP_BL2_SIZE)
++endif
++TF_CFLAGS		+=	$(STM32MP_CPPFLAGS)
++BL31_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++BL2_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++ASFLAGS			+=	$(STM32MP_CPPFLAGS)
++DTC_CPPFLAGS		+=	$(STM32MP_CPPFLAGS)
++
+ PLAT_BL_COMMON_SOURCES		+=	lib/cpus/${ARCH}/cortex_a35.S
+ PLAT_BL_COMMON_SOURCES		+=	drivers/st/uart/${ARCH}/stm32_console.S
+ PLAT_BL_COMMON_SOURCES		+=	plat/st/stm32mp2/${ARCH}/stm32mp2_helper.S
+diff --git a/plat/st/stm32mp2/stm32mp2_def.h b/plat/st/stm32mp2/stm32mp2_def.h
+index 2e9652f13..f9f778fbf 100644
+--- a/plat/st/stm32mp2/stm32mp2_def.h
++++ b/plat/st/stm32mp2/stm32mp2_def.h
+@@ -215,27 +215,43 @@ enum ddr_type {
+ 						 (STM32MP_PARAM_LOAD_SIZE +	\
+ 						  STM32MP_HEADER_SIZE))
+ 
++#ifndef STM32MP_BL2_RO_SIZE
+ #if TRUSTED_BOARD_BOOT
+ #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
+ #define STM32MP_BL2_RO_SIZE			U(0x00021000)	/* 132 KiB */
+-#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
+ #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #define STM32MP_BL2_RO_SIZE			U(0x00021000)	/* 132 KiB */
+-#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
+ #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #else
+ #if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
+ #define STM32MP_BL2_RO_SIZE			U(0x0001F000)	/* 124 KiB */
+-#define STM32MP_BL2_SIZE			U(0x00028000)	/* 160 KiB for BL2 */
+ #else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #define STM32MP_BL2_RO_SIZE			U(0x00020000)	/* 128 KiB */
++#endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
++#endif /* TRUSTED_BOARD_BOOT */
++#endif /* STM32MP_BL2_RO_SIZE */
++
++#ifndef STM32MP_BL2_SIZE
++#if TRUSTED_BOARD_BOOT
++#if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
++#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
++#else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
++#define STM32MP_BL2_SIZE			U(0x0002C000)	/* 176 KiB for BL2 */
++#endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
++#else
++#if STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER
++#define STM32MP_BL2_SIZE			U(0x00028000)	/* 160 KiB for BL2 */
++#else /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #define STM32MP_BL2_SIZE			U(0x00029000)	/* 164 KiB for BL2 */
+ #endif /* STM32MP_UART_PROGRAMMER || STM32MP_USB_PROGRAMMER */
+ #endif /* TRUSTED_BOARD_BOOT */
++#endif /* STM32MP_BL2_SIZE */
+ 
+ /* Allocate remaining sysram to BL31 Binary only */
++#ifndef STM32MP_BL31_SIZE
+ #define STM32MP_BL31_SIZE			(STM32MP_SEC_SYSRAM_SIZE - \
+ 						 STM32MP_BL2_SIZE)
++#endif
+ 
+ #define BL31_PROGBITS_LIMIT		STM32MP_BL31_SIZE
+ 

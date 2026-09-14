@@ -1,0 +1,142 @@
+From b4f14862442c6fec31d13a8cb6fe0d582fa36122 Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Wed, 9 Sep 2026 10:22:08 +0000
+Subject: [PATCH] stm32: kconfig bugfixes
+
+---
+ arch/arm/Kconfig.debug        | 2 +-
+ drivers/clk/stm32/Kconfig     | 8 ++++----
+ drivers/cpufreq/Kconfig.arm   | 2 +-
+ drivers/pinctrl/stm32/Kconfig | 9 ++++-----
+ drivers/soc/st/Kconfig        | 4 ++--
+ drivers/thermal/st/Kconfig    | 2 +-
+ 6 files changed, 13 insertions(+), 14 deletions(-)
+
+diff --git a/arch/arm/Kconfig.debug b/arch/arm/Kconfig.debug
+index b407b7b9b715..b679dab937b0 100644
+--- a/arch/arm/Kconfig.debug
++++ b/arch/arm/Kconfig.debug
+@@ -1203,7 +1203,7 @@ choice
+ 
+ 	config STM32MP1_DEBUG_UART
+ 		bool "Use STM32MP1 UART for low-level debug"
+-		depends on MACH_STM32MP157
++		depends on MACH_STM32MP157 || MACH_STM32MP13
+ 		select DEBUG_STM32_UART
+ 		help
+ 		  Say Y here if you want kernel low-level debugging support on
+diff --git a/drivers/clk/stm32/Kconfig b/drivers/clk/stm32/Kconfig
+index d81cec0c3b12..3c3733a2986e 100644
+--- a/drivers/clk/stm32/Kconfig
++++ b/drivers/clk/stm32/Kconfig
+@@ -13,21 +13,21 @@ if COMMON_CLK_STM32MP
+ 
+ config COMMON_CLK_STM32MP135
+ 	bool "Clock driver for stm32mp13x clocks"
+-	depends on ARM || COMPILE_TEST
++	depends on MACH_STM32MP13 || COMPILE_TEST
+ 	default y
+ 	help
+ 	  Support for stm32mp13x SoC family clocks.
+ 
+ config COMMON_CLK_STM32MP157
+ 	bool "Clock driver for stm32mp15x clocks"
+-	depends on ARM || COMPILE_TEST
++	depends on MACH_STM32MP157 || COMPILE_TEST
+ 	default y
+ 	help
+ 	  Support for stm32mp15x SoC family clocks.
+ 
+ config COMMON_CLK_STM32MP215
+ 	bool "Clock driver for stm32m21x clocks"
+-	depends on ARM || ARM64 || COMPILE_TEST
++	depends on (ARM64 && ARCH_STM32) || COMPILE_TEST
+ 	select COMMON_CLK_REGMAP
+ 	default y
+ 	help
+@@ -35,7 +35,7 @@ config COMMON_CLK_STM32MP215
+ 
+ config COMMON_CLK_STM32MP257
+ 	bool "Clock driver for stm32mp25x clocks"
+-	depends on ARM || ARM64 || COMPILE_TEST
++	depends on (ARM64 && ARCH_STM32) || COMPILE_TEST
+ 	select COMMON_CLK_REGMAP
+ 	default y
+ 	help
+diff --git a/drivers/cpufreq/Kconfig.arm b/drivers/cpufreq/Kconfig.arm
+index 583c74ab961d..345ee6e7a09b 100644
+--- a/drivers/cpufreq/Kconfig.arm
++++ b/drivers/cpufreq/Kconfig.arm
+@@ -242,7 +242,7 @@ config ARM_STI_CPUFREQ
+ 
+ config ARM_STM32_CPUFREQ
+ 	tristate "STM32 CPUFreq support"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  This adds the CPUFreq driver support for STM32 MPU SOCs.
+diff --git a/drivers/pinctrl/stm32/Kconfig b/drivers/pinctrl/stm32/Kconfig
+index 880896e79f4e..bb6c1776b94e 100644
+--- a/drivers/pinctrl/stm32/Kconfig
++++ b/drivers/pinctrl/stm32/Kconfig
+@@ -55,26 +55,25 @@ config PINCTRL_STM32MP157
+ config PINCTRL_STM32MP215
+ 	tristate "STMicroelectronics STM32MP215 pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP21 || ARM64 || ARM
++	default ARM64 && ARCH_STM32
+ 	select PINCTRL_STM32
+ 
+ config PINCTRL_STM32MP235
+ 	tristate "STMicroelectronics STM32MP235 pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP23 || ARM64 || ARM
++	default ARM64 && ARCH_STM32
+ 	select PINCTRL_STM32
+ 
+ config PINCTRL_STM32MP257
+ 	tristate "STMicroelectronics STM32MP257 pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP25 || ARM64 || ARM
++	default ARM64 && ARCH_STM32
+ 	select PINCTRL_STM32
+ 
+ config PINCTRL_STM32_HDP
+ 	tristate "STMicroelectronics STM32 Hardware Debug Port (HDP) pin control"
+ 	depends on OF && HAS_IOMEM
+-	default MACH_STM32MP157 || MACH_STM32MP13 || MACH_STM32MP21 || \
+-		MACH_STM32MP23 || MACH_STM32MP25 || ARM64 || ARM
++	default ARCH_STM32 && (ARM64 || ARCH_MULTI_V7)
+ 	select PINMUX
+ 	select GENERIC_PINCONF
+ 	select GPIOLIB
+diff --git a/drivers/soc/st/Kconfig b/drivers/soc/st/Kconfig
+index 2fa90d1f3555..217c553d4f6d 100644
+--- a/drivers/soc/st/Kconfig
++++ b/drivers/soc/st/Kconfig
+@@ -8,9 +8,9 @@ config STM32_HOG
+ 
+ config STM32_PM_DOMAINS
+ 	bool "STM32 PM domains"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	select PM_GENERIC_DOMAINS
+-	default y if MACH_STM32MP157
++	default y
+ 
+ config STM32MP_PM_DOMAIN
+ 	tristate "STM32MP PM domain"
+diff --git a/drivers/thermal/st/Kconfig b/drivers/thermal/st/Kconfig
+index ecbdf4ef00f4..5f1bc833a22b 100644
+--- a/drivers/thermal/st/Kconfig
++++ b/drivers/thermal/st/Kconfig
+@@ -14,7 +14,7 @@ config ST_THERMAL_MEMMAP
+ 
+ config STM32_THERMAL
+ 	tristate "Thermal framework support on STMicroelectronics STM32 series of SoCs"
+-	depends on MACH_STM32MP157
++	depends on MACH_STM32MP157 || MACH_STM32MP13
+ 	default y
+ 	help
+ 	  Support for thermal framework on STMicroelectronics STM32 series of

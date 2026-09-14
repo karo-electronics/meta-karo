@@ -7,8 +7,6 @@ DEPENDS = "u-boot-mkimage-native"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-#SRC_URI = "file://uboot.sh"
-
 inherit deploy
 
 BOOTSCRIPT ??= "${THISDIR}/files/uboot.sh"

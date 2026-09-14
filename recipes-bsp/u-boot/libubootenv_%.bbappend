@@ -1,7 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI:append = " \
-        file://fw_env.config \
+    file://fw_env.config \
 "
 
 # -----------------------------------------------------

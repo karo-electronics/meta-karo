@@ -7,16 +7,17 @@ inherit python3native deploy
 # Baremetal and we bring a compiler below
 INHIBIT_DEFAULT_DEPS = "1"
 
-DEPENDS += "cmake-native \
-            ninja-native \
-            gcc-arm-none-eabi-native \
-            python3-cbor2-native \
-            python3-click-native \
-            python3-cryptography-native \
-            python3-pyasn1-native \
-            python3-imgtool-native \
-            python3-jinja2-native \
-            python3-pyyaml-native \
+DEPENDS += " \
+    cmake-native \
+    ninja-native \
+    gcc-arm-none-eabi-native \
+    python3-cbor2-native \
+    python3-click-native \
+    python3-cryptography-native \
+    python3-pyasn1-native \
+    python3-imgtool-native \
+    python3-jinja2-native \
+    python3-pyyaml-native \
 "
 
 S = "${WORKDIR}/git/tfm"

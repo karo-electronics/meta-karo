@@ -2,10 +2,6 @@ SUMMARY = "OPTEE TA development kit for stm32mp"
 LICENSE = "BSD-2-Clause & BSD-3-Clause"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=c1f21c4f72f372ef38a5a4aee55ec173"
 
-#OPTEE_SRC_DEFAULT = "git://github.com/OP-TEE/optee_os.git;protocol=https"
-#OPTEE_BRANCH_DEFAULT = "master"
-#OPTEE_REV_DEFAULT = "2a5b1d1232f582056184367fb58a425ac7478ec6"
-
 OPTEE_SRC_DEFAULT = "git://github.com/STMicroelectronics/optee_os.git;protocol=https"
 OPTEE_BRANCH_DEFAULT = "${OPTEE_VERSION}-${OPTEE_SUBVERSION}"
 OPTEE_REV_DEFAULT = "d9c4df97fc9cf1e5319d8511adbf1eb6c95da38e"

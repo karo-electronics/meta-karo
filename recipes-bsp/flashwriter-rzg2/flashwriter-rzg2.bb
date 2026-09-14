@@ -4,14 +4,18 @@ PV = "0.89+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/patches:"
+
+inherit deploy
+
 SRC_URI = "git://github.com/karo-electronics/rzg2-flash-writer.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "karo-txrz"
 SRCREV = "a762698b52729ab7a4680bca2efee857cf7b845d"
 
-inherit deploy
-
 S = "${WORKDIR}/git"
 B = "${S}/AArch64_output"
+
+SRC_URI:append = " file://txrz-g2l2-bugfix.patch"
 
 FILES:${PN} += "Flash_Writer_SCIF_${MACHINE}.mot"
 
@@ -32,6 +36,3 @@ do_deploy() {
 addtask do_deploy after do_install
 
 PARALLEL_MAKE = "-j 1"
-
-FILESEXTRAPATHS:prepend := "${THISDIR}/patches:"
-SRC_URI:append = " file://txrz-g2l2-bugfix.patch"

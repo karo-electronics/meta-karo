@@ -2,7 +2,7 @@ MACHINEOVERRIDES =. "stm32mpcommon:stm32mp1common:stm32mp1:"
 
 DEFAULTTUNE ?= "cortexa7thf-neon-vfpv4"
 
-include karo.inc
+include karo-base.inc
 include conf/machine/include/soc-family.inc
 include conf/machine/include/arm/armv7a/tune-cortexa7.inc
 
@@ -49,8 +49,6 @@ TF_A_CONFIG[noenv] = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', "optee"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONFIG_usb', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
 tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'optee', 'TF_A_CONFIG_optee', '', d)}"
-
-DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
 
 # coprocessor stuff
 M4_BOARDS ?= "STM32MP157C-DK2"

@@ -1,3 +1,12 @@
+From 3386949fb52ce9ce3d07c2759ce00bc699b26e9e Mon Sep 17 00:00:00 2001
+From: Robin Lintermann <rl@karo-electronics.de>
+Date: Wed, 9 Sep 2026 10:21:43 +0000
+Subject: [PATCH] stm32: usart sysrq bugfix
+
+---
+ drivers/tty/serial/stm32-usart.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
 diff --git a/drivers/tty/serial/stm32-usart.c b/drivers/tty/serial/stm32-usart.c
 index 238aaca2cd42..4837d235e2da 100644
 --- a/drivers/tty/serial/stm32-usart.c

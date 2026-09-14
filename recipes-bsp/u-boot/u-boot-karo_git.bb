@@ -1,14 +1,7 @@
-require recipes-bsp/u-boot/u-boot.inc
-
-OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
-require conf/machine/include/${OVERLAY_INC_FILE}
-
 DESCRIPTION = "U-Boot for Ka-Ro electronics TX Computer-On-Modules."
 LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://Licenses/README;md5=2ca5f2c35c8cc335f0a19756634782f1"
 LIC_FILES_CHKSUM:rzg2l = "file://Licenses/README;md5=5a7450c57ffe5ae63fd732446b988025"
-
-PROVIDES += "u-boot"
 
 DEPENDS:append = " \
     bc-native \
@@ -17,8 +10,16 @@ DEPENDS:append = " \
     python3-setuptools-native \
 "
 
+require recipes-bsp/u-boot/u-boot.inc
+require conf/machine/include/${SOC_PREFIX}-overlays.inc
+inherit karo-u-boot-localversion
+
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:${THISDIR}/${PN}/cfg:"
+
 fiptool = "${@ "tf-a-tools-native" if "stm32mp2" in d.getVar('MACHINEOVERRIDES').split(':') else "fiptool-native"}"
 DEPENDS:append = " ${fiptool}"
+
+PROVIDES += "u-boot"
 
 SIGN_KEY ?= ""
 SIGN_KEY_PASS ?= ""
@@ -26,8 +27,6 @@ SIGN_PUB_KEY ?= ""
 SIGN_PUB_KEY_HASH ?= ""
 SIGN_ENABLE ?= "0"
 SIGN_TOOL ?= ""
-
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}/env:${THISDIR}/${PN}/defconfigs:"
 
 UBOOT_SRC_DEFAULT = "git://github.com/karo-electronics/karo-tx-uboot.git;protocol=https"
 UBOOT_BRANCH_DEFAULT = "karo-stm32mp2-v2022.10"
@@ -58,24 +57,16 @@ B = "${WORKDIR}/build"
 
 EXTRA_OEMAKE:append = " V=0"
 
-# append git hash to u-boot name
-SCMVERSION ??= "y"
-LOCALVERSION ??= "-karo"
-
 UBOOT_BOARD_DIR:stm32mp1 = "board/karo/stm32mp1"
 UBOOT_BOARD_DIR:stm32mp2 = "board/karo/stm32mp2"
 UBOOT_BOARD_DIR:rzg2 = "board/karo/txrz"
 
-UBOOT_LOCALVERSION = "${LOCALVERSION}"
-UBOOT_INITIAL_ENV = "${@ bb.utils.contains('IMAGE_INSTALL', 'u-boot-fw-utils', "u-boot-initial-env", "", d)}"
-UBOOT_DEVICE_TREE ?= "${@ "${DTB_BASENAME}-${KARO_BASEBOARD}" if "${KARO_BASEBOARD}" != "" else "${DTB_BASENAME}"}"
 UBOOT_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES', 'rauc', ' rauc', '', d)}"
+UBOOT_FEATURES:append = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', ' copro', '', d)}"
 
 UBOOT_ENV_FILE ?= "${@ "%s%s" % (d.getVar('MACHINE'), \
                        "-" + d.getVar('KARO_BASEBOARD') \
                        if d.getVar('KARO_BASEBOARD') != "" else "")}"
-
-
 
 SRC_URI:append = "${@ " file://%s.env;subdir=git/%s" % \
                       (d.getVar('UBOOT_ENV_FILE'), d.getVar('UBOOT_BOARD_DIR')) \
@@ -83,17 +74,17 @@ SRC_URI:append = "${@ " file://%s.env;subdir=git/%s" % \
 "
 
 SRC_URI:append = " \
-    file://dts/${UBOOT_DEVICE_TREE}.dts;subdir=git/arch/arm \
-    file://dts/${UBOOT_DEVICE_TREE}-u-boot.dtsi;subdir=git/arch/arm \
+    file://dts/${UBOOT_DTB_NAME}.dts;subdir=git/arch/arm \
+    file://dts/${UBOOT_DTB_NAME}-u-boot.dtsi;subdir=git/arch/arm \
+    file://dts/${DTB_BASENAME}.dts;subdir=git/arch/arm \
+    file://dts/${DTB_BASENAME}-u-boot.dtsi;subdir=git/arch/arm \
 "
 
 SRC_URI:append = " file://u-boot-cfg.${SOC_PREFIX}"
 SRC_URI:append = " file://u-boot-cfg.${SOC_FAMILY}"
 SRC_URI:append = " file://u-boot-cfg.${MACHINE}"
 SRC_URI:append = "${@ "".join(map(lambda f: " file://u-boot-cfg.%s" % f, d.getVar('UBOOT_CONFIG').split()))}"
-SRC_URI:append = "${@ "".join(map(lambda f: " file://cfg/%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
-
-SRC_URI:append = "${@ bb.utils.contains('IMAGE_INSTALL', 'u-boot-fw-utils', " file://fw_env.config", "", d)}"
+SRC_URI:append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
 
 UBOOT_FEATURES:append = "${@ " " + d.getVar('KARO_BASEBOARD') if d.getVar('KARO_BASEBOARD') in "qsbase1 qsbase4".split() else ""}"
 
@@ -129,7 +120,7 @@ do_configure() {
                 fi
                 for feature in ${UBOOT_FEATURES};do
                     bbnote "Appending '$feature' specific config to '${S}/configs/${c}'"
-                    cat "${WORKDIR}/cfg/${feature}.cfg" >> "${S}/configs/${c}"
+                    cat "${WORKDIR}/${feature}.cfg" >> "${S}/configs/${c}"
                 done
                 oe_runmake -C ${S} O=${B}/${config} ${c}
                 break
@@ -158,13 +149,13 @@ do_configure() {
     if [ -z "$tmpfile" ];then
         bbfatal "Failed to create tmpfile"
     fi
-    bbnote "UBOOT_DEVICE_TREE='${UBOOT_DEVICE_TREE}'"
+    bbnote "UBOOT_DTB_NAME='${UBOOT_DTB_NAME}'"
     cat <<EOF >> "$tmpfile"
-CONFIG_DEFAULT_DEVICE_TREE="${UBOOT_DEVICE_TREE}"
+CONFIG_DEFAULT_DEVICE_TREE="${UBOOT_DTB_NAME}"
 EOF
-    grep -q "${UBOOT_DEVICE_TREE}\.dtb" ${S}/arch/arm/dts/Makefile || \
+    grep -q "${UBOOT_DTB_NAME}\.dtb" ${S}/arch/arm/dts/Makefile || \
             sed -i '/^targets /i\
-dtb-y += ${UBOOT_DEVICE_TREE}.dtb\
+dtb-y += ${UBOOT_DTB_NAME}.dtb\
 ' ${S}/arch/arm/dts/Makefile
 
     bbnote "UBOOT_ENV_FILE='${UBOOT_ENV_FILE}'"
@@ -229,7 +220,8 @@ do_savedefconfig() {
 do_savedefconfig[nostamp] = "1"
 addtask savedefconfig after do_configure
 
-check_cnf() {
+# Helper function for do_check_config task
+check_config() {
     local src="$1"
     local cfg="$2"
     fgrep -f "$src" "${cfg}/.config" || true
@@ -283,24 +275,24 @@ do_check_config() {
                 break
             done
             oe_runmake -C ${c} olddefconfig
-            check_cnf "${WORKDIR}/u-boot-cfg.${SOC_PREFIX}" "${c}"
+            check_config "${WORKDIR}/u-boot-cfg.${SOC_PREFIX}" "${c}"
             if [ "${SOC_FAMILY}" != "${SOC_PREFIX}" ];then
-                check_cnf "${WORKDIR}/u-boot-cfg.${SOC_FAMILY}" "${c}"
+                check_config "${WORKDIR}/u-boot-cfg.${SOC_FAMILY}" "${c}"
             fi
-            check_cnf "${WORKDIR}/u-boot-cfg.${MACHINE}" "${c}"
-            check_cnf "${WORKDIR}/u-boot-cfg.${type}" "${c}"
+            check_config "${WORKDIR}/u-boot-cfg.${MACHINE}" "${c}"
+            check_config "${WORKDIR}/u-boot-cfg.${type}" "${c}"
             for feature in ${UBOOT_FEATURES} ${MACHINE_FEATURES};do
-                [ -s "${WORKDIR}/cfg/${feature}.cfg" ] || continue
+                [ -s "${WORKDIR}/${feature}.cfg" ] || continue
                 bbnote "Appending '$feature' specific config to '$(basename "${c}")/.config'"
-                merge_config.sh -m -r -O "${c}" "${c}/.config" "${WORKDIR}/cfg/${feature}.cfg"
+                merge_config.sh -m -r -O "${c}" "${c}/.config" "${WORKDIR}/${feature}.cfg"
                 oe_runmake -C ${c} olddefconfig
-                check_cnf "${WORKDIR}/cfg/${feature}.cfg" "${c}"
+                check_config "${WORKDIR}/${feature}.cfg" "${c}"
             done
-            check_cnf "${WORKDIR}/u-boot-cfg.${SOC_PREFIX}" "${c}"
+            check_config "${WORKDIR}/u-boot-cfg.${SOC_PREFIX}" "${c}"
             if [ "${SOC_FAMILY}" != "${SOC_PREFIX}" ];then
-                check_cnf "${WORKDIR}/u-boot-cfg.${SOC_FAMILY}" "${c}"
+                check_config "${WORKDIR}/u-boot-cfg.${SOC_FAMILY}" "${c}"
             fi
-            check_cnf "${WORKDIR}/u-boot-cfg.${MACHINE}" "${c}"
+            check_config "${WORKDIR}/u-boot-cfg.${MACHINE}" "${c}"
 
             # restore the original config
             cp -v "${c}/defconfig" "${c}/.config"
@@ -314,11 +306,11 @@ do_check_config() {
         fi
         merge_config.sh -m -r -O "${B}" "${B}/.config" "${WORKDIR}/u-boot-cfg.${MACHINE}"
         oe_runmake -C ${B} olddefconfig
-        check_cnf "${WORKDIR}/u-boot-cfg.${SOC_PREFIX}" "${B}"
+        check_config "${WORKDIR}/u-boot-cfg.${SOC_PREFIX}" "${B}"
         if [ "${SOC_FAMILY}" != "${SOC_PREFIX}" ];then
-            check_cnf "${WORKDIR}/u-boot-cfg.${SOC_FAMILY}" "${B}"
+            check_config "${WORKDIR}/u-boot-cfg.${SOC_FAMILY}" "${B}"
         fi
-        check_cnf "${WORKDIR}/u-boot-cfg.${MACHINE}" "${B}"
+        check_config "${WORKDIR}/u-boot-cfg.${MACHINE}" "${B}"
 
         # restore the original config
         cp -v "${B}/defconfig" "${B}/.config"
@@ -327,18 +319,6 @@ do_check_config() {
 }
 addtask do_check_config after do_savedefconfig
 do_check_config[nostamp] = "1"
-
-do_compile:prepend() {
-    if [ "${SCMVERSION}" = "y" ]; then
-        # Add GIT revision to the local version
-        head="`cd ${S} ; git rev-parse --verify --short HEAD 2> /dev/null`"
-        printf "%s+g%s" "${UBOOT_LOCALVERSION}" "$head" > ${S}/.scmversion
-        printf "%s+g%s" "${UBOOT_LOCALVERSION}" "$head" > ${B}/.scmversion
-    else
-        printf "%s" "${UBOOT_LOCALVERSION}" > ${S}/.scmversion
-        printf "%s" "${UBOOT_LOCALVERSION}" > ${B}/.scmversion
-    fi
-}
 
 def get_tfa_configs(d):
     cfg = ()

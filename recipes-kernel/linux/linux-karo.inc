@@ -4,7 +4,7 @@
 LICENSE = "GPL-2.0-only"
 
 inherit kernel
-LINUX_VERSION_EXTENSION ?= "-karo"
+inherit karo-kernel-localversion
 
 PROVIDES += "linux"
 DEPENDS += "lzop-native bc-native dtc-native"
@@ -37,20 +37,27 @@ SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
 
 SRC_URI:append = "${@ "".join(map(lambda f: " file://dts%s/includes/%s-%s.dtsi;subdir=git/${KERNEL_OUTPUT_DIR}" % \
-                  (("/" + d.getVar('dtb_vendordir') if d.getVar('dtb_vendordir') != "" else ""), d.getVar('SOC_PREFIX'), f), \
+                  (("/" + d.getVar('DTB_VENDOR_DIR') if d.getVar('DTB_VENDOR_DIR') != "" else ""), d.getVar('SOC_PREFIX'), f), \
 		  d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 
 KERNEL_DTC_FLAGS += "-@"
 
+DTB_OVERLAY_EXT = "dtb"
+DTB_OVERLAY_EXT:rzg2 = "dtbo"
+
+DTB_VENDOR_DIR = ""
+DTB_VENDOR_DIR:rzg2 = "renesas"
+DTB_VENDOR_DIR:stm32mpcommon = "st"
+
 def get_overlays(d):
     ovlist = []
-    vendor = d.getVar('dtb_vendordir')
-    ext = d.getVar('dtb_ext')
+    vendordir = d.getVar('DTB_VENDOR_DIR')
+    ovext = d.getVar('DTB_OVERLAY_EXT')
     g = d.getVar('DTB_OVERLAYS_generic') or ""
     o = d.getVar('DTB_OVERLAYS') or ""
     for ov in g.split():
         for fn in ov.split(","):
-            fn = " %s%s-%s.%s" % (vendor + "/" if vendor != "" else "", d.getVar('SOC_PREFIX'), fn, ext)
+            fn = " %s%s-%s.%s" % (vendordir + "/" if vendordir != "" else "", d.getVar('SOC_PREFIX'), fn, ovext)
             if fn in ovlist:
                 bb.debug(2, "'%s' is already in overlays" % fn)
             else:
@@ -59,7 +66,7 @@ def get_overlays(d):
 
     for ov in o.split():
         for fn in ov.split(","):
-            fn = " %s%s-%s.%s" % (vendor + "/" if vendor != "" else "", d.getVar('SOC_FAMILY'), fn, ext)
+            fn = " %s%s-%s.%s" % (vendordir + "/" if vendordir != "" else "", d.getVar('SOC_FAMILY'), fn, ovext)
             if fn in ovlist:
                 bb.debug(2, "'%s' is already in overlays" % fn)
             else:
@@ -87,7 +94,7 @@ do_check_config() {
         for pat in $bad;do
             override=false
             for f in ${KERNEL_FEATURES};do
-                if fgrep -qw "$pat" "${WORKDIR}/cfg/${f}";then
+                if fgrep -qw "$pat" "${WORKDIR}/${f}";then
                     bbdebug 1 "'$(fgrep -w "$pat" "${WORKDIR}/${KBUILD_DEFCONFIG}")' from '${KBUILD_DEFCONFIG}' has been overridden by '${f}'"
                     override=true
                     break
@@ -112,26 +119,26 @@ do_check_config() {
 
     for f in ${KERNEL_FEATURES};do
         bbdebug 1 "Checking '$f'"
-        applied=$(fgrep -f "${WORKDIR}/cfg/${f}" ${B}/.config | sort)
-        configured=$(sort "${WORKDIR}/cfg/${f}")
+        applied=$(fgrep -f "${WORKDIR}/${f}" ${B}/.config | sort)
+        configured=$(sort "${WORKDIR}/${f}")
         if [ "$applied" != "$configured" ];then
-            bad=$(fgrep -f "${WORKDIR}/cfg/${f}" ${B}/.config | \
-                    fgrep -vf - "${WORKDIR}/cfg/${f}" | sed 's/^# //;s/[= ].*$//')
+            bad=$(fgrep -f "${WORKDIR}/${f}" ${B}/.config | \
+                    fgrep -vf - "${WORKDIR}/${f}" | sed 's/^# //;s/[= ].*$//')
             for pat in $bad;do
-                bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/cfg/${f}")' from '${f}' has not been accepted by Kconfig"
+                bbwarn "'$(fgrep -w "$pat" "${WORKDIR}/${f}")' from '${f}' has not been accepted by Kconfig"
             done
         fi
-        obsolete="$(fgrep -f "${WORKDIR}/cfg/${f}" "${B}/defconfig" | \
-                fgrep -vf - "${WORKDIR}/cfg/${f}" | \
+        obsolete="$(fgrep -f "${WORKDIR}/${f}" "${B}/defconfig" | \
+                fgrep -vf - "${WORKDIR}/${f}" | \
                 sed 's/^# //;s/[= ].*$//')"
         for pat in $obsolete;do
             cfg=$(fgrep -qw "$pat" "${B}/.config" | sort)
-            def=$(fgrep -qw "$pat" "${WORKDIR}/cfg/${f}" | sort)
+            def=$(fgrep -qw "$pat" "${WORKDIR}/${f}" | sort)
             if fgrep -qw "$pat" "${B}/.config";then
                 if fgrep -qw "$pat" "${WORKDIR}/defconfig";then
-                    bbdebug 1 "$(fgrep -w "$pat" "${WORKDIR}/cfg/${f}")' from '${f}' overrides '$(fgrep -w "$pat" "${WORKDIR}/defconfig")' from '${KBUILD_DEFCONFIG}'"
+                    bbdebug 1 "$(fgrep -w "$pat" "${WORKDIR}/${f}")' from '${f}' overrides '$(fgrep -w "$pat" "${WORKDIR}/defconfig")' from '${KBUILD_DEFCONFIG}'"
                 else
-                    bbwarn "$(fgrep -w "$pat" "${WORKDIR}/cfg/${f}")' is obsolete in '${f}'"
+                    bbwarn "$(fgrep -w "$pat" "${WORKDIR}/${f}")' is obsolete in '${f}'"
                 fi
             fi
         done
@@ -160,45 +167,30 @@ do_compile_dtbs() {
 addtask do_compile_dtbs after do_configure before do_check_dtbs
 
 do_configure:prepend() {
-    # Add GIT revision to the local version
-    head=`git --git-dir=${S}/.git rev-parse --verify --short HEAD 2> /dev/null`
-    if ! [ -s "${S}/.scmversion" ] || ! grep -q "$head" ${S}/.scmversion;then
-        echo "+g$head" > "${S}/.scmversion"
-    fi
     install -v "${WORKDIR}/${KBUILD_DEFCONFIG}" "${B}/.config"
-
-    sed -i '/CONFIG_LOCALVERSION/d' "${B}/.config"
-    echo 'CONFIG_LOCALVERSION="${KERNEL_LOCALVERSION}"' >> "${B}/.config"
-
+    
     for f in ${KERNEL_FEATURES};do
-        cat ${WORKDIR}/cfg/${f} >> ${B}/.config
+        cat ${WORKDIR}/${f} >> ${B}/.config
     done
 }
 addtask do_configure before do_devshell
-
-dtb_ext = "dtb"
-dtb_ext:rzg2 = "dtbo"
-
-dtb_vendordir = ""
-dtb_vendordir:rzg2 = "renesas"
-dtb_vendordir:stm32mpcommon = "st"
 
 python do_check_dtbs () {
     import os
     pfx = d.getVar('SOC_PREFIX')
     fam = d.getVar('SOC_FAMILY')
-    dtb_ext = d.getVar('dtb_ext')
-    dtb_vendordir = d.getVar('dtb_vendordir')
+    ovext = d.getVar('DTB_OVERLAY_EXT')
+    vendordir = d.getVar('DTB_VENDOR_DIR')
 
     def get_ovname(name):
         fn = []
         for n in name.split(","):
-            if os.path.exists("%s-%s.%s" % (fam, n, dtb_ext)):
-                fn.append("%s-%s.%s" % (fam, n, dtb_ext))
-            elif os.path.exists("%s-%s.%s" % (pfx, n, dtb_ext)):
-                fn.append("%s-%s.%s" % (pfx, n, dtb_ext))
+            if os.path.exists("%s-%s.%s" % (fam, n, ovext)):
+                fn.append("%s-%s.%s" % (fam, n, ovext))
+            elif os.path.exists("%s-%s.%s" % (pfx, n, ovext)):
+                fn.append("%s-%s.%s" % (pfx, n, ovext))
             else:
-                bb.fatal("Overlay file '[%s,%s]-%s.%s' not found" % (fam, pfx, n, dtb_ext))
+                bb.fatal("Overlay file '[%s,%s]-%s.%s' not found" % (fam, pfx, n, ovext))
         return fn
 
     def apply_overlays(infile, outfile, overlays):
@@ -229,10 +221,10 @@ python do_check_dtbs () {
     if basename == None:
         bb.warn("DTB_BASENAME is not set; cannot process FDT overlays")
         return
-    if dtb_vendordir == "":
+    if vendordir == "":
         os.chdir(os.path.join(d.getVar('B'), d.getVar('KERNEL_OUTPUT_DIR'), "dts"))
     else:
-        os.chdir(os.path.join(d.getVar('B'), d.getVar('KERNEL_OUTPUT_DIR'), "dts", dtb_vendordir))
+        os.chdir(os.path.join(d.getVar('B'), d.getVar('KERNEL_OUTPUT_DIR'), "dts", vendordir))
     for baseboard in baseboards.split():
         bb.debug(2, "creating %s-%s.dtb from %s.dtb" % (basename, baseboard, basename))
         outfile = "%s-%s" % (basename, baseboard)
