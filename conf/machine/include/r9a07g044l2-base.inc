@@ -1,13 +1,14 @@
 MACHINEOVERRIDES =. "r9a07g044l:rzg2:rzg2l:"
 
+DEFAULTTUNE ?= "cortexa55"
+
 include karo-base.inc
 require conf/machine/include/arm/armv8-2a/tune-cortexa55.inc
-
-DEFAULTTUNE = "cortexa55"
 
 SOC_PREFIX = "r9a07g044l2"
 SOC_FAMILY ??= "${SOC_PREFIX}"
 
+PREFERRED_VERSION_u-boot-karo = "2020.10"
 PREFERRED_VERSION_linux-karo = "6.1"
 
 # build u-boot with image

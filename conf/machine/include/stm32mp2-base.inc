@@ -6,6 +6,9 @@ require karo-base.inc
 require conf/machine/include/soc-family.inc
 require conf/machine/include/arm/armv8a/tune-cortexa35.inc
 
+PREFERRED_VERSION_u-boot-karo = "2022.10"
+PREFERRED_VERSION_linux-karo = "6.6"
+
 MACHINE_FEATURES:append = " emmc"
 MACHINE_FEATURES:append = " optee"
 MACHINE_FEATURES:append = " gpu"

@@ -1,6 +1,5 @@
 LIC_FILES_CHKSUM = "file://LICENSE.md;md5=1fb5dca04b27614d6d04abca6f103d8d"
 LICENSE="BSD-3-Clause"
-PV = "0.89+git${SRCPV}"
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
@@ -11,6 +10,8 @@ inherit deploy
 SRC_URI = "git://github.com/karo-electronics/rzg2-flash-writer.git;protocol=https;branch=${SRCBRANCH}"
 SRCBRANCH = "karo-txrz"
 SRCREV = "a762698b52729ab7a4680bca2efee857cf7b845d"
+
+PV = "0.89+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 B = "${S}/AArch64_output"

@@ -3,10 +3,6 @@ SRC_URI:append = " \
 "
 
 SRC_URI:append = " \
-    file://dts/r9a07g044l2-qsrz.dtsi;subdir=git/arch/arm \
-    file://dts/r9a07g044l2-qsrz-qsbase1.dtsi;subdir=git/arch/arm \
-    file://dts/r9a07g044l2-qsrz-qsbase4.dtsi;subdir=git/arch/arm \
-    file://dts/r9a07g044l2-txrz.dtsi;subdir=git/arch/arm \
     file://dts/stm32mp15-karo.dtsi;subdir=git/arch/arm \
     file://dts/stm32mp15-qsbase4.dtsi;subdir=git/arch/arm \
     file://dts/stm32mp15-qsmp-u-boot.dtsi;subdir=git/arch/arm \

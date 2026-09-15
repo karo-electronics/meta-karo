@@ -9,10 +9,10 @@ TF_A_REV ?= "ef156f33ce580564ff1e863ee12dfe834f097d30"
 SRC_URI = "${TF_A_SRC};branch=${TF_A_BRANCH}"
 SRCREV = "${TF_A_REV}"
 
+PV = "2.7-rz"
+PR = "r1"
+
 PROVIDES += "virtual/trusted-firmware-a"
 PROVIDES += "tf-a-karo"
 
 DEPENDS:append = " bootparameter-native"
-
-PV = "2.7-rz"
-PR = "r1"

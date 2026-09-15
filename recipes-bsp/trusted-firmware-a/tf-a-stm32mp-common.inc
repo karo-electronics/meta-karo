@@ -33,7 +33,6 @@ SRC_URI:append = " file://tf-a-st-ddr.tar.gz;subdir=git;name=fw"
 
 TF_A_VERSION ?= "v2.10"
 TF_A_RELEASE = "stm32mp"
-
 TF_A_SUBVERSION = ".5"
 
 PV = "${TF_A_VERSION}${TF_A_SUBVERSION}-${TF_A_RELEASE}"

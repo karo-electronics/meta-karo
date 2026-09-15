@@ -47,6 +47,7 @@ SRC_URI += " \
 TF_M_VERSION = "v1.7.0"
 TF_M_SUBVERSION = "stm32mp25"
 TF_M_RELEASE = "r6"
+
 PV = "${TF_M_VERSION}-${TF_M_SUBVERSION}-${TF_M_RELEASE}"
 
 include tf-m-stm32mp-common.inc
