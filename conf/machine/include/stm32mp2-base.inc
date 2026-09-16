@@ -33,6 +33,11 @@ KARO_BOARD_PMIC ??= "stpmic2"
 BOOTSCHEME_LABELS ??= "optee"
 BOOTSCHEME_DEFAULT ??= "optee"
 
+INITIAL_BOOTSCHEME[tf-a] = "usb"
+INITIAL_BOOTSCHEME[fip] = "mfg"
+
+BOOTLOADER_BINARIES = "tf-a.stm32 fip-ddr.bin fip.bin"
+
 # =========================================================================
 # tf-a
 # =========================================================================

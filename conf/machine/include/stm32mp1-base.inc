@@ -30,6 +30,11 @@ SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
 BOOTSCHEME_LABELS ??= "optee"
 BOOTSCHEME_DEFAULT ??= "optee"
 
+INITIAL_BOOTSCHEME[tf-a] = "usb"
+INITIAL_BOOTSCHEME[fip] = "mfg"
+
+BOOTLOADER_BINARIES = "tf-a.stm32 fip.bin"
+
 # =========================================================================
 # tf-a
 # =========================================================================
