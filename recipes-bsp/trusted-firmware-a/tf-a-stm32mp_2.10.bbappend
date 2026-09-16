@@ -82,8 +82,7 @@ EXTRA_OEMAKE:append:stm32mp2:qsmp = " STM32MP_DEBUG_UART=4"
 EXTRA_OEMAKE:append:stm32mp2 = " STM32MP_BL31_SIZE=0x1e000"
 EXTRA_OEMAKE:append:stm32mp2common = " ${@ "STM32MP_%s=1" % "${KARO_BOARD_PMIC}".upper()}"
 
-EXTRA_OEMAKE:append = " ${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_SPI_NAND=1','STM32MP_EMMC=1',d)}"
-EXTRA_OEMAKE:append = " ${@bb.utils.contains('FLASHLAYOUT_CONFIG_LABELS','spinand','STM32MP_FORCE_MTD_START_OFFSET=0x00080000','',d)}"
+EXTRA_OEMAKE:append = " STM32MP_EMMC=1"
 
 TF_A_CONFIG_usb:append = ' STM32MP_USB_PROGRAMMER=1'
 TF_A_CONFIG_usb:append = ' DEBUG=1'
