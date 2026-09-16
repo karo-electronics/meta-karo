@@ -12,16 +12,12 @@ for BOOT_SLOT in "${BOOT_ORDER}"; do
     if test 0x${BOOT_A_LEFT} -gt 0; then
       echo "Found valid slot A, ${BOOT_A_LEFT} attempts remaining"
       setexpr BOOT_A_LEFT ${BOOT_A_LEFT} - 1
-      #setenv load_kernel "nand read ${kernel_loadaddr} ${kernel_a_nandoffset} ${kernel_size}"
-      #setenv bootargs "${default_bootargs} root=/dev/mmcblk0p1 rauc.slot=A"
       setenv bootargs_mmc_rauc 'run load_boot_file;source ${loadaddr};run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfs} rauc.slot=A rootwait ${append_bootargs} ${dyndbg}'
     fi
   elif test "x${BOOT_SLOT}" = "xB"; then
     if test 0x${BOOT_B_LEFT} -gt 0; then
       echo "Found valid slot B, ${BOOT_B_LEFT} attempts remaining"
       setexpr BOOT_B_LEFT ${BOOT_B_LEFT} - 1
-      #setenv load_kernel "nand read ${kernel_loadaddr} ${kernel_b_nandoffset} ${kernel_size}"
-      #setenv bootargs "${default_bootargs} root=/dev/mmcblk0p2 rauc.slot=B"
       setenv bootargs_mmc_rauc 'run load_boot_file;source ${loadaddr};run default_bootargs;setenv bootargs ${bootargs} root=PARTUUID=${uuid_rootfsB} rauc.slot=B rootwait ${append_bootargs} ${dyndbg}'
     fi
   fi
@@ -36,8 +32,3 @@ else
   saveenv
   reset
 fi
-
-#echo "Loading kernel"
-#run load_kernel_${boot_mode}
-#echo " Starting kernel"
-#bootm ${loadaddr_kernel}
