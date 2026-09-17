@@ -31,3 +31,5 @@ KARO_DTB_OVERLAYS[qsbase4] = " \
         qsmp-qsbase4 \
         qsmp-ksz9131 \
 "
+
+KERNEL_DEVICETREE:append = "${@ get_overlays(d) }"

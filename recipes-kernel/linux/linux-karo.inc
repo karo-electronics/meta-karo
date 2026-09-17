@@ -11,15 +11,6 @@ DEPENDS += "lzop-native bc-native dtc-native"
 
 S = "${WORKDIR}/git"
 
-# We need to pass it as param since kernel might support more then one
-# machine, with different entry points
-KERNEL_EXTRA_ARGS:stm32mp1 += "LOADADDR=${UBOOT_ENTRYPOINT}"
-
-EXTRA_OEMAKE:append = " V=0"
-
-OVERLAY_INC_FILE = "${SOC_PREFIX}-overlays.inc"
-require conf/machine/include/${OVERLAY_INC_FILE}
-
 KARO_KERNEL_SRC ?= "${KERNEL_SRC_DEFAULT}"
 KARO_KERNEL_BRANCH ?= "${KERNEL_BRANCH_DEFAULT}"
 KARO_KERNEL_REV ?= "${KERNEL_REV_DEFAULT}"
@@ -28,10 +19,9 @@ KERNEL_SRC = "${KARO_KERNEL_SRC}"
 KERNEL_BRANCH = "${KARO_KERNEL_BRANCH}"
 KERNEL_REV = "${KARO_KERNEL_REV}"
 
+SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 SRCBRANCH = "${KERNEL_BRANCH}"
 SRCREV = "${KERNEL_REV}"
-
-SRC_URI = "${KERNEL_SRC};branch=${SRCBRANCH}"
 
 # automatically add all .dts files referenced by ${KERNEL_DEVICETREE} to SRC_URI
 SRC_URI:append = "${@"".join(map(lambda f: " file://dts/%s;subdir=git/${KERNEL_OUTPUT_DIR}" % f.replace(".dtb", ".dts"), "${KERNEL_DEVICETREE}".split()))}"
@@ -40,45 +30,12 @@ SRC_URI:append = "${@ "".join(map(lambda f: " file://dts%s/includes/%s-%s.dtsi;s
                   (("/" + d.getVar('DTB_VENDOR_DIR') if d.getVar('DTB_VENDOR_DIR') != "" else ""), d.getVar('SOC_PREFIX'), f), \
 		  d.getVar('DTB_OVERLAY_INCLUDES').split()))}"
 
+# We need to pass it as param since kernel might support more then one
+# machine, with different entry points
+KERNEL_EXTRA_ARGS:stm32mpcommon += "LOADADDR=${UBOOT_ENTRYPOINT}"
+
+EXTRA_OEMAKE:append = " V=0"
 KERNEL_DTC_FLAGS += "-@"
-
-DTB_OVERLAY_EXT = "dtb"
-DTB_OVERLAY_EXT:rzg2 = "dtbo"
-
-DTB_VENDOR_DIR = ""
-DTB_VENDOR_DIR:rzg2 = "renesas"
-DTB_VENDOR_DIR:stm32mpcommon = "st"
-
-def get_overlays(d):
-    ovlist = []
-    vendordir = d.getVar('DTB_VENDOR_DIR')
-    ovext = d.getVar('DTB_OVERLAY_EXT')
-    g = d.getVar('DTB_OVERLAYS_generic') or ""
-    o = d.getVar('DTB_OVERLAYS') or ""
-    for ov in g.split():
-        for fn in ov.split(","):
-            fn = " %s%s-%s.%s" % (vendordir + "/" if vendordir != "" else "", d.getVar('SOC_PREFIX'), fn, ovext)
-            if fn in ovlist:
-                bb.debug(2, "'%s' is already in overlays" % fn)
-            else:
-                bb.debug(2, "Adding '%s' to overlays" % fn)
-                ovlist += [fn]
-
-    for ov in o.split():
-        for fn in ov.split(","):
-            fn = " %s%s-%s.%s" % (vendordir + "/" if vendordir != "" else "", d.getVar('SOC_FAMILY'), fn, ovext)
-            if fn in ovlist:
-                bb.debug(2, "'%s' is already in overlays" % fn)
-            else:
-                bb.debug(2, "Adding '%s' to overlays" % fn)
-                ovlist += [fn]
-
-    if len(ovlist) == 0:
-        return ""
-    bb.debug(2, "ovlist='%s'" % ovlist)
-    return " ".join(ovlist)
-
-KERNEL_DEVICETREE:append = "${@ get_overlays(d) }"
 
 do_check_config() {
     ifs="$IFS"

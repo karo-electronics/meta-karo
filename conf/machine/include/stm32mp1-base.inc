@@ -2,23 +2,27 @@ MACHINEOVERRIDES =. "stm32mpcommon:stm32mp1common:stm32mp1:"
 
 DEFAULTTUNE ?= "cortexa7thf-neon-vfpv4"
 
-include karo-base.inc
-include conf/machine/include/soc-family.inc
-include conf/machine/include/arm/armv7a/tune-cortexa7.inc
-
-PREFERRED_VERSION_u-boot-karo = "2022.10"
-PREFERRED_VERSION_linux-karo = "6.6"
+require karo-base.inc
+require conf/machine/include/soc-family.inc
+require conf/machine/include/arm/armv7a/tune-cortexa7.inc
 
 MACHINE_FEATURES:append = " emmc"
 MACHINE_FEATURES:append = " optee"
 
 UBOOT_CONFIG ??= "${@ "optee" if 'optee' in d.getVar('MACHINE_FEATURES').split() else "trusted"} mfg noenv"
-UBOOT_FEATURES ?= "${@ "emmc fastboot" if 'emmc' in d.getVar('MACHINE_FEATURES').split() else ""}"
 
 UBOOT_ENTRYPOINT = "0xc0008000"
 
+DTB_OVERLAY_EXT = "dtb"
+DTB_VENDOR_DIR = "st"
+
 KERNEL_IMAGETYPE ?= "uImage"
+
+PREFERRED_VERSION_u-boot-karo = "2022.10"
 PREFERRED_VERSION_linux-karo = "6.6"
+
+# Kernel
+KERNEL_DEVICETREE ?= "st/${DTB_BASENAME}.dtb"
 
 # Set Serial consoles
 SERIAL_CONSOLES ?= "115200;ttySTM0 115200;ttySTM1 115200;ttySTM2"
@@ -42,22 +46,17 @@ BOOTLOADER_BINARIES = "tf-a.stm32 fip.bin"
 EXTRA_IMAGEDEPENDS += "tf-a-karo"
 EXTRA_IMAGEDEPENDS += "optee-os"
 
-# Define default TF-A config
 # Set default TF-A config
 TF_A_CONFIG = "usb"
 TF_A_CONFIG:prepend = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'trusted', 'trusted ', '', d)}"
 TF_A_CONFIG:prepend = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', 'optee ', '', d)}"
 
-TF_A_TOOLS_PLATFORM ?= "stm32mp1"
-
 # link TF_A_CONFIG to UBOOT_CONFIG
 TF_A_CONFIG[mfg] = "usb"
 TF_A_CONFIG[noenv] = "${@bb.utils.contains('BOOTSCHEME_LABELS', 'optee', "optee", "trusted", d)}"
 
-# Manage proper update for TF_A_CONFIG_* var
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'usb', 'TF_A_CONFIG_usb', '', d)}"
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'trusted', 'TF_A_CONFIG_trusted', '', d)}"
-tfaconfig_env[vardeps] += "${@bb.utils.contains('TF_A_CONFIG', 'optee', 'TF_A_CONFIG_optee', '', d)}"
+TF_A_TOOLS_PLATFORM ?= "stm32mp1"
+TF_A_DEVICETREE ?= "${SOC_FAMILY}-${MACHINE}"
 
 # coprocessor stuff
 M4_BOARDS ?= "STM32MP157C-DK2"

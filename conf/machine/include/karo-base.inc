@@ -44,10 +44,10 @@ MACHINE_FEATURES = " \
     vfat \
 "
 
-UBOOT_FEATURES ??= ""
-
-# Set U-Boot DTB
+# Set DTB variables
 KARO_BASEBOARD ??= ""
+DTB_OVERLAY_EXT ?= "dtbo"
+DTB_VENDOR_DIR ?= ""
 DTB_BASENAME ?= "${SOC_FAMILY}-${MACHINE}"
 UBOOT_DTB_NAME ?= "${@ "${DTB_BASENAME}%s" % ("-${KARO_BASEBOARD}" if "${KARO_BASEBOARD}" != "" else "")}"
 

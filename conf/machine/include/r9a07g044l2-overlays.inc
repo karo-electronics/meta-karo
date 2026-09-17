@@ -97,3 +97,5 @@ KARO_DTB_OVERLAYS[qsglyn1] = " \
     qsrz-raspi-display \
     qsrz-ksz9131 \
 "
+
+KERNEL_DEVICETREE:append = "${@ get_overlays(d) }"

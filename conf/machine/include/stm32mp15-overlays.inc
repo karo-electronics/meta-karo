@@ -120,3 +120,5 @@ KARO_DTB_OVERLAYS[qsglyn1] = " \
         qsmp-lcd-panel \
         qsmp-qsglyn1 \
 "
+
+KERNEL_DEVICETREE:append = "${@ get_overlays(d) }"

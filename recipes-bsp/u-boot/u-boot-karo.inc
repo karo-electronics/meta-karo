@@ -35,10 +35,11 @@ SRCREV = "${UBOOT_REV}"
 S = "${WORKDIR}/git"
 B = "${WORKDIR}/build"
 
-EXTRA_OEMAKE:append = " V=0"
-
-UBOOT_FEATURES:append = "${@bb.utils.contains('DISTRO_FEATURES', 'rauc', ' rauc', '', d)}"
+UBOOT_FEATURES:append = "${@ " " + d.getVar('KARO_BASEBOARD') if d.getVar('KARO_BASEBOARD') in "qsbase1 qsbase4".split() else ""}"
+UBOOT_FEATURES:append = "${@ bb.utils.contains('MACHINE_FEATURES', 'emmc', ' emmc', '', d)}"
+UBOOT_FEATURES:append = "${@ bb.utils.contains('DISTRO_FEATURES', 'rauc', ' rauc', '', d)}"
 UBOOT_FEATURES:append = "${@ bb.utils.contains('DISTRO_FEATURES', 'copro', ' copro', '', d)}"
+UBOOT_FEATURES:append = " fastboot"
 
 UBOOT_ENV_FILE ?= "${@ "%s%s" % (d.getVar('MACHINE'), \
                        "-" + d.getVar('KARO_BASEBOARD') \
@@ -62,7 +63,7 @@ SRC_URI:append = " file://u-boot-cfg.${MACHINE}"
 SRC_URI:append = "${@ "".join(map(lambda f: " file://u-boot-cfg.%s" % f, d.getVar('UBOOT_CONFIG').split()))}"
 SRC_URI:append = "${@ "".join(map(lambda f: " file://%s.cfg" % f, d.getVar('UBOOT_FEATURES').split()))}"
 
-UBOOT_FEATURES:append = "${@ " " + d.getVar('KARO_BASEBOARD') if d.getVar('KARO_BASEBOARD') in "qsbase1 qsbase4".split() else ""}"
+EXTRA_OEMAKE:append = " V=0"
 
 do_deploy[depends] += "virtual/trusted-firmware-a:do_deploy"
 do_deploy[depends] += "${@bb.utils.contains('MACHINE_FEATURES', 'optee', 'optee-os:do_deploy', '', d)}"

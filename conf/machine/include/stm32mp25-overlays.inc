@@ -93,3 +93,5 @@ KARO_DTB_OVERLAYS[qsbase5] = " \
         qsmp-spidev2 \
         karo-panel-tm101jvhg32 \
 "
+
+KERNEL_DEVICETREE:append = "${@ get_overlays(d) }"
