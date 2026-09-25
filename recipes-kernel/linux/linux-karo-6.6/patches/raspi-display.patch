@@ -1,8 +1,8 @@
 diff --git a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
-index 300b4fb7ce655..b053954172e15 100644
+index c8ecdf1a2fb1..e80c9426d155 100644
 --- a/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
 +++ b/drivers/gpu/drm/bridge/synopsys/dw-mipi-dsi.c
-@@ -432,7 +432,7 @@ static int dw_mipi_dsi_gen_pkt_hdr_write(struct dw_mipi_dsi *dsi, u32 hdr_val)
+@@ -425,7 +425,7 @@ static int dw_mipi_dsi_gen_pkt_hdr_write(struct dw_mipi_dsi *dsi, u32 hdr_val)
  				 val, !(val & GEN_CMD_FULL), 1000,
  				 CMD_PKT_STATUS_TIMEOUT_US);
  	if (ret) {
@@ -11,7 +11,7 @@ index 300b4fb7ce655..b053954172e15 100644
  		return ret;
  	}
  
-@@ -443,7 +443,7 @@ static int dw_mipi_dsi_gen_pkt_hdr_write(struct dw_mipi_dsi *dsi, u32 hdr_val)
+@@ -436,7 +436,7 @@ static int dw_mipi_dsi_gen_pkt_hdr_write(struct dw_mipi_dsi *dsi, u32 hdr_val)
  				 val, (val & mask) == mask,
  				 1000, CMD_PKT_STATUS_TIMEOUT_US);
  	if (ret) {
@@ -21,7 +21,7 @@ index 300b4fb7ce655..b053954172e15 100644
  	}
  
 diff --git a/drivers/gpu/drm/bridge/tc358762.c b/drivers/gpu/drm/bridge/tc358762.c
-index 46198af9eebbf..5a0850b08912e 100644
+index 46198af9eebb..5a0850b08912 100644
 --- a/drivers/gpu/drm/bridge/tc358762.c
 +++ b/drivers/gpu/drm/bridge/tc358762.c
 @@ -53,6 +53,12 @@
@@ -63,7 +63,7 @@ index 46198af9eebbf..5a0850b08912e 100644
  
  	return ret;
 diff --git a/drivers/gpu/drm/panel/Kconfig b/drivers/gpu/drm/panel/Kconfig
-index 3a2f4a9f1d466..32c99eec0ec5d 100644
+index 3a2f4a9f1d46..32c99eec0ec5 100644
 --- a/drivers/gpu/drm/panel/Kconfig
 +++ b/drivers/gpu/drm/panel/Kconfig
 @@ -487,6 +487,16 @@ config DRM_PANEL_RASPBERRYPI_TOUCHSCREEN
@@ -84,15 +84,15 @@ index 3a2f4a9f1d466..32c99eec0ec5d 100644
  	tristate "Raydium RM67191 FHD 1080x1920 DSI video mode panel"
  	depends on OF
 diff --git a/drivers/gpu/drm/panel/panel-simple.c b/drivers/gpu/drm/panel/panel-simple.c
-index ae5d3205b0086..3e236ccd98d45 100644
+index 1b50e37d2fb5..92abec951ee0 100644
 --- a/drivers/gpu/drm/panel/panel-simple.c
 +++ b/drivers/gpu/drm/panel/panel-simple.c
-@@ -3533,6 +3533,31 @@ static const struct panel_desc rocktech_rk043fn48h = {
+@@ -3530,6 +3530,31 @@ static const struct panel_desc rocktech_rk043fn48h = {
  	.connector_type = DRM_MODE_CONNECTOR_DPI,
  };
  
 +static const struct drm_display_mode raspberrypi_7inch_mode = {
-+	.clock = 27448,
++	.clock = 30000,
 +	.hdisplay = 800,
 +	.hsync_start = 800 + 131,
 +	.hsync_end = 800 + 131 + 2,
@@ -119,7 +119,7 @@ index ae5d3205b0086..3e236ccd98d45 100644
  static const struct display_timing rocktech_rk070er9427_timing = {
  	.pixelclock = { 26400000, 33300000, 46800000 },
  	.hactive = { 800, 800, 800 },
-@@ -4629,6 +4654,9 @@ static const struct of_device_id platform_of_match[] = {
+@@ -4626,6 +4651,9 @@ static const struct of_device_id platform_of_match[] = {
  	}, {
  		.compatible = "rocktech,rk043fn48h",
  		.data = &rocktech_rk043fn48h,
@@ -463,7 +463,7 @@ index f32d8b426f61..26001493c39a 100644
  		.pm = pm_sleep_ptr(&edt_ft5x06_ts_pm_ops),
  		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 diff --git a/drivers/regulator/rpi-panel-attiny-regulator.c b/drivers/regulator/rpi-panel-attiny-regulator.c
-index f52c3d47ecea2..3c300528b7eeb 100644
+index f52c3d47ecea..3c300528b7ee 100644
 --- a/drivers/regulator/rpi-panel-attiny-regulator.c
 +++ b/drivers/regulator/rpi-panel-attiny-regulator.c
 @@ -6,12 +6,14 @@
