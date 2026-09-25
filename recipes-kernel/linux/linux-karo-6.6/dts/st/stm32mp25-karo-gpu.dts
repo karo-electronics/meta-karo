@@ -15,5 +15,7 @@
 
 &gpu {
 	contiguous-area = <&gpu_reserved>;
+	power-domains = <&scmi_devpd 0>, <&d1_pd>;
+	power-domain-names = "scmi_devpd", "d1_pd";
 	status = "okay";
 };
