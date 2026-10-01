@@ -22,20 +22,18 @@
     pinctrl-0 = <&qsmp_ethernet0_rgmii_pins>;
 	pinctrl-1 = <&qsmp_ethernet0_rgmii_sleep_pins>;
 	phy-mode = "rgmii-id";
-	phy-handle = <&phy0>;
-	status = "okay";
+    phy-handle = <&phy0>;
+	snps,reset-gpio = <&gpioa 4 GPIO_ACTIVE_LOW>;
+    snps,reset-active-low;
+    snps,reset-delays-us = <0 10000 30000>;
+    status = "okay";
 };
 
 &mdio0 {
-	reset-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
-	reset-delay-us = <10000>;
-	reset-post-delay-us = <100>;
-
 	phy0: ethernet-phy@3 {
 		reg = <3>;
 		interrupt-parent = <&gpioa>;
 		interrupts = <9 IRQ_TYPE_EDGE_FALLING>;
-		micrel,force-master;
 	};
 };
 
